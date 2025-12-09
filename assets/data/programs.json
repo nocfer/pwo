@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "slug": "push-ups",
+    "exercise": {
+      "name": "Push Ups",
+      "warmUp": 300,
+      "break": 120,
+      "sets": 5,
+      "reps": [8, 8, 8, 8, 8]
+    }
+  }
+]
