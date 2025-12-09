@@ -1,4 +1,5 @@
 import ProgressView from "@/components/ProgressView";
+import { useLastCompletedSlug } from "@/hooks/useLastCompletedSlug";
 import { useRoutines } from "@/hooks/useRoutines";
 import { theme } from "@/theme/theme";
 import { router } from "expo-router";
@@ -7,6 +8,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 export default function Index() {
   const { data: routines } = useRoutines();
   const firstRoutine = routines?.[0];
+  const lastCompletedSlug = useLastCompletedSlug();
+  const targetSlug = lastCompletedSlug || firstRoutine?.slug;
 
   return (
     <View style={styles.container}>
@@ -15,8 +18,8 @@ export default function Index() {
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Streak</Text>
-        {firstRoutine ? (
-          <ProgressView slug={firstRoutine.slug} />
+        {targetSlug ? (
+          <ProgressView slug={targetSlug} />
         ) : (
           <Text style={styles.muted}>Add a routine to start tracking.</Text>
         )}

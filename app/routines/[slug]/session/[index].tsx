@@ -2,7 +2,7 @@ import { StepCard } from "@/components/StepCard";
 import { TimerControls } from "@/components/TimerControls";
 import { useProgramSessions } from "@/hooks/useProgramSessions";
 import { useSessionSteps } from "@/hooks/useSessionSteps";
-import { appendEvent, appendHistory, loadSessionState, saveSessionState } from "@/lib/persist";
+import { appendEvent, appendHistory, loadSessionState, saveSessionState, saveStreakHit } from "@/lib/persist";
 import { theme } from "@/theme/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -26,7 +26,7 @@ export default function SessionDetail() {
   const [timer, setTimer] = useState(() => (phase === "warmup" ? warmUpSeconds : 0));
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [warmupDone, setWarmupDone] = useState(warmUpSeconds === 0);
+  const [warmupDone, setWarmupDone] = useState(false);
 
   // const repsForSet = session?.sets[currentSet - 1] ?? 0;
 
@@ -109,6 +109,13 @@ export default function SessionDetail() {
     }
   }, [phase, warmUpSeconds, startTimer, slug, index, session?.index]);
 
+  // If the program has no warm-up, mark warmupDone once program is known
+  useEffect(() => {
+    if (program && (program.exercise.warmUp ?? 0) === 0 && !warmupDone) {
+      setWarmupDone(true);
+    }
+  }, [program, warmupDone]);
+
   // Ensure warm-up is honored once the program loads. On first render, warmUpSeconds may be 0,
   // which would set phase to "working". When program arrives with warmUpSeconds > 0, switch to warmup.
   useEffect(() => {
@@ -142,6 +149,7 @@ export default function SessionDetail() {
           date: new Date().toISOString().slice(0, 10),
           summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
         });
+        void saveStreakHit(slug, new Date().toISOString());
       } else {
         setCurrentSet(next);
         setPhase("working");
@@ -281,6 +289,7 @@ export default function SessionDetail() {
                             date: new Date().toISOString().slice(0, 10),
                             summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
                           });
+                          void saveStreakHit(slug, new Date().toISOString());
                         } else {
                           setCurrentSet(next);
                         }

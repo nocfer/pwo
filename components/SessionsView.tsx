@@ -1,4 +1,5 @@
 import { useProgramSessions } from "@/hooks/useProgramSessions";
+import { useSessionCompletion } from "@/hooks/useSessionCompletion";
 import { theme } from "@/theme/theme";
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -9,6 +10,7 @@ type Props = {
 
 export default function SessionsView({ slug }: Props) {
   const { sessions, program, loading, error } = useProgramSessions(slug);
+  const { completed } = useSessionCompletion(slug);
 
   if (loading) {
     return (
@@ -41,11 +43,18 @@ export default function SessionsView({ slug }: Props) {
             const href = `/routines/${slug}/session/${s.index}` as any;
             router.navigate(href);
           }}
-          style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+          style={({ pressed }) => [
+            styles.card,
+            completed.has(s.index) && styles.cardDone,
+            pressed && styles.cardPressed,
+          ]}
         >
           <View style={styles.rowBetween}>
-            <Text style={styles.title}>Session {s.index}</Text>
-            <Text style={styles.badge}>{s.totalReps} reps</Text>
+            <Text style={[styles.title, completed.has(s.index) && styles.titleDone]}>Session {s.index}</Text>
+            <View style={styles.rowBetween}>
+              {completed.has(s.index) && <Text style={styles.tick}>✓</Text>}
+              <Text style={[styles.badge, completed.has(s.index) && styles.badgeDone]}>{s.totalReps} reps</Text>
+            </View>
           </View>
           <Text style={styles.subtitle}>{program.exercise.name}</Text>
           <View style={styles.setsRow}>
@@ -76,6 +85,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
   },
+  cardDone: {
+    borderColor: theme.colors.success,
+  },
   cardPressed: {
     backgroundColor: theme.colors.card,
   },
@@ -90,6 +102,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  titleDone: {
+    color: theme.colors.success,
+  },
   subtitle: {
     color: theme.colors.muted,
     marginBottom: theme.spacing.sm,
@@ -97,6 +112,9 @@ const styles = StyleSheet.create({
   badge: {
     color: theme.colors.primary,
     fontWeight: "600",
+  },
+  badgeDone: {
+    color: theme.colors.success,
   },
   setsRow: {
     flexDirection: "row",
@@ -113,6 +131,12 @@ const styles = StyleSheet.create({
   },
   setPillText: {
     color: theme.colors.text,
+  },
+  tick: {
+    color: theme.colors.success,
+    fontWeight: "700",
+    fontSize: 16,
+    marginRight: theme.spacing.sm,
   },
   muted: {
     color: theme.colors.muted,

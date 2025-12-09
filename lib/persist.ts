@@ -87,3 +87,61 @@ export async function appendHistory(slug: string, entry: HistoryEntry) {
   }
   await FileSystem.writeAsStringAsync(path, JSON.stringify(arr, null, 2));
 }
+
+// Streak persistence (last 7 days window ending today)
+export type StreakEntry = { slug: string; streak: number[]; updatedAt: string };
+
+function daysBetween(a: Date, b: Date) {
+  const MS = 24 * 60 * 60 * 1000;
+  const ad = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const bd = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((bd.getTime() - ad.getTime()) / MS);
+}
+
+function normalizeStreak(streak: number[], daysDiff: number) {
+  // shift left by daysDiff and pad with zeros to length 7
+  const base = streak.slice(-7);
+  let shifted = base;
+  if (daysDiff > 0) {
+    shifted = [...base, ...Array(daysDiff).fill(0)];
+  }
+  return shifted.slice(-7);
+}
+
+export async function saveStreakHit(slug: string, dateISO: string) {
+  const path = `${DIR}progress-state.json`;
+  await ensureFile(path, []);
+  const raw = await FileSystem.readAsStringAsync(path);
+  const arr = (raw ? JSON.parse(raw) : []) as StreakEntry[];
+  const idx = arr.findIndex((e) => e.slug === slug);
+  const today = new Date(dateISO);
+  if (idx < 0) {
+    // new entry: mark today as hit
+    const streak = Array(6).fill(0).concat(1);
+    arr.push({ slug, streak, updatedAt: today.toISOString() });
+  } else {
+    const entry = arr[idx];
+    const last = new Date(entry.updatedAt);
+    const diff = daysBetween(last, today);
+    const normalized = normalizeStreak(entry.streak, diff);
+    // set today to 1
+    normalized[normalized.length - 1] = 1;
+    arr[idx] = { slug, streak: normalized, updatedAt: today.toISOString() };
+  }
+  await FileSystem.writeAsStringAsync(path, JSON.stringify(arr, null, 2));
+}
+
+export async function loadStreak(slug: string): Promise<number[] | null> {
+  const path = `${DIR}progress-state.json`;
+  const info = await FileSystem.getInfoAsync(path);
+  if (!info.exists) return null;
+  const raw = await FileSystem.readAsStringAsync(path);
+  const arr = (raw ? JSON.parse(raw) : []) as StreakEntry[];
+  const entry = arr.find((e) => e.slug === slug);
+  if (!entry) return null;
+  // align to today even if no update today
+  const today = new Date();
+  const last = new Date(entry.updatedAt);
+  const diff = daysBetween(last, today);
+  return normalizeStreak(entry.streak, diff);
+}
