@@ -1,19 +1,55 @@
+import { useProgress } from "@/hooks/useProgress";
+import { theme } from "@/theme/theme";
 import { StyleSheet, Text, View } from "react-native";
 
 type Props = {
   slug: string;
 };
 
-export default async function ProgressView({ slug }: Props) {
-  const progress = await import("@/assets/data/progress.json");
+export default function ProgressView({ slug }: Props) {
+  const { data, loading, error } = useProgress(slug);
 
-  const last7DaysProgress = progress.default.find((p) => p.slug === slug);
+  if (loading) {
+    return (
+      <View style={styles.viewContainer}>
+        <Text style={styles.message}>Loading progress…</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.viewContainer}>
+        <Text style={styles.message}>Failed to load progress.</Text>
+      </View>
+    );
+  }
+
+  if (!data || !data.streak || data.streak.length === 0) {
+    return (
+      <View style={styles.viewContainer}>
+        <Text style={styles.message}>No progress yet.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.viewContainer}>
-      {last7DaysProgress?.streak?.map((hit, i) => (
-        <Text key={i}>{hit}</Text>
-      ))}
+      <View style={styles.streakRow}>
+        {data.streak.slice(-7).map((hit, i) => {
+          const active = Boolean(hit) && hit !== 0 && hit !== "0";
+          return (
+            <View
+              key={i}
+              style={[
+                styles.streakDot,
+                active ? styles.streakDotActive : styles.streakDotInactive,
+              ]}
+            />
+          );
+        })}
+      </View>
+      <Text style={styles.caption}>Last 7 days</Text>
     </View>
   );
 }
@@ -22,6 +58,33 @@ const styles = StyleSheet.create({
   viewContainer: {
     alignItems: "center",
     justifyContent: "center",
-    padding: 3,
+    padding: theme.spacing.sm,
+  },
+  streakRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  streakDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    marginHorizontal: 6,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  streakDotActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  streakDotInactive: {
+    backgroundColor: theme.colors.card,
+  },
+  message: {
+    color: theme.colors.subtext,
+  },
+  caption: {
+    marginTop: theme.spacing.sm,
+    color: theme.colors.muted,
+    fontSize: 12,
   },
 });

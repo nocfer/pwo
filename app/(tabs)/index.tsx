@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import RoutinesView from "@/components/RoutinesView";
+import { theme } from "@/theme/theme";
 
 export default function Index() {
   return (
@@ -16,12 +17,12 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#25292e",
+    backgroundColor: theme.colors.background,
     alignItems: "center",
   },
   title: {
     fontSize: 18,
-    color: "#fff",
+    color: theme.colors.text,
     alignItems: "center",
     justifyContent: "center",
   },
