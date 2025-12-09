@@ -3,12 +3,16 @@ import { theme } from "@/theme/theme";
 import { StyleSheet, Text, View } from "react-native";
 import RoutineButton from "./RoutineButton";
 
-export default function RoutinesView() {
+type Props = {
+  query?: string;
+};
+
+export default function RoutinesView({ query }: Props) {
   const { data, loading, error } = useRoutines();
 
   if (loading) {
     return (
-      <View style={styles.buttonContainer}>
+      <View style={styles.container}>
         <Text style={styles.message}>Loading routines…</Text>
       </View>
     );
@@ -16,7 +20,7 @@ export default function RoutinesView() {
 
   if (error) {
     return (
-      <View style={styles.buttonContainer}>
+      <View style={styles.container}>
         <Text style={styles.message}>Failed to load routines.</Text>
       </View>
     );
@@ -24,15 +28,19 @@ export default function RoutinesView() {
 
   if (!data || data.length === 0) {
     return (
-      <View style={styles.buttonContainer}>
+      <View style={styles.container}>
         <Text style={styles.message}>No routines available.</Text>
       </View>
     );
   }
 
+  const filtered = query
+    ? data.filter((r) => r.name.toLowerCase().includes(query.toLowerCase()))
+    : data;
+
   return (
-    <View style={styles.buttonContainer}>
-      {data.map((routine, i) => (
+    <View style={styles.listContainer}>
+      {filtered.map((routine, i) => (
         <RoutineButton label={routine.name} key={i} slug={routine.slug} />
       ))}
     </View>
@@ -40,10 +48,11 @@ export default function RoutinesView() {
 }
 
 const styles = StyleSheet.create({
-  buttonContainer: {
-    alignItems: "center",
-    justifyContent: "center",
+  container: {
     padding: theme.spacing.sm,
+  },
+  listContainer: {
+    gap: theme.spacing.sm,
   },
   message: {
     color: theme.colors.subtext,

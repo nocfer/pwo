@@ -1,10 +1,12 @@
+import SessionsView from "@/components/SessionsView";
 import { theme } from "@/theme/theme";
 import { StyleSheet, Text, View } from "react-native";
 
 export default function RoutinesScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Routines screen</Text>
+      <Text style={styles.title}>Push Ups program</Text>
+      <SessionsView slug="push-ups" />
     </View>
   );
 }
@@ -13,10 +15,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    justifyContent: "center",
-    alignItems: "center",
+    padding: theme.spacing.lg,
   },
-  text: {
+  title: {
     color: theme.colors.text,
+    fontSize: 20,
+    marginBottom: theme.spacing.md,
   },
 });

@@ -1,0 +1,28 @@
+[
+  {
+    "slug": "full-body-a",
+    "recent": [
+      {
+        "date": "2025-12-04",
+        "summary": "Squat 3x5 @ 75kg, Bench 3x5 @ 57.5kg, Row 3x5 @ 50kg"
+      },
+      {
+        "date": "2025-12-02",
+        "summary": "Squat 3x5 @ 72.5kg, Bench 3x5 @ 55kg, Row 3x5 @ 47.5kg"
+      },
+      {
+        "date": "2025-11-30",
+        "summary": "Squat 3x5 @ 70kg, Bench 3x5 @ 52.5kg, Row 3x5 @ 45kg"
+      }
+    ]
+  },
+  {
+    "slug": "push",
+    "recent": [
+      {
+        "date": "2025-12-03",
+        "summary": "OHP 5x5 @ 37.5kg, Incline DB 4x10 @ 22kg"
+      }
+    ]
+  }
+]
