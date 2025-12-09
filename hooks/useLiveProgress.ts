@@ -1,4 +1,4 @@
-import { loadStreak } from "@/lib/persist";
+import { loadStreak } from "@/lib/persistPlatform";
 import { useEffect, useState } from "react";
 
 export type LiveProgress = {

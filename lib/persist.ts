@@ -1,7 +1,48 @@
 import * as FileSystem from "expo-file-system/legacy";
+import { Platform } from "react-native";
 
 const FS_ANY = FileSystem as any;
 const DIR: string = FS_ANY.documentDirectory || FS_ANY.cacheDirectory || "";
+
+function pathToKey(path: string) {
+  if (path.endsWith("events.json")) return "persist.events";
+  if (path.endsWith("sessions-state.json")) return "persist.sessionsState";
+  if (path.endsWith("history.json")) return "persist.history";
+  if (path.endsWith("progress-state.json")) return "persist.progressState";
+  return `persist.${path}`;
+}
+
+function webRead(key: string): string | null {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      return window.localStorage.getItem(key);
+    }
+  } catch {}
+  return null;
+}
+
+function webWrite(key: string, value: string) {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {}
+}
+
+async function readText(path: string): Promise<string> {
+  if (Platform.OS === "web") {
+    return webRead(pathToKey(path)) ?? "";
+  }
+  return FileSystem.readAsStringAsync(path);
+}
+
+async function writeText(path: string, content: string): Promise<void> {
+  if (Platform.OS === "web") {
+    webWrite(pathToKey(path), content);
+    return;
+  }
+  await FileSystem.writeAsStringAsync(path, content);
+}
 
 async function ensureFile(path: string, seed: any) {
   try {

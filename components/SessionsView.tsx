@@ -1,6 +1,7 @@
 import { useProgramSessions } from "@/hooks/useProgramSessions";
 import { useSessionCompletion } from "@/hooks/useSessionCompletion";
 import { theme } from "@/theme/theme";
+import { useIsFocused } from "@react-navigation/native";
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -10,7 +11,8 @@ type Props = {
 
 export default function SessionsView({ slug }: Props) {
   const { sessions, program, loading, error } = useProgramSessions(slug);
-  const { completed } = useSessionCompletion(slug);
+  const isFocused = useIsFocused();
+  const { completed } = useSessionCompletion(slug, isFocused ? 1 : 0);
 
   if (loading) {
     return (

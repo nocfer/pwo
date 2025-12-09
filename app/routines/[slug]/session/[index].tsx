@@ -2,7 +2,7 @@ import { StepCard } from "@/components/StepCard";
 import { TimerControls } from "@/components/TimerControls";
 import { useProgramSessions } from "@/hooks/useProgramSessions";
 import { useSessionSteps } from "@/hooks/useSessionSteps";
-import { appendEvent, appendHistory, loadSessionState, saveSessionState, saveStreakHit } from "@/lib/persist";
+import { appendEvent, appendHistory, loadSessionState, saveSessionState, saveStreakHit } from "@/lib/persistPlatform";
 import { theme } from "@/theme/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

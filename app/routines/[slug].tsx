@@ -1,6 +1,8 @@
 import ProgressView from "@/components/ProgressView";
 import SessionsView from "@/components/SessionsView";
+import { useLiveHistory } from "@/hooks/useLiveHistory";
 import { theme } from "@/theme/theme";
+import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -8,25 +10,21 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 export default function RoutinePage() {
   const params = useLocalSearchParams();
   const slug = params.slug as string;
+  const isFocused = useIsFocused();
 
   const [targets, setTargets] = useState<
     { label: string; value: number; unit?: string }[]
   >([]);
-  const [recent, setRecent] = useState<
-    { date: string; summary: string }[]
-  >([]);
+  const { data: liveRecent } = useLiveHistory(slug, isFocused ? 1 : 0);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const tmod = await import("@/assets/data/targets.json");
-        const hmod = await import("@/assets/data/history.json");
         if (!mounted) return;
         const tentry = (tmod as any).default.find((e: any) => e.slug === slug);
-        const hentry = (hmod as any).default.find((e: any) => e.slug === slug);
         setTargets(tentry?.targets ?? []);
-        setRecent(hentry?.recent ?? []);
       } catch {
         // swallow for mock data
       }
@@ -61,11 +59,11 @@ export default function RoutinePage() {
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Recent history</Text>
-        {recent.length === 0 ? (
+        {!liveRecent || liveRecent.length === 0 ? (
           <Text style={styles.muted}>No sessions yet.</Text>
         ) : (
           <View style={styles.listVGap}>
-            {recent.map((r, i) => (
+            {liveRecent.map((r, i) => (
               <View key={i} style={styles.vItem}>
                 <Text style={styles.itemSubtle}>{r.date}</Text>
                 <Text style={styles.itemText}>{r.summary}</Text>
