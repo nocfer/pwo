@@ -55,6 +55,15 @@ export default function SessionDetail() {
     }
   }, [phase, warmUpSeconds, startTimer]);
 
+  // Ensure warm-up is honored once the program loads. On first render, warmUpSeconds may be 0,
+  // which would set phase to "working". When program arrives with warmUpSeconds > 0, switch to warmup.
+  useEffect(() => {
+    if (program && warmUpSeconds > 0 && phase === "working" && currentSet === 1 && timer === 0) {
+      setPhase("warmup");
+      startTimer(warmUpSeconds);
+    }
+  }, [program, warmUpSeconds, phase, currentSet, timer, startTimer]);
+
   useEffect(() => {
     if (timer === 0 && phase === "warmup") {
       setPhase("working");

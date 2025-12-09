@@ -1,8 +1,9 @@
 import ProgressView from "@/components/ProgressView";
+import SessionsView from "@/components/SessionsView";
 import { theme } from "@/theme/theme";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function RoutinePage() {
   const params = useLocalSearchParams();
@@ -35,7 +36,7 @@ export default function RoutinePage() {
     };
   }, [slug]);
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Routine</Text>
       <ProgressView slug={slug} />
 
@@ -74,6 +75,11 @@ export default function RoutinePage() {
         )}
       </View>
 
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Sessions</Text>
+        <SessionsView slug={slug} />
+      </View>
+
       <Pressable
         style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
         onPress={() => {
@@ -83,7 +89,7 @@ export default function RoutinePage() {
       >
         <Text style={styles.ctaText}>Start session</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -91,7 +97,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  content: {
     padding: theme.spacing.lg,
+    gap: theme.spacing.lg,
   },
   title: {
     color: theme.colors.text,
