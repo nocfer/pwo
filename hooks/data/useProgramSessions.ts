@@ -9,7 +9,7 @@ function distributeIntoSets(total: number, sets: number): number[] {
   const remainder = total - base * sets;
   const arr = Array.from(
     { length: sets },
-    (_, i) => base + (i < remainder ? 1 : 0)
+    (_, i) => base + (i < remainder ? 1 : 0),
   );
   return arr;
 }

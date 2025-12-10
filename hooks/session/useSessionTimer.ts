@@ -16,17 +16,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type TimerActions = {
   recordEvent: (
-    event: Omit<EventRecord, "ts"> & { ts?: string }
+    event: Omit<EventRecord, "ts"> & { ts?: string },
   ) => Promise<void>;
   completeSession: (
     slug: string,
     sessionIndex: number,
-    summary: string
+    summary: string,
   ) => Promise<void>;
   saveSessionState: (state: SessionState) => Promise<void>;
   loadSessionState: (
     slug: string,
-    sessionIndex: number
+    sessionIndex: number,
   ) => Promise<SessionState | null>;
 };
 
@@ -71,11 +71,11 @@ export function useSessionTimer({
   const breakSeconds = program?.exercise?.break ?? 0;
 
   const [phase, setPhase] = useState<SessionPhase>(
-    warmUpSeconds > 0 ? "warmup" : "working"
+    warmUpSeconds > 0 ? "warmup" : "working",
   );
   const [currentSet, setCurrentSet] = useState(1);
   const [timer, setTimer] = useState(() =>
-    phase === "warmup" ? warmUpSeconds : 0
+    phase === "warmup" ? warmUpSeconds : 0,
   );
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isPaused, setIsPaused] = useState(false);
@@ -105,7 +105,7 @@ export function useSessionTimer({
       }, 1000);
       setIsPaused(false);
     },
-    [clearTimer]
+    [clearTimer],
   );
 
   const pauseTimer = useCallback(() => {

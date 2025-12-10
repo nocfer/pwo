@@ -32,7 +32,7 @@ const listenerIds = new Map<number, Listener>();
  */
 export function subscribe(
   callback: DataEventCallback,
-  types?: DataEventType[]
+  types?: DataEventType[],
 ): () => void {
   const id = nextId++;
   const listener: Listener = { callback, types };

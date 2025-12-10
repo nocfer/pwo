@@ -118,7 +118,7 @@ export const storage = {
 
   async loadSessionState(
     slug: string,
-    sessionIndex: number
+    sessionIndex: number,
   ): Promise<SessionState | null> {
     const arr = await read<SessionState[]>(KEYS.SESSIONS, []);
     return (
@@ -130,7 +130,7 @@ export const storage = {
   async saveSessionState(state: SessionState): Promise<void> {
     const arr = await read<SessionState[]>(KEYS.SESSIONS, []);
     const idx = arr.findIndex(
-      (s) => s.slug === state.slug && s.sessionIndex === state.sessionIndex
+      (s) => s.slug === state.slug && s.sessionIndex === state.sessionIndex,
     );
     if (idx >= 0) {
       arr[idx] = state;
@@ -143,7 +143,7 @@ export const storage = {
   async clearSessionState(slug: string, sessionIndex: number): Promise<void> {
     const arr = await read<SessionState[]>(KEYS.SESSIONS, []);
     const filtered = arr.filter(
-      (s) => !(s.slug === slug && s.sessionIndex === sessionIndex)
+      (s) => !(s.slug === slug && s.sessionIndex === sessionIndex),
     );
     await write(KEYS.SESSIONS, filtered);
   },
@@ -162,7 +162,7 @@ export const storage = {
   },
 
   async appendEvent(
-    event: Omit<EventRecord, "ts"> & { ts?: string }
+    event: Omit<EventRecord, "ts"> & { ts?: string },
   ): Promise<void> {
     const arr = await read<EventRecord[]>(KEYS.EVENTS, []);
     const record: EventRecord = {

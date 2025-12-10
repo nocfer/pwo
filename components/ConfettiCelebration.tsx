@@ -37,10 +37,10 @@ export function ConfettiCelebration({
   useEffect(() => {
     if (show) {
       setIsVisible(true);
-      
+
       // Trigger haptics
       haptics.celebration();
-      
+
       // Animate message in
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -145,4 +145,3 @@ const styles = StyleSheet.create({
 });
 
 export default ConfettiCelebration;
-

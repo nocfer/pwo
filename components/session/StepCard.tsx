@@ -12,7 +12,15 @@ export type StepCardProps = {
   children?: ReactNode;
 };
 
-export function StepCard({ title, active, done, locked, right, style, children }: StepCardProps) {
+export function StepCard({
+  title,
+  active,
+  done,
+  locked,
+  right,
+  style,
+  children,
+}: StepCardProps) {
   const containerStyles = [
     styles.card,
     active && styles.cardActive,

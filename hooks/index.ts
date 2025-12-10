@@ -3,12 +3,12 @@
  */
 
 // Data hooks
-export { 
-  useRoutines, 
-  useLiveProgress, 
-  useLiveHistory, 
-  useSessionCompletion, 
-  useProgramSessions, 
+export {
+  useRoutines,
+  useLiveProgress,
+  useLiveHistory,
+  useSessionCompletion,
+  useProgramSessions,
   useLastCompletedSlug,
   type LiveProgress,
   type HistoryEntry,
@@ -17,8 +17,8 @@ export {
 } from "./data";
 
 // Session hooks
-export { 
-  useSessionTimer, 
+export {
+  useSessionTimer,
   useSessionSteps,
   type UseSessionTimerReturn,
   type Step,

@@ -11,7 +11,11 @@ type AnimatedCardProps = {
 /**
  * A wrapper component that animates its children with a fade-in and slide-up effect
  */
-export function AnimatedCard({ children, delay = 0, style }: AnimatedCardProps) {
+export function AnimatedCard({
+  children,
+  delay = 0,
+  style,
+}: AnimatedCardProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
 
@@ -99,7 +103,11 @@ type PulseAnimationProps = {
 /**
  * Adds a subtle pulse animation to its children when active
  */
-export function PulseAnimation({ children, isActive = false, style }: PulseAnimationProps) {
+export function PulseAnimation({
+  children,
+  isActive = false,
+  style,
+}: PulseAnimationProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -116,7 +124,7 @@ export function PulseAnimation({ children, isActive = false, style }: PulseAnima
             duration: 800,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       );
       pulse.start();
       return () => pulse.stop();
@@ -142,7 +150,12 @@ type FadeInProps = {
 /**
  * Simple fade-in animation wrapper
  */
-export function FadeIn({ children, delay = 0, duration = 300, style }: FadeInProps) {
+export function FadeIn({
+  children,
+  delay = 0,
+  duration = 300,
+  style,
+}: FadeInProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

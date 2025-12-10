@@ -1,6 +1,6 @@
 /**
  * useRoutines - Hook for accessing routines data
- * 
+ *
  * Uses the DataContext for reactive updates.
  * Falls back to direct asset loading if used outside context.
  */
@@ -11,7 +11,7 @@ import type { Routine } from "@/types";
 
 export function useRoutines() {
   const context = useContext(DataContext);
-  
+
   // If we're inside DataProvider, use context
   if (context) {
     return {
@@ -20,7 +20,7 @@ export function useRoutines() {
       error: null,
     };
   }
-  
+
   // Fallback for usage outside provider (shouldn't happen normally)
   const [data, setData] = useState<Routine[] | null>(null);
   const [loading, setLoading] = useState(true);

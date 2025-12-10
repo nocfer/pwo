@@ -1,6 +1,6 @@
 /**
  * useLastCompletedSlug - Hook for getting the last completed routine slug
- * 
+ *
  * Uses the DataContext for reactive updates.
  */
 
@@ -10,12 +10,12 @@ import { storage } from "@/lib/storage";
 
 export function useLastCompletedSlug(): string | null {
   const context = useContext(DataContext);
-  
+
   // If we're inside DataProvider, use context
   if (context) {
     return context.state.lastCompletedSlug;
   }
-  
+
   // Fallback for usage outside provider
   const [slug, setSlug] = useState<string | null>(null);
 

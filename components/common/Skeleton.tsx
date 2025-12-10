@@ -31,7 +31,7 @@ export function Skeleton({
           duration: 1000,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     animation.start();
     return () => animation.stop();
@@ -63,11 +63,7 @@ export function Skeleton({
         ]}
       >
         <LinearGradient
-          colors={[
-            "transparent",
-            "rgba(255,255,255,0.4)",
-            "transparent",
-          ]}
+          colors={["transparent", "rgba(255,255,255,0.4)", "transparent"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.gradient}
@@ -99,7 +95,11 @@ export function SkeletonRoutineButton() {
     <View style={styles.routineButton}>
       <View style={styles.routineButtonContent}>
         <Skeleton width={44} height={44} borderRadius={theme.radius.md} />
-        <Skeleton width={140} height={18} style={{ marginLeft: theme.spacing.md }} />
+        <Skeleton
+          width={140}
+          height={18}
+          style={{ marginLeft: theme.spacing.md }}
+        />
       </View>
       <Skeleton width={20} height={20} borderRadius={theme.radius.sm} />
     </View>
@@ -112,11 +112,19 @@ export function SkeletonSessionCard() {
       <View style={styles.sessionHeader}>
         <View style={styles.sessionTitleRow}>
           <Skeleton width={28} height={28} borderRadius={theme.radius.sm} />
-          <Skeleton width={100} height={16} style={{ marginLeft: theme.spacing.sm }} />
+          <Skeleton
+            width={100}
+            height={16}
+            style={{ marginLeft: theme.spacing.sm }}
+          />
         </View>
         <Skeleton width={60} height={24} borderRadius={theme.radius.sm} />
       </View>
-      <Skeleton width={120} height={12} style={{ marginTop: theme.spacing.sm }} />
+      <Skeleton
+        width={120}
+        height={12}
+        style={{ marginTop: theme.spacing.sm }}
+      />
       <View style={styles.pillRow}>
         <Skeleton width={50} height={28} borderRadius={theme.radius.sm} />
         <Skeleton width={50} height={28} borderRadius={theme.radius.sm} />
@@ -133,11 +141,20 @@ export function SkeletonStreakDots() {
         {[...Array(7)].map((_, i) => (
           <View key={i} style={styles.dayContainer}>
             <Skeleton width={36} height={36} borderRadius={theme.radius.md} />
-            <Skeleton width={12} height={10} style={{ marginTop: 4 }} borderRadius={4} />
+            <Skeleton
+              width={12}
+              height={10}
+              style={{ marginTop: 4 }}
+              borderRadius={4}
+            />
           </View>
         ))}
       </View>
-      <Skeleton width={80} height={12} style={{ marginTop: theme.spacing.md }} />
+      <Skeleton
+        width={80}
+        height={12}
+        style={{ marginTop: theme.spacing.md }}
+      />
     </View>
   );
 }

@@ -11,15 +11,21 @@ export function useSessionSteps(
   breakSeconds: number,
   session: Session | null | undefined,
   phase: "warmup" | "working" | "break" | "done",
-  currentSet: number
+  currentSet: number,
 ) {
   const steps = useMemo<Step[]>(() => {
     const list: Step[] = [];
     if (warmUpSeconds > 0) list.push({ key: "warmup", type: "warmup" });
     const totalSets = session?.sets.length ?? 0;
     for (let i = 1; i <= totalSets; i++) {
-      list.push({ key: `set-${i}`, type: "set", set: i, reps: session?.sets[i - 1] ?? 0 });
-      if (breakSeconds > 0 && i < totalSets) list.push({ key: `break-${i}`, type: "break", afterSet: i });
+      list.push({
+        key: `set-${i}`,
+        type: "set",
+        set: i,
+        reps: session?.sets[i - 1] ?? 0,
+      });
+      if (breakSeconds > 0 && i < totalSets)
+        list.push({ key: `break-${i}`, type: "break", afterSet: i });
     }
     return list;
   }, [session, warmUpSeconds, breakSeconds]);
@@ -51,5 +57,10 @@ export function useSessionSteps(
     return { totalSets, completedSets };
   }, [session, phase, currentSet]);
 
-  return { steps, currentStepIndex, totalSteps: steps.length, ...totals } as const;
+  return {
+    steps,
+    currentStepIndex,
+    totalSteps: steps.length,
+    ...totals,
+  } as const;
 }

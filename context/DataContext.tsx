@@ -1,6 +1,6 @@
 /**
  * Data Context - Global State Management
- * 
+ *
  * Provides reactive access to app data with automatic updates
  * when data changes anywhere in the app.
  */
@@ -8,42 +8,52 @@
 import { dataEvents } from "@/lib/events";
 import { storage } from "@/lib/storage";
 import type {
-    DataAction,
-    DataEvent,
-    DataState,
-    EventRecord,
-    HistoryEntry,
-    Routine,
-    SessionState,
+  DataAction,
+  DataEvent,
+  DataState,
+  EventRecord,
+  HistoryEntry,
+  Routine,
+  SessionState,
 } from "@/types";
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useReducer } from "react";
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useReducer,
+} from "react";
 
 // Re-export Routine type for backwards compatibility
 export type { Routine } from "@/types";
 
 type DataContextValue = {
   state: DataState;
-  
+
   // Actions
   actions: {
     // Session completion flow - call this when a session is completed
     completeSession: (
       slug: string,
       sessionIndex: number,
-      summary: string
+      summary: string,
     ) => Promise<void>;
-    
+
     // Record an event
     recordEvent: (
-      event: Omit<EventRecord, "ts"> & { ts?: string }
+      event: Omit<EventRecord, "ts"> & { ts?: string },
     ) => Promise<void>;
-    
+
     // Save session state
     saveSessionState: (state: SessionState) => Promise<void>;
-    
+
     // Load session state
-    loadSessionState: (slug: string, sessionIndex: number) => Promise<SessionState | null>;
-    
+    loadSessionState: (
+      slug: string,
+      sessionIndex: number,
+    ) => Promise<SessionState | null>;
+
     // Refresh data
     refreshAll: () => void;
     refreshProgress: () => void;
@@ -111,7 +121,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       try {
         const mod = await import("@/assets/data/routines.json");
         if (!mounted) return;
-        dispatch({ type: "SET_ROUTINES", routines: (mod as any).default as Routine[] });
+        dispatch({
+          type: "SET_ROUTINES",
+          routines: (mod as any).default as Routine[],
+        });
       } catch {
         if (mounted) dispatch({ type: "SET_ROUTINES_LOADING", loading: false });
       }
@@ -192,7 +205,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       dataEvents.emitProgressUpdated(slug);
       dataEvents.emitHistoryUpdated(slug);
     },
-    []
+    [],
   );
 
   const recordEvent = useCallback(
@@ -200,19 +213,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await storage.appendEvent(event);
       dataEvents.emitEventRecorded(event.slug, event.type);
     },
-    []
+    [],
   );
 
   const saveSessionState = useCallback(async (sessionState: SessionState) => {
     await storage.saveSessionState(sessionState);
-    dataEvents.emitSessionStateChanged(sessionState.slug, sessionState.sessionIndex);
+    dataEvents.emitSessionStateChanged(
+      sessionState.slug,
+      sessionState.sessionIndex,
+    );
   }, []);
 
   const loadSessionState = useCallback(
     async (slug: string, sessionIndex: number) => {
       return storage.loadSessionState(slug, sessionIndex);
     },
-    []
+    [],
   );
 
   const refreshAll = useCallback(() => {
@@ -246,9 +262,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <DataContext.Provider value={contextValue}>
-      {children}
-    </DataContext.Provider>
+    <DataContext.Provider value={contextValue}>{children}</DataContext.Provider>
   );
 }
 
@@ -294,4 +308,3 @@ export function useRefreshVersions() {
 }
 
 export default DataContext;
-

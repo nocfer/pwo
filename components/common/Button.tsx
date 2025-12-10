@@ -31,7 +31,9 @@ export default function Button({
           styles.button,
           isPrimary && styles.buttonPrimary,
           isGhost && styles.buttonGhost,
-          pressed && !disabled && (isPrimary ? styles.buttonPrimaryPressed : styles.buttonPressed),
+          pressed &&
+            !disabled &&
+            (isPrimary ? styles.buttonPrimaryPressed : styles.buttonPressed),
           disabled && styles.buttonDisabled,
         ]}
         onPress={onPress}

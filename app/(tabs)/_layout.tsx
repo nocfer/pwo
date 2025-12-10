@@ -91,10 +91,12 @@ export default function TabLayout() {
         name="about"
         options={{
           headerShown: false,
-          title: "About", 
+          title: "About",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "information-circle" : "information-circle-outline"}
+              name={
+                focused ? "information-circle" : "information-circle-outline"
+              }
               color={color}
               size={26}
             />

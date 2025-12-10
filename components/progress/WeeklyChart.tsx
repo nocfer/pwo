@@ -12,9 +12,13 @@ type WeeklyChartProps = {
 
 const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-export function WeeklyChart({ data, maxValue, title = "Last 7 days" }: WeeklyChartProps) {
+export function WeeklyChart({
+  data,
+  maxValue,
+  title = "Last 7 days",
+}: WeeklyChartProps) {
   const todayIndex = getTodayIndex(); // 0=Mon, 6=Sun
-  
+
   // Shift data and labels so today is rightmost (position 6)
   const { shiftedData, shiftedDays } = useMemo(() => {
     // Pad data to 7 if needed
@@ -22,26 +26,28 @@ export function WeeklyChart({ data, maxValue, title = "Last 7 days" }: WeeklyCha
     while (paddedData.length < 7) {
       paddedData.unshift(0);
     }
-    
+
     // For position i, the day index is (todayIndex + i + 1) % 7
     const days = Array.from({ length: 7 }, (_, i) => {
       const dayIndex = (todayIndex + i + 1) % 7;
       return ALL_DAYS[dayIndex];
     });
-    
+
     const shifted = Array.from({ length: 7 }, (_, i) => {
       const dayIndex = (todayIndex + i + 1) % 7;
       return paddedData[dayIndex] ?? 0;
     });
-    
+
     return { shiftedData: shifted, shiftedDays: days };
   }, [data, todayIndex]);
 
-  const animatedValues = useRef(shiftedData.map(() => new Animated.Value(0))).current;
-  
+  const animatedValues = useRef(
+    shiftedData.map(() => new Animated.Value(0)),
+  ).current;
+
   // Calculate max value for scaling
   const max = maxValue || Math.max(...shiftedData, 1);
-  
+
   useEffect(() => {
     // Animate bars on mount
     const animations = shiftedData.map((value, index) => {
@@ -52,7 +58,7 @@ export function WeeklyChart({ data, maxValue, title = "Last 7 days" }: WeeklyCha
         useNativeDriver: false,
       });
     });
-    
+
     Animated.parallel(animations).start();
   }, [shiftedData, max, animatedValues]);
 
@@ -93,7 +99,10 @@ export function WeeklyChart({ data, maxValue, title = "Last 7 days" }: WeeklyCha
                 {isActive ? (
                   <Animated.View style={[styles.bar, { height }]}>
                     <LinearGradient
-                      colors={[theme.colors.gradient.primaryStart, theme.colors.gradient.primaryEnd]}
+                      colors={[
+                        theme.colors.gradient.primaryStart,
+                        theme.colors.gradient.primaryEnd,
+                      ]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 0, y: 1 }}
                       style={styles.barGradient}
@@ -118,7 +127,7 @@ export function WeeklyChart({ data, maxValue, title = "Last 7 days" }: WeeklyCha
 // Compact version for smaller spaces
 export function WeeklyChartCompact({ data }: { data: number[] }) {
   const todayIndex = getTodayIndex();
-  
+
   // Shift data so today is rightmost
   const shiftedData = useMemo(() => {
     const paddedData = [...data];
@@ -130,7 +139,7 @@ export function WeeklyChartCompact({ data }: { data: number[] }) {
       return paddedData[dayIndex] ?? 0;
     });
   }, [data, todayIndex]);
-  
+
   const max = Math.max(...shiftedData, 1);
 
   return (
@@ -144,7 +153,10 @@ export function WeeklyChartCompact({ data }: { data: number[] }) {
             <View style={styles.compactBarWrapper}>
               {isActive ? (
                 <LinearGradient
-                  colors={[theme.colors.gradient.successStart, theme.colors.gradient.successEnd]}
+                  colors={[
+                    theme.colors.gradient.successStart,
+                    theme.colors.gradient.successEnd,
+                  ]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 0, y: 1 }}
                   style={[styles.compactBar, { height: `${heightPercent}%` }]}

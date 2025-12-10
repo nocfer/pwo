@@ -27,7 +27,7 @@ export default function SwipeableRoutineButton({ label, slug }: Props) {
 
   const renderRightActions = (
     progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>
+    dragX: Animated.AnimatedInterpolation<number>,
   ) => {
     const scale = dragX.interpolate({
       inputRange: [-100, 0],
@@ -45,7 +45,10 @@ export default function SwipeableRoutineButton({ label, slug }: Props) {
       <Animated.View style={[styles.rightAction, { opacity }]}>
         <Pressable onPress={handleQuickStart} style={styles.actionButton}>
           <LinearGradient
-            colors={[theme.colors.gradient.successStart, theme.colors.gradient.successEnd]}
+            colors={[
+              theme.colors.gradient.successStart,
+              theme.colors.gradient.successEnd,
+            ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.actionGradient}
@@ -69,7 +72,10 @@ export default function SwipeableRoutineButton({ label, slug }: Props) {
       overshootRight={false}
     >
       <Pressable
-        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        style={({ pressed }) => [
+          styles.button,
+          pressed && styles.buttonPressed,
+        ]}
         onPress={() =>
           router.navigate({
             pathname: "/routines/[slug]",
@@ -79,7 +85,11 @@ export default function SwipeableRoutineButton({ label, slug }: Props) {
       >
         <View style={styles.content}>
           <View style={styles.iconContainer}>
-            <Ionicons name="barbell-outline" size={24} color={theme.colors.primary} />
+            <Ionicons
+              name="barbell-outline"
+              size={24}
+              color={theme.colors.primary}
+            />
           </View>
           <Text style={styles.label}>{label}</Text>
         </View>

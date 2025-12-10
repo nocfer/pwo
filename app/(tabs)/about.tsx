@@ -17,11 +17,17 @@ export default function AboutScreen() {
       <View style={styles.infoCard}>
         <View style={styles.infoRow}>
           <View style={styles.infoIconContainer}>
-            <Ionicons name="fitness-outline" size={20} color={theme.colors.primary} />
+            <Ionicons
+              name="fitness-outline"
+              size={20}
+              color={theme.colors.primary}
+            />
           </View>
           <View style={styles.infoContent}>
             <Text style={styles.infoTitle}>Track Your Progress</Text>
-            <Text style={styles.infoText}>Monitor your workout streaks and achievements</Text>
+            <Text style={styles.infoText}>
+              Monitor your workout streaks and achievements
+            </Text>
           </View>
         </View>
 
@@ -29,11 +35,17 @@ export default function AboutScreen() {
 
         <View style={styles.infoRow}>
           <View style={styles.infoIconContainer}>
-            <Ionicons name="time-outline" size={20} color={theme.colors.success} />
+            <Ionicons
+              name="time-outline"
+              size={20}
+              color={theme.colors.success}
+            />
           </View>
           <View style={styles.infoContent}>
             <Text style={styles.infoTitle}>Guided Sessions</Text>
-            <Text style={styles.infoText}>Follow structured workout routines with timers</Text>
+            <Text style={styles.infoText}>
+              Follow structured workout routines with timers
+            </Text>
           </View>
         </View>
 
@@ -41,11 +53,17 @@ export default function AboutScreen() {
 
         <View style={styles.infoRow}>
           <View style={styles.infoIconContainer}>
-            <Ionicons name="trophy-outline" size={20} color={theme.colors.warning} />
+            <Ionicons
+              name="trophy-outline"
+              size={20}
+              color={theme.colors.warning}
+            />
           </View>
           <View style={styles.infoContent}>
             <Text style={styles.infoTitle}>Set Goals</Text>
-            <Text style={styles.infoText}>Define targets and work towards them</Text>
+            <Text style={styles.infoText}>
+              Define targets and work towards them
+            </Text>
           </View>
         </View>
       </View>

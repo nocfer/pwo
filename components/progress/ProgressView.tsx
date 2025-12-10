@@ -32,7 +32,7 @@ export default function ProgressView({ slug }: Props) {
 
   const allDays = ["M", "T", "W", "T", "F", "S", "S"];
   const streakSlice = streak.slice(-7);
-  
+
   // Pad streak to 7 days if needed
   while (streakSlice.length < 7) {
     streakSlice.unshift(0);
@@ -44,7 +44,7 @@ export default function ProgressView({ slug }: Props) {
     const dayIndex = (todayIndex + i + 1) % 7;
     return allDays[dayIndex];
   });
-  
+
   // Reorder streak data to match the shifted days
   const shiftedStreak = Array.from({ length: 7 }, (_, i) => {
     const dayIndex = (todayIndex + i + 1) % 7;

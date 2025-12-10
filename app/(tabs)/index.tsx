@@ -19,14 +19,19 @@ export default function Index() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Gradient Header */}
       <LinearGradient
-        colors={[theme.colors.gradient.primaryStart, theme.colors.gradient.primaryEnd]}
+        colors={[
+          theme.colors.gradient.primaryStart,
+          theme.colors.gradient.primaryEnd,
+        ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.headerGradient}
       >
         <View style={styles.headerContent}>
           <Text style={styles.greeting}>Welcome back</Text>
-          <Text style={styles.headerSubtitle}>Ready to crush your workout?</Text>
+          <Text style={styles.headerSubtitle}>
+            Ready to crush your workout?
+          </Text>
         </View>
       </LinearGradient>
 
@@ -38,7 +43,10 @@ export default function Index() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <LinearGradient
-              colors={[theme.colors.gradient.warmStart, theme.colors.gradient.warmEnd]}
+              colors={[
+                theme.colors.gradient.warmStart,
+                theme.colors.gradient.warmEnd,
+              ]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.cardIconGradient}
@@ -57,11 +65,18 @@ export default function Index() {
         {/* Action Buttons */}
         <View style={styles.actionsRow}>
           <Pressable
-            style={({ pressed }) => [styles.actionButton, pressed && styles.actionPressed]}
+            style={({ pressed }) => [
+              styles.actionButton,
+              pressed && styles.actionPressed,
+            ]}
             onPress={() => router.navigate("/(tabs)/routines")}
           >
             <View style={styles.actionIconContainer}>
-              <Ionicons name="list-outline" size={20} color={theme.colors.text} />
+              <Ionicons
+                name="list-outline"
+                size={20}
+                color={theme.colors.text}
+              />
             </View>
             <Text style={styles.actionText}>All Routines</Text>
           </Pressable>
@@ -75,17 +90,27 @@ export default function Index() {
             disabled={!firstRoutine}
             onPress={() =>
               firstRoutine &&
-              router.navigate({ pathname: "/routines/[slug]", params: { slug: firstRoutine.slug } })
+              router.navigate({
+                pathname: "/routines/[slug]",
+                params: { slug: firstRoutine.slug },
+              })
             }
           >
             <LinearGradient
-              colors={[theme.colors.gradient.primaryStart, theme.colors.gradient.primaryEnd]}
+              colors={[
+                theme.colors.gradient.primaryStart,
+                theme.colors.gradient.primaryEnd,
+              ]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.actionGradient}
             >
               <View style={styles.actionIconContainerPrimary}>
-                <Ionicons name="play" size={20} color={theme.colors.primaryTextOn} />
+                <Ionicons
+                  name="play"
+                  size={20}
+                  color={theme.colors.primaryTextOn}
+                />
               </View>
               <Text style={styles.actionPrimaryText}>
                 {firstRoutine ? "Quick Start" : "No routine"}

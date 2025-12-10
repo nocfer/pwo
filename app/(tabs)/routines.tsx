@@ -3,7 +3,14 @@ import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RoutinesScreen() {
@@ -24,53 +31,57 @@ export default function RoutinesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={theme.colors.primary}
-          colors={[theme.colors.primary]}
-        />
-      }
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>Routines</Text>
-        <Text style={styles.subtitle}>Browse and start your workouts</Text>
-      </View>
-
-      <View style={[styles.searchContainer, isFocused && styles.searchContainerFocused]}>
-        <Ionicons
-          name="search-outline"
-          size={20}
-          color={isFocused ? theme.colors.primary : theme.colors.muted}
-          style={styles.searchIcon}
-        />
-        <TextInput
-          placeholder="Search routines..."
-          placeholderTextColor={theme.colors.muted}
-          value={query}
-          onChangeText={setQuery}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          style={styles.searchInput}
-        />
-        {query.length > 0 && (
-          <Ionicons
-            name="close-circle"
-            size={20}
-            color={theme.colors.muted}
-            onPress={() => setQuery("")}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors.primary}
+            colors={[theme.colors.primary]}
           />
-        )}
-      </View>
+        }
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Routines</Text>
+          <Text style={styles.subtitle}>Browse and start your workouts</Text>
+        </View>
 
-      <RoutinesView key={refreshKey} query={query} />
-    </ScrollView>
+        <View
+          style={[
+            styles.searchContainer,
+            isFocused && styles.searchContainerFocused,
+          ]}
+        >
+          <Ionicons
+            name="search-outline"
+            size={20}
+            color={isFocused ? theme.colors.primary : theme.colors.muted}
+            style={styles.searchIcon}
+          />
+          <TextInput
+            placeholder="Search routines..."
+            placeholderTextColor={theme.colors.muted}
+            value={query}
+            onChangeText={setQuery}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            style={styles.searchInput}
+          />
+          {query.length > 0 && (
+            <Ionicons
+              name="close-circle"
+              size={20}
+              color={theme.colors.muted}
+              onPress={() => setQuery("")}
+            />
+          )}
+        </View>
+
+        <RoutinesView key={refreshKey} query={query} />
+      </ScrollView>
     </SafeAreaView>
-
   );
 }
 

@@ -21,7 +21,11 @@ export default function RoutineButton({ label, slug }: Props) {
     >
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <Ionicons name="barbell-outline" size={24} color={theme.colors.primary} />
+          <Ionicons
+            name="barbell-outline"
+            size={24}
+            color={theme.colors.primary}
+          />
         </View>
         <Text style={styles.label}>{label}</Text>
       </View>

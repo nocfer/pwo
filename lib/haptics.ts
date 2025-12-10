@@ -69,14 +69,14 @@ export const haptics = {
   // Navigation & UI
   buttonTap: tapLight,
   tabSwitch: selectionChanged,
-  
+
   // Workout actions
   setComplete: notifySuccess,
   sessionComplete: notifySuccess,
   skipAction: notifyWarning,
   pauseTimer: tapLight,
   resumeTimer: tapMedium,
-  
+
   // General
   refresh: tapLight,
   swipeAction: tapMedium,
@@ -84,4 +84,3 @@ export const haptics = {
 };
 
 export default haptics;
-

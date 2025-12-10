@@ -33,16 +33,23 @@ export function SessionFooter({
             onPress={onPauseResume}
             style={({ pressed }) => [
               styles.secondaryBtn,
-              (phase === "working") && styles.btnDisabled,
+              phase === "working" && styles.btnDisabled,
               pressed && styles.secondaryBtnPressed,
             ]}
           >
             <Ionicons
               name={isPaused ? "play" : "pause"}
               size={20}
-              color={phase === "working" ? theme.colors.muted : theme.colors.text}
+              color={
+                phase === "working" ? theme.colors.muted : theme.colors.text
+              }
             />
-            <Text style={[styles.secondaryBtnText, phase === "working" && styles.textDisabled]}>
+            <Text
+              style={[
+                styles.secondaryBtnText,
+                phase === "working" && styles.textDisabled,
+              ]}
+            >
               {isPaused ? "Resume" : "Pause"}
             </Text>
           </Pressable>
@@ -54,7 +61,11 @@ export function SessionFooter({
               pressed && styles.secondaryBtnPressed,
             ]}
           >
-            <Ionicons name="play-skip-forward" size={20} color={theme.colors.text} />
+            <Ionicons
+              name="play-skip-forward"
+              size={20}
+              color={theme.colors.text}
+            />
             <Text style={styles.secondaryBtnText}>Skip</Text>
           </Pressable>
         </View>
@@ -76,7 +87,11 @@ export function SessionFooter({
             style={{ marginRight: theme.spacing.sm }}
           />
           <Text style={styles.primaryBtnText}>
-            {phase === "working" ? `Complete Set ${currentSet}` : phase === "warmup" ? "Warming up..." : "Resting..."}
+            {phase === "working"
+              ? `Complete Set ${currentSet}`
+              : phase === "warmup"
+                ? "Warming up..."
+                : "Resting..."}
           </Text>
         </Pressable>
       </View>

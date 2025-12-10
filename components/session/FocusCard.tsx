@@ -27,10 +27,19 @@ export function FocusCard({
   // Show timer card for warmup and break phases
   if (phase !== "working" && phase !== "done") {
     return (
-      <View style={[styles.focusCard, { backgroundColor: phaseBg, borderColor: phaseFg }]}>
-        <Text style={[styles.timerHero, { color: phaseFg }]}>{formatTime(timer)}</Text>
+      <View
+        style={[
+          styles.focusCard,
+          { backgroundColor: phaseBg, borderColor: phaseFg },
+        ]}
+      >
+        <Text style={[styles.timerHero, { color: phaseFg }]}>
+          {formatTime(timer)}
+        </Text>
         <Text style={styles.focusLabel}>
-          {phase === "warmup" ? "Get ready for your workout" : `Rest after set ${currentSet}`}
+          {phase === "warmup"
+            ? "Get ready for your workout"
+            : `Rest after set ${currentSet}`}
         </Text>
       </View>
     );
@@ -39,13 +48,27 @@ export function FocusCard({
   // Show info pills for working and done phases
   return (
     <View style={styles.focusRow}>
-      <View style={[styles.infoPill, { backgroundColor: phaseBg, borderColor: phaseFg }]}>
+      <View
+        style={[
+          styles.infoPill,
+          { backgroundColor: phaseBg, borderColor: phaseFg },
+        ]}
+      >
         <Ionicons name="barbell-outline" size={18} color={phaseFg} />
-        <Text style={[styles.infoPillText, { color: phaseFg }]}>Set {currentSet}/{totalSets}</Text>
+        <Text style={[styles.infoPillText, { color: phaseFg }]}>
+          Set {currentSet}/{totalSets}
+        </Text>
       </View>
-      <View style={[styles.infoPill, { backgroundColor: phaseBg, borderColor: phaseFg }]}>
+      <View
+        style={[
+          styles.infoPill,
+          { backgroundColor: phaseBg, borderColor: phaseFg },
+        ]}
+      >
         <Ionicons name="repeat-outline" size={18} color={phaseFg} />
-        <Text style={[styles.infoPillText, { color: phaseFg }]}>{currentReps} reps</Text>
+        <Text style={[styles.infoPillText, { color: phaseFg }]}>
+          {currentReps} reps
+        </Text>
       </View>
     </View>
   );

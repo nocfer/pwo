@@ -19,14 +19,19 @@ export function SessionProgressBar({
     <View style={styles.progressSection}>
       <View style={styles.progressHeader}>
         <Text style={styles.progressLabel}>Progress</Text>
-        <Text style={styles.progressValue}>{completedSets}/{totalSets} sets</Text>
+        <Text style={styles.progressValue}>
+          {completedSets}/{totalSets} sets
+        </Text>
       </View>
       <View style={styles.progressBarTrack}>
-        <View 
+        <View
           style={[
-            styles.progressBarFill, 
-            { width: `${Math.round(progress * 100)}%`, backgroundColor: phaseFg }
-          ]} 
+            styles.progressBarFill,
+            {
+              width: `${Math.round(progress * 100)}%`,
+              backgroundColor: phaseFg,
+            },
+          ]}
         />
       </View>
     </View>

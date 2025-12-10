@@ -20,20 +20,33 @@ export function SessionHeader({
   phaseBg,
   phaseFg,
 }: SessionHeaderProps) {
-  const phaseLabel = 
-    phase === "warmup" ? "Warm-up" : 
-    phase === "working" ? "Working" : 
-    phase === "break" ? "Break" : "Done";
+  const phaseLabel =
+    phase === "warmup"
+      ? "Warm-up"
+      : phase === "working"
+        ? "Working"
+        : phase === "break"
+          ? "Break"
+          : "Done";
 
   return (
     <View style={styles.headerTop}>
       <View style={styles.headerInfo}>
         <Text style={styles.title}>{exerciseName}</Text>
-        <Text style={styles.subtitle}>Session {sessionIndex} • {totalReps} reps total</Text>
+        <Text style={styles.subtitle}>
+          Session {sessionIndex} • {totalReps} reps total
+        </Text>
       </View>
-      <View style={[styles.phaseChip, { backgroundColor: phaseBg, borderColor: phaseFg }]}>
+      <View
+        style={[
+          styles.phaseChip,
+          { backgroundColor: phaseBg, borderColor: phaseFg },
+        ]}
+      >
         <View style={[styles.phaseChipDot, { backgroundColor: phaseFg }]} />
-        <Text style={[styles.phaseChipText, { color: phaseFg }]}>{phaseLabel}</Text>
+        <Text style={[styles.phaseChipText, { color: phaseFg }]}>
+          {phaseLabel}
+        </Text>
       </View>
     </View>
   );

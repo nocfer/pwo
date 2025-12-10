@@ -8,19 +8,26 @@ export function SessionComplete() {
   return (
     <View style={styles.doneCard}>
       <View style={styles.doneIconContainer}>
-        <Ionicons name="checkmark-circle" size={48} color={theme.colors.success} />
+        <Ionicons
+          name="checkmark-circle"
+          size={48}
+          color={theme.colors.success}
+        />
       </View>
       <Text style={styles.doneTitle}>Session Complete!</Text>
       <Text style={styles.doneSubtitle}>Great job finishing your workout</Text>
       <Pressable
-        style={({ pressed }) => [styles.doneButton, pressed && styles.buttonPressed]}
+        style={({ pressed }) => [
+          styles.doneButton,
+          pressed && styles.buttonPressed,
+        ]}
         onPress={() => router.back()}
       >
-        <Ionicons 
-          name="arrow-back" 
-          size={18} 
-          color={theme.colors.primaryTextOn} 
-          style={{ marginRight: theme.spacing.sm }} 
+        <Ionicons
+          name="arrow-back"
+          size={18}
+          color={theme.colors.primaryTextOn}
+          style={{ marginRight: theme.spacing.sm }}
         />
         <Text style={styles.doneButtonText}>Back to Routine</Text>
       </Pressable>

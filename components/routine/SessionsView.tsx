@@ -38,7 +38,10 @@ export default function SessionsView({ slug }: Props) {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      contentContainerStyle={styles.list}
+      showsVerticalScrollIndicator={false}
+    >
       {sessions.map((s) => {
         const isDone = completed.has(s.index);
         // Session is locked if it's not the first and previous session is not completed
@@ -60,34 +63,78 @@ export default function SessionsView({ slug }: Props) {
           >
             <View style={styles.rowBetween}>
               <View style={styles.titleRow}>
-                <View style={[
-                  styles.sessionIcon,
-                  isDone && styles.sessionIconDone,
-                  isLocked && styles.sessionIconLocked,
-                ]}>
+                <View
+                  style={[
+                    styles.sessionIcon,
+                    isDone && styles.sessionIconDone,
+                    isLocked && styles.sessionIconLocked,
+                  ]}
+                >
                   <Ionicons
-                    name={isLocked ? "lock-closed" : isDone ? "checkmark" : "barbell-outline"}
+                    name={
+                      isLocked
+                        ? "lock-closed"
+                        : isDone
+                          ? "checkmark"
+                          : "barbell-outline"
+                    }
                     size={16}
-                    color={isLocked ? theme.colors.muted : isDone ? theme.colors.success : theme.colors.primary}
+                    color={
+                      isLocked
+                        ? theme.colors.muted
+                        : isDone
+                          ? theme.colors.success
+                          : theme.colors.primary
+                    }
                   />
                 </View>
-                <Text style={[styles.title, isDone && styles.titleDone, isLocked && styles.titleLocked]}>
+                <Text
+                  style={[
+                    styles.title,
+                    isDone && styles.titleDone,
+                    isLocked && styles.titleLocked,
+                  ]}
+                >
                   Session {s.index}
                 </Text>
               </View>
-              <View style={[styles.badge, isDone && styles.badgeDone, isLocked && styles.badgeLocked]}>
-                <Text style={[styles.badgeText, isDone && styles.badgeTextDone, isLocked && styles.badgeTextLocked]}>
+              <View
+                style={[
+                  styles.badge,
+                  isDone && styles.badgeDone,
+                  isLocked && styles.badgeLocked,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.badgeText,
+                    isDone && styles.badgeTextDone,
+                    isLocked && styles.badgeTextLocked,
+                  ]}
+                >
                   {s.totalReps} reps
                 </Text>
               </View>
             </View>
             <Text style={[styles.subtitle, isLocked && styles.subtitleLocked]}>
-              {isLocked ? `Complete Session ${s.index - 1} first` : program.exercise.name}
+              {isLocked
+                ? `Complete Session ${s.index - 1} first`
+                : program.exercise.name}
             </Text>
             <View style={styles.setsRow}>
               {s.sets.map((r, i) => (
-                <View key={i} style={[styles.setPill, isLocked && styles.setPillLocked]}>
-                  <Text style={[styles.setPillText, isLocked && styles.setPillTextLocked]}>{r}</Text>
+                <View
+                  key={i}
+                  style={[styles.setPill, isLocked && styles.setPillLocked]}
+                >
+                  <Text
+                    style={[
+                      styles.setPillText,
+                      isLocked && styles.setPillTextLocked,
+                    ]}
+                  >
+                    {r}
+                  </Text>
                 </View>
               ))}
             </View>

@@ -7,7 +7,13 @@ import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SessionDetail() {
@@ -19,7 +25,10 @@ export default function SessionDetail() {
   const actions = useDataActions();
 
   const { program, sessions, loading, error } = useProgramSessions(slug);
-  const session = useMemo(() => sessions.find((s) => s.index === index), [sessions, index]);
+  const session = useMemo(
+    () => sessions.find((s) => s.index === index),
+    [sessions, index],
+  );
 
   // Use the timer hook
   const timer = useSessionTimer({
@@ -49,7 +58,7 @@ export default function SessionDetail() {
     breakSeconds,
     session,
     phase,
-    currentSet
+    currentSet,
   );
 
   // Auto-scroll to active step
@@ -58,7 +67,11 @@ export default function SessionDetail() {
     if (!listRef.current) return;
     if (currentStepIndex < 0 || currentStepIndex >= steps.length) return;
     try {
-      listRef.current.scrollToIndex({ index: currentStepIndex, animated: true, viewPosition: 0.5 });
+      listRef.current.scrollToIndex({
+        index: currentStepIndex,
+        animated: true,
+        viewPosition: 0.5,
+      });
     } catch {}
   }, [currentStepIndex, steps.length]);
 
@@ -81,8 +94,22 @@ export default function SessionDetail() {
     );
   }
 
-  const phaseBg = phase === "warmup" ? theme.colors.phases.warmupBg : phase === "working" ? theme.colors.phases.workingBg : phase === "break" ? theme.colors.phases.breakBg : theme.colors.phases.doneBg;
-  const phaseFg = phase === "warmup" ? theme.colors.phases.warmup : phase === "working" ? theme.colors.phases.working : phase === "break" ? theme.colors.phases.break : theme.colors.phases.done;
+  const phaseBg =
+    phase === "warmup"
+      ? theme.colors.phases.warmupBg
+      : phase === "working"
+        ? theme.colors.phases.workingBg
+        : phase === "break"
+          ? theme.colors.phases.breakBg
+          : theme.colors.phases.doneBg;
+  const phaseFg =
+    phase === "warmup"
+      ? theme.colors.phases.warmup
+      : phase === "working"
+        ? theme.colors.phases.working
+        : phase === "break"
+          ? theme.colors.phases.break
+          : theme.colors.phases.done;
 
   return (
     <View style={styles.container}>
@@ -100,12 +127,27 @@ export default function SessionDetail() {
           <View style={styles.headerTop}>
             <View style={styles.headerInfo}>
               <Text style={styles.title}>{program.exercise?.name}</Text>
-              <Text style={styles.subtitle}>Session {session.index} • {session.totalReps} reps total</Text>
+              <Text style={styles.subtitle}>
+                Session {session.index} • {session.totalReps} reps total
+              </Text>
             </View>
-            <View style={[styles.phaseChip, { backgroundColor: phaseBg, borderColor: phaseFg }]}>
-              <View style={[styles.phaseChipDot, { backgroundColor: phaseFg }]} />
+            <View
+              style={[
+                styles.phaseChip,
+                { backgroundColor: phaseBg, borderColor: phaseFg },
+              ]}
+            >
+              <View
+                style={[styles.phaseChipDot, { backgroundColor: phaseFg }]}
+              />
               <Text style={[styles.phaseChipText, { color: phaseFg }]}>
-                {phase === "warmup" ? "Warm-up" : phase === "working" ? "Working" : phase === "break" ? "Break" : "Done"}
+                {phase === "warmup"
+                  ? "Warm-up"
+                  : phase === "working"
+                    ? "Working"
+                    : phase === "break"
+                      ? "Break"
+                      : "Done"}
               </Text>
             </View>
           </View>
@@ -114,31 +156,64 @@ export default function SessionDetail() {
           <View style={styles.progressSection}>
             <View style={styles.progressHeader}>
               <Text style={styles.progressLabel}>Progress</Text>
-              <Text style={styles.progressValue}>{completedSets}/{totalSets} sets</Text>
+              <Text style={styles.progressValue}>
+                {completedSets}/{totalSets} sets
+              </Text>
             </View>
             <View style={styles.progressBarTrack}>
-              <View style={[styles.progressBarFill, { width: `${Math.round(progress * 100)}%`, backgroundColor: phaseFg }]} />
+              <View
+                style={[
+                  styles.progressBarFill,
+                  {
+                    width: `${Math.round(progress * 100)}%`,
+                    backgroundColor: phaseFg,
+                  },
+                ]}
+              />
             </View>
           </View>
         </View>
 
         {/* Focus Card */}
         {phase !== "working" && phase !== "done" ? (
-          <View style={[styles.focusCard, { backgroundColor: phaseBg, borderColor: phaseFg }]}>
-            <Text style={[styles.timerHero, { color: phaseFg }]}>{formatTime(timerValue)}</Text>
+          <View
+            style={[
+              styles.focusCard,
+              { backgroundColor: phaseBg, borderColor: phaseFg },
+            ]}
+          >
+            <Text style={[styles.timerHero, { color: phaseFg }]}>
+              {formatTime(timerValue)}
+            </Text>
             <Text style={styles.focusLabel}>
-              {phase === "warmup" ? "Get ready for your workout" : `Rest after set ${currentSet}`}
+              {phase === "warmup"
+                ? "Get ready for your workout"
+                : `Rest after set ${currentSet}`}
             </Text>
           </View>
         ) : (
           <View style={styles.focusRow}>
-            <View style={[styles.infoPill, { backgroundColor: phaseBg, borderColor: phaseFg }]}>
+            <View
+              style={[
+                styles.infoPill,
+                { backgroundColor: phaseBg, borderColor: phaseFg },
+              ]}
+            >
               <Ionicons name="barbell-outline" size={18} color={phaseFg} />
-              <Text style={[styles.infoPillText, { color: phaseFg }]}>Set {currentSet}/{session.sets.length}</Text>
+              <Text style={[styles.infoPillText, { color: phaseFg }]}>
+                Set {currentSet}/{session.sets.length}
+              </Text>
             </View>
-            <View style={[styles.infoPill, { backgroundColor: phaseBg, borderColor: phaseFg }]}>
+            <View
+              style={[
+                styles.infoPill,
+                { backgroundColor: phaseBg, borderColor: phaseFg },
+              ]}
+            >
               <Ionicons name="repeat-outline" size={18} color={phaseFg} />
-              <Text style={[styles.infoPillText, { color: phaseFg }]}>{session.sets[currentSet - 1] ?? 0} reps</Text>
+              <Text style={[styles.infoPillText, { color: phaseFg }]}>
+                {session.sets[currentSet - 1] ?? 0} reps
+              </Text>
             </View>
           </View>
         )}
@@ -148,27 +223,51 @@ export default function SessionDetail() {
           ref={listRef}
           data={steps}
           keyExtractor={(item) => item.key}
-          extraData={{ phase, timerValue, currentSet, isPaused, currentStepIndex }}
-          ItemSeparatorComponent={() => <View style={{ height: theme.spacing.sm }} />}
+          extraData={{
+            phase,
+            timerValue,
+            currentSet,
+            isPaused,
+            currentStepIndex,
+          }}
+          ItemSeparatorComponent={() => (
+            <View style={{ height: theme.spacing.sm }} />
+          )}
           contentContainerStyle={styles.listContent}
           onScrollToIndexFailed={(info) => {
             try {
               if (!listRef.current) return;
-              const validIndex = Math.min(info.highestMeasuredFrameIndex, info.index);
-              listRef.current.scrollToIndex({ index: Math.max(0, validIndex), animated: true });
+              const validIndex = Math.min(
+                info.highestMeasuredFrameIndex,
+                info.index,
+              );
+              listRef.current.scrollToIndex({
+                index: Math.max(0, validIndex),
+                animated: true,
+              });
             } catch {}
           }}
           renderItem={({ item, index: idx }) => {
             const isDone = idx < currentStepIndex;
             const isActive = idx === currentStepIndex && phase !== "done";
             const isLocked = idx > currentStepIndex || phase === "done";
-            const rightTick = isDone ? <Text style={[styles.tick, { color: phaseFg }]}>✓</Text> : undefined;
+            const rightTick = isDone ? (
+              <Text style={[styles.tick, { color: phaseFg }]}>✓</Text>
+            ) : undefined;
 
             if (item.type === "warmup") {
               return (
-                <StepCard title="Warm-up" active={isActive} done={isDone} locked={isLocked} right={rightTick}>
+                <StepCard
+                  title="Warm-up"
+                  active={isActive}
+                  done={isDone}
+                  locked={isLocked}
+                  right={rightTick}
+                >
                   {isActive && phase === "warmup" && (
-                    <Text style={styles.timerText}>{formatTime(timerValue)}</Text>
+                    <Text style={styles.timerText}>
+                      {formatTime(timerValue)}
+                    </Text>
                   )}
                 </StepCard>
               );
@@ -182,7 +281,11 @@ export default function SessionDetail() {
                   active={isActive}
                   done={isDone || (phase === "done" && idx < steps.length)}
                   locked={isLocked}
-                  right={(isDone || (phase === "done" && idx < steps.length)) ? <Text style={styles.tick}>✓</Text> : undefined}
+                  right={
+                    isDone || (phase === "done" && idx < steps.length) ? (
+                      <Text style={styles.tick}>✓</Text>
+                    ) : undefined
+                  }
                 >
                   <View style={styles.setPill}>
                     <Text style={styles.setPillText}>{item.reps} reps</Text>
@@ -193,9 +296,16 @@ export default function SessionDetail() {
 
             // break
             const after = item.afterSet;
-            const isCurrentBreak = isActive && phase === "break" && currentSet === after;
+            const isCurrentBreak =
+              isActive && phase === "break" && currentSet === after;
             return (
-              <StepCard title="Break" active={isActive} done={isDone} locked={isLocked} right={rightTick}>
+              <StepCard
+                title="Break"
+                active={isActive}
+                done={isDone}
+                locked={isLocked}
+                right={rightTick}
+              >
                 {isCurrentBreak && (
                   <Text style={styles.timerText}>{formatTime(timerValue)}</Text>
                 )}
@@ -206,15 +316,29 @@ export default function SessionDetail() {
             phase === "done" ? (
               <View style={styles.doneCard}>
                 <View style={styles.doneIconContainer}>
-                  <Ionicons name="checkmark-circle" size={48} color={theme.colors.success} />
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={48}
+                    color={theme.colors.success}
+                  />
                 </View>
                 <Text style={styles.doneTitle}>Session Complete!</Text>
-                <Text style={styles.doneSubtitle}>Great job finishing your workout</Text>
+                <Text style={styles.doneSubtitle}>
+                  Great job finishing your workout
+                </Text>
                 <Pressable
-                  style={({ pressed }) => [styles.doneButton, pressed && styles.buttonPressed]}
+                  style={({ pressed }) => [
+                    styles.doneButton,
+                    pressed && styles.buttonPressed,
+                  ]}
                   onPress={() => router.back()}
                 >
-                  <Ionicons name="arrow-back" size={18} color={theme.colors.primaryTextOn} style={{ marginRight: theme.spacing.sm }} />
+                  <Ionicons
+                    name="arrow-back"
+                    size={18}
+                    color={theme.colors.primaryTextOn}
+                    style={{ marginRight: theme.spacing.sm }}
+                  />
                   <Text style={styles.doneButtonText}>Back to Routine</Text>
                 </Pressable>
               </View>
@@ -234,16 +358,23 @@ export default function SessionDetail() {
                 onPress={handlePauseResume}
                 style={({ pressed }) => [
                   styles.secondaryBtn,
-                  (phase === "working") && styles.btnDisabled,
+                  phase === "working" && styles.btnDisabled,
                   pressed && styles.secondaryBtnPressed,
                 ]}
               >
                 <Ionicons
                   name={isPaused ? "play" : "pause"}
                   size={20}
-                  color={phase === "working" ? theme.colors.muted : theme.colors.text}
+                  color={
+                    phase === "working" ? theme.colors.muted : theme.colors.text
+                  }
                 />
-                <Text style={[styles.secondaryBtnText, phase === "working" && styles.textDisabled]}>
+                <Text
+                  style={[
+                    styles.secondaryBtnText,
+                    phase === "working" && styles.textDisabled,
+                  ]}
+                >
                   {isPaused ? "Resume" : "Pause"}
                 </Text>
               </Pressable>
@@ -255,7 +386,11 @@ export default function SessionDetail() {
                   pressed && styles.secondaryBtnPressed,
                 ]}
               >
-                <Ionicons name="play-skip-forward" size={20} color={theme.colors.text} />
+                <Ionicons
+                  name="play-skip-forward"
+                  size={20}
+                  color={theme.colors.text}
+                />
                 <Text style={styles.secondaryBtnText}>Skip</Text>
               </Pressable>
             </View>
@@ -277,7 +412,11 @@ export default function SessionDetail() {
                 style={{ marginRight: theme.spacing.sm }}
               />
               <Text style={styles.primaryBtnText}>
-                {phase === "working" ? `Complete Set ${currentSet}` : phase === "warmup" ? "Warming up..." : "Resting..."}
+                {phase === "working"
+                  ? `Complete Set ${currentSet}`
+                  : phase === "warmup"
+                    ? "Warming up..."
+                    : "Resting..."}
               </Text>
             </Pressable>
           </View>

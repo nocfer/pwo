@@ -11,31 +11,64 @@ export type TimerControlsProps = {
   layout?: "row" | "column";
 };
 
-export function TimerControls({ isPaused, onPause, onResume, onSkip, layout = "row" }: TimerControlsProps) {
+export function TimerControls({
+  isPaused,
+  onPause,
+  onResume,
+  onSkip,
+  layout = "row",
+}: TimerControlsProps) {
   return (
     <View style={[styles.container, layout === "row" && styles.row]}>
       {!isPaused ? (
         <Pressable
-          style={({ pressed }) => [styles.button, styles.buttonSecondary, pressed && styles.buttonPressed]}
+          style={({ pressed }) => [
+            styles.button,
+            styles.buttonSecondary,
+            pressed && styles.buttonPressed,
+          ]}
           onPress={onPause}
         >
-          <Ionicons name="pause" size={18} color={theme.colors.text} style={styles.icon} />
+          <Ionicons
+            name="pause"
+            size={18}
+            color={theme.colors.text}
+            style={styles.icon}
+          />
           <Text style={styles.buttonSecondaryText}>Pause</Text>
         </Pressable>
       ) : (
         <Pressable
-          style={({ pressed }) => [styles.button, styles.buttonPrimary, pressed && styles.buttonPrimaryPressed]}
+          style={({ pressed }) => [
+            styles.button,
+            styles.buttonPrimary,
+            pressed && styles.buttonPrimaryPressed,
+          ]}
           onPress={onResume}
         >
-          <Ionicons name="play" size={18} color={theme.colors.primaryTextOn} style={styles.icon} />
+          <Ionicons
+            name="play"
+            size={18}
+            color={theme.colors.primaryTextOn}
+            style={styles.icon}
+          />
           <Text style={styles.buttonPrimaryText}>Resume</Text>
         </Pressable>
       )}
       <Pressable
-        style={({ pressed }) => [styles.button, styles.buttonSecondary, pressed && styles.buttonPressed]}
+        style={({ pressed }) => [
+          styles.button,
+          styles.buttonSecondary,
+          pressed && styles.buttonPressed,
+        ]}
         onPress={onSkip}
       >
-        <Ionicons name="play-skip-forward" size={18} color={theme.colors.text} style={styles.icon} />
+        <Ionicons
+          name="play-skip-forward"
+          size={18}
+          color={theme.colors.text}
+          style={styles.icon}
+        />
         <Text style={styles.buttonSecondaryText}>Skip</Text>
       </Pressable>
     </View>

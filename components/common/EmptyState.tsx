@@ -17,7 +17,10 @@ type EmptyStateProps = {
 const variantConfig = {
   default: {
     icon: "barbell-outline" as const,
-    gradientColors: [theme.colors.gradient.primaryStart, theme.colors.gradient.primaryEnd] as const,
+    gradientColors: [
+      theme.colors.gradient.primaryStart,
+      theme.colors.gradient.primaryEnd,
+    ] as const,
   },
   search: {
     icon: "search-outline" as const,
@@ -25,11 +28,17 @@ const variantConfig = {
   },
   progress: {
     icon: "trending-up-outline" as const,
-    gradientColors: [theme.colors.gradient.successStart, theme.colors.gradient.successEnd] as const,
+    gradientColors: [
+      theme.colors.gradient.successStart,
+      theme.colors.gradient.successEnd,
+    ] as const,
   },
   history: {
     icon: "time-outline" as const,
-    gradientColors: [theme.colors.gradient.warmStart, theme.colors.gradient.warmEnd] as const,
+    gradientColors: [
+      theme.colors.gradient.warmStart,
+      theme.colors.gradient.warmEnd,
+    ] as const,
   },
 };
 
@@ -55,16 +64,17 @@ export function EmptyState({
       >
         <Ionicons name={iconName} size={32} color="#FFFFFF" />
       </LinearGradient>
-      
+
       <Text style={styles.title}>{title}</Text>
-      
-      {description && (
-        <Text style={styles.description}>{description}</Text>
-      )}
-      
+
+      {description && <Text style={styles.description}>{description}</Text>}
+
       {actionLabel && onAction && (
         <Pressable
-          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+          style={({ pressed }) => [
+            styles.button,
+            pressed && styles.buttonPressed,
+          ]}
           onPress={onAction}
         >
           <Text style={styles.buttonText}>{actionLabel}</Text>

@@ -1,4 +1,7 @@
-import { NoRoutinesEmpty, NoSearchResultsEmpty } from "@/components/common/EmptyState";
+import {
+  NoRoutinesEmpty,
+  NoSearchResultsEmpty,
+} from "@/components/common/EmptyState";
 import { SkeletonRoutineButton } from "@/components/common/Skeleton";
 import { useRoutines } from "@/hooks/data";
 import { theme } from "@/theme/theme";
@@ -45,7 +48,11 @@ export default function RoutinesView({ query }: Props) {
   return (
     <View style={styles.listContainer}>
       {filtered.map((routine, i) => (
-        <SwipeableRoutineButton label={routine.name} key={i} slug={routine.slug} />
+        <SwipeableRoutineButton
+          label={routine.name}
+          key={i}
+          slug={routine.slug}
+        />
       ))}
     </View>
   );
