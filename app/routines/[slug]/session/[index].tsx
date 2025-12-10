@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
   footerContent: {
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
+    paddingBottom: theme.spacing.md,
     gap: theme.spacing.md,
   },
   secondaryRow: {

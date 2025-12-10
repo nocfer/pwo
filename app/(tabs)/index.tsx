@@ -1,5 +1,9 @@
 import { ProgressView, WeeklyChart } from "@/components";
-import { useLastCompletedSlug, useRoutines } from "@/hooks/data";
+import {
+  useLastCompletedSlug,
+  useRoutines,
+  useWeeklyActivity,
+} from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,9 +16,7 @@ export default function Index() {
   const firstRoutine = routines?.[0];
   const lastCompletedSlug = useLastCompletedSlug();
   const targetSlug = lastCompletedSlug || firstRoutine?.slug;
-
-  // Mock weekly data - in a real app, this would come from your progress hook
-  const weeklyData = [1, 0, 1, 1, 0, 1, 0]; // Example: Mon, Wed, Thu, Sat completed
+  const { data: weeklyData } = useWeeklyActivity();
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right"]}>

@@ -43,26 +43,8 @@ export function useLiveProgress(slug: string | undefined) {
         if (streak) {
           setData({ slug, streak });
         } else {
-          // Fall back to static asset data
-          try {
-            const mod = await import("@/assets/data/progress.json");
-            const entries = (mod as any).default as {
-              slug: string;
-              streak: (number | boolean | string)[];
-            }[];
-            const entry = entries.find((e) => e.slug === slug);
-            if (entry && mounted) {
-              // Convert to number array
-              const numStreak = entry.streak.map((v) =>
-                typeof v === "number" ? v : v ? 1 : 0,
-              );
-              setData({ slug, streak: numStreak.slice(-7) });
-            } else if (mounted) {
-              setData(null);
-            }
-          } catch {
-            if (mounted) setData(null);
-          }
+          // No progress data yet - return empty streak
+          setData({ slug, streak: [0, 0, 0, 0, 0, 0, 0] });
         }
       } catch (e) {
         if (mounted) setError(e as Error);

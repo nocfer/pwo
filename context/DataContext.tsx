@@ -191,7 +191,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       });
 
       // Append to history
-      const historyEntry: HistoryEntry = { date, summary };
+      const historyEntry: HistoryEntry = { date, summary, sessionIndex };
       await storage.appendHistory(slug, historyEntry);
 
       // Update streak

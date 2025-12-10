@@ -22,7 +22,7 @@ export type {
   HistoryEntry,
   HistoryFile,
   SessionState,
-  StreakEntry,
+  StreakEntry
 } from "@/types";
 
 // ============================================================================
@@ -245,13 +245,22 @@ export const storage = {
   // --------------------------------------------------------------------------
 
   async loadCompletedSessions(slug: string): Promise<Set<number>> {
-    const events = await this.loadEvents();
     const completed = new Set<number>();
+
+    // From events
+    const events = await this.loadEvents();
     for (const e of events) {
       if (e.slug === slug && e.type === "session_completed") {
         completed.add(e.sessionIndex);
       }
     }
+
+    // From storage history
+    const storageHistory = await this.loadHistory(slug);
+    for (const h of storageHistory) {
+      if (h.sessionIndex != null) completed.add(h.sessionIndex);
+    }
+
     return completed;
   },
 

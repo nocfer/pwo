@@ -2,7 +2,8 @@ import { theme } from "@/theme/theme";
 import type { SessionPhase } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React from "react";
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type SessionFooterProps = {
   phase: SessionPhase;
@@ -24,7 +25,7 @@ export function SessionFooter({
   if (phase === "done") return null;
 
   return (
-    <SafeAreaView style={styles.footer}>
+    <SafeAreaView style={styles.footer} edges={["bottom"]}>
       <View style={styles.footerContent}>
         {/* Secondary actions row */}
         <View style={styles.secondaryRow}>
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
   footerContent: {
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
+    paddingBottom: theme.spacing.md,
     gap: theme.spacing.md,
   },
   secondaryRow: {

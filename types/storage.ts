@@ -36,6 +36,7 @@ export type EventRecord = {
 export type HistoryEntry = {
   date: string;
   summary: string;
+  sessionIndex: number;
 };
 
 export type HistoryFile = {

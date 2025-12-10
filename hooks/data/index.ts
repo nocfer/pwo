@@ -2,13 +2,14 @@
  * Data hooks barrel export
  */
 
-export { useRoutines } from "./useRoutines";
-export { useLiveProgress, type LiveProgress } from "./useLiveProgress";
+export { useLastCompletedSlug } from "./useLastCompletedSlug";
 export { useLiveHistory, type HistoryEntry } from "./useLiveHistory";
-export { useSessionCompletion } from "./useSessionCompletion";
+export { useLiveProgress, type LiveProgress } from "./useLiveProgress";
 export {
   useProgramSessions,
   type Program,
   type Session,
 } from "./useProgramSessions";
-export { useLastCompletedSlug } from "./useLastCompletedSlug";
+export { useRoutines } from "./useRoutines";
+export { useSessionCompletion } from "./useSessionCompletion";
+export { useWeeklyActivity } from "./useWeeklyActivity";

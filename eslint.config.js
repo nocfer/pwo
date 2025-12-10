@@ -7,5 +7,8 @@ module.exports = defineConfig([
   eslintPluginPrettierRecommended,
   {
     ignores: ["dist/*"],
+    rules: {
+      "@typescript-eslint/comma-dangle": "off",
+    },
   },
 ]);
