@@ -1,6 +1,7 @@
+import { getTodayIndex } from "@/lib/utils/date";
 import { theme } from "@/theme/theme";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 
 type WeeklyChartProps = {
@@ -9,17 +10,41 @@ type WeeklyChartProps = {
   title?: string;
 };
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-export function WeeklyChart({ data, maxValue, title = "This Week" }: WeeklyChartProps) {
-  const animatedValues = useRef(data.map(() => new Animated.Value(0))).current;
+export function WeeklyChart({ data, maxValue, title = "Last 7 days" }: WeeklyChartProps) {
+  const todayIndex = getTodayIndex(); // 0=Mon, 6=Sun
+  
+  // Shift data and labels so today is rightmost (position 6)
+  const { shiftedData, shiftedDays } = useMemo(() => {
+    // Pad data to 7 if needed
+    const paddedData = [...data];
+    while (paddedData.length < 7) {
+      paddedData.unshift(0);
+    }
+    
+    // For position i, the day index is (todayIndex + i + 1) % 7
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const dayIndex = (todayIndex + i + 1) % 7;
+      return ALL_DAYS[dayIndex];
+    });
+    
+    const shifted = Array.from({ length: 7 }, (_, i) => {
+      const dayIndex = (todayIndex + i + 1) % 7;
+      return paddedData[dayIndex] ?? 0;
+    });
+    
+    return { shiftedData: shifted, shiftedDays: days };
+  }, [data, todayIndex]);
+
+  const animatedValues = useRef(shiftedData.map(() => new Animated.Value(0))).current;
   
   // Calculate max value for scaling
-  const max = maxValue || Math.max(...data, 1);
+  const max = maxValue || Math.max(...shiftedData, 1);
   
   useEffect(() => {
     // Animate bars on mount
-    const animations = data.map((value, index) => {
+    const animations = shiftedData.map((value, index) => {
       return Animated.timing(animatedValues[index], {
         toValue: value / max,
         duration: 600,
@@ -29,11 +54,11 @@ export function WeeklyChart({ data, maxValue, title = "This Week" }: WeeklyChart
     });
     
     Animated.parallel(animations).start();
-  }, [data, max, animatedValues]);
+  }, [shiftedData, max, animatedValues]);
 
   // Calculate total and average
-  const total = data.reduce((sum, val) => sum + val, 0);
-  const activeDays = data.filter((v) => v > 0).length;
+  const total = shiftedData.reduce((sum, val) => sum + val, 0);
+  const activeDays = shiftedData.filter((v) => v > 0).length;
 
   return (
     <View style={styles.container}>
@@ -53,14 +78,14 @@ export function WeeklyChart({ data, maxValue, title = "This Week" }: WeeklyChart
       </View>
 
       <View style={styles.chartContainer}>
-        {data.map((value, index) => {
+        {shiftedData.map((value, index) => {
           const height = animatedValues[index].interpolate({
             inputRange: [0, 1],
             outputRange: ["0%", "100%"],
           });
 
           const isActive = value > 0;
-          const isToday = index === new Date().getDay() - 1 || (new Date().getDay() === 0 && index === 6);
+          const isToday = index === 6; // Rightmost position is always today
 
           return (
             <View key={index} style={styles.barContainer}>
@@ -79,7 +104,7 @@ export function WeeklyChart({ data, maxValue, title = "This Week" }: WeeklyChart
                 )}
               </View>
               <Text style={[styles.dayLabel, isToday && styles.dayLabelToday]}>
-                {DAYS[index]}
+                {shiftedDays[index]}
               </Text>
               {isToday && <View style={styles.todayDot} />}
             </View>
@@ -92,11 +117,25 @@ export function WeeklyChart({ data, maxValue, title = "This Week" }: WeeklyChart
 
 // Compact version for smaller spaces
 export function WeeklyChartCompact({ data }: { data: number[] }) {
-  const max = Math.max(...data, 1);
+  const todayIndex = getTodayIndex();
+  
+  // Shift data so today is rightmost
+  const shiftedData = useMemo(() => {
+    const paddedData = [...data];
+    while (paddedData.length < 7) {
+      paddedData.unshift(0);
+    }
+    return Array.from({ length: 7 }, (_, i) => {
+      const dayIndex = (todayIndex + i + 1) % 7;
+      return paddedData[dayIndex] ?? 0;
+    });
+  }, [data, todayIndex]);
+  
+  const max = Math.max(...shiftedData, 1);
 
   return (
     <View style={styles.compactContainer}>
-      {data.map((value, index) => {
+      {shiftedData.map((value, index) => {
         const heightPercent = (value / max) * 100;
         const isActive = value > 0;
 

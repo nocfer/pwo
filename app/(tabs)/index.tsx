@@ -32,7 +32,7 @@ export default function Index() {
 
       <View style={styles.content}>
         {/* Weekly Activity Chart */}
-        <WeeklyChart data={weeklyData} title="This Week" />
+        <WeeklyChart data={weeklyData} title="Last 7 days" />
 
         {/* Streak Card */}
         <View style={styles.card}>

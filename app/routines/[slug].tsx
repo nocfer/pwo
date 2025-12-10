@@ -1,9 +1,9 @@
 import { ProgressView, SessionsView } from "@/components";
-import { useLiveHistory } from "@/hooks/data";
+import { useLiveHistory, useProgramSessions, useSessionCompletion } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function RoutinePage() {
@@ -14,6 +14,15 @@ export default function RoutinePage() {
     { label: string; value: number; unit?: string }[]
   >([]);
   const { data: liveRecent } = useLiveHistory(slug);
+  const { sessions, program } = useProgramSessions(slug);
+  const { completed } = useSessionCompletion(slug);
+
+  // Find the next incomplete session
+  const nextSession = useMemo(() => {
+    return sessions.find((s) => !completed.has(s.index)) ?? null;
+  }, [sessions, completed]);
+
+  const allComplete = sessions.length > 0 && nextSession === null;
 
   useEffect(() => {
     let mounted = true;
@@ -74,6 +83,55 @@ export default function RoutinePage() {
           </View>
         )}
       </View>
+
+      {/* Next Session Quick-Start Card */}
+      {allComplete ? (
+        <View style={[styles.card, styles.nextSessionCard, styles.completeCard]}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.cardIconContainer, { backgroundColor: theme.colors.successLight }]}>
+              <Ionicons name="checkmark-circle" size={18} color={theme.colors.success} />
+            </View>
+            <Text style={styles.cardTitle}>Program Complete!</Text>
+          </View>
+          <Text style={styles.completeText}>
+            Congratulations! You&apos;ve completed all sessions in this program.
+          </Text>
+        </View>
+      ) : nextSession ? (
+        <Pressable
+          style={({ pressed }) => [
+            styles.card,
+            styles.nextSessionCard,
+            pressed && styles.nextSessionCardPressed,
+          ]}
+          onPress={() => {
+            const href = `/routines/${slug}/session/${nextSession.index}` as any;
+            router.navigate(href);
+          }}
+        >
+          <View style={styles.cardHeader}>
+            <View style={[styles.cardIconContainer, { backgroundColor: theme.colors.primaryLight }]}>
+              <Ionicons name="rocket-outline" size={18} color={theme.colors.primary} />
+            </View>
+            <Text style={styles.cardTitle}>Next Session</Text>
+          </View>
+          <View style={styles.nextSessionContent}>
+            <View style={styles.nextSessionInfo}>
+              <Text style={styles.nextSessionTitle}>Session {nextSession.index}</Text>
+              <Text style={styles.nextSessionSubtitle}>
+                {nextSession.totalReps} reps · {nextSession.sets.length} sets
+              </Text>
+              {program?.exercise?.name && (
+                <Text style={styles.nextSessionExercise}>{program.exercise.name}</Text>
+              )}
+            </View>
+            <View style={styles.startButton}>
+              <Ionicons name="play" size={20} color={theme.colors.primaryTextOn} />
+              <Text style={styles.startButtonText}>Start</Text>
+            </View>
+          </View>
+        </Pressable>
+      ) : null}
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -227,5 +285,55 @@ const styles = StyleSheet.create({
   ctaText: {
     ...theme.typography.bodyBold,
     color: theme.colors.primaryTextOn,
+  },
+  nextSessionCard: {
+    borderColor: theme.colors.primary,
+    borderWidth: 2,
+  },
+  nextSessionCardPressed: {
+    backgroundColor: theme.colors.card,
+    transform: [{ scale: 0.98 }],
+  },
+  nextSessionContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  nextSessionInfo: {
+    flex: 1,
+  },
+  nextSessionTitle: {
+    ...theme.typography.h3,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  nextSessionSubtitle: {
+    ...theme.typography.body,
+    color: theme.colors.primary,
+  },
+  nextSessionExercise: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    marginTop: theme.spacing.xs,
+  },
+  startButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    gap: theme.spacing.xs,
+  },
+  startButtonText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primaryTextOn,
+  },
+  completeCard: {
+    borderColor: theme.colors.success,
+  },
+  completeText: {
+    ...theme.typography.body,
+    color: theme.colors.success,
   },
 });

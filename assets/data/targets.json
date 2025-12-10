@@ -2,15 +2,15 @@
   {
     "slug": "pull-ups",
     "targets": [
-      { "label": "Max consecutive", "value": 15, "unit": "reps" },
-      { "label": "Weighted", "value": 10, "unit": "kg" }
+      { "label": "Max consecutive", "value": 20, "unit": "reps" },
+      { "label": "Total reps", "value": 100, "unit": "reps" }
     ]
   },
   {
     "slug": "push-ups",
     "targets": [
-      { "label": "Max consecutive", "value": 50, "unit": "reps" },
-      { "label": "Diamond variation", "value": 20, "unit": "reps" }
+      { "label": "Max consecutive", "value": 20, "unit": "reps" },
+      { "label": "Total reps", "value": 100, "unit": "reps" }
     ]
   }
 ]

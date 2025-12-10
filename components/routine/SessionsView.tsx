@@ -41,43 +41,53 @@ export default function SessionsView({ slug }: Props) {
     <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
       {sessions.map((s) => {
         const isDone = completed.has(s.index);
+        // Session is locked if it's not the first and previous session is not completed
+        const isLocked = s.index > 1 && !completed.has(s.index - 1);
         return (
           <Pressable
             key={s.index}
             onPress={() => {
+              if (isLocked) return; // Prevent navigation for locked sessions
               const href = `/routines/${slug}/session/${s.index}` as any;
               router.navigate(href);
             }}
             style={({ pressed }) => [
               styles.card,
               isDone && styles.cardDone,
-              pressed && styles.cardPressed,
+              isLocked && styles.cardLocked,
+              pressed && !isLocked && styles.cardPressed,
             ]}
           >
             <View style={styles.rowBetween}>
               <View style={styles.titleRow}>
-                <View style={[styles.sessionIcon, isDone && styles.sessionIconDone]}>
+                <View style={[
+                  styles.sessionIcon,
+                  isDone && styles.sessionIconDone,
+                  isLocked && styles.sessionIconLocked,
+                ]}>
                   <Ionicons
-                    name={isDone ? "checkmark" : "barbell-outline"}
+                    name={isLocked ? "lock-closed" : isDone ? "checkmark" : "barbell-outline"}
                     size={16}
-                    color={isDone ? theme.colors.success : theme.colors.primary}
+                    color={isLocked ? theme.colors.muted : isDone ? theme.colors.success : theme.colors.primary}
                   />
                 </View>
-                <Text style={[styles.title, isDone && styles.titleDone]}>
+                <Text style={[styles.title, isDone && styles.titleDone, isLocked && styles.titleLocked]}>
                   Session {s.index}
                 </Text>
               </View>
-              <View style={[styles.badge, isDone && styles.badgeDone]}>
-                <Text style={[styles.badgeText, isDone && styles.badgeTextDone]}>
+              <View style={[styles.badge, isDone && styles.badgeDone, isLocked && styles.badgeLocked]}>
+                <Text style={[styles.badgeText, isDone && styles.badgeTextDone, isLocked && styles.badgeTextLocked]}>
                   {s.totalReps} reps
                 </Text>
               </View>
             </View>
-            <Text style={styles.subtitle}>{program.exercise.name}</Text>
+            <Text style={[styles.subtitle, isLocked && styles.subtitleLocked]}>
+              {isLocked ? `Complete Session ${s.index - 1} first` : program.exercise.name}
+            </Text>
             <View style={styles.setsRow}>
               {s.sets.map((r, i) => (
-                <View key={i} style={styles.setPill}>
-                  <Text style={styles.setPillText}>{r}</Text>
+                <View key={i} style={[styles.setPill, isLocked && styles.setPillLocked]}>
+                  <Text style={[styles.setPillText, isLocked && styles.setPillTextLocked]}>{r}</Text>
                 </View>
               ))}
             </View>
@@ -108,6 +118,11 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.success,
     backgroundColor: theme.colors.successLight,
   },
+  cardLocked: {
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    opacity: 0.6,
+  },
   cardPressed: {
     backgroundColor: theme.colors.card,
     transform: [{ scale: 0.98 }],
@@ -134,6 +149,9 @@ const styles = StyleSheet.create({
   sessionIconDone: {
     backgroundColor: theme.colors.successLight,
   },
+  sessionIconLocked: {
+    backgroundColor: theme.colors.card,
+  },
   title: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
@@ -141,10 +159,16 @@ const styles = StyleSheet.create({
   titleDone: {
     color: theme.colors.success,
   },
+  titleLocked: {
+    color: theme.colors.muted,
+  },
   subtitle: {
     ...theme.typography.caption,
     color: theme.colors.muted,
     marginBottom: theme.spacing.sm,
+  },
+  subtitleLocked: {
+    fontStyle: "italic",
   },
   badge: {
     backgroundColor: theme.colors.primaryLight,
@@ -155,6 +179,9 @@ const styles = StyleSheet.create({
   badgeDone: {
     backgroundColor: theme.colors.successLight,
   },
+  badgeLocked: {
+    backgroundColor: theme.colors.card,
+  },
   badgeText: {
     ...theme.typography.caption,
     fontFamily: theme.fonts.semiBold,
@@ -162,6 +189,9 @@ const styles = StyleSheet.create({
   },
   badgeTextDone: {
     color: theme.colors.success,
+  },
+  badgeTextLocked: {
+    color: theme.colors.muted,
   },
   setsRow: {
     flexDirection: "row",
@@ -179,6 +209,13 @@ const styles = StyleSheet.create({
   setPillText: {
     ...theme.typography.caption,
     color: theme.colors.text,
+  },
+  setPillLocked: {
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
+  },
+  setPillTextLocked: {
+    color: theme.colors.muted,
   },
   muted: {
     ...theme.typography.body,

@@ -45,6 +45,7 @@ export default function RootLayout() {
         <Stack
           screenOptions={{
             animation: "slide_from_right",
+            headerShown: false,
             headerTitleStyle: {
               fontFamily: theme.fonts.semiBold,
             },
@@ -56,11 +57,11 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="routines/[slug]/session/[index]"
-            options={{ title: "", headerShown: true }}
+            options={{ title: "", headerShown: false }}
           />
           <Stack.Screen
             name="routines/[slug]"
-            options={{ title: "", headerShown: true }}
+            options={{ title: "", headerShown: false }}
           />
         </Stack>
         <StatusBar style="dark" />

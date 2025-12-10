@@ -10,6 +10,7 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.muted,
+        headerShown: false,
         headerStyle: {
           backgroundColor: theme.colors.surface,
           ...Platform.select({
@@ -61,6 +62,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          headerShown: false,
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
@@ -74,6 +76,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="routines"
         options={{
+          headerShown: false,
           title: "Routines",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
@@ -87,7 +90,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="about"
         options={{
-          title: "About",
+          headerShown: false,
+          title: "About", 
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "information-circle" : "information-circle-outline"}
