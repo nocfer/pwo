@@ -7,13 +7,7 @@ import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef } from "react";
-import {
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View
-} from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SessionDetail() {
@@ -349,7 +343,7 @@ export default function SessionDetail() {
 
       {/* Bottom Controls */}
       {phase !== "done" && (
-        <SafeAreaView style={styles.footer}>
+        <SafeAreaView style={styles.footer} edges={["bottom"]}>
           <View style={styles.footerContent}>
             {/* Secondary actions row */}
             <View style={styles.secondaryRow}>
