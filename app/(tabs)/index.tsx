@@ -5,6 +5,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Index() {
   const { data: routines } = useRoutines();
@@ -16,8 +17,7 @@ export default function Index() {
   const weeklyData = [1, 0, 1, 1, 0, 1, 0]; // Example: Mon, Wed, Thu, Sat completed
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Gradient Header */}
+    <SafeAreaView style={styles.container} edges={["left", "right"]}>
       <LinearGradient
         colors={[
           theme.colors.gradient.primaryStart,
@@ -34,92 +34,95 @@ export default function Index() {
           </Text>
         </View>
       </LinearGradient>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Gradient Header */}
 
-      <View style={styles.content}>
-        {/* Weekly Activity Chart */}
-        <WeeklyChart data={weeklyData} title="Last 7 days" />
+        <View style={styles.content}>
+          {/* Weekly Activity Chart */}
+          <WeeklyChart data={weeklyData} title="Last 7 days" />
 
-        {/* Streak Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <LinearGradient
-              colors={[
-                theme.colors.gradient.warmStart,
-                theme.colors.gradient.warmEnd,
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.cardIconGradient}
-            >
-              <Ionicons name="flame" size={20} color="#FFFFFF" />
-            </LinearGradient>
-            <Text style={styles.cardTitle}>Your Streak</Text>
-          </View>
-          {targetSlug ? (
-            <ProgressView slug={targetSlug} />
-          ) : (
-            <Text style={styles.muted}>Add a routine to start tracking.</Text>
-          )}
-        </View>
-
-        {/* Action Buttons */}
-        <View style={styles.actionsRow}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionButton,
-              pressed && styles.actionPressed,
-            ]}
-            onPress={() => router.navigate("/(tabs)/routines")}
-          >
-            <View style={styles.actionIconContainer}>
-              <Ionicons
-                name="list-outline"
-                size={20}
-                color={theme.colors.text}
-              />
+          {/* Streak Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <LinearGradient
+                colors={[
+                  theme.colors.gradient.warmStart,
+                  theme.colors.gradient.warmEnd,
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.cardIconGradient}
+              >
+                <Ionicons name="flame" size={20} color="#FFFFFF" />
+              </LinearGradient>
+              <Text style={styles.cardTitle}>Your Streak</Text>
             </View>
-            <Text style={styles.actionText}>All Routines</Text>
-          </Pressable>
+            {targetSlug ? (
+              <ProgressView slug={targetSlug} />
+            ) : (
+              <Text style={styles.muted}>Add a routine to start tracking.</Text>
+            )}
+          </View>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionButtonPrimary,
-              pressed && styles.actionPrimaryPressed,
-              !firstRoutine && styles.actionDisabled,
-            ]}
-            disabled={!firstRoutine}
-            onPress={() =>
-              firstRoutine &&
-              router.navigate({
-                pathname: "/routines/[slug]",
-                params: { slug: firstRoutine.slug },
-              })
-            }
-          >
-            <LinearGradient
-              colors={[
-                theme.colors.gradient.primaryStart,
-                theme.colors.gradient.primaryEnd,
+          {/* Action Buttons */}
+          <View style={styles.actionsRow}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.actionButton,
+                pressed && styles.actionPressed,
               ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.actionGradient}
+              onPress={() => router.navigate("/(tabs)/routines")}
             >
-              <View style={styles.actionIconContainerPrimary}>
+              <View style={styles.actionIconContainer}>
                 <Ionicons
-                  name="play"
+                  name="list-outline"
                   size={20}
-                  color={theme.colors.primaryTextOn}
+                  color={theme.colors.text}
                 />
               </View>
-              <Text style={styles.actionPrimaryText}>
-                {firstRoutine ? "Quick Start" : "No routine"}
-              </Text>
-            </LinearGradient>
-          </Pressable>
+              <Text style={styles.actionText}>All Routines</Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.actionButtonPrimary,
+                pressed && styles.actionPrimaryPressed,
+                !firstRoutine && styles.actionDisabled,
+              ]}
+              disabled={!firstRoutine}
+              onPress={() =>
+                firstRoutine &&
+                router.navigate({
+                  pathname: "/routines/[slug]",
+                  params: { slug: firstRoutine.slug },
+                })
+              }
+            >
+              <LinearGradient
+                colors={[
+                  theme.colors.gradient.primaryStart,
+                  theme.colors.gradient.primaryEnd,
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.actionGradient}
+              >
+                <View style={styles.actionIconContainerPrimary}>
+                  <Ionicons
+                    name="play"
+                    size={20}
+                    color={theme.colors.primaryTextOn}
+                  />
+                </View>
+                <Text style={styles.actionPrimaryText}>
+                  {firstRoutine ? "Quick Start" : "No routine"}
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -134,6 +137,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     borderBottomLeftRadius: theme.radius.xl,
     borderBottomRightRadius: theme.radius.xl,
+    marginBottom: theme.spacing.md,
   },
   headerContent: {
     paddingTop: theme.spacing.lg,
