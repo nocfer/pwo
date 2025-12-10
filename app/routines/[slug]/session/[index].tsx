@@ -176,6 +176,99 @@ export default function SessionDetail() {
 
   const progress = totalSets > 0 ? completedSets / totalSets : 0;
 
+  // Handler functions
+  const handlePauseResume = () => {
+    if (phase === "working" || phase === "done") return;
+    if (isPaused) {
+      resumeTimer();
+      void appendEvent({ slug, sessionIndex: session!.index, type: phase === "warmup" ? "warmup_resumed" : "break_resumed" });
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } else {
+      pauseTimer();
+      void appendEvent({ slug, sessionIndex: session!.index, type: phase === "warmup" ? "warmup_paused" : "break_paused" });
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const handleSkip = () => {
+    if (!session) return;
+    if (phase === "warmup") {
+      clearTimer();
+      setTimer(0);
+      setIsPaused(false);
+      setWarmupDone(true);
+      setPhase("working");
+      void appendEvent({ slug, sessionIndex: session.index, type: "warmup_skipped" });
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      return;
+    }
+    if (phase === "break") {
+      clearTimer();
+      setTimer(0);
+      setIsPaused(false);
+      setPhase("working");
+      const next = currentSet + 1;
+      if (next <= session.sets.length) setCurrentSet(next);
+      void appendEvent({ slug, sessionIndex: session.index, type: "break_skipped" });
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      return;
+    }
+    if (phase === "working") {
+      if (breakSeconds > 0 && currentSet < session.sets.length) {
+        setPhase("break");
+        startTimer(breakSeconds);
+        void appendEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
+        void appendEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: currentSet } });
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } else {
+        const next = currentSet + 1;
+        void appendEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
+        if (next > session.sets.length) {
+          setPhase("done");
+          void appendEvent({ slug, sessionIndex: session.index, type: "session_completed" });
+          void appendHistory(slug, {
+            date: new Date().toISOString().slice(0, 10),
+            summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
+          });
+          void saveStreakHit(slug, new Date().toISOString());
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } else {
+          setCurrentSet(next);
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+      }
+    }
+  };
+
+  const handleComplete = () => {
+    if (phase !== "working" || !session) return;
+    const setNum = currentSet;
+    const reps = session.sets[setNum - 1] ?? 0;
+    if (breakSeconds > 0 && setNum < session.sets.length) {
+      setPhase("break");
+      startTimer(breakSeconds);
+      void appendEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
+      void appendEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: setNum } });
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } else {
+      const next = setNum + 1;
+      void appendEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
+      if (next > session.sets.length) {
+        setPhase("done");
+        void appendEvent({ slug, sessionIndex: session.index, type: "session_completed" });
+        void appendHistory(slug, {
+          date: new Date().toISOString().slice(0, 10),
+          summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
+        });
+        void saveStreakHit(slug, new Date().toISOString());
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        setCurrentSet(next);
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -317,7 +410,7 @@ export default function SessionDetail() {
                 <Text style={styles.doneTitle}>Session Complete!</Text>
                 <Text style={styles.doneSubtitle}>Great job finishing your workout</Text>
                 <Pressable
-                  style={({ pressed }) => [styles.doneButton, pressed && styles.doneButtonPressed]}
+                  style={({ pressed }) => [styles.doneButton, pressed && styles.buttonPressed]}
                   onPress={() => router.back()}
                 >
                   <Ionicons name="arrow-back" size={18} color={theme.colors.primaryTextOn} style={{ marginRight: theme.spacing.sm }} />
@@ -329,144 +422,66 @@ export default function SessionDetail() {
         />
       </View>
 
-      {/* Sticky Footer Controls */}
-      <SafeAreaView style={styles.footer}>
-        <View style={[styles.footerBar, { backgroundColor: phaseBg, borderColor: phaseFg }]}>
-          {/* Pause/Resume */}
-          <Pressable
-            disabled={phase === "working" || phase === "done"}
-            onPress={() => {
-              if (phase === "working" || phase === "done") return;
-              if (isPaused) {
-                resumeTimer();
-                void appendEvent({ slug, sessionIndex: session.index, type: phase === "warmup" ? "warmup_resumed" : "break_resumed" });
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              } else {
-                pauseTimer();
-                void appendEvent({ slug, sessionIndex: session.index, type: phase === "warmup" ? "warmup_paused" : "break_paused" });
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }
-            }}
-            style={({ pressed }) => [
-              styles.footerBtn,
-              styles.footerBtnPause,
-              (phase === "working" || phase === "done") && styles.footerBtnDisabled,
-              pressed && styles.footerBtnPressed,
-            ]}
-          >
-            <Ionicons
-              name={isPaused ? "play" : "pause"}
-              size={20}
-              color={theme.colors.primaryTextOn}
-            />
-            <Text style={styles.footerBtnText}>{isPaused ? "Resume" : "Pause"}</Text>
-          </Pressable>
+      {/* Bottom Controls */}
+      {phase !== "done" && (
+        <SafeAreaView style={styles.footer}>
+          <View style={styles.footerContent}>
+            {/* Secondary actions row */}
+            <View style={styles.secondaryRow}>
+              <Pressable
+                disabled={phase === "working"}
+                onPress={handlePauseResume}
+                style={({ pressed }) => [
+                  styles.secondaryBtn,
+                  (phase === "working") && styles.btnDisabled,
+                  pressed && styles.secondaryBtnPressed,
+                ]}
+              >
+                <Ionicons
+                  name={isPaused ? "play" : "pause"}
+                  size={20}
+                  color={phase === "working" ? theme.colors.muted : theme.colors.text}
+                />
+                <Text style={[styles.secondaryBtnText, phase === "working" && styles.textDisabled]}>
+                  {isPaused ? "Resume" : "Pause"}
+                </Text>
+              </Pressable>
 
-          {/* Skip */}
-          <Pressable
-            disabled={phase === "done"}
-            onPress={() => {
-              if (phase === "warmup") {
-                clearTimer();
-                setTimer(0);
-                setIsPaused(false);
-                setWarmupDone(true);
-                setPhase("working");
-                void appendEvent({ slug, sessionIndex: session.index, type: "warmup_skipped" });
-                void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                return;
-              }
-              if (phase === "break") {
-                clearTimer();
-                setTimer(0);
-                setIsPaused(false);
-                setPhase("working");
-                const next = currentSet + 1;
-                if (next <= session.sets.length) setCurrentSet(next);
-                void appendEvent({ slug, sessionIndex: session.index, type: "break_skipped" });
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                return;
-              }
-              if (phase === "working") {
-                if (breakSeconds > 0 && currentSet < session.sets.length) {
-                  setPhase("break");
-                  startTimer(breakSeconds);
-                  void appendEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
-                  void appendEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: currentSet } });
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                } else {
-                  const next = currentSet + 1;
-                  void appendEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
-                  if (next > session.sets.length) {
-                    setPhase("done");
-                    void appendEvent({ slug, sessionIndex: session.index, type: "session_completed" });
-                    void appendHistory(slug, {
-                      date: new Date().toISOString().slice(0, 10),
-                      summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
-                    });
-                    void saveStreakHit(slug, new Date().toISOString());
-                    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                  } else {
-                    setCurrentSet(next);
-                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }
-                }
-              }
-            }}
-            style={({ pressed }) => [
-              styles.footerBtn,
-              styles.footerBtnSkip,
-              phase === "done" && styles.footerBtnDisabled,
-              pressed && styles.footerBtnPressed,
-            ]}
-          >
-            <Ionicons name="play-skip-forward" size={20} color={theme.colors.primaryTextOn} />
-            <Text style={styles.footerBtnText}>Skip</Text>
-          </Pressable>
+              <Pressable
+                onPress={handleSkip}
+                style={({ pressed }) => [
+                  styles.secondaryBtn,
+                  pressed && styles.secondaryBtnPressed,
+                ]}
+              >
+                <Ionicons name="play-skip-forward" size={20} color={theme.colors.text} />
+                <Text style={styles.secondaryBtnText}>Skip</Text>
+              </Pressable>
+            </View>
 
-          {/* Complete Set */}
-          <Pressable
-            disabled={phase !== "working"}
-            onPress={() => {
-              if (phase !== "working") return;
-              const setNum = currentSet;
-              const reps = session.sets[setNum - 1] ?? 0;
-              if (breakSeconds > 0 && setNum < session.sets.length) {
-                setPhase("break");
-                startTimer(breakSeconds);
-                void appendEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
-                void appendEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: setNum } });
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              } else {
-                const next = setNum + 1;
-                void appendEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
-                if (next > session.sets.length) {
-                  setPhase("done");
-                  void appendEvent({ slug, sessionIndex: session.index, type: "session_completed" });
-                  void appendHistory(slug, {
-                    date: new Date().toISOString().slice(0, 10),
-                    summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
-                  });
-                  void saveStreakHit(slug, new Date().toISOString());
-                  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                } else {
-                  setCurrentSet(next);
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }
-              }
-            }}
-            style={({ pressed }) => [
-              styles.footerBtn,
-              styles.footerBtnComplete,
-              phase !== "working" && styles.footerBtnDisabled,
-              pressed && styles.footerBtnPressed,
-            ]}
-          >
-            <Ionicons name="checkmark-done" size={20} color={theme.colors.primaryTextOn} />
-            <Text style={styles.footerBtnText}>Done</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+            {/* Primary action */}
+            <Pressable
+              disabled={phase !== "working"}
+              onPress={handleComplete}
+              style={({ pressed }) => [
+                styles.primaryBtn,
+                phase !== "working" && styles.primaryBtnDisabled,
+                pressed && phase === "working" && styles.primaryBtnPressed,
+              ]}
+            >
+              <Ionicons
+                name="checkmark-circle"
+                size={24}
+                color={theme.colors.primaryTextOn}
+                style={{ marginRight: theme.spacing.sm }}
+              />
+              <Text style={styles.primaryBtnText}>
+                {phase === "working" ? `Complete Set ${currentSet}` : phase === "warmup" ? "Warming up..." : "Resting..."}
+              </Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      )}
     </View>
   );
 }
@@ -597,7 +612,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: theme.spacing.lg,
-    paddingBottom: 140,
+    paddingBottom: 200,
   },
   timerText: {
     ...theme.typography.h1,
@@ -660,61 +675,79 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xl,
     ...theme.shadows.md,
   },
-  doneButtonPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
-  },
   doneButtonText: {
     ...theme.typography.bodyBold,
     color: theme.colors.primaryTextOn,
   },
+
+  // Footer styles
   footer: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.lg,
-    backgroundColor: theme.colors.background,
-  },
-  footerBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm,
-    borderRadius: theme.radius.xl,
-    borderWidth: 1,
-    padding: theme.spacing.sm,
+    backgroundColor: theme.colors.surface,
+    borderTopLeftRadius: theme.radius.xl,
+    borderTopRightRadius: theme.radius.xl,
     ...theme.shadows.lg,
   },
-  footerBtn: {
+  footerContent: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
+    gap: theme.spacing.md,
+  },
+  secondaryRow: {
+    flexDirection: "row",
+    gap: theme.spacing.md,
+  },
+  secondaryBtn: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: theme.spacing.xs,
+    gap: theme.spacing.sm,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.radius.lg,
-    minHeight: 48,
+    backgroundColor: theme.colors.card,
   },
-  footerBtnPause: {
-    backgroundColor: theme.colors.warning,
+  secondaryBtnPressed: {
+    backgroundColor: theme.colors.border,
+    transform: [{ scale: 0.98 }],
   },
-  footerBtnSkip: {
-    backgroundColor: theme.colors.danger,
+  secondaryBtnText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text,
   },
-  footerBtnComplete: {
-    backgroundColor: theme.colors.success,
+  primaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: theme.spacing.lg,
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.primary,
+    ...theme.shadows.md,
   },
-  footerBtnDisabled: {
-    opacity: 0.4,
+  primaryBtnDisabled: {
+    backgroundColor: theme.colors.muted,
   },
-  footerBtnPressed: {
+  primaryBtnPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.98 }],
   },
-  footerBtnText: {
+  primaryBtnText: {
     ...theme.typography.bodyBold,
     color: theme.colors.primaryTextOn,
+    fontSize: 16,
+  },
+  btnDisabled: {
+    opacity: 0.5,
+  },
+  textDisabled: {
+    color: theme.colors.muted,
+  },
+  buttonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
   },
 });
