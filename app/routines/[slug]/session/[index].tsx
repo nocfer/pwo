@@ -1,12 +1,13 @@
 import { StepCard } from "@/components/StepCard";
-import { TimerControls } from "@/components/TimerControls";
 import { useProgramSessions } from "@/hooks/useProgramSessions";
 import { useSessionSteps } from "@/hooks/useSessionSteps";
 import { appendEvent, appendHistory, loadSessionState, saveSessionState, saveStreakHit } from "@/lib/persistPlatform";
 import { theme } from "@/theme/theme";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
 
 export default function SessionDetail() {
   const params = useLocalSearchParams();
@@ -193,36 +194,73 @@ export default function SessionDetail() {
     );
   }
 
+  const phaseBg = phase === "warmup" ? theme.colors.phases.warmupBg : phase === "working" ? theme.colors.phases.workingBg : phase === "break" ? theme.colors.phases.breakBg : theme.colors.phases.doneBg;
+  const phaseFg = phase === "warmup" ? theme.colors.phases.warmup : phase === "working" ? theme.colors.phases.working : phase === "break" ? theme.colors.phases.break : theme.colors.phases.done;
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{program.exercise.name}</Text>
-      <Text style={styles.subtitle}>Session {session.index} • Total {session.totalReps} reps</Text>
-      <View style={styles.progressHeader}>
-        <Text style={styles.progressLabel}>Sets: {completedSets}/{totalSets}</Text>
-        <View style={styles.progressBarTrack}>
-          <View style={[styles.progressBarFill, { width: `${Math.round(progress * 100)}%` }]} />
+      <View style={{ flex: 1 }}>
+        <View style={[styles.rowBetween, styles.headerWrap]}>
+          <View>
+            <Text style={styles.title}>{program.exercise.name}</Text>
+            <Text style={styles.subtitle}>Session {session.index} • Total {session.totalReps} reps</Text>
+          </View>
+          <View style={[
+            styles.phaseChip,
+            { backgroundColor: phaseBg, borderColor: phaseFg },
+          ]}
+          >
+            <Text style={styles.phaseChipText}>
+              {phase === "warmup" ? "Warm-up" : phase === "working" ? "Working" : phase === "break" ? "Break" : "Done"}
+            </Text>
+          </View>
         </View>
-      </View>
+        <View style={styles.progressHeader}>
+          <Text style={styles.progressLabel}>Sets: {completedSets}/{totalSets}</Text>
+          <View style={styles.progressBarTrack}>
+            <View style={[styles.progressBarFill, { width: `${Math.round(progress * 100)}%`, backgroundColor: phaseFg }]} />
+          </View>
+        </View>
 
-      <FlatList
-        ref={listRef}
-        data={steps}
-        keyExtractor={(item) => item.key}
-        extraData={{ phase, timer, currentSet, isPaused, currentStepIndex: currentStepIndex }}
-        ItemSeparatorComponent={() => <View style={{ height: theme.spacing.sm }} />}
-        onScrollToIndexFailed={(info) => {
-          // Fallback: scroll to closest and retry
-          try {
-            if (!listRef.current) return;
-            const validIndex = Math.min(info.highestMeasuredFrameIndex, info.index);
-            listRef.current.scrollToIndex({ index: Math.max(0, validIndex), animated: true });
-          } catch {}
-        }}
-        renderItem={({ item, index }) => {
+        {phase !== "working" && phase !== "done" ? (
+          <View style={styles.focusCard}>
+            <Text style={[styles.timerHero, { color: phase === "warmup" ? theme.colors.phases.warmup : theme.colors.phases.break }]}>{formatTime(timer)}</Text>
+            <Text style={styles.muted}>
+              {phase === "warmup" ? "Get ready" : `Rest after set ${currentSet}`}
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.focusRow}>
+            <View style={[styles.setPillBig, { backgroundColor: phaseBg, borderColor: phaseFg }]}>
+              <Ionicons name="barbell-outline" size={16} color={theme.colors.text} />
+              <Text style={styles.setPillBigText}>Set {currentSet} of {session.sets.length}</Text>
+            </View>
+            <View style={[styles.setPillBig, { backgroundColor: phaseBg, borderColor: phaseFg }]}>
+              <Ionicons name="repeat-outline" size={16} color={theme.colors.text} />
+              <Text style={styles.setPillBigText}>{session.sets[currentSet - 1] ?? 0} reps</Text>
+            </View>
+          </View>
+        )}
+
+        <FlatList
+          ref={listRef}
+          data={steps}
+          keyExtractor={(item) => item.key}
+          extraData={{ phase, timer, currentSet, isPaused, currentStepIndex: currentStepIndex }}
+          ItemSeparatorComponent={() => <View style={{ height: theme.spacing.sm }} />}
+          contentContainerStyle={styles.listContent}
+          onScrollToIndexFailed={(info) => {
+            // Fallback: scroll to closest and retry
+            try {
+              if (!listRef.current) return;
+              const validIndex = Math.min(info.highestMeasuredFrameIndex, info.index);
+              listRef.current.scrollToIndex({ index: Math.max(0, validIndex), animated: true });
+            } catch {}
+          }}
+          renderItem={({ item, index }) => {
           const isDone = index < currentStepIndex;
           const isActive = index === currentStepIndex && phase !== "done";
           const isLocked = index > currentStepIndex || phase === "done";
-          const rightTick = isDone ? <Text style={styles.tick}>✓</Text> : undefined;
+          const rightTick = isDone ? <Text style={[styles.tick, { color: phaseFg }]}>✓</Text> : undefined;
 
           if (item.type === "warmup") {
             return (
@@ -230,28 +268,6 @@ export default function SessionDetail() {
                 {isActive && phase === "warmup" && (
                   <>
                     <Text style={styles.timerText}>{formatTime(timer)}</Text>
-                    <View style={styles.rowGap}>
-                      <TimerControls
-                        isPaused={isPaused}
-                        onPause={() => {
-                          pauseTimer();
-                          if (session) void appendEvent({ slug, sessionIndex: session.index, type: "warmup_paused" });
-                        }}
-                        onResume={() => {
-                          resumeTimer();
-                          if (session) void appendEvent({ slug, sessionIndex: session.index, type: "warmup_resumed" });
-                        }}
-                        onSkip={() => {
-                          clearTimer();
-                          setTimer(0);
-                          setIsPaused(false);
-                          setWarmupDone(true);
-                          setPhase("working");
-                          if (session) void appendEvent({ slug, sessionIndex: session.index, type: "warmup_skipped" });
-                        }}
-                      />
-                      <Text style={styles.muted}>Automatically starts work sets when finished.</Text>
-                    </View>
                   </>
                 )}
               </StepCard>
@@ -260,7 +276,6 @@ export default function SessionDetail() {
 
           if (item.type === "set") {
             const setNum = item.set;
-            const isCurrentSet = isActive && phase === "working" && currentSet === setNum;
             return (
               <StepCard
                 title={`Set ${setNum} of ${session.sets.length}`}
@@ -270,35 +285,7 @@ export default function SessionDetail() {
                 right={(isDone || (phase === "done" && index < steps.length)) ? <Text style={styles.tick}>✓</Text> : undefined}
               >
                 <View style={styles.setPill}><Text style={styles.setPillText}>{item.reps} reps</Text></View>
-                {isCurrentSet && (
-                  <Pressable
-                    style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
-                    onPress={() => {
-                      if (breakSeconds > 0 && setNum < session.sets.length) {
-                        setPhase("break");
-                        startTimer(breakSeconds);
-                        void appendEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps: item.reps } });
-                        void appendEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: setNum } });
-                      } else {
-                        const next = setNum + 1;
-                        void appendEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps: item.reps } });
-                        if (next > session.sets.length) {
-                          setPhase("done");
-                          void appendEvent({ slug, sessionIndex: session.index, type: "session_completed" });
-                          void appendHistory(slug, {
-                            date: new Date().toISOString().slice(0, 10),
-                            summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
-                          });
-                          void saveStreakHit(slug, new Date().toISOString());
-                        } else {
-                          setCurrentSet(next);
-                        }
-                      }
-                    }}
-                  >
-                    <Text style={styles.ctaText}>Complete set</Text>
-                  </Pressable>
-                )}
+                {/* Complete set moved to global footer */}
               </StepCard>
             );
           }
@@ -309,30 +296,7 @@ export default function SessionDetail() {
           return (
             <StepCard title="Break" active={isActive} done={isDone} locked={isLocked} right={rightTick}>
               {isCurrentBreak && (
-                <>
-                  <Text style={styles.timerText}>{formatTime(timer)}</Text>
-                  <TimerControls
-                    isPaused={isPaused}
-                    onPause={() => {
-                      pauseTimer();
-                      void appendEvent({ slug, sessionIndex: session!.index, type: "break_paused" });
-                    }}
-                    onResume={() => {
-                      resumeTimer();
-                      void appendEvent({ slug, sessionIndex: session!.index, type: "break_resumed" });
-                    }}
-                    onSkip={() => {
-                      // skip break
-                      clearTimer();
-                      setTimer(0);
-                      setIsPaused(false);
-                      setPhase("working");
-                      const next = currentSet + 1;
-                      if (next <= session.sets.length) setCurrentSet(next);
-                      void appendEvent({ slug, sessionIndex: session!.index, type: "break_skipped" });
-                    }}
-                  />
-                </>
+                <Text style={styles.timerText}>{formatTime(timer)}</Text>
               )}
             </StepCard>
           );
@@ -350,7 +314,151 @@ export default function SessionDetail() {
             </View>
           ) : null
         }
-      />
+        />
+      </View>
+
+      {/* Sticky global controls footer */}
+      <SafeAreaView style={[
+        styles.footer,
+      ]}>
+        <View style={[styles.footerBar, { backgroundColor: phaseBg, borderColor: phaseFg, borderWidth: 1 }]}>
+          {/* Pause/Resume */}
+          <Pressable
+            disabled={phase === "working" || phase === "done"}
+            onPress={() => {
+              if (phase === "working" || phase === "done") return;
+              if (isPaused) {
+                resumeTimer();
+                void appendEvent({ slug, sessionIndex: session.index, type: phase === "warmup" ? "warmup_resumed" : "break_resumed" });
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              } else {
+                pauseTimer();
+                void appendEvent({ slug, sessionIndex: session.index, type: phase === "warmup" ? "warmup_paused" : "break_paused" });
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+            }}
+            style={({ pressed }) => [
+              styles.footerBtn,
+              styles.footerBtnPause,
+              (phase === "working" || phase === "done") && styles.footerBtnDisabled,
+              pressed && styles.footerBtnPressed,
+            ]}
+          >
+            <Ionicons
+              name={isPaused ? "play-outline" : "pause-outline"}
+              size={20}
+              color={theme.colors.primaryTextOn}
+              style={styles.footerBtnIcon}
+            />
+            <Text style={styles.footerBtnText}>{isPaused ? "Resume" : "Pause"}</Text>
+          </Pressable>
+
+          {/* Skip */}
+          <Pressable
+            disabled={phase === "done"}
+            onPress={() => {
+              if (phase === "warmup") {
+                clearTimer();
+                setTimer(0);
+                setIsPaused(false);
+                setWarmupDone(true);
+                setPhase("working");
+                void appendEvent({ slug, sessionIndex: session.index, type: "warmup_skipped" });
+                void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                return;
+              }
+              if (phase === "break") {
+                clearTimer();
+                setTimer(0);
+                setIsPaused(false);
+                setPhase("working");
+                const next = currentSet + 1;
+                if (next <= session.sets.length) setCurrentSet(next);
+                void appendEvent({ slug, sessionIndex: session.index, type: "break_skipped" });
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                return;
+              }
+              if (phase === "working") {
+                // Skip current set
+                if (breakSeconds > 0 && currentSet < session.sets.length) {
+                  setPhase("break");
+                  startTimer(breakSeconds);
+                  void appendEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
+                  void appendEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: currentSet } });
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                } else {
+                  const next = currentSet + 1;
+                  void appendEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
+                  if (next > session.sets.length) {
+                    setPhase("done");
+                    void appendEvent({ slug, sessionIndex: session.index, type: "session_completed" });
+                    void appendHistory(slug, {
+                      date: new Date().toISOString().slice(0, 10),
+                      summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
+                    });
+                    void saveStreakHit(slug, new Date().toISOString());
+                    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  } else {
+                    setCurrentSet(next);
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                }
+              }
+            }}
+            style={({ pressed }) => [
+              styles.footerBtn,
+              styles.footerBtnSkip,
+              phase === "done" && styles.footerBtnDisabled,
+              pressed && styles.footerBtnPressed,
+            ]}
+          >
+            <Ionicons name="play-skip-forward-outline" size={20} color={theme.colors.primaryTextOn} style={styles.footerBtnIcon} />
+            <Text style={styles.footerBtnText}>Skip</Text>
+          </Pressable>
+
+          {/* Complete Set */}
+          <Pressable
+            disabled={phase !== "working"}
+            onPress={() => {
+              if (phase !== "working") return;
+              const setNum = currentSet;
+              const reps = session.sets[setNum - 1] ?? 0;
+              if (breakSeconds > 0 && setNum < session.sets.length) {
+                setPhase("break");
+                startTimer(breakSeconds);
+                void appendEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
+                void appendEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: setNum } });
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              } else {
+                const next = setNum + 1;
+                void appendEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
+                if (next > session.sets.length) {
+                  setPhase("done");
+                  void appendEvent({ slug, sessionIndex: session.index, type: "session_completed" });
+                  void appendHistory(slug, {
+                    date: new Date().toISOString().slice(0, 10),
+                    summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
+                  });
+                  void saveStreakHit(slug, new Date().toISOString());
+                  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                } else {
+                  setCurrentSet(next);
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+              }
+            }}
+            style={({ pressed }) => [
+              styles.footerBtn,
+              styles.footerBtnComplete,
+              phase !== "working" && styles.footerBtnDisabled,
+              pressed && styles.footerBtnPressed,
+            ]}
+          >
+            <Ionicons name="checkmark-done-outline" size={20} color={theme.colors.primaryTextOn} style={styles.footerBtnIcon} />
+            <Text style={styles.footerBtnText}>Complete</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
@@ -365,8 +473,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    gap: theme.spacing.md,
   },
   title: {
     color: theme.colors.text,
@@ -374,7 +483,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: theme.colors.muted,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -480,14 +589,144 @@ const styles = StyleSheet.create({
     color: theme.colors.subtext,
   },
   progressBarTrack: {
-    height: 8,
+    height: 10,
     width: "100%",
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.card,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   progressBarFill: {
     height: "100%",
     backgroundColor: theme.colors.primary,
+  },
+  headerWrap: {
+    marginBottom: theme.spacing.sm,
+  },
+  listContent: {
+    paddingBottom: 120,
+  },
+  // Floating footer container
+  footer: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.sm,
+    backgroundColor: theme.colors.surface,
+  },
+  // Inner rounded bar with shadow and phase-tinted background
+  footerBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    borderRadius: theme.radius.xxl,
+    padding: theme.spacing.sm,
+    backgroundColor: theme.colors.surface,
+    // iOS shadow
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    // Android shadow
+    elevation: 6,
+  },
+  footerBarWarmup: {
+    backgroundColor: "#FEF3C7", // amber-100
+  },
+  footerBarWorking: {
+    backgroundColor: "#DBEAFE", // blue-100
+  },
+  footerBarBreak: {
+    backgroundColor: "#E5E7EB", // gray-200
+  },
+  footerBarDone: {
+    backgroundColor: "#DCFCE7", // green-100
+  },
+  footerBtn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.xxl,
+    flexDirection: "row",
+    minHeight: 48,
+  },
+  footerBtnPause: {
+    backgroundColor: theme.colors.warning,
+  },
+  footerBtnSkip: {
+    backgroundColor: theme.colors.danger,
+  },
+  footerBtnComplete: {
+    backgroundColor: theme.colors.success,
+  },
+  footerBtnDisabled: {
+    opacity: 0.6,
+  },
+  footerBtnPressed: {
+    opacity: 0.9,
+  },
+  footerBtnIcon: {
+    marginRight: 6,
+  },
+  footerBtnText: {
+    color: theme.colors.primaryTextOn,
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  // Header phase chip
+  phaseChip: {
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    backgroundColor: theme.colors.card,
+  },
+  phaseChipWarmup: { backgroundColor: "#FEF3C7" },
+  phaseChipWorking: { backgroundColor: "#DBEAFE" },
+  phaseChipBreak: { backgroundColor: "#E5E7EB" },
+  phaseChipDone: { backgroundColor: "#DCFCE7" },
+  phaseChipText: {
+    color: theme.colors.text,
+    fontWeight: "700",
+  },
+  // Focus elements
+  focusCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.xl,
+    paddingVertical: theme.spacing.xl,
+    alignItems: "center",
+    // subtle shadow
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  timerHero: {
+    color: theme.colors.text,
+    fontSize: 44,
+    fontVariant: ["tabular-nums"],
+    marginBottom: theme.spacing.xs,
+  },
+  focusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+  },
+  setPillBig: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    paddingVertical: 6,
+    paddingHorizontal: theme.spacing.md,
+  },
+  setPillBigText: {
+    color: theme.colors.text,
+    fontWeight: "700",
   },
 })
