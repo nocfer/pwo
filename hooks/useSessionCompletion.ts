@@ -1,53 +1,54 @@
-import * as FileSystem from "expo-file-system/legacy";
-import { useEffect, useState } from "react";
-import { Platform } from "react-native";
+/**
+ * useSessionCompletion - Hook for tracking completed sessions
+ * 
+ * Uses unified storage and subscribes to session completion events
+ * for automatic UI updates.
+ */
 
-export function useSessionCompletion(slug: string | undefined, refreshKey: number = 0) {
+import { useRefreshVersions } from "@/context/DataContext";
+import { storage } from "@/lib/storage";
+import { useEffect, useState } from "react";
+
+export function useSessionCompletion(slug: string | undefined) {
   const [completed, setCompleted] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  
+  // Get version from context to trigger re-fetches
+  const { completedVersion } = useRefreshVersions();
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
+    
+    async function loadCompleted() {
       try {
         if (!slug) {
-          if (mounted) setCompleted(new Set());
+          if (mounted) {
+            setCompleted(new Set());
+            setLoading(false);
+          }
           return;
         }
-        let events: { slug: string; sessionIndex: number; type: string; ts: string }[] = [];
-        if (Platform.OS === "web") {
-          const raw = typeof window !== "undefined" ? window.localStorage.getItem("persist.events") : null;
-          events = raw ? (JSON.parse(raw) as { slug: string; sessionIndex: number; type: string; ts: string }[]) : [];
-        } else {
-          const dir: any = FileSystem as any;
-          const base = (dir.documentDirectory || dir.cacheDirectory || "");
-          const path = `${base}events.json`;
-          const info = await FileSystem.getInfoAsync(path);
-          if (!info.exists) {
-            if (mounted) setCompleted(new Set());
-            return;
-          }
-          const raw = await FileSystem.readAsStringAsync(path);
-          events = raw ? (JSON.parse(raw) as { slug: string; sessionIndex: number; type: string; ts: string }[]) : [];
+        
+        setLoading(true);
+        const completedSet = await storage.loadCompletedSessions(slug);
+        
+        if (mounted) {
+          setCompleted(completedSet);
         }
-        const done = new Set<number>();
-        for (const e of events) {
-          if (e.slug === slug && e.type === "session_completed") {
-            done.add(e.sessionIndex);
-          }
-        }
-        if (mounted) setCompleted(done);
       } catch (e) {
         if (mounted) setError(e as Error);
       } finally {
         if (mounted) setLoading(false);
       }
-    })();
+    }
+    
+    loadCompleted();
+    
     return () => {
       mounted = false;
-    }
-  }, [slug, refreshKey]);
+    };
+  }, [slug, completedVersion]);
 
   return { completed, loading, error } as const;
 }

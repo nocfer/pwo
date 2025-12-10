@@ -1,3 +1,10 @@
+/**
+ * useProgress - Hook for accessing progress data
+ * 
+ * @deprecated Use useLiveProgress instead for reactive updates.
+ * This hook is kept for backwards compatibility and only reads static assets.
+ */
+
 import { useEffect, useState } from "react";
 
 export type Progress = {

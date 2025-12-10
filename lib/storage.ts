@@ -1,0 +1,306 @@
+/**
+ * Unified Storage Layer
+ * 
+ * Single source of truth for all data persistence operations.
+ * Works consistently across web (localStorage) and native (FileSystem).
+ */
+
+import * as FileSystem from "expo-file-system/legacy";
+import { Platform } from "react-native";
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export type SessionState = {
+  slug: string;
+  sessionIndex: number;
+  phase: "warmup" | "working" | "break" | "done";
+  currentSet: number;
+  timer: number;
+  isPaused: boolean;
+  warmupDone: boolean;
+};
+
+export type EventRecord = {
+  ts: string;
+  slug: string;
+  sessionIndex: number;
+  type:
+    | "warmup_started"
+    | "warmup_paused"
+    | "warmup_resumed"
+    | "warmup_skipped"
+    | "warmup_completed"
+    | "set_completed"
+    | "set_skipped"
+    | "break_started"
+    | "break_paused"
+    | "break_resumed"
+    | "break_skipped"
+    | "break_completed"
+    | "session_completed";
+  data?: Record<string, unknown>;
+};
+
+export type HistoryEntry = {
+  date: string;
+  summary: string;
+};
+
+export type HistoryFile = {
+  slug: string;
+  recent: HistoryEntry[];
+}[];
+
+export type StreakEntry = {
+  slug: string;
+  streak: number[];
+  updatedAt: string;
+};
+
+// ============================================================================
+// Storage Keys
+// ============================================================================
+
+const KEYS = {
+  SESSIONS: "pwo.sessions",
+  EVENTS: "pwo.events",
+  HISTORY: "pwo.history",
+  PROGRESS: "pwo.progress",
+} as const;
+
+// ============================================================================
+// Platform-specific helpers
+// ============================================================================
+
+const isWeb = Platform.OS === "web";
+const FS_ANY = FileSystem as any;
+const DOC_DIR: string = FS_ANY.documentDirectory || FS_ANY.cacheDirectory || "";
+
+function getFilePath(key: string): string {
+  return `${DOC_DIR}${key}.json`;
+}
+
+// Web storage helpers
+function webRead<T>(key: string, defaultValue: T): T {
+  if (typeof window === "undefined" || !window.localStorage) return defaultValue;
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+}
+
+function webWrite<T>(key: string, value: T): void {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Storage might be full or disabled
+  }
+}
+
+// Native storage helpers
+async function nativeRead<T>(key: string, defaultValue: T): Promise<T> {
+  const path = getFilePath(key);
+  try {
+    const info = await FileSystem.getInfoAsync(path);
+    if (!info.exists) return defaultValue;
+    const raw = await FileSystem.readAsStringAsync(path);
+    return raw ? (JSON.parse(raw) as T) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+}
+
+async function nativeWrite<T>(key: string, value: T): Promise<void> {
+  const path = getFilePath(key);
+  try {
+    await FileSystem.writeAsStringAsync(path, JSON.stringify(value, null, 2));
+  } catch {
+    // Best effort
+  }
+}
+
+// Unified read/write
+async function read<T>(key: string, defaultValue: T): Promise<T> {
+  if (isWeb) {
+    return webRead(key, defaultValue);
+  }
+  return nativeRead(key, defaultValue);
+}
+
+async function write<T>(key: string, value: T): Promise<void> {
+  if (isWeb) {
+    webWrite(key, value);
+    return;
+  }
+  await nativeWrite(key, value);
+}
+
+// ============================================================================
+// Date Utilities
+// ============================================================================
+
+function daysBetween(a: Date, b: Date): number {
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const aDate = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const bDate = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((bDate.getTime() - aDate.getTime()) / MS_PER_DAY);
+}
+
+function normalizeStreak(streak: number[], daysDiff: number): number[] {
+  const base = streak.slice(-7);
+  let shifted = base;
+  if (daysDiff > 0) {
+    shifted = [...base, ...Array(daysDiff).fill(0)];
+  }
+  return shifted.slice(-7);
+}
+
+// ============================================================================
+// Storage API
+// ============================================================================
+
+export const storage = {
+  // --------------------------------------------------------------------------
+  // Session State
+  // --------------------------------------------------------------------------
+  
+  async loadSessionState(slug: string, sessionIndex: number): Promise<SessionState | null> {
+    const arr = await read<SessionState[]>(KEYS.SESSIONS, []);
+    return arr.find((s) => s.slug === slug && s.sessionIndex === sessionIndex) || null;
+  },
+
+  async saveSessionState(state: SessionState): Promise<void> {
+    const arr = await read<SessionState[]>(KEYS.SESSIONS, []);
+    const idx = arr.findIndex((s) => s.slug === state.slug && s.sessionIndex === state.sessionIndex);
+    if (idx >= 0) {
+      arr[idx] = state;
+    } else {
+      arr.push(state);
+    }
+    await write(KEYS.SESSIONS, arr);
+  },
+
+  async clearSessionState(slug: string, sessionIndex: number): Promise<void> {
+    const arr = await read<SessionState[]>(KEYS.SESSIONS, []);
+    const filtered = arr.filter((s) => !(s.slug === slug && s.sessionIndex === sessionIndex));
+    await write(KEYS.SESSIONS, filtered);
+  },
+
+  // --------------------------------------------------------------------------
+  // Events
+  // --------------------------------------------------------------------------
+
+  async loadEvents(): Promise<EventRecord[]> {
+    return read<EventRecord[]>(KEYS.EVENTS, []);
+  },
+
+  async loadEventsForSlug(slug: string): Promise<EventRecord[]> {
+    const events = await this.loadEvents();
+    return events.filter((e) => e.slug === slug);
+  },
+
+  async appendEvent(event: Omit<EventRecord, "ts"> & { ts?: string }): Promise<void> {
+    const arr = await read<EventRecord[]>(KEYS.EVENTS, []);
+    const record: EventRecord = {
+      ...event,
+      ts: event.ts ?? new Date().toISOString(),
+    };
+    arr.push(record);
+    await write(KEYS.EVENTS, arr);
+  },
+
+  // --------------------------------------------------------------------------
+  // History
+  // --------------------------------------------------------------------------
+
+  async loadAllHistory(): Promise<HistoryFile> {
+    return read<HistoryFile>(KEYS.HISTORY, []);
+  },
+
+  async loadHistory(slug: string): Promise<HistoryEntry[]> {
+    const arr = await read<HistoryFile>(KEYS.HISTORY, []);
+    const entry = arr.find((h) => h.slug === slug);
+    return entry?.recent ?? [];
+  },
+
+  async appendHistory(slug: string, entry: HistoryEntry): Promise<void> {
+    const arr = await read<HistoryFile>(KEYS.HISTORY, []);
+    const idx = arr.findIndex((h) => h.slug === slug);
+    if (idx >= 0) {
+      arr[idx].recent.unshift(entry);
+    } else {
+      arr.push({ slug, recent: [entry] });
+    }
+    await write(KEYS.HISTORY, arr);
+  },
+
+  // --------------------------------------------------------------------------
+  // Progress / Streak
+  // --------------------------------------------------------------------------
+
+  async loadStreak(slug: string): Promise<number[] | null> {
+    const arr = await read<StreakEntry[]>(KEYS.PROGRESS, []);
+    const entry = arr.find((e) => e.slug === slug);
+    if (!entry) return null;
+    
+    // Align to today
+    const today = new Date();
+    const last = new Date(entry.updatedAt);
+    const diff = daysBetween(last, today);
+    return normalizeStreak(entry.streak, diff);
+  },
+
+  async saveStreakHit(slug: string, dateISO: string): Promise<void> {
+    const arr = await read<StreakEntry[]>(KEYS.PROGRESS, []);
+    const idx = arr.findIndex((e) => e.slug === slug);
+    const today = new Date(dateISO);
+    
+    if (idx < 0) {
+      // New entry: mark today as hit
+      const streak = Array(6).fill(0).concat(1);
+      arr.push({ slug, streak, updatedAt: today.toISOString() });
+    } else {
+      const entry = arr[idx];
+      const last = new Date(entry.updatedAt);
+      const diff = daysBetween(last, today);
+      const normalized = normalizeStreak(entry.streak, diff);
+      // Set today to 1
+      normalized[normalized.length - 1] = 1;
+      arr[idx] = { slug, streak: normalized, updatedAt: today.toISOString() };
+    }
+    await write(KEYS.PROGRESS, arr);
+  },
+
+  async loadAllStreaks(): Promise<StreakEntry[]> {
+    return read<StreakEntry[]>(KEYS.PROGRESS, []);
+  },
+
+  // --------------------------------------------------------------------------
+  // Completed Sessions
+  // --------------------------------------------------------------------------
+
+  async loadCompletedSessions(slug: string): Promise<Set<number>> {
+    const events = await this.loadEvents();
+    const completed = new Set<number>();
+    for (const e of events) {
+      if (e.slug === slug && e.type === "session_completed") {
+        completed.add(e.sessionIndex);
+      }
+    }
+    return completed;
+  },
+
+  async getLastCompletedSlug(): Promise<string | null> {
+    const events = await this.loadEvents();
+    const last = [...events].reverse().find((e) => e.type === "session_completed");
+    return last?.slug ?? null;
+  },
+};
+
+export default storage;
+

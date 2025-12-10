@@ -1,9 +1,9 @@
 import { ConfettiCelebration } from "@/components/ConfettiCelebration";
 import { StepCard } from "@/components/StepCard";
+import { useDataActions } from "@/context/DataContext";
 import { useProgramSessions } from "@/hooks/useProgramSessions";
 import { useSessionSteps } from "@/hooks/useSessionSteps";
 import { haptics } from "@/lib/haptics";
-import { appendEvent, appendHistory, loadSessionState, saveSessionState, saveStreakHit } from "@/lib/persistPlatform";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -14,6 +14,9 @@ export default function SessionDetail() {
   const params = useLocalSearchParams();
   const slug = params.slug as string;
   const index = Number(params.index);
+
+  // Data context actions
+  const { completeSession, recordEvent, saveSessionState, loadSessionState } = useDataActions();
 
   const { program, sessions, loading, error } = useProgramSessions(slug);
   const session = useMemo(() => sessions.find((s) => s.index === index), [sessions, index]);
@@ -87,7 +90,7 @@ export default function SessionDetail() {
     return () => {
       active = false;
     };
-  }, [program, session, slug, startTimer]);
+  }, [program, session, slug, startTimer, loadSessionState]);
 
   // Save state whenever it changes
   useEffect(() => {
@@ -101,14 +104,14 @@ export default function SessionDetail() {
       isPaused,
       warmupDone,
     });
-  }, [slug, session, phase, currentSet, timer, isPaused, warmupDone]);
+  }, [slug, session, phase, currentSet, timer, isPaused, warmupDone, saveSessionState]);
 
   useEffect(() => {
     if (phase === "warmup" && warmUpSeconds > 0) {
       startTimer(warmUpSeconds);
-      void appendEvent({ slug, sessionIndex: session?.index ?? index, type: "warmup_started" });
+      void recordEvent({ slug, sessionIndex: session?.index ?? index, type: "warmup_started" });
     }
-  }, [phase, warmUpSeconds, startTimer, slug, index, session?.index]);
+  }, [phase, warmUpSeconds, startTimer, slug, index, session?.index, recordEvent]);
 
   // If the program has no warm-up, mark warmupDone once program is known
   useEffect(() => {
@@ -136,27 +139,23 @@ export default function SessionDetail() {
     if (timer === 0 && phase === "warmup") {
       setPhase("working");
       setWarmupDone(true);
-      void appendEvent({ slug, sessionIndex: session?.index ?? index, type: "warmup_completed" });
+      void recordEvent({ slug, sessionIndex: session?.index ?? index, type: "warmup_completed" });
     }
     if (timer === 0 && phase === "break") {
       if (!session) return;
       const next = currentSet + 1;
       if (next > session.sets.length) {
         setPhase("done");
-        void appendEvent({ slug, sessionIndex: session.index, type: "break_completed" });
-        void appendEvent({ slug, sessionIndex: session.index, type: "session_completed" });
-        void appendHistory(slug, {
-          date: new Date().toISOString().slice(0, 10),
-          summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
-        });
-        void saveStreakHit(slug, new Date().toISOString());
+        void recordEvent({ slug, sessionIndex: session.index, type: "break_completed" });
+        const summary = `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`;
+        void completeSession(slug, session.index, summary);
       } else {
         setCurrentSet(next);
         setPhase("working");
-        void appendEvent({ slug, sessionIndex: session.index, type: "break_completed" });
+        void recordEvent({ slug, sessionIndex: session.index, type: "break_completed" });
       }
     }
-  }, [timer, phase, currentSet, session, slug, index, program?.exercise?.name]);
+  }, [timer, phase, currentSet, session, slug, index, program?.exercise?.name, recordEvent, completeSession]);
 
   const { steps, currentStepIndex, totalSets, completedSets } = useSessionSteps(
     warmUpSeconds,
@@ -183,11 +182,11 @@ export default function SessionDetail() {
     if (phase === "working" || phase === "done") return;
     if (isPaused) {
       resumeTimer();
-      void appendEvent({ slug, sessionIndex: session!.index, type: phase === "warmup" ? "warmup_resumed" : "break_resumed" });
+      void recordEvent({ slug, sessionIndex: session!.index, type: phase === "warmup" ? "warmup_resumed" : "break_resumed" });
       void haptics.resumeTimer();
     } else {
       pauseTimer();
-      void appendEvent({ slug, sessionIndex: session!.index, type: phase === "warmup" ? "warmup_paused" : "break_paused" });
+      void recordEvent({ slug, sessionIndex: session!.index, type: phase === "warmup" ? "warmup_paused" : "break_paused" });
       void haptics.pauseTimer();
     }
   };
@@ -200,7 +199,7 @@ export default function SessionDetail() {
       setIsPaused(false);
       setWarmupDone(true);
       setPhase("working");
-      void appendEvent({ slug, sessionIndex: session.index, type: "warmup_skipped" });
+      void recordEvent({ slug, sessionIndex: session.index, type: "warmup_skipped" });
       void haptics.skipAction();
       return;
     }
@@ -211,7 +210,7 @@ export default function SessionDetail() {
       setPhase("working");
       const next = currentSet + 1;
       if (next <= session.sets.length) setCurrentSet(next);
-      void appendEvent({ slug, sessionIndex: session.index, type: "break_skipped" });
+      void recordEvent({ slug, sessionIndex: session.index, type: "break_skipped" });
       void haptics.skipAction();
       return;
     }
@@ -219,21 +218,17 @@ export default function SessionDetail() {
       if (breakSeconds > 0 && currentSet < session.sets.length) {
         setPhase("break");
         startTimer(breakSeconds);
-        void appendEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
-        void appendEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: currentSet } });
+        void recordEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
+        void recordEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: currentSet } });
         void haptics.skipAction();
       } else {
         const next = currentSet + 1;
-        void appendEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
+        void recordEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
         if (next > session.sets.length) {
           setPhase("done");
           setShowConfetti(true);
-          void appendEvent({ slug, sessionIndex: session.index, type: "session_completed" });
-          void appendHistory(slug, {
-            date: new Date().toISOString().slice(0, 10),
-            summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
-          });
-          void saveStreakHit(slug, new Date().toISOString());
+          const summary = `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`;
+          void completeSession(slug, session.index, summary);
           void haptics.sessionComplete();
         } else {
           setCurrentSet(next);
@@ -250,21 +245,17 @@ export default function SessionDetail() {
     if (breakSeconds > 0 && setNum < session.sets.length) {
       setPhase("break");
       startTimer(breakSeconds);
-      void appendEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
-      void appendEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: setNum } });
+      void recordEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
+      void recordEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: setNum } });
       void haptics.setComplete();
     } else {
       const next = setNum + 1;
-      void appendEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
+      void recordEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
       if (next > session.sets.length) {
         setPhase("done");
         setShowConfetti(true);
-        void appendEvent({ slug, sessionIndex: session.index, type: "session_completed" });
-        void appendHistory(slug, {
-          date: new Date().toISOString().slice(0, 10),
-          summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
-        });
-        void saveStreakHit(slug, new Date().toISOString());
+        const summary = `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`;
+        void completeSession(slug, session.index, summary);
         void haptics.sessionComplete();
       } else {
         setCurrentSet(next);

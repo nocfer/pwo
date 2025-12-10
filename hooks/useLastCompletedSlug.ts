@@ -1,35 +1,30 @@
-import * as FileSystem from "expo-file-system/legacy";
-import { useEffect, useState } from "react";
-import { Platform } from "react-native";
+/**
+ * useLastCompletedSlug - Hook for getting the last completed routine slug
+ * 
+ * Uses the DataContext for reactive updates.
+ */
 
-type Event = { ts: string; slug: string; sessionIndex: number; type: string };
+import { useContext, useEffect, useState } from "react";
+import DataContext from "@/context/DataContext";
+import { storage } from "@/lib/storage";
 
-export function useLastCompletedSlug() {
+export function useLastCompletedSlug(): string | null {
+  const context = useContext(DataContext);
+  
+  // If we're inside DataProvider, use context
+  if (context) {
+    return context.state.lastCompletedSlug;
+  }
+  
+  // Fallback for usage outside provider
   const [slug, setSlug] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        let events: Event[] = [];
-        if (Platform.OS === "web") {
-          const raw = typeof window !== "undefined" ? window.localStorage.getItem("persist.events") : null;
-          events = raw ? (JSON.parse(raw) as Event[]) : [];
-        } else {
-          const fs: any = FileSystem as any;
-          const base = fs.documentDirectory || fs.cacheDirectory || "";
-          const path = `${base}events.json`;
-          const info = await FileSystem.getInfoAsync(path);
-          if (!info.exists) {
-            if (mounted) setSlug(null);
-            return;
-          }
-          const raw = await FileSystem.readAsStringAsync(path);
-          events = raw ? JSON.parse(raw) : [];
-        }
-        // find last session_completed
-        const last = [...events].reverse().find((e) => e.type === "session_completed");
-        if (mounted) setSlug(last?.slug ?? null);
+        const lastSlug = await storage.getLastCompletedSlug();
+        if (mounted) setSlug(lastSlug);
       } catch {
         if (mounted) setSlug(null);
       }

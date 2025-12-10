@@ -3,7 +3,6 @@ import SessionsView from "@/components/SessionsView";
 import { useLiveHistory } from "@/hooks/useLiveHistory";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -11,12 +10,11 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 export default function RoutinePage() {
   const params = useLocalSearchParams();
   const slug = params.slug as string;
-  const isFocused = useIsFocused();
 
   const [targets, setTargets] = useState<
     { label: string; value: number; unit?: string }[]
   >([]);
-  const { data: liveRecent } = useLiveHistory(slug, isFocused ? 1 : 0);
+  const { data: liveRecent } = useLiveHistory(slug);
 
   useEffect(() => {
     let mounted = true;
@@ -89,7 +87,7 @@ export default function RoutinePage() {
           <Text style={styles.muted}>No sessions yet.</Text>
         ) : (
           <View style={styles.listGap}>
-            {liveRecent.map((r, i) => (
+            {liveRecent.slice(0, 5).map((r, i) => (
               <View key={i} style={styles.historyItem}>
                 <Text style={styles.historyDate}>{r.date}</Text>
                 <Text style={styles.historySummary}>{r.summary}</Text>
@@ -232,4 +230,3 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryTextOn,
   },
 });
-

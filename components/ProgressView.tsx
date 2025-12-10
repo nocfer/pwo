@@ -1,7 +1,5 @@
 import { useLiveProgress } from "@/hooks/useLiveProgress";
-import { useProgress } from "@/hooks/useProgress";
 import { theme } from "@/theme/theme";
-import { useIsFocused } from "@react-navigation/native";
 import { StyleSheet, Text, View } from "react-native";
 import { NoProgressEmpty } from "./EmptyState";
 import { SkeletonStreakDots } from "./Skeleton";
@@ -11,11 +9,7 @@ type Props = {
 };
 
 export default function ProgressView({ slug }: Props) {
-  const isFocused = useIsFocused();
-  const { data: live, loading: loadingLive, error: errorLive } = useLiveProgress(slug, isFocused ? 1 : 0);
-  const { data: asset, loading: loadingAsset, error: errorAsset } = useProgress(slug);
-  const loading = loadingLive || loadingAsset;
-  const error = errorLive || errorAsset;
+  const { data, loading, error } = useLiveProgress(slug);
 
   if (loading) {
     return <SkeletonStreakDots />;
@@ -29,7 +23,7 @@ export default function ProgressView({ slug }: Props) {
     );
   }
 
-  const streak = live?.streak ?? (asset?.streak as (number | boolean | string)[] | undefined);
+  const streak = data?.streak;
   if (!streak || streak.length === 0) {
     return <NoProgressEmpty />;
   }
@@ -41,7 +35,7 @@ export default function ProgressView({ slug }: Props) {
     <View style={styles.container}>
       <View style={styles.streakRow}>
         {streakSlice.map((hit, i) => {
-          const active = Boolean(hit) && hit !== 0 && hit !== "0";
+          const active = Boolean(hit) && hit !== 0;
           return (
             <View key={i} style={styles.dayContainer}>
               <View

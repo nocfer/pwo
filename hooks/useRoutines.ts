@@ -1,12 +1,31 @@
-import { useEffect, useState } from "react";
+/**
+ * useRoutines - Hook for accessing routines data
+ * 
+ * Uses the DataContext for reactive updates.
+ * Falls back to direct asset loading if used outside context.
+ */
+
+import { useContext, useEffect, useState } from "react";
+import DataContext from "@/context/DataContext";
 
 export type Routine = {
   name: string;
   slug: string;
-  // extend as needed later
 };
 
 export function useRoutines() {
+  const context = useContext(DataContext);
+  
+  // If we're inside DataProvider, use context
+  if (context) {
+    return {
+      data: context.state.routines.length > 0 ? context.state.routines : null,
+      loading: context.state.routinesLoading,
+      error: null,
+    };
+  }
+  
+  // Fallback for usage outside provider (shouldn't happen normally)
   const [data, setData] = useState<Routine[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

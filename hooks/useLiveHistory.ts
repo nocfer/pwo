@@ -1,56 +1,79 @@
-import * as FileSystem from "expo-file-system/legacy";
+/**
+ * useLiveHistory - Hook for accessing workout history
+ * 
+ * Uses unified storage and subscribes to history update events
+ * for automatic UI updates. Merges live data with static assets.
+ */
+
+import { useRefreshVersions } from "@/context/DataContext";
+import { storage, HistoryEntry } from "@/lib/storage";
 import { useEffect, useState } from "react";
 
-export type HistoryEntry = { date: string; summary: string };
+export type { HistoryEntry };
 
-export function useLiveHistory(slug: string | undefined, refreshKey: number = 0) {
+export function useLiveHistory(slug: string | undefined) {
   const [data, setData] = useState<HistoryEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  
+  // Get version from context to trigger re-fetches
+  const { historyVersion } = useRefreshVersions();
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
+    
+    async function loadHistory() {
       try {
         if (!slug) {
-          if (mounted) setData(null);
+          if (mounted) {
+            setData(null);
+            setLoading(false);
+          }
           return;
         }
-        // read live history file
-        const fsAny: any = FileSystem as any;
-        const base = fsAny.documentDirectory || fsAny.cacheDirectory || "";
-        const livePath = `${base}history.json`;
-        let live: HistoryEntry[] = [];
-        const info = await FileSystem.getInfoAsync(livePath);
-        if (info.exists) {
-          const raw = await FileSystem.readAsStringAsync(livePath);
-          const arr = raw ? (JSON.parse(raw) as { slug: string; recent: HistoryEntry[] }[]) : [];
-          const entry = arr.find((e) => e.slug === slug);
-          if (entry) live = entry.recent;
-        }
-        // read asset history as fallback/merge
-        let asset: HistoryEntry[] = [];
+        
+        setLoading(true);
+        
+        // Load from storage
+        const liveHistory = await storage.loadHistory(slug);
+        
+        // Load from static assets
+        let assetHistory: HistoryEntry[] = [];
         try {
-          const hmod = await import("@/assets/data/history.json");
-          const aentry = (hmod as any).default.find((e: any) => e.slug === slug);
-          asset = aentry?.recent ?? [];
-        } catch {}
-        // merge: live first, then any asset entries not duplicated
-        const byKey = new Set(live.map((e) => `${e.date}-${e.summary}`));
-        const merged = [...live, ...asset.filter((e) => !byKey.has(`${e.date}-${e.summary}`))];
-        // sort desc by date
+          const mod = await import("@/assets/data/history.json");
+          const entries = (mod as any).default as { slug: string; recent: HistoryEntry[] }[];
+          const entry = entries.find((e) => e.slug === slug);
+          assetHistory = entry?.recent ?? [];
+        } catch {
+          // No asset data
+        }
+        
+        if (!mounted) return;
+        
+        // Merge: live first, then unique asset entries
+        const byKey = new Set(liveHistory.map((e) => `${e.date}-${e.summary}`));
+        const merged = [
+          ...liveHistory,
+          ...assetHistory.filter((e) => !byKey.has(`${e.date}-${e.summary}`)),
+        ];
+        
+        // Sort by date descending
         merged.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
-        if (mounted) setData(merged);
+        
+        setData(merged);
       } catch (e) {
         if (mounted) setError(e as Error);
       } finally {
         if (mounted) setLoading(false);
       }
-    })();
+    }
+    
+    loadHistory();
+    
     return () => {
       mounted = false;
     };
-  }, [slug, refreshKey]);
+  }, [slug, historyVersion]);
 
   return { data, loading, error } as const;
 }
