@@ -17,7 +17,7 @@ export default function ProgressView({ slug }: Props) {
 
   if (loading) {
     return (
-      <View style={styles.viewContainer}>
+      <View style={styles.container}>
         <Text style={styles.message}>Loading progress…</Text>
       </View>
     );
@@ -25,7 +25,7 @@ export default function ProgressView({ slug }: Props) {
 
   if (error) {
     return (
-      <View style={styles.viewContainer}>
+      <View style={styles.container}>
         <Text style={styles.message}>Failed to load progress.</Text>
       </View>
     );
@@ -34,25 +34,32 @@ export default function ProgressView({ slug }: Props) {
   const streak = live?.streak ?? (asset?.streak as (number | boolean | string)[] | undefined);
   if (!streak || streak.length === 0) {
     return (
-      <View style={styles.viewContainer}>
+      <View style={styles.container}>
         <Text style={styles.message}>No progress yet.</Text>
       </View>
     );
   }
 
+  const days = ["M", "T", "W", "T", "F", "S", "S"];
+  const streakSlice = streak.slice(-7);
+
   return (
-    <View style={styles.viewContainer}>
+    <View style={styles.container}>
       <View style={styles.streakRow}>
-        {streak.slice(-7).map((hit, i) => {
+        {streakSlice.map((hit, i) => {
           const active = Boolean(hit) && hit !== 0 && hit !== "0";
           return (
-            <View
-              key={i}
-              style={[
-                styles.streakDot,
-                active ? styles.streakDotActive : styles.streakDotInactive,
-              ]}
-            />
+            <View key={i} style={styles.dayContainer}>
+              <View
+                style={[
+                  styles.streakDot,
+                  active ? styles.streakDotActive : styles.streakDotInactive,
+                ]}
+              >
+                {active && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.dayLabel}>{days[i]}</Text>
+            </View>
           );
         })}
       </View>
@@ -62,36 +69,53 @@ export default function ProgressView({ slug }: Props) {
 }
 
 const styles = StyleSheet.create({
-  viewContainer: {
+  container: {
     alignItems: "center",
     justifyContent: "center",
-    padding: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
   },
   streakRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: theme.spacing.sm,
+  },
+  dayContainer: {
+    alignItems: "center",
+    gap: theme.spacing.xs,
   },
   streakDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    marginHorizontal: 6,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
   },
   streakDotActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.successLight,
+    borderColor: theme.colors.success,
   },
   streakDotInactive: {
     backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+  },
+  checkmark: {
+    color: theme.colors.success,
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  dayLabel: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
   },
   message: {
+    ...theme.typography.body,
     color: theme.colors.subtext,
   },
   caption: {
-    marginTop: theme.spacing.sm,
+    marginTop: theme.spacing.md,
+    ...theme.typography.caption,
     color: theme.colors.muted,
-    fontSize: 12,
   },
 });

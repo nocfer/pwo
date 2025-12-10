@@ -42,18 +42,15 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderColor: theme.colors.border,
     borderWidth: 1,
-    borderRadius: theme.radius.xl,
-    padding: theme.spacing.md,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 1,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.lg,
+    ...theme.shadows.md,
   },
   cardActive: {
     borderColor: theme.colors.primary,
     borderLeftWidth: 4,
     borderLeftColor: theme.colors.primary,
+    backgroundColor: theme.colors.primaryLight,
   },
   cardDone: {
     borderColor: theme.colors.phases.done,
@@ -62,12 +59,12 @@ const styles = StyleSheet.create({
     borderLeftColor: theme.colors.phases.done,
   },
   cardLocked: {
-    opacity: 0.6,
+    opacity: 0.5,
+    ...theme.shadows.sm,
   },
   cardTitle: {
+    ...theme.typography.bodyBold,
     color: theme.colors.text,
-    fontSize: 15,
-    fontWeight: "600",
     marginBottom: theme.spacing.xs,
   },
   cardTitleDone: {

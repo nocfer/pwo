@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Platform } from "react-native";
 
 export default function TabLayout() {
   return (
@@ -11,12 +12,47 @@ export default function TabLayout() {
         tabBarInactiveTintColor: theme.colors.muted,
         headerStyle: {
           backgroundColor: theme.colors.surface,
+          ...Platform.select({
+            ios: {
+              shadowColor: theme.shadows.sm.shadowColor,
+              shadowOpacity: theme.shadows.sm.shadowOpacity,
+              shadowOffset: theme.shadows.sm.shadowOffset,
+              shadowRadius: theme.shadows.sm.shadowRadius,
+            },
+            android: {
+              elevation: theme.shadows.sm.elevation,
+            },
+          }),
         },
         headerShadowVisible: false,
         headerTintColor: theme.colors.text,
+        headerTitleStyle: {
+          ...theme.typography.h3,
+        },
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.border,
+          borderTopWidth: 1,
+          paddingTop: theme.spacing.xs,
+          height: Platform.OS === "ios" ? 88 : 64,
+          ...Platform.select({
+            ios: {
+              shadowColor: theme.shadows.md.shadowColor,
+              shadowOpacity: theme.shadows.md.shadowOpacity,
+              shadowOffset: { width: 0, height: -2 },
+              shadowRadius: theme.shadows.md.shadowRadius,
+            },
+            android: {
+              elevation: theme.shadows.md.elevation,
+            },
+          }),
+        },
+        tabBarLabelStyle: {
+          ...theme.typography.caption,
+          marginTop: theme.spacing.xs,
+        },
+        tabBarIconStyle: {
+          marginTop: theme.spacing.xs,
         },
       }}
     >
@@ -26,9 +62,9 @@ export default function TabLayout() {
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "home-sharp" : "home-outline"}
+              name={focused ? "home" : "home-outline"}
               color={color}
-              size={24}
+              size={26}
             />
           ),
         }}
@@ -41,7 +77,7 @@ export default function TabLayout() {
             <Ionicons
               name={focused ? "barbell" : "barbell-outline"}
               color={color}
-              size={24}
+              size={26}
             />
           ),
         }}
@@ -52,11 +88,9 @@ export default function TabLayout() {
           title: "About",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={
-                focused ? "information-circle" : "information-circle-outline"
-              }
+              name={focused ? "information-circle" : "information-circle-outline"}
               color={color}
-              size={24}
+              size={26}
             />
           ),
         }}

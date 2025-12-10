@@ -1,78 +1,118 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { theme } from "@/theme/theme";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
 
 type Props = {
   label: string;
-  theme?: "primary";
+  variant?: "primary" | "secondary" | "ghost";
+  icon?: keyof typeof Ionicons.glyphMap;
+  onPress?: () => void;
+  disabled?: boolean;
+  fullWidth?: boolean;
+  style?: ViewStyle;
 };
 
-function standardButton({ label }: Props) {
+export default function Button({
+  label,
+  variant = "secondary",
+  icon,
+  onPress,
+  disabled = false,
+  fullWidth = false,
+  style,
+}: Props) {
+  const isPrimary = variant === "primary";
+  const isGhost = variant === "ghost";
+
   return (
-    <View style={styles.buttonContainer}>
+    <View style={[styles.container, fullWidth && styles.fullWidth, style]}>
       <Pressable
-        style={styles.button}
-        onPress={() => alert("You pressed a button.")}
+        style={({ pressed }) => [
+          styles.button,
+          isPrimary && styles.buttonPrimary,
+          isGhost && styles.buttonGhost,
+          pressed && !disabled && (isPrimary ? styles.buttonPrimaryPressed : styles.buttonPressed),
+          disabled && styles.buttonDisabled,
+        ]}
+        onPress={onPress}
+        disabled={disabled}
       >
-        <Text style={styles.buttonLabel}>{label}</Text>
+        {icon && (
+          <Ionicons
+            name={icon}
+            size={18}
+            color={isPrimary ? theme.colors.primaryTextOn : theme.colors.text}
+            style={styles.icon}
+          />
+        )}
+        <Text
+          style={[
+            styles.label,
+            isPrimary && styles.labelPrimary,
+            isGhost && styles.labelGhost,
+            disabled && styles.labelDisabled,
+          ]}
+        >
+          {label}
+        </Text>
       </Pressable>
     </View>
   );
-}
-
-function primaryButton({ label }: Props) {
-  return (
-    <View
-      style={[
-        styles.buttonContainer,
-        { borderWidth: 2, borderColor: "#ffd33d", borderRadius: 10 },
-      ]}
-    >
-      <Pressable
-        style={[styles.button, { backgroundColor: "#fff" }]}
-        onPress={() => router.navigate("/(tabs)/routines")}
-      >
-        <FontAwesome
-          name="picture-o"
-          size={18}
-          color="#25292e"
-          style={styles.buttonIcon}
-        />
-        <Text style={[styles.buttonLabel, { color: "#25292e" }]}>{label}</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-export default function Button({ label, theme }: Props) {
-  if (theme === "primary") {
-    return primaryButton({ label });
-  }
-  return standardButton({ label });
 }
 
 const styles = StyleSheet.create({
-  buttonContainer: {
-    width: 320,
-    height: 68,
-    marginHorizontal: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 3,
+  container: {
+    alignSelf: "flex-start",
+  },
+  fullWidth: {
+    alignSelf: "stretch",
   },
   button: {
-    borderRadius: 10,
-    width: "100%",
-    height: "100%",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    flexDirection: "row",
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    ...theme.shadows.sm,
   },
-  buttonIcon: {
-    paddingRight: 8,
+  buttonPrimary: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+    ...theme.shadows.md,
   },
-  buttonLabel: {
-    color: "#fff",
-    fontSize: 16,
+  buttonGhost: {
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  buttonPressed: {
+    backgroundColor: theme.colors.card,
+  },
+  buttonPrimaryPressed: {
+    opacity: 0.9,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  icon: {
+    marginRight: theme.spacing.sm,
+  },
+  label: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text,
+  },
+  labelPrimary: {
+    color: theme.colors.primaryTextOn,
+  },
+  labelGhost: {
+    color: theme.colors.primary,
+  },
+  labelDisabled: {
+    color: theme.colors.muted,
   },
 });

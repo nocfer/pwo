@@ -1,29 +1,32 @@
 export const theme = {
   colors: {
-    background: "#F8FAFC", // slate-50
+    background: "#F1F5F9", // slate-100, slightly warmer
     surface: "#FFFFFF",
     text: "#0F172A", // slate-900
     subtext: "#334155", // slate-700
     muted: "#64748B", // slate-500
     border: "#E2E8F0", // slate-200
-    primary: "#2563EB", // blue-600
+    primary: "#3B82F6", // blue-500, slightly lighter for soft feel
+    primaryLight: "#DBEAFE", // blue-100
     primaryTextOn: "#FFFFFF",
     accent: "#ffd33d", // keep project accent
-    card: "#F1F5F9", // slate-100
-    success: "#16A34A",
-    danger: "#DC2626",
-    warning: "#F59E0B",
-    // Phase palette for a 2025 look
+    card: "#F8FAFC", // slate-50
+    success: "#22C55E", // green-500
+    successLight: "#DCFCE7", // green-100
+    danger: "#EF4444", // red-500
+    dangerLight: "#FEE2E2", // red-100
+    warning: "#F59E0B", // amber-500
+    warningLight: "#FEF3C7", // amber-100
+    // Phase palette for workout states
     phases: {
-      // Warmer, punchier palette
       warmup: "#EA580C", // orange-600
       warmupBg: "#FFF7ED", // orange-50
       working: "#7C3AED", // violet-600
-      workingBg: "#F3E8FF", // violet-100
+      workingBg: "#F5F3FF", // violet-50
       break: "#06B6D4", // cyan-500
       breakBg: "#ECFEFF", // cyan-50
       done: "#22C55E", // green-500
-      doneBg: "#ECFDF5", // green-50
+      doneBg: "#F0FDF4", // green-50
     },
     overlayGlass: "#FFFFFFEE",
   },
@@ -36,16 +39,65 @@ export const theme = {
     xxl: 32,
   },
   radius: {
-    sm: 6,
-    md: 10,
-    lg: 14,
-    xl: 20,
-    xxl: 28,
+    sm: 8,
+    md: 14,
+    lg: 20,
+    xl: 28,
+    full: 9999,
+  },
+  shadows: {
+    sm: {
+      shadowColor: "#64748B",
+      shadowOpacity: 0.06,
+      shadowOffset: { width: 0, height: 1 },
+      shadowRadius: 4,
+      elevation: 1,
+    },
+    md: {
+      shadowColor: "#64748B",
+      shadowOpacity: 0.08,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    lg: {
+      shadowColor: "#64748B",
+      shadowOpacity: 0.1,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 16,
+      elevation: 4,
+    },
   },
   typography: {
-    title: 20,
-    subtitle: 16,
-    body: 14,
-    caption: 12,
+    h1: {
+      fontSize: 28,
+      fontWeight: "700" as const,
+      lineHeight: 34,
+    },
+    h2: {
+      fontSize: 22,
+      fontWeight: "600" as const,
+      lineHeight: 28,
+    },
+    h3: {
+      fontSize: 18,
+      fontWeight: "600" as const,
+      lineHeight: 24,
+    },
+    body: {
+      fontSize: 15,
+      fontWeight: "400" as const,
+      lineHeight: 22,
+    },
+    bodyBold: {
+      fontSize: 15,
+      fontWeight: "600" as const,
+      lineHeight: 22,
+    },
+    caption: {
+      fontSize: 13,
+      fontWeight: "400" as const,
+      lineHeight: 18,
+    },
   },
 } as const;

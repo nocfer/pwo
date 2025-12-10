@@ -2,6 +2,7 @@ import ProgressView from "@/components/ProgressView";
 import SessionsView from "@/components/SessionsView";
 import { useLiveHistory } from "@/hooks/useLiveHistory";
 import { theme } from "@/theme/theme";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
@@ -33,24 +34,44 @@ export default function RoutinePage() {
       mounted = false;
     };
   }, [slug]);
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Routine</Text>
-      <ProgressView slug={slug} />
+      <View style={styles.header}>
+        <Text style={styles.title}>Routine</Text>
+        <Text style={styles.subtitle}>{slug.replace(/-/g, " ")}</Text>
+      </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Targets</Text>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardIconContainer}>
+            <Ionicons name="flame-outline" size={18} color={theme.colors.primary} />
+          </View>
+          <Text style={styles.cardTitle}>Progress</Text>
+        </View>
+        <ProgressView slug={slug} />
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={[styles.cardIconContainer, { backgroundColor: theme.colors.warningLight }]}>
+            <Ionicons name="trophy-outline" size={18} color={theme.colors.warning} />
+          </View>
+          <Text style={styles.cardTitle}>Targets</Text>
+        </View>
         {targets.length === 0 ? (
           <Text style={styles.muted}>No targets set.</Text>
         ) : (
-          <View style={styles.listVGap}>
+          <View style={styles.listGap}>
             {targets.map((t, i) => (
-              <View key={i} style={styles.rowBetween}>
-                <Text style={styles.itemText}>{t.label}</Text>
-                <Text style={styles.itemText}>
-                  {t.value}
-                  {t.unit ? ` ${t.unit}` : ""}
-                </Text>
+              <View key={i} style={styles.targetRow}>
+                <Text style={styles.targetLabel}>{t.label}</Text>
+                <View style={styles.targetValueContainer}>
+                  <Text style={styles.targetValue}>
+                    {t.value}
+                    {t.unit ? ` ${t.unit}` : ""}
+                  </Text>
+                </View>
               </View>
             ))}
           </View>
@@ -58,15 +79,20 @@ export default function RoutinePage() {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Recent history</Text>
+        <View style={styles.cardHeader}>
+          <View style={[styles.cardIconContainer, { backgroundColor: theme.colors.successLight }]}>
+            <Ionicons name="time-outline" size={18} color={theme.colors.success} />
+          </View>
+          <Text style={styles.cardTitle}>Recent History</Text>
+        </View>
         {!liveRecent || liveRecent.length === 0 ? (
           <Text style={styles.muted}>No sessions yet.</Text>
         ) : (
-          <View style={styles.listVGap}>
+          <View style={styles.listGap}>
             {liveRecent.map((r, i) => (
-              <View key={i} style={styles.vItem}>
-                <Text style={styles.itemSubtle}>{r.date}</Text>
-                <Text style={styles.itemText}>{r.summary}</Text>
+              <View key={i} style={styles.historyItem}>
+                <Text style={styles.historyDate}>{r.date}</Text>
+                <Text style={styles.historySummary}>{r.summary}</Text>
               </View>
             ))}
           </View>
@@ -74,18 +100,23 @@ export default function RoutinePage() {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Sessions</Text>
+        <View style={styles.cardHeader}>
+          <View style={[styles.cardIconContainer, { backgroundColor: theme.colors.phases.workingBg }]}>
+            <Ionicons name="barbell-outline" size={18} color={theme.colors.phases.working} />
+          </View>
+          <Text style={styles.cardTitle}>Sessions</Text>
+        </View>
         <SessionsView slug={slug} />
       </View>
 
       <Pressable
         style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
         onPress={() => {
-          // placeholder action for now
           console.log("Start session for", slug);
         }}
       >
-        <Text style={styles.ctaText}>Start session</Text>
+        <Ionicons name="play" size={20} color={theme.colors.primaryTextOn} style={styles.ctaIcon} />
+        <Text style={styles.ctaText}>Start Session</Text>
       </Pressable>
     </ScrollView>
   );
@@ -99,11 +130,19 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.lg,
+    paddingBottom: theme.spacing.xxl,
+  },
+  header: {
+    marginBottom: theme.spacing.sm,
   },
   title: {
+    ...theme.typography.h2,
     color: theme.colors.text,
-    fontSize: 20,
-    marginBottom: theme.spacing.md,
+  },
+  subtitle: {
+    ...theme.typography.body,
+    color: theme.colors.muted,
+    textTransform: "capitalize",
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -111,46 +150,86 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
+    ...theme.shadows.md,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: theme.spacing.md,
+  },
+  cardIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: theme.spacing.sm,
   },
   cardTitle: {
+    ...theme.typography.h3,
     color: theme.colors.text,
-    fontSize: 16,
-    marginBottom: theme.spacing.sm,
   },
   muted: {
+    ...theme.typography.body,
     color: theme.colors.muted,
   },
-  listVGap: {
+  listGap: {
     gap: theme.spacing.sm,
   },
-  rowBetween: {
+  targetRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingVertical: theme.spacing.xs,
   },
-  vItem: {
-    gap: 2,
-  },
-  itemText: {
+  targetLabel: {
+    ...theme.typography.body,
     color: theme.colors.text,
   },
-  itemSubtle: {
+  targetValueContainer: {
+    backgroundColor: theme.colors.card,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radius.sm,
+  },
+  targetValue: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primary,
+  },
+  historyItem: {
+    paddingVertical: theme.spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  historyDate: {
+    ...theme.typography.caption,
     color: theme.colors.muted,
-    fontSize: 12,
+    marginBottom: 2,
+  },
+  historySummary: {
+    ...theme.typography.body,
+    color: theme.colors.text,
   },
   cta: {
-    marginTop: theme.spacing.lg,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.md,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.lg,
+    ...theme.shadows.md,
   },
   ctaPressed: {
     opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  ctaIcon: {
+    marginRight: theme.spacing.sm,
   },
   ctaText: {
+    ...theme.typography.bodyBold,
     color: theme.colors.primaryTextOn,
-    fontWeight: "600",
   },
 });
+

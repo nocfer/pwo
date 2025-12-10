@@ -1,6 +1,8 @@
 import { theme } from "@/theme/theme";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+
 type Props = {
   label: string;
   slug: string;
@@ -8,55 +10,60 @@ type Props = {
 
 export default function RoutineButton({ label, slug }: Props) {
   return (
-    <View style={styles.buttonContainer}>
-      <Pressable
-        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-        onPress={() =>
-          router.navigate({
-            pathname: "/routines/[slug]",
-            params: { slug },
-          })
-        }
-      >
-        <Text style={styles.buttonLabel}>{label}</Text>
-      </Pressable>
-    </View>
+    <Pressable
+      style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+      onPress={() =>
+        router.navigate({
+          pathname: "/routines/[slug]",
+          params: { slug },
+        })
+      }
+    >
+      <View style={styles.content}>
+        <View style={styles.iconContainer}>
+          <Ionicons name="barbell-outline" size={24} color={theme.colors.primary} />
+        </View>
+        <Text style={styles.label}>{label}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color={theme.colors.muted} />
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  buttonContainer: {
-    width: 320,
-    height: 88,
-    marginHorizontal: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 3,
-  },
   button: {
-    borderRadius: 12,
-    width: "100%",
-    height: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    ...theme.shadows.md,
   },
   buttonPressed: {
     backgroundColor: theme.colors.card,
+    transform: [{ scale: 0.98 }],
   },
-  buttonIcon: {
-    paddingRight: 8,
+  content: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
   },
-  buttonLabel: {
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: theme.spacing.md,
+  },
+  label: {
+    ...theme.typography.bodyBold,
     color: theme.colors.text,
-    fontSize: 16,
+    flex: 1,
   },
 });

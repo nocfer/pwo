@@ -1,4 +1,5 @@
 import { theme } from "@/theme/theme";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -14,16 +15,28 @@ export function TimerControls({ isPaused, onPause, onResume, onSkip, layout = "r
   return (
     <View style={[styles.container, layout === "row" && styles.row]}>
       {!isPaused ? (
-        <Pressable style={({ pressed }) => [styles.ctaSecondary, pressed && styles.ctaSecondaryPressed]} onPress={onPause}>
-          <Text style={styles.ctaSecondaryText}>Pause</Text>
+        <Pressable
+          style={({ pressed }) => [styles.button, styles.buttonSecondary, pressed && styles.buttonPressed]}
+          onPress={onPause}
+        >
+          <Ionicons name="pause" size={18} color={theme.colors.text} style={styles.icon} />
+          <Text style={styles.buttonSecondaryText}>Pause</Text>
         </Pressable>
       ) : (
-        <Pressable style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]} onPress={onResume}>
-          <Text style={styles.ctaText}>Resume</Text>
+        <Pressable
+          style={({ pressed }) => [styles.button, styles.buttonPrimary, pressed && styles.buttonPrimaryPressed]}
+          onPress={onResume}
+        >
+          <Ionicons name="play" size={18} color={theme.colors.primaryTextOn} style={styles.icon} />
+          <Text style={styles.buttonPrimaryText}>Resume</Text>
         </Pressable>
       )}
-      <Pressable style={({ pressed }) => [styles.ctaSecondary, pressed && styles.ctaSecondaryPressed]} onPress={onSkip}>
-        <Text style={styles.ctaSecondaryText}>Skip</Text>
+      <Pressable
+        style={({ pressed }) => [styles.button, styles.buttonSecondary, pressed && styles.buttonPressed]}
+        onPress={onSkip}
+      >
+        <Ionicons name="play-skip-forward" size={18} color={theme.colors.text} style={styles.icon} />
+        <Text style={styles.buttonSecondaryText}>Skip</Text>
       </Pressable>
     </View>
   );
@@ -37,35 +50,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  cta: {
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
+  button: {
+    flex: 1,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radius.lg,
+    minHeight: 48,
   },
-  ctaPressed: {
-    opacity: 0.9,
+  buttonPrimary: {
+    backgroundColor: theme.colors.primary,
+    ...theme.shadows.md,
   },
-  ctaText: {
-    color: theme.colors.primaryTextOn,
-    fontWeight: "600",
-  },
-  ctaSecondary: {
-    borderRadius: theme.radius.md,
+  buttonSecondary: {
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    alignItems: "center",
+    ...theme.shadows.sm,
   },
-  ctaSecondaryPressed: {
+  buttonPressed: {
     backgroundColor: theme.colors.card,
+    transform: [{ scale: 0.98 }],
   },
-  ctaSecondaryText: {
+  buttonPrimaryPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  icon: {
+    marginRight: theme.spacing.sm,
+  },
+  buttonPrimaryText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primaryTextOn,
+  },
+  buttonSecondaryText: {
+    ...theme.typography.bodyBold,
     color: theme.colors.text,
-    fontWeight: "600",
   },
 });
 
