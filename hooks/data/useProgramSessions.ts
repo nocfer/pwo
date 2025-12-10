@@ -46,14 +46,14 @@ export function useProgramSessions(slug: string) {
     const result: Session[] = [];
     const sets = program.exercise.sets || 5;
     const targetReps = program.exercise.targetReps || 100;
-    let total = 10;
+    let total = 20;
     let i = 1;
     while (total <= targetReps) {
       const rounded = Math.max(1, Math.round(total));
       const dist = distributeIntoSets(rounded, sets);
       result.push({ index: i, totalReps: rounded, sets: dist });
       i += 1;
-      total = total * 1.1;
+      total += (total * 12) / 100;
     }
     // Ensure last session is exactly targetReps if we overshot slightly
     const last = result[result.length - 1];
