@@ -1,17 +1,16 @@
 [
   {
-    "slug": "full-body-a",
+    "slug": "pull-ups",
     "targets": [
-      { "label": "Squat", "value": 80, "unit": "kg" },
-      { "label": "Bench Press", "value": 60, "unit": "kg" },
-      { "label": "Row", "value": 50, "unit": "kg" }
+      { "label": "Max consecutive", "value": 15, "unit": "reps" },
+      { "label": "Weighted", "value": 10, "unit": "kg" }
     ]
   },
   {
-    "slug": "push",
+    "slug": "push-ups",
     "targets": [
-      { "label": "Overhead Press", "value": 40, "unit": "kg" },
-      { "label": "Incline DB Press", "value": 24, "unit": "kg" }
+      { "label": "Max consecutive", "value": 50, "unit": "reps" },
+      { "label": "Diamond variation", "value": 20, "unit": "reps" }
     ]
   }
 ]

@@ -2,9 +2,23 @@
  * Routine-related type definitions
  */
 
-export type Routine = {
+export type RoutineExercise = {
   name: string;
+  warmUp?: number; // seconds
+  break?: number; // seconds between sets
+  sets: number;
+  targetReps?: number;
+};
+
+export type Routine = {
   slug: string;
+  name: string;
+  description?: string;
+  category?: "strength" | "cardio" | "flexibility";
+  icon?: string;
+  estimatedMinutes?: number;
+  difficulty?: "beginner" | "intermediate" | "advanced";
+  exercise?: RoutineExercise;
 };
 
 export type DataState = {

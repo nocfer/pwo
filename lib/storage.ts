@@ -14,7 +14,7 @@ import type {
 } from "@/types";
 import * as FileSystem from "expo-file-system/legacy";
 import { Platform } from "react-native";
-import { daysBetween, normalizeStreak } from "./utils/date";
+import { getMondayBasedDayIndex, normalizeStreak } from "./utils/date";
 
 // Re-export types for backwards compatibility
 export type {
@@ -199,7 +199,7 @@ export const storage = {
   },
 
   // --------------------------------------------------------------------------
-  // Progress / Streak
+  // Progress / Streak (Calendar Week Aligned: Mon=0, Sun=6)
   // --------------------------------------------------------------------------
 
   async loadStreak(slug: string): Promise<number[] | null> {
@@ -207,29 +207,30 @@ export const storage = {
     const entry = arr.find((e) => e.slug === slug);
     if (!entry) return null;
 
-    // Align to today
+    // Normalize for calendar week - resets if different week
     const today = new Date();
     const last = new Date(entry.updatedAt);
-    const diff = daysBetween(last, today);
-    return normalizeStreak(entry.streak, diff);
+    return normalizeStreak(entry.streak, last, today);
   },
 
   async saveStreakHit(slug: string, dateISO: string): Promise<void> {
     const arr = await read<StreakEntry[]>(KEYS.PROGRESS, []);
     const idx = arr.findIndex((e) => e.slug === slug);
     const today = new Date(dateISO);
+    const dayIndex = getMondayBasedDayIndex(today); // 0=Mon, 6=Sun
 
     if (idx < 0) {
-      // New entry: mark today as hit
-      const streak = Array(6).fill(0).concat(1);
+      // New entry: create fresh week and mark today's day
+      const streak = Array(7).fill(0);
+      streak[dayIndex] = 1;
       arr.push({ slug, streak, updatedAt: today.toISOString() });
     } else {
       const entry = arr[idx];
       const last = new Date(entry.updatedAt);
-      const diff = daysBetween(last, today);
-      const normalized = normalizeStreak(entry.streak, diff);
-      // Set today to 1
-      normalized[normalized.length - 1] = 1;
+      // Normalize streak (resets if new week)
+      const normalized = normalizeStreak(entry.streak, last, today);
+      // Set today's day-of-week to 1
+      normalized[dayIndex] = 1;
       arr[idx] = { slug, streak: normalized, updatedAt: today.toISOString() };
     }
     await write(KEYS.PROGRESS, arr);

@@ -67,8 +67,8 @@ export function useSessionTimer({
   const { recordEvent, completeSession, saveSessionState, loadSessionState } =
     actions;
 
-  const warmUpSeconds = program?.exercise.warmUp ?? 0;
-  const breakSeconds = program?.exercise.break ?? 0;
+  const warmUpSeconds = program?.exercise?.warmUp ?? 0;
+  const breakSeconds = program?.exercise?.break ?? 0;
 
   const [phase, setPhase] = useState<SessionPhase>(
     warmUpSeconds > 0 ? "warmup" : "working"
@@ -186,7 +186,7 @@ export function useSessionTimer({
 
   // If the program has no warm-up, mark warmupDone once program is known
   useEffect(() => {
-    if (program && (program.exercise.warmUp ?? 0) === 0 && !warmupDone) {
+    if (program && (program.exercise?.warmUp ?? 0) === 0 && !warmupDone) {
       setWarmupDone(true);
     }
   }, [program, warmupDone]);
@@ -235,7 +235,7 @@ export function useSessionTimer({
           sessionIndex: session.index,
           type: "break_completed",
         });
-        const summary = `${program?.exercise.name ?? slug} ${
+        const summary = `${program?.exercise?.name ?? slug} ${
           session.sets.length
         } sets, ${session.totalReps} reps`;
         void completeSession(slug, session.index, summary);
@@ -341,7 +341,7 @@ export function useSessionTimer({
         if (next > session.sets.length) {
           setPhase("done");
           setShowConfetti(true);
-          const summary = `${program?.exercise.name ?? slug} ${
+          const summary = `${program?.exercise?.name ?? slug} ${
             session.sets.length
           } sets, ${session.totalReps} reps`;
           void completeSession(slug, session.index, summary);
@@ -396,7 +396,7 @@ export function useSessionTimer({
       if (next > session.sets.length) {
         setPhase("done");
         setShowConfetti(true);
-        const summary = `${program?.exercise.name ?? slug} ${
+        const summary = `${program?.exercise?.name ?? slug} ${
           session.sets.length
         } sets, ${session.totalReps} reps`;
         void completeSession(slug, session.index, summary);

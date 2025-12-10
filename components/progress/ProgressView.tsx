@@ -1,6 +1,7 @@
 import { NoProgressEmpty } from "@/components/common/EmptyState";
 import { SkeletonStreakDots } from "@/components/common/Skeleton";
 import { useLiveProgress } from "@/hooks/data";
+import { getTodayIndex } from "@/lib/utils/date";
 import { theme } from "@/theme/theme";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -10,6 +11,7 @@ type Props = {
 
 export default function ProgressView({ slug }: Props) {
   const { data, loading, error } = useLiveProgress(slug);
+  const todayIndex = getTodayIndex(); // 0=Mon, 6=Sun
 
   if (loading) {
     return <SkeletonStreakDots />;
@@ -36,22 +38,27 @@ export default function ProgressView({ slug }: Props) {
       <View style={styles.streakRow}>
         {streakSlice.map((hit, i) => {
           const active = Boolean(hit) && hit !== 0;
+          const isToday = i === todayIndex;
           return (
             <View key={i} style={styles.dayContainer}>
               <View
                 style={[
                   styles.streakDot,
                   active ? styles.streakDotActive : styles.streakDotInactive,
+                  isToday && styles.streakDotToday,
                 ]}
               >
                 {active && <Text style={styles.checkmark}>✓</Text>}
               </View>
-              <Text style={styles.dayLabel}>{days[i]}</Text>
+              <Text style={[styles.dayLabel, isToday && styles.dayLabelToday]}>
+                {days[i]}
+              </Text>
+              {isToday && <View style={styles.todayDot} />}
             </View>
           );
         })}
       </View>
-      <Text style={styles.caption}>Last 7 days</Text>
+      <Text style={styles.caption}>This week</Text>
     </View>
   );
 }
@@ -88,6 +95,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.card,
     borderColor: theme.colors.border,
   },
+  streakDotToday: {
+    borderColor: theme.colors.primary,
+    borderWidth: 2,
+  },
   checkmark: {
     color: theme.colors.success,
     fontFamily: theme.fonts.bold,
@@ -96,6 +107,16 @@ const styles = StyleSheet.create({
   dayLabel: {
     ...theme.typography.caption,
     color: theme.colors.muted,
+  },
+  dayLabelToday: {
+    color: theme.colors.primary,
+    fontFamily: theme.fonts.semiBold,
+  },
+  todayDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: theme.colors.primary,
   },
   message: {
     ...theme.typography.body,

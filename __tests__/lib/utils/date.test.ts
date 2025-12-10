@@ -1,4 +1,11 @@
-import { daysBetween, formatDate, normalizeStreak } from "@/lib/utils/date";
+import {
+  daysBetween,
+  formatDate,
+  getMondayBasedDayIndex,
+  getWeekStart,
+  isSameWeek,
+  normalizeStreak,
+} from "@/lib/utils/date";
 import { describe, expect, it } from "vitest";
 
 describe("daysBetween", () => {
@@ -38,35 +45,114 @@ describe("daysBetween", () => {
   });
 });
 
+describe("getMondayBasedDayIndex", () => {
+  it("returns 0 for Monday", () => {
+    // Jan 15, 2024 is a Monday
+    expect(getMondayBasedDayIndex(new Date(2024, 0, 15))).toBe(0);
+  });
+
+  it("returns 6 for Sunday", () => {
+    // Jan 14, 2024 is a Sunday
+    expect(getMondayBasedDayIndex(new Date(2024, 0, 14))).toBe(6);
+  });
+
+  it("returns 2 for Wednesday", () => {
+    // Jan 17, 2024 is a Wednesday
+    expect(getMondayBasedDayIndex(new Date(2024, 0, 17))).toBe(2);
+  });
+
+  it("returns 4 for Friday", () => {
+    // Jan 19, 2024 is a Friday
+    expect(getMondayBasedDayIndex(new Date(2024, 0, 19))).toBe(4);
+  });
+});
+
+describe("getWeekStart", () => {
+  it("returns Monday for a Wednesday", () => {
+    // 2024-01-17 (Wed) -> week starts 2024-01-15 (Mon)
+    const result = getWeekStart(new Date(2024, 0, 17)); // Jan 17, 2024 (Wed)
+    expect(result.getFullYear()).toBe(2024);
+    expect(result.getMonth()).toBe(0); // January
+    expect(result.getDate()).toBe(15); // 15th (Monday)
+  });
+
+  it("returns same day for Monday", () => {
+    const result = getWeekStart(new Date(2024, 0, 15)); // Jan 15, 2024 (Mon)
+    expect(result.getDate()).toBe(15);
+  });
+
+  it("returns previous Monday for Sunday", () => {
+    // 2024-01-14 (Sun) -> week starts 2024-01-08 (Mon)
+    const result = getWeekStart(new Date(2024, 0, 14)); // Jan 14, 2024 (Sun)
+    expect(result.getDate()).toBe(8);
+  });
+});
+
+describe("isSameWeek", () => {
+  it("returns true for same week (Mon-Sun)", () => {
+    const mon = new Date(2024, 0, 15); // Monday
+    const fri = new Date(2024, 0, 19); // Friday same week
+    expect(isSameWeek(mon, fri)).toBe(true);
+  });
+
+  it("returns true for Monday and Sunday of same week", () => {
+    const mon = new Date(2024, 0, 15); // Monday
+    const sun = new Date(2024, 0, 21); // Sunday same week
+    expect(isSameWeek(mon, sun)).toBe(true);
+  });
+
+  it("returns false for different weeks", () => {
+    const week1 = new Date(2024, 0, 15); // Monday week 1
+    const week2 = new Date(2024, 0, 22); // Monday week 2
+    expect(isSameWeek(week1, week2)).toBe(false);
+  });
+
+  it("returns false for Sunday and next Monday", () => {
+    const sun = new Date(2024, 0, 21); // Sunday
+    const mon = new Date(2024, 0, 22); // Monday next week
+    expect(isSameWeek(sun, mon)).toBe(false);
+  });
+});
+
 describe("normalizeStreak", () => {
-  it("returns last 7 entries when no days passed", () => {
+  it("returns existing streak when same week", () => {
     const streak = [1, 0, 1, 1, 0, 1, 1];
-    const result = normalizeStreak(streak, 0);
+    const lastDate = new Date(2024, 0, 15); // Monday
+    const today = new Date(2024, 0, 17); // Wednesday same week
+    const result = normalizeStreak(streak, lastDate, today);
     expect(result).toEqual([1, 0, 1, 1, 0, 1, 1]);
   });
 
-  it("pads with zeros when days passed", () => {
+  it("resets streak when different week", () => {
     const streak = [1, 0, 1, 1, 0, 1, 1];
-    const result = normalizeStreak(streak, 2);
-    expect(result).toEqual([1, 1, 0, 1, 1, 0, 0]);
+    const lastDate = new Date(2024, 0, 15); // Monday week 1
+    const today = new Date(2024, 0, 22); // Monday week 2
+    const result = normalizeStreak(streak, lastDate, today);
+    expect(result).toEqual([0, 0, 0, 0, 0, 0, 0]);
   });
 
-  it("handles streak shorter than 7", () => {
+  it("pads short streak to 7 entries", () => {
     const streak = [1, 0, 1];
-    const result = normalizeStreak(streak, 0);
-    expect(result).toEqual([1, 0, 1]);
+    const lastDate = new Date(2024, 0, 15);
+    const today = new Date(2024, 0, 17);
+    const result = normalizeStreak(streak, lastDate, today);
+    expect(result).toEqual([0, 0, 0, 0, 1, 0, 1]);
   });
 
   it("handles streak longer than 7 by slicing last 7 entries", () => {
     const streak = [1, 0, 1, 1, 0, 1, 1, 0, 1];
-    const result = normalizeStreak(streak, 0);
+    const lastDate = new Date(2024, 0, 15);
+    const today = new Date(2024, 0, 17);
+    const result = normalizeStreak(streak, lastDate, today);
     // slice(-7) gets last 7: [1, 1, 0, 1, 1, 0, 1]
     expect(result).toEqual([1, 1, 0, 1, 1, 0, 1]);
   });
 
-  it("shifts out all old data when many days pass", () => {
+  it("resets when week changes even if only 1 day apart", () => {
     const streak = [1, 1, 1, 1, 1, 1, 1];
-    const result = normalizeStreak(streak, 7);
+    const lastDate = new Date(2024, 0, 21); // Sunday
+    const today = new Date(2024, 0, 22); // Monday next week
+    const result = normalizeStreak(streak, lastDate, today);
     expect(result).toEqual([0, 0, 0, 0, 0, 0, 0]);
   });
 });

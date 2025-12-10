@@ -99,7 +99,7 @@ export default function SessionDetail() {
         <View style={styles.headerSection}>
           <View style={styles.headerTop}>
             <View style={styles.headerInfo}>
-              <Text style={styles.title}>{program.exercise.name}</Text>
+              <Text style={styles.title}>{program.exercise?.name}</Text>
               <Text style={styles.subtitle}>Session {session.index} • {session.totalReps} reps total</Text>
             </View>
             <View style={[styles.phaseChip, { backgroundColor: phaseBg, borderColor: phaseFg }]}>

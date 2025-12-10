@@ -1,13 +1,4 @@
 [
-  {
-    "id": 1,
-    "name": "Pull ups",
-    "slug": "pull-ups"
-  },
-  {
-    "id": 2,
-    "name": "Push ups",
-    "slug": "push-ups",
-    "streak": [0, 1, 1, 1, 1, 0, 0]
-  }
+  { "slug": "pull-ups", "streak": [1, 0, 1, 0, 0, 0, 0] },
+  { "slug": "push-ups", "streak": [0, 1, 1, 0, 0, 0, 0] }
 ]
