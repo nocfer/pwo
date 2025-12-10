@@ -1,12 +1,7 @@
 import { DataProvider } from "@/context/DataContext";
 import { theme } from "@/theme/theme";
-import {
-  DMSans_400Regular,
-  DMSans_500Medium,
-  DMSans_600SemiBold,
-  DMSans_700Bold,
-  useFonts,
-} from "@expo-google-fonts/dm-sans";
+import { Ionicons } from "@expo/vector-icons";
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -16,13 +11,15 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync();
+Ionicons.loadFont = () => Promise.resolve(); // prevent auto-loading broken path
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    DMSans_400Regular,
-    DMSans_500Medium,
-    DMSans_600SemiBold,
-    DMSans_700Bold,
+    Ionicons: require("../assets/icons/Ionicons.ttf"),
+    DMSans_400Regular: require("../assets/fonts/dm-sans/400Regular/DMSans_400Regular.ttf"),
+    DMSans_500Medium: require("../assets/fonts/dm-sans/500Medium/DMSans_500Medium.ttf"),
+    DMSans_600SemiBold: require("../assets/fonts/dm-sans/600SemiBold/DMSans_600SemiBold.ttf"),
+    DMSans_700Bold: require("../assets/fonts/dm-sans/700Bold/DMSans_700Bold.ttf"),
   });
 
   useEffect(() => {
