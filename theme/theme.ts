@@ -7,6 +7,7 @@ export const theme = {
     muted: "#64748B", // slate-500
     border: "#E2E8F0", // slate-200
     primary: "#3B82F6", // blue-500, slightly lighter for soft feel
+    primaryDark: "#2563EB", // blue-600
     primaryLight: "#DBEAFE", // blue-100
     primaryTextOn: "#FFFFFF",
     accent: "#ffd33d", // keep project accent
@@ -28,7 +29,24 @@ export const theme = {
       done: "#22C55E", // green-500
       doneBg: "#F0FDF4", // green-50
     },
+    // Gradient colors
+    gradient: {
+      primaryStart: "#3B82F6", // blue-500
+      primaryEnd: "#8B5CF6", // violet-500
+      warmStart: "#F97316", // orange-500
+      warmEnd: "#EF4444", // red-500
+      successStart: "#22C55E", // green-500
+      successEnd: "#14B8A6", // teal-500
+    },
     overlayGlass: "#FFFFFFEE",
+    skeleton: "#E2E8F0", // slate-200
+    skeletonHighlight: "#F1F5F9", // slate-100
+  },
+  fonts: {
+    regular: "DMSans_400Regular",
+    medium: "DMSans_500Medium",
+    semiBold: "DMSans_600SemiBold",
+    bold: "DMSans_700Bold",
   },
   spacing: {
     xs: 4,
@@ -71,32 +89,32 @@ export const theme = {
   typography: {
     h1: {
       fontSize: 28,
-      fontWeight: "700" as const,
+      fontFamily: "DMSans_700Bold",
       lineHeight: 34,
     },
     h2: {
       fontSize: 22,
-      fontWeight: "600" as const,
+      fontFamily: "DMSans_600SemiBold",
       lineHeight: 28,
     },
     h3: {
       fontSize: 18,
-      fontWeight: "600" as const,
+      fontFamily: "DMSans_600SemiBold",
       lineHeight: 24,
     },
     body: {
       fontSize: 15,
-      fontWeight: "400" as const,
+      fontFamily: "DMSans_400Regular",
       lineHeight: 22,
     },
     bodyBold: {
       fontSize: 15,
-      fontWeight: "600" as const,
+      fontFamily: "DMSans_600SemiBold",
       lineHeight: 22,
     },
     caption: {
       fontSize: 13,
-      fontWeight: "400" as const,
+      fontFamily: "DMSans_400Regular",
       lineHeight: 18,
     },
   },

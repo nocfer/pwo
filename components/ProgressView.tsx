@@ -3,6 +3,8 @@ import { useProgress } from "@/hooks/useProgress";
 import { theme } from "@/theme/theme";
 import { useIsFocused } from "@react-navigation/native";
 import { StyleSheet, Text, View } from "react-native";
+import { NoProgressEmpty } from "./EmptyState";
+import { SkeletonStreakDots } from "./Skeleton";
 
 type Props = {
   slug: string;
@@ -16,11 +18,7 @@ export default function ProgressView({ slug }: Props) {
   const error = errorLive || errorAsset;
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.message}>Loading progress…</Text>
-      </View>
-    );
+    return <SkeletonStreakDots />;
   }
 
   if (error) {
@@ -33,11 +31,7 @@ export default function ProgressView({ slug }: Props) {
 
   const streak = live?.streak ?? (asset?.streak as (number | boolean | string)[] | undefined);
   if (!streak || streak.length === 0) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.message}>No progress yet.</Text>
-      </View>
-    );
+    return <NoProgressEmpty />;
   }
 
   const days = ["M", "T", "W", "T", "F", "S", "S"];
@@ -102,7 +96,7 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: theme.colors.success,
-    fontWeight: "700",
+    fontFamily: theme.fonts.bold,
     fontSize: 16,
   },
   dayLabel: {

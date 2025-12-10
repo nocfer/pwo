@@ -1,10 +1,11 @@
+import { ConfettiCelebration } from "@/components/ConfettiCelebration";
 import { StepCard } from "@/components/StepCard";
 import { useProgramSessions } from "@/hooks/useProgramSessions";
 import { useSessionSteps } from "@/hooks/useSessionSteps";
+import { haptics } from "@/lib/haptics";
 import { appendEvent, appendHistory, loadSessionState, saveSessionState, saveStreakHit } from "@/lib/persistPlatform";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
@@ -28,6 +29,7 @@ export default function SessionDetail() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [warmupDone, setWarmupDone] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const clearTimer = useCallback(() => {
     if (intervalRef.current) {
@@ -182,11 +184,11 @@ export default function SessionDetail() {
     if (isPaused) {
       resumeTimer();
       void appendEvent({ slug, sessionIndex: session!.index, type: phase === "warmup" ? "warmup_resumed" : "break_resumed" });
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      void haptics.resumeTimer();
     } else {
       pauseTimer();
       void appendEvent({ slug, sessionIndex: session!.index, type: phase === "warmup" ? "warmup_paused" : "break_paused" });
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      void haptics.pauseTimer();
     }
   };
 
@@ -199,7 +201,7 @@ export default function SessionDetail() {
       setWarmupDone(true);
       setPhase("working");
       void appendEvent({ slug, sessionIndex: session.index, type: "warmup_skipped" });
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      void haptics.skipAction();
       return;
     }
     if (phase === "break") {
@@ -210,7 +212,7 @@ export default function SessionDetail() {
       const next = currentSet + 1;
       if (next <= session.sets.length) setCurrentSet(next);
       void appendEvent({ slug, sessionIndex: session.index, type: "break_skipped" });
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      void haptics.skipAction();
       return;
     }
     if (phase === "working") {
@@ -219,22 +221,23 @@ export default function SessionDetail() {
         startTimer(breakSeconds);
         void appendEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
         void appendEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: currentSet } });
-        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        void haptics.skipAction();
       } else {
         const next = currentSet + 1;
         void appendEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
         if (next > session.sets.length) {
           setPhase("done");
+          setShowConfetti(true);
           void appendEvent({ slug, sessionIndex: session.index, type: "session_completed" });
           void appendHistory(slug, {
             date: new Date().toISOString().slice(0, 10),
             summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
           });
           void saveStreakHit(slug, new Date().toISOString());
-          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          void haptics.sessionComplete();
         } else {
           setCurrentSet(next);
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          void haptics.buttonTap();
         }
       }
     }
@@ -249,22 +252,23 @@ export default function SessionDetail() {
       startTimer(breakSeconds);
       void appendEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
       void appendEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: setNum } });
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      void haptics.setComplete();
     } else {
       const next = setNum + 1;
       void appendEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
       if (next > session.sets.length) {
         setPhase("done");
+        setShowConfetti(true);
         void appendEvent({ slug, sessionIndex: session.index, type: "session_completed" });
         void appendHistory(slug, {
           date: new Date().toISOString().slice(0, 10),
           summary: `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`,
         });
         void saveStreakHit(slug, new Date().toISOString());
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        void haptics.sessionComplete();
       } else {
         setCurrentSet(next);
-        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        void haptics.setComplete();
       }
     }
   };
@@ -293,6 +297,14 @@ export default function SessionDetail() {
 
   return (
     <View style={styles.container}>
+      {/* Confetti Celebration */}
+      <ConfettiCelebration
+        show={showConfetti}
+        onComplete={() => setShowConfetti(false)}
+        message="Session Complete! 🎉"
+        subMessage="You're crushing it!"
+      />
+
       <View style={{ flex: 1 }}>
         {/* Header */}
         <View style={styles.headerSection}>

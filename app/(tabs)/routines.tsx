@@ -1,15 +1,39 @@
 import RoutinesView from "@/components/RoutinesView";
+import haptics from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useState, useCallback } from "react";
+import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function RoutinesScreen() {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    void haptics.refresh();
+    // Trigger a re-render of RoutinesView by changing the key
+    setRefreshKey((prev) => prev + 1);
+    // Simulate network delay
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setRefreshing(false);
+  }, []);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={theme.colors.primary}
+          colors={[theme.colors.primary]}
+        />
+      }
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Routines</Text>
         <Text style={styles.subtitle}>Browse and start your workouts</Text>
@@ -41,7 +65,7 @@ export default function RoutinesScreen() {
         )}
       </View>
 
-      <RoutinesView query={query} />
+      <RoutinesView key={refreshKey} query={query} />
     </ScrollView>
   );
 }

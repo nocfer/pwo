@@ -1,7 +1,9 @@
 import { useRoutines } from "@/hooks/useRoutines";
 import { theme } from "@/theme/theme";
 import { StyleSheet, Text, View } from "react-native";
-import RoutineButton from "./RoutineButton";
+import { NoRoutinesEmpty, NoSearchResultsEmpty } from "./EmptyState";
+import { SkeletonRoutineButton } from "./Skeleton";
+import SwipeableRoutineButton from "./SwipeableRoutineButton";
 
 type Props = {
   query?: string;
@@ -12,8 +14,10 @@ export default function RoutinesView({ query }: Props) {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>Loading routines…</Text>
+      <View style={styles.listContainer}>
+        <SkeletonRoutineButton />
+        <SkeletonRoutineButton />
+        <SkeletonRoutineButton />
       </View>
     );
   }
@@ -27,12 +31,7 @@ export default function RoutinesView({ query }: Props) {
   }
 
   if (!data || data.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyTitle}>No routines yet</Text>
-        <Text style={styles.emptySubtitle}>Add a routine to get started</Text>
-      </View>
-    );
+    return <NoRoutinesEmpty />;
   }
 
   const filtered = query
@@ -40,18 +39,13 @@ export default function RoutinesView({ query }: Props) {
     : data;
 
   if (filtered.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyTitle}>No results</Text>
-        <Text style={styles.emptySubtitle}>Try a different search term</Text>
-      </View>
-    );
+    return <NoSearchResultsEmpty query={query || ""} />;
   }
 
   return (
     <View style={styles.listContainer}>
       {filtered.map((routine, i) => (
-        <RoutineButton label={routine.name} key={i} slug={routine.slug} />
+        <SwipeableRoutineButton label={routine.name} key={i} slug={routine.slug} />
       ))}
     </View>
   );
@@ -68,18 +62,5 @@ const styles = StyleSheet.create({
   message: {
     ...theme.typography.body,
     color: theme.colors.subtext,
-  },
-  emptyContainer: {
-    paddingVertical: theme.spacing.xxl,
-    alignItems: "center",
-  },
-  emptyTitle: {
-    ...theme.typography.h3,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  emptySubtitle: {
-    ...theme.typography.body,
-    color: theme.colors.muted,
   },
 });

@@ -5,6 +5,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useIsFocused } from "@react-navigation/native";
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SkeletonSessionCard } from "./Skeleton";
 
 type Props = {
   slug: string;
@@ -18,7 +19,9 @@ export default function SessionsView({ slug }: Props) {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.muted}>Loading sessions…</Text>
+        <SkeletonSessionCard />
+        <View style={{ height: theme.spacing.md }} />
+        <SkeletonSessionCard />
       </View>
     );
   }
@@ -157,7 +160,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     ...theme.typography.caption,
-    fontWeight: "600",
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primary,
   },
   badgeTextDone: {

@@ -27,7 +27,8 @@ export default function TabLayout() {
         headerShadowVisible: false,
         headerTintColor: theme.colors.text,
         headerTitleStyle: {
-          ...theme.typography.h3,
+          fontFamily: theme.fonts.semiBold,
+          fontSize: 18,
         },
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
@@ -48,7 +49,8 @@ export default function TabLayout() {
           }),
         },
         tabBarLabelStyle: {
-          ...theme.typography.caption,
+          fontFamily: theme.fonts.medium,
+          fontSize: 12,
           marginTop: theme.spacing.xs,
         },
         tabBarIconStyle: {
