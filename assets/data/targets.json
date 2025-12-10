@@ -1,0 +1,17 @@
+[
+  {
+    "slug": "full-body-a",
+    "targets": [
+      { "label": "Squat", "value": 80, "unit": "kg" },
+      { "label": "Bench Press", "value": 60, "unit": "kg" },
+      { "label": "Row", "value": 50, "unit": "kg" }
+    ]
+  },
+  {
+    "slug": "push",
+    "targets": [
+      { "label": "Overhead Press", "value": 40, "unit": "kg" },
+      { "label": "Incline DB Press", "value": 24, "unit": "kg" }
+    ]
+  }
+]

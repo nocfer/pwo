@@ -13,6 +13,19 @@ export const theme = {
     success: "#16A34A",
     danger: "#DC2626",
     warning: "#F59E0B",
+    // Phase palette for a 2025 look
+    phases: {
+      // Warmer, punchier palette
+      warmup: "#EA580C", // orange-600
+      warmupBg: "#FFF7ED", // orange-50
+      working: "#7C3AED", // violet-600
+      workingBg: "#F3E8FF", // violet-100
+      break: "#06B6D4", // cyan-500
+      breakBg: "#ECFEFF", // cyan-50
+      done: "#22C55E", // green-500
+      doneBg: "#ECFDF5", // green-50
+    },
+    overlayGlass: "#FFFFFFEE",
   },
   spacing: {
     xs: 4,
@@ -27,6 +40,7 @@ export const theme = {
     md: 10,
     lg: 14,
     xl: 20,
+    xxl: 28,
   },
   typography: {
     title: 20,
