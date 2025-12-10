@@ -2,5 +2,5 @@
  * Utility functions barrel export
  */
 
-export { daysBetween, normalizeStreak, formatDate } from "./date";
-export { formatTime, formatReps } from "./format";
+export { daysBetween, formatDate, normalizeStreak } from "./date";
+export { formatReps, formatTime } from "./format";

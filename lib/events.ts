@@ -1,6 +1,6 @@
 /**
  * Data Events - Pub/Sub Pattern
- * 
+ *
  * Simple event emitter for reactive data updates across the app.
  * Components subscribe to events they care about and automatically
  * re-fetch data when those events are emitted.
@@ -9,7 +9,7 @@
 import type { DataEvent, DataEventCallback, DataEventType } from "@/types";
 
 // Re-export types for backwards compatibility
-export type { DataEventType, DataEvent, DataEventCallback } from "@/types";
+export type { DataEvent, DataEventCallback, DataEventType } from "@/types";
 
 // ============================================================================
 // Event Emitter Implementation
@@ -111,4 +111,3 @@ export const dataEvents = {
 };
 
 export default dataEvents;
-

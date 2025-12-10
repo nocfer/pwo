@@ -8,13 +8,13 @@
 import { dataEvents } from "@/lib/events";
 import { storage } from "@/lib/storage";
 import type {
-  DataEvent,
-  DataState,
-  DataAction,
-  EventRecord,
-  HistoryEntry,
-  Routine,
-  SessionState,
+    DataAction,
+    DataEvent,
+    DataState,
+    EventRecord,
+    HistoryEntry,
+    Routine,
+    SessionState,
 } from "@/types";
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useReducer } from "react";
 

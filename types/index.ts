@@ -4,30 +4,18 @@
 
 // Storage types
 export type {
-  SessionState,
   EventRecord,
   HistoryEntry,
   HistoryFile,
+  SessionState,
   StreakEntry,
 } from "./storage";
 
 // Event types
-export type {
-  DataEventType,
-  DataEvent,
-  DataEventCallback,
-} from "./events";
+export type { DataEvent, DataEventCallback, DataEventType } from "./events";
 
 // Session types
-export type {
-  Program,
-  Session,
-  SessionPhase,
-} from "./session";
+export type { Program, Session, SessionPhase } from "./session";
 
 // Routine types
-export type {
-  Routine,
-  DataState,
-  DataAction,
-} from "./routine";
+export type { DataAction, DataState, Routine } from "./routine";

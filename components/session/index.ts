@@ -2,9 +2,9 @@
  * Session components barrel export
  */
 
+export { FocusCard } from "./FocusCard";
+export { SessionComplete } from "./SessionComplete";
+export { SessionFooter } from "./SessionFooter";
 export { SessionHeader } from "./SessionHeader";
 export { SessionProgressBar } from "./SessionProgressBar";
-export { FocusCard } from "./FocusCard";
-export { SessionFooter } from "./SessionFooter";
-export { SessionComplete } from "./SessionComplete";
 export { StepCard } from "./StepCard";

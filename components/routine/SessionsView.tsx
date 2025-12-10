@@ -1,9 +1,9 @@
+import { SkeletonSessionCard } from "@/components/common/Skeleton";
 import { useProgramSessions, useSessionCompletion } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SkeletonSessionCard } from "@/components/common/Skeleton";
 
 type Props = {
   slug: string;

@@ -11,10 +11,10 @@ export type DataState = {
   // Routines (from static assets)
   routines: Routine[];
   routinesLoading: boolean;
-  
+
   // Last completed slug
   lastCompletedSlug: string | null;
-  
+
   // Refresh triggers (incremented to force re-fetch)
   progressVersion: number;
   historyVersion: number;

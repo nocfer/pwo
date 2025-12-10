@@ -1,7 +1,7 @@
 import { ConfettiCelebration, StepCard } from "@/components";
 import { useDataActions } from "@/context/DataContext";
 import { useProgramSessions } from "@/hooks/data";
-import { useSessionTimer, useSessionSteps } from "@/hooks/session";
+import { useSessionSteps, useSessionTimer } from "@/hooks/session";
 import { formatTime } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
