@@ -94,7 +94,7 @@ export default function SessionDetail() {
         subMessage="You're crushing it!"
       />
 
-      <View style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         {/* Header */}
         <View style={styles.headerSection}>
           <View style={styles.headerTop}>
@@ -221,7 +221,7 @@ export default function SessionDetail() {
             ) : null
           }
         />
-      </View>
+      </SafeAreaView>
 
       {/* Bottom Controls */}
       {phase !== "done" && (

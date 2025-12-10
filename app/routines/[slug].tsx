@@ -5,6 +5,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RoutinePage() {
   const params = useLocalSearchParams();
@@ -42,6 +43,8 @@ export default function RoutinePage() {
   }, [slug]);
 
   return (
+    <SafeAreaView style={styles.container}>
+
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Text style={styles.title}>Routine</Text>
@@ -174,6 +177,7 @@ export default function RoutinePage() {
         <Text style={styles.ctaText}>Start Session</Text>
       </Pressable>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 

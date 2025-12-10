@@ -1,9 +1,10 @@
 import { RoutinesView } from "@/components";
-import haptics from "@/lib/haptics";
+import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RoutinesScreen() {
   const [query, setQuery] = useState("");
@@ -22,6 +23,7 @@ export default function RoutinesScreen() {
   }, []);
 
   return (
+    <SafeAreaView style={styles.container}>
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
@@ -67,6 +69,8 @@ export default function RoutinesScreen() {
 
       <RoutinesView key={refreshKey} query={query} />
     </ScrollView>
+    </SafeAreaView>
+
   );
 }
 
