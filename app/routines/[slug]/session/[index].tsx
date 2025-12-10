@@ -1,13 +1,12 @@
-import { ConfettiCelebration } from "@/components/ConfettiCelebration";
-import { StepCard } from "@/components/StepCard";
+import { ConfettiCelebration, StepCard } from "@/components";
 import { useDataActions } from "@/context/DataContext";
-import { useProgramSessions } from "@/hooks/useProgramSessions";
-import { useSessionSteps } from "@/hooks/useSessionSteps";
-import { haptics } from "@/lib/haptics";
+import { useProgramSessions } from "@/hooks/data";
+import { useSessionTimer, useSessionSteps } from "@/hooks/session";
+import { formatTime } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { FlatList, Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
 
 export default function SessionDetail() {
@@ -16,146 +15,33 @@ export default function SessionDetail() {
   const index = Number(params.index);
 
   // Data context actions
-  const { completeSession, recordEvent, saveSessionState, loadSessionState } = useDataActions();
+  const actions = useDataActions();
 
   const { program, sessions, loading, error } = useProgramSessions(slug);
   const session = useMemo(() => sessions.find((s) => s.index === index), [sessions, index]);
 
-  const warmUpSeconds = program?.exercise.warmUp ?? 0;
-  const breakSeconds = program?.exercise.break ?? 0;
+  // Use the timer hook
+  const timer = useSessionTimer({
+    slug,
+    session,
+    program,
+    actions,
+  });
 
-  const [phase, setPhase] = useState<"warmup" | "working" | "break" | "done">(
-    warmUpSeconds > 0 ? "warmup" : "working"
-  );
-  const [currentSet, setCurrentSet] = useState(1);
-  const [timer, setTimer] = useState(() => (phase === "warmup" ? warmUpSeconds : 0));
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [isPaused, setIsPaused] = useState(false);
-  const [warmupDone, setWarmupDone] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-
-  const clearTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
-  const startTimer = useCallback((seconds: number) => {
-    clearTimer();
-    setTimer(seconds);
-    intervalRef.current = setInterval(() => {
-      setTimer((t) => {
-        if (t <= 1) {
-          clearTimer();
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-    setIsPaused(false);
-  }, [clearTimer]);
-
-  const pauseTimer = useCallback(() => {
-    clearTimer();
-    setIsPaused(true);
-  }, [clearTimer]);
-
-  const resumeTimer = useCallback(() => {
-    if (timer > 0 && isPaused) {
-      startTimer(timer);
-    }
-  }, [isPaused, startTimer, timer]);
-
-  useEffect(() => {
-    return () => clearTimer();
-  }, [clearTimer]);
-
-  // Load previously saved state
-  useEffect(() => {
-    if (!program || !session) return;
-    let active = true;
-    (async () => {
-      const saved = await loadSessionState(slug, session.index);
-      if (!active || !saved) return;
-      setPhase(saved.phase);
-      setCurrentSet(saved.currentSet);
-      setTimer(saved.timer);
-      setIsPaused(saved.isPaused);
-      setWarmupDone(saved.warmupDone);
-      if ((saved.phase === "warmup" || saved.phase === "break") && saved.timer > 0 && !saved.isPaused) {
-        startTimer(saved.timer);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [program, session, slug, startTimer, loadSessionState]);
-
-  // Save state whenever it changes
-  useEffect(() => {
-    if (!session) return;
-    void saveSessionState({
-      slug,
-      sessionIndex: session.index,
-      phase,
-      currentSet,
-      timer,
-      isPaused,
-      warmupDone,
-    });
-  }, [slug, session, phase, currentSet, timer, isPaused, warmupDone, saveSessionState]);
-
-  useEffect(() => {
-    if (phase === "warmup" && warmUpSeconds > 0) {
-      startTimer(warmUpSeconds);
-      void recordEvent({ slug, sessionIndex: session?.index ?? index, type: "warmup_started" });
-    }
-  }, [phase, warmUpSeconds, startTimer, slug, index, session?.index, recordEvent]);
-
-  // If the program has no warm-up, mark warmupDone once program is known
-  useEffect(() => {
-    if (program && (program.exercise.warmUp ?? 0) === 0 && !warmupDone) {
-      setWarmupDone(true);
-    }
-  }, [program, warmupDone]);
-
-  // Ensure warm-up is honored once the program loads
-  useEffect(() => {
-    if (
-      program &&
-      warmUpSeconds > 0 &&
-      !warmupDone &&
-      phase === "working" &&
-      currentSet === 1 &&
-      timer === 0
-    ) {
-      setPhase("warmup");
-      startTimer(warmUpSeconds);
-    }
-  }, [program, warmUpSeconds, warmupDone, phase, currentSet, timer, startTimer]);
-
-  useEffect(() => {
-    if (timer === 0 && phase === "warmup") {
-      setPhase("working");
-      setWarmupDone(true);
-      void recordEvent({ slug, sessionIndex: session?.index ?? index, type: "warmup_completed" });
-    }
-    if (timer === 0 && phase === "break") {
-      if (!session) return;
-      const next = currentSet + 1;
-      if (next > session.sets.length) {
-        setPhase("done");
-        void recordEvent({ slug, sessionIndex: session.index, type: "break_completed" });
-        const summary = `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`;
-        void completeSession(slug, session.index, summary);
-      } else {
-        setCurrentSet(next);
-        setPhase("working");
-        void recordEvent({ slug, sessionIndex: session.index, type: "break_completed" });
-      }
-    }
-  }, [timer, phase, currentSet, session, slug, index, program?.exercise?.name, recordEvent, completeSession]);
+  const {
+    phase,
+    currentSet,
+    timer: timerValue,
+    isPaused,
+    showConfetti,
+    progress,
+    warmUpSeconds,
+    breakSeconds,
+    handlePauseResume,
+    handleSkip,
+    handleComplete,
+    setShowConfetti,
+  } = timer;
 
   const { steps, currentStepIndex, totalSets, completedSets } = useSessionSteps(
     warmUpSeconds,
@@ -174,95 +60,6 @@ export default function SessionDetail() {
       listRef.current.scrollToIndex({ index: currentStepIndex, animated: true, viewPosition: 0.5 });
     } catch {}
   }, [currentStepIndex, steps.length]);
-
-  const progress = totalSets > 0 ? completedSets / totalSets : 0;
-
-  // Handler functions
-  const handlePauseResume = () => {
-    if (phase === "working" || phase === "done") return;
-    if (isPaused) {
-      resumeTimer();
-      void recordEvent({ slug, sessionIndex: session!.index, type: phase === "warmup" ? "warmup_resumed" : "break_resumed" });
-      void haptics.resumeTimer();
-    } else {
-      pauseTimer();
-      void recordEvent({ slug, sessionIndex: session!.index, type: phase === "warmup" ? "warmup_paused" : "break_paused" });
-      void haptics.pauseTimer();
-    }
-  };
-
-  const handleSkip = () => {
-    if (!session) return;
-    if (phase === "warmup") {
-      clearTimer();
-      setTimer(0);
-      setIsPaused(false);
-      setWarmupDone(true);
-      setPhase("working");
-      void recordEvent({ slug, sessionIndex: session.index, type: "warmup_skipped" });
-      void haptics.skipAction();
-      return;
-    }
-    if (phase === "break") {
-      clearTimer();
-      setTimer(0);
-      setIsPaused(false);
-      setPhase("working");
-      const next = currentSet + 1;
-      if (next <= session.sets.length) setCurrentSet(next);
-      void recordEvent({ slug, sessionIndex: session.index, type: "break_skipped" });
-      void haptics.skipAction();
-      return;
-    }
-    if (phase === "working") {
-      if (breakSeconds > 0 && currentSet < session.sets.length) {
-        setPhase("break");
-        startTimer(breakSeconds);
-        void recordEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
-        void recordEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: currentSet } });
-        void haptics.skipAction();
-      } else {
-        const next = currentSet + 1;
-        void recordEvent({ slug, sessionIndex: session.index, type: "set_skipped", data: { set: currentSet } });
-        if (next > session.sets.length) {
-          setPhase("done");
-          setShowConfetti(true);
-          const summary = `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`;
-          void completeSession(slug, session.index, summary);
-          void haptics.sessionComplete();
-        } else {
-          setCurrentSet(next);
-          void haptics.buttonTap();
-        }
-      }
-    }
-  };
-
-  const handleComplete = () => {
-    if (phase !== "working" || !session) return;
-    const setNum = currentSet;
-    const reps = session.sets[setNum - 1] ?? 0;
-    if (breakSeconds > 0 && setNum < session.sets.length) {
-      setPhase("break");
-      startTimer(breakSeconds);
-      void recordEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
-      void recordEvent({ slug, sessionIndex: session.index, type: "break_started", data: { afterSet: setNum } });
-      void haptics.setComplete();
-    } else {
-      const next = setNum + 1;
-      void recordEvent({ slug, sessionIndex: session.index, type: "set_completed", data: { set: setNum, reps } });
-      if (next > session.sets.length) {
-        setPhase("done");
-        setShowConfetti(true);
-        const summary = `${program?.exercise.name ?? slug} ${session.sets.length} sets, ${session.totalReps} reps`;
-        void completeSession(slug, session.index, summary);
-        void haptics.sessionComplete();
-      } else {
-        setCurrentSet(next);
-        void haptics.setComplete();
-      }
-    }
-  };
 
   if (loading) {
     return (
@@ -327,7 +124,7 @@ export default function SessionDetail() {
         {/* Focus Card */}
         {phase !== "working" && phase !== "done" ? (
           <View style={[styles.focusCard, { backgroundColor: phaseBg, borderColor: phaseFg }]}>
-            <Text style={[styles.timerHero, { color: phaseFg }]}>{formatTime(timer)}</Text>
+            <Text style={[styles.timerHero, { color: phaseFg }]}>{formatTime(timerValue)}</Text>
             <Text style={styles.focusLabel}>
               {phase === "warmup" ? "Get ready for your workout" : `Rest after set ${currentSet}`}
             </Text>
@@ -350,7 +147,7 @@ export default function SessionDetail() {
           ref={listRef}
           data={steps}
           keyExtractor={(item) => item.key}
-          extraData={{ phase, timer, currentSet, isPaused, currentStepIndex }}
+          extraData={{ phase, timerValue, currentSet, isPaused, currentStepIndex }}
           ItemSeparatorComponent={() => <View style={{ height: theme.spacing.sm }} />}
           contentContainerStyle={styles.listContent}
           onScrollToIndexFailed={(info) => {
@@ -370,7 +167,7 @@ export default function SessionDetail() {
               return (
                 <StepCard title="Warm-up" active={isActive} done={isDone} locked={isLocked} right={rightTick}>
                   {isActive && phase === "warmup" && (
-                    <Text style={styles.timerText}>{formatTime(timer)}</Text>
+                    <Text style={styles.timerText}>{formatTime(timerValue)}</Text>
                   )}
                 </StepCard>
               );
@@ -399,7 +196,7 @@ export default function SessionDetail() {
             return (
               <StepCard title="Break" active={isActive} done={isDone} locked={isLocked} right={rightTick}>
                 {isCurrentBreak && (
-                  <Text style={styles.timerText}>{formatTime(timer)}</Text>
+                  <Text style={styles.timerText}>{formatTime(timerValue)}</Text>
                 )}
               </StepCard>
             );
@@ -487,12 +284,6 @@ export default function SessionDetail() {
       )}
     </View>
   );
-}
-
-function formatTime(total: number) {
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 const styles = StyleSheet.create({

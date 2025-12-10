@@ -1,4 +1,4 @@
-import RoutinesView from "@/components/RoutinesView";
+import { RoutinesView } from "@/components";
 import haptics from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";

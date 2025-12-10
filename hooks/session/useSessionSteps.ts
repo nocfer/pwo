@@ -1,4 +1,4 @@
-import type { Session } from "@/hooks/useProgramSessions";
+import type { Session } from "@/types";
 import { useMemo } from "react";
 
 export type Step =

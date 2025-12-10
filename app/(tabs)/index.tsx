@@ -1,7 +1,5 @@
-import ProgressView from "@/components/ProgressView";
-import { WeeklyChart } from "@/components/WeeklyChart";
-import { useLastCompletedSlug } from "@/hooks/useLastCompletedSlug";
-import { useRoutines } from "@/hooks/useRoutines";
+import { ProgressView, WeeklyChart } from "@/components";
+import { useLastCompletedSlug, useRoutines } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";

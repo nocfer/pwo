@@ -5,41 +5,21 @@
  * when data changes anywhere in the app.
  */
 
-import { DataEvent, dataEvents } from "@/lib/events";
-import { EventRecord, HistoryEntry, SessionState, storage } from "@/lib/storage";
+import { dataEvents } from "@/lib/events";
+import { storage } from "@/lib/storage";
+import type {
+  DataEvent,
+  DataState,
+  DataAction,
+  EventRecord,
+  HistoryEntry,
+  Routine,
+  SessionState,
+} from "@/types";
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useReducer } from "react";
 
-// ============================================================================
-// Types
-// ============================================================================
-
-export type Routine = {
-  name: string;
-  slug: string;
-};
-
-type DataState = {
-  // Routines (from static assets)
-  routines: Routine[];
-  routinesLoading: boolean;
-  
-  // Last completed slug
-  lastCompletedSlug: string | null;
-  
-  // Refresh triggers (incremented to force re-fetch)
-  progressVersion: number;
-  historyVersion: number;
-  completedVersion: number;
-};
-
-type DataAction =
-  | { type: "SET_ROUTINES"; routines: Routine[] }
-  | { type: "SET_ROUTINES_LOADING"; loading: boolean }
-  | { type: "SET_LAST_COMPLETED_SLUG"; slug: string | null }
-  | { type: "INCREMENT_PROGRESS_VERSION" }
-  | { type: "INCREMENT_HISTORY_VERSION" }
-  | { type: "INCREMENT_COMPLETED_VERSION" }
-  | { type: "REFRESH_ALL" };
+// Re-export Routine type for backwards compatibility
+export type { Routine } from "@/types";
 
 type DataContextValue = {
   state: DataState;
@@ -76,7 +56,7 @@ type DataContextValue = {
 // Initial State & Reducer
 // ============================================================================
 
-const initialState: DataState = {
+export const initialState: DataState = {
   routines: [],
   routinesLoading: true,
   lastCompletedSlug: null,
@@ -85,7 +65,7 @@ const initialState: DataState = {
   completedVersion: 0,
 };
 
-function dataReducer(state: DataState, action: DataAction): DataState {
+export function dataReducer(state: DataState, action: DataAction): DataState {
   switch (action.type) {
     case "SET_ROUTINES":
       return { ...state, routines: action.routines, routinesLoading: false };

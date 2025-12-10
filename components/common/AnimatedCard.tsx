@@ -162,4 +162,3 @@ export function FadeIn({ children, delay = 0, duration = 300, style }: FadeInPro
 }
 
 export default AnimatedCard;
-

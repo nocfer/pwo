@@ -7,11 +7,7 @@
 
 import { useContext, useEffect, useState } from "react";
 import DataContext from "@/context/DataContext";
-
-export type Routine = {
-  name: string;
-  slug: string;
-};
+import type { Routine } from "@/types";
 
 export function useRoutines() {
   const context = useContext(DataContext);

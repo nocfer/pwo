@@ -1,8 +1,8 @@
-import { useRoutines } from "@/hooks/useRoutines";
+import { useRoutines } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import { StyleSheet, Text, View } from "react-native";
-import { NoRoutinesEmpty, NoSearchResultsEmpty } from "./EmptyState";
-import { SkeletonRoutineButton } from "./Skeleton";
+import { NoRoutinesEmpty, NoSearchResultsEmpty } from "@/components/common/EmptyState";
+import { SkeletonRoutineButton } from "@/components/common/Skeleton";
 import SwipeableRoutineButton from "./SwipeableRoutineButton";
 
 type Props = {

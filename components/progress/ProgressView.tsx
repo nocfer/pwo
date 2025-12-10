@@ -1,8 +1,8 @@
-import { useLiveProgress } from "@/hooks/useLiveProgress";
+import { useLiveProgress } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import { StyleSheet, Text, View } from "react-native";
-import { NoProgressEmpty } from "./EmptyState";
-import { SkeletonStreakDots } from "./Skeleton";
+import { NoProgressEmpty } from "@/components/common/EmptyState";
+import { SkeletonStreakDots } from "@/components/common/Skeleton";
 
 type Props = {
   slug: string;

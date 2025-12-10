@@ -1,6 +1,5 @@
-import ProgressView from "@/components/ProgressView";
-import SessionsView from "@/components/SessionsView";
-import { useLiveHistory } from "@/hooks/useLiveHistory";
+import { ProgressView, SessionsView } from "@/components";
+import { useLiveHistory } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";

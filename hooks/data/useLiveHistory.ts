@@ -6,7 +6,8 @@
  */
 
 import { useRefreshVersions } from "@/context/DataContext";
-import { storage, HistoryEntry } from "@/lib/storage";
+import { storage } from "@/lib/storage";
+import type { HistoryEntry } from "@/types";
 import { useEffect, useState } from "react";
 
 export type { HistoryEntry };

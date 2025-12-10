@@ -1,22 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import type { Program, Session } from "@/types";
 
-export type Program = {
-  id: number;
-  slug: string;
-  exercise: {
-    name: string;
-    warmUp?: number; // seconds
-    break?: number; // seconds between sets
-    sets: number; // fixed 5 in our case
-    reps?: number[]; // optional baseline
-  };
-};
-
-export type Session = {
-  index: number; // 1-based
-  totalReps: number;
-  sets: number[]; // length = program.exercise.sets
-};
+// Re-export types for backwards compatibility
+export type { Program, Session } from "@/types";
 
 function distributeIntoSets(total: number, sets: number): number[] {
   const base = Math.floor(total / sets);
