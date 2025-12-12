@@ -148,9 +148,25 @@ export default function ProgramSessionRunner() {
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         <View style={styles.headerSection}>
           <View style={styles.headerTop}>
+            <Pressable
+              onPress={() => router.back()}
+              accessibilityRole="button"
+              accessibilityLabel="Back"
+              style={({ pressed }) => [
+                styles.headerBack,
+                pressed && styles.headerBackPressed,
+              ]}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color={theme.colors.text}
+              />
+            </Pressable>
+
             <View style={{ flex: 1 }}>
-              <Text style={styles.title}>{program.name}</Text>
-              <Text style={styles.subtitle}>
+              <Text style={styles.headerTitle}>{program.name}</Text>
+              <Text style={styles.headerSubtitle}>
                 {title} • {currentStepIndex + 1}/{steps.length}
               </Text>
               <View style={styles.progressTrack}>
@@ -165,90 +181,210 @@ export default function ProgramSessionRunner() {
                 />
               </View>
             </View>
-            <Pressable
-              onPress={() => router.back()}
-              style={({ pressed }) => [
-                styles.headerClose,
-                pressed && styles.headerClosePressed,
-              ]}
-            >
-              <Ionicons name="close" size={18} color={theme.colors.text} />
-            </Pressable>
           </View>
 
-          {/* Focus card (always visible for clarity) */}
-          <View
-            style={[
-              styles.focusCard,
-              {
-                borderColor: phaseAccent,
-                backgroundColor: theme.colors.surface,
-              },
-            ]}
-          >
-            <View style={styles.focusTopRow}>
-              <View style={[styles.phaseChip, { borderColor: phaseAccent }]}>
+          {/* Focus card - action-oriented */}
+          {timer.phase === "done" ? (
+            <View style={[styles.focusCard, styles.focusCardComplete]}>
+              <View style={styles.focusIconContainer}>
+                <Ionicons
+                  name="checkmark-circle"
+                  size={32}
+                  color={theme.colors.success}
+                />
+              </View>
+              <Text style={styles.focusTitle}>Session Complete</Text>
+              <Text style={styles.focusSub}>
+                Great work! You've finished all exercises.
+              </Text>
+            </View>
+          ) : timer.phase === "timed" ? (
+            <View
+              style={[
+                styles.focusCard,
+                {
+                  borderColor: phaseAccent,
+                  backgroundColor: phaseBg,
+                },
+              ]}
+            >
+              <View style={styles.focusTopRow}>
                 <View
                   style={[
-                    styles.phaseChipDot,
-                    { backgroundColor: phaseAccent },
+                    styles.focusIconSmall,
+                    { backgroundColor: phaseAccent + "20" },
                   ]}
-                />
+                >
+                  <Ionicons
+                    name={
+                      current?.type === "warmup"
+                        ? "flame"
+                        : current?.type === "rest"
+                          ? "pause-circle"
+                          : "time"
+                    }
+                    size={20}
+                    color={phaseAccent}
+                  />
+                </View>
                 <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
-                  {phaseLabel}
+                  {current?.type === "warmup"
+                    ? "Warming up"
+                    : current?.type === "rest"
+                      ? "Resting"
+                      : "Timer running"}
                 </Text>
               </View>
-              {nextLabel && timer.phase !== "done" && (
-                <Text style={styles.nextUp}>Next: {nextLabel}</Text>
+              <Text style={[styles.timerHero, { color: phaseAccent }]}>
+                {formatTime(timer.timer)}
+              </Text>
+              <Text style={styles.focusLabel}>
+                {current?.type === "warmup"
+                  ? "Get ready for your workout"
+                  : current?.type === "rest"
+                    ? `Rest before ${nextLabel ?? "next exercise"}`
+                    : current?.type === "exercise"
+                      ? `Complete ${currentExerciseName ?? "exercise"}`
+                      : "Continue"}
+              </Text>
+            </View>
+          ) : current?.type === "exercise" ? (
+            <View
+              style={[
+                styles.focusCard,
+                {
+                  borderColor: phaseAccent,
+                  backgroundColor: theme.colors.surface,
+                },
+              ]}
+            >
+              <View style={styles.focusTopRow}>
+                <View
+                  style={[
+                    styles.focusIconSmall,
+                    { backgroundColor: phaseAccent + "15" },
+                  ]}
+                >
+                  <Ionicons name="barbell" size={20} color={phaseAccent} />
+                </View>
+                <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
+                  Current Exercise
+                </Text>
+              </View>
+              <Text style={styles.focusTitle}>{currentExerciseName}</Text>
+              <View style={styles.focusMetrics}>
+                {current.targetReps != null && (
+                  <View style={styles.focusMetric}>
+                    <Ionicons
+                      name="repeat"
+                      size={16}
+                      color={theme.colors.muted}
+                    />
+                    <Text style={styles.focusMetricText}>
+                      {current.targetReps} reps
+                    </Text>
+                  </View>
+                )}
+                {current.durationSeconds != null && (
+                  <View style={styles.focusMetric}>
+                    <Ionicons
+                      name="time-outline"
+                      size={16}
+                      color={theme.colors.muted}
+                    />
+                    <Text style={styles.focusMetricText}>
+                      {current.durationSeconds}s
+                    </Text>
+                  </View>
+                )}
+              </View>
+              {current.note && (
+                <View style={styles.focusNoteContainer}>
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={16}
+                    color={theme.colors.subtext}
+                  />
+                  <Text style={styles.focusNote}>{current.note}</Text>
+                </View>
               )}
             </View>
-            {timer.phase === "timed" ? (
-              <>
-                <Text style={styles.timerHero}>{formatTime(timer.timer)}</Text>
-                <Text style={styles.focusLabel}>
-                  {current?.type === "warmup"
-                    ? "Warm-up in progress"
-                    : current?.type === "rest"
-                      ? `${current.label ?? "Rest"}`
-                      : current?.type === "exercise"
-                        ? `${currentExerciseName ?? "Exercise"}`
-                        : "Timer"}
+          ) : current?.type === "warmup" ? (
+            <View
+              style={[
+                styles.focusCard,
+                {
+                  borderColor: phaseAccent,
+                  backgroundColor: phaseBg,
+                },
+              ]}
+            >
+              <View style={styles.focusTopRow}>
+                <View
+                  style={[
+                    styles.focusIconSmall,
+                    { backgroundColor: phaseAccent + "20" },
+                  ]}
+                >
+                  <Ionicons name="flame" size={20} color={phaseAccent} />
+                </View>
+                <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
+                  Ready to start
                 </Text>
-              </>
-            ) : current?.type === "exercise" ? (
-              <>
-                <Text style={styles.focusTitle}>{currentExerciseName}</Text>
-                <Text style={styles.focusSub}>
-                  {current.targetReps != null
-                    ? `Target: ${current.targetReps} reps`
-                    : "No target reps"}
-                  {current.durationSeconds != null
-                    ? ` • ${current.durationSeconds}s`
-                    : ""}
+              </View>
+              <Text style={styles.focusTitle}>Warm-up</Text>
+              <Text style={styles.focusSub}>
+                {current.seconds} seconds • Tap to begin
+              </Text>
+            </View>
+          ) : current?.type === "rest" ? (
+            <View
+              style={[
+                styles.focusCard,
+                {
+                  borderColor: phaseAccent,
+                  backgroundColor: phaseBg,
+                },
+              ]}
+            >
+              <View style={styles.focusTopRow}>
+                <View
+                  style={[
+                    styles.focusIconSmall,
+                    { backgroundColor: phaseAccent + "20" },
+                  ]}
+                >
+                  <Ionicons name="pause-circle" size={20} color={phaseAccent} />
+                </View>
+                <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
+                  Rest period
                 </Text>
-                {current.note ? (
-                  <Text style={styles.focusNote}>{current.note}</Text>
-                ) : null}
-              </>
-            ) : current?.type === "warmup" ? (
-              <>
-                <Text style={styles.focusTitle}>Warm-up</Text>
-                <Text style={styles.focusSub}>{current.seconds}s</Text>
-              </>
-            ) : current?.type === "rest" ? (
-              <>
-                <Text style={styles.focusTitle}>
-                  {current.label ? `Rest • ${current.label}` : "Rest"}
-                </Text>
-                <Text style={styles.focusSub}>{current.seconds}s</Text>
-              </>
-            ) : (
-              <>
-                <Text style={styles.focusTitle}>Ready</Text>
-                <Text style={styles.focusSub}>Start the next step</Text>
-              </>
-            )}
-          </View>
+              </View>
+              <Text style={styles.focusTitle}>
+                {current.label ? current.label : "Rest"}
+              </Text>
+              <Text style={styles.focusSub}>
+                {current.seconds} seconds • Tap to start timer
+              </Text>
+            </View>
+          ) : (
+            <View
+              style={[
+                styles.focusCard,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.surface,
+                },
+              ]}
+            >
+              <Text style={styles.focusTitle}>Ready</Text>
+              <Text style={styles.focusSub}>
+                {nextLabel
+                  ? `Next: ${nextLabel}`
+                  : "Start the next step"}
+              </Text>
+            </View>
+          )}
         </View>
 
         <FlatList
@@ -468,33 +604,41 @@ const styles = StyleSheet.create({
   headerSection: {
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
-    gap: theme.spacing.md,
+    paddingBottom: theme.spacing.md,
   },
   headerTop: {
     flexDirection: "row",
     alignItems: "flex-start",
-    justifyContent: "space-between",
     gap: theme.spacing.md,
   },
-  title: { ...theme.typography.h2, color: theme.colors.text },
-  subtitle: {
+  headerBack: {
+    padding: theme.spacing.xs,
+    marginTop: -theme.spacing.xs,
+    marginLeft: -theme.spacing.xs,
+  },
+  headerBackPressed: { opacity: 0.6 },
+  headerTitle: {
+    ...theme.typography.h2,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  headerSubtitle: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    marginTop: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
   },
   progressTrack: {
-    marginTop: theme.spacing.sm,
-    height: 8,
-    borderRadius: theme.radius.sm,
+    height: 6,
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.card,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.full,
   },
+
+  // (kept for potential reuse)
   headerClose: {
     width: 36,
     height: 36,
@@ -507,22 +651,41 @@ const styles = StyleSheet.create({
   },
   headerClosePressed: { backgroundColor: theme.colors.card },
   focusCard: {
-    marginTop: theme.spacing.sm,
+    marginTop: theme.spacing.md,
     borderRadius: theme.radius.xl,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
     paddingVertical: theme.spacing.xl,
     paddingHorizontal: theme.spacing.lg,
-    alignItems: "center",
     ...theme.shadows.md,
+  },
+  focusCardComplete: {
+    borderColor: theme.colors.success,
+    backgroundColor: theme.colors.successLight,
+    alignItems: "center",
   },
   focusTopRow: {
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: theme.spacing.sm,
     marginBottom: theme.spacing.md,
+  },
+  focusIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: theme.spacing.md,
+    ...theme.shadows.sm,
+  },
+  focusIconSmall: {
+    width: 32,
+    height: 32,
+    borderRadius: theme.radius.md,
+    alignItems: "center",
+    justifyContent: "center",
   },
   phaseChip: {
     flexDirection: "row",
@@ -538,27 +701,63 @@ const styles = StyleSheet.create({
   phaseChipText: {
     ...theme.typography.caption,
     fontFamily: theme.fonts.semiBold,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  nextUp: { ...theme.typography.caption, color: theme.colors.muted },
   timerHero: {
-    fontSize: 56,
+    fontSize: 64,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
-    marginBottom: theme.spacing.xs,
-    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
+    textAlign: "center",
   },
-  focusLabel: { ...theme.typography.body, color: theme.colors.muted },
-  focusTitle: { ...theme.typography.h2, color: theme.colors.text },
+  focusLabel: {
+    ...theme.typography.body,
+    color: theme.colors.subtext,
+    textAlign: "center",
+  },
+  focusTitle: {
+    ...theme.typography.h2,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+    textAlign: "center",
+  },
   focusSub: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    marginTop: theme.spacing.xs,
+    textAlign: "center",
+  },
+  focusMetrics: {
+    flexDirection: "row",
+    gap: theme.spacing.lg,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+    justifyContent: "center",
+  },
+  focusMetric: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+  },
+  focusMetricText: {
+    ...theme.typography.body,
+    color: theme.colors.text,
+    fontFamily: theme.fonts.semiBold,
+  },
+  focusNoteContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
   },
   focusNote: {
     ...theme.typography.caption,
     color: theme.colors.subtext,
-    marginTop: theme.spacing.sm,
-    textAlign: "center",
+    flex: 1,
+    lineHeight: 18,
   },
   listContent: {
     paddingHorizontal: theme.spacing.lg,

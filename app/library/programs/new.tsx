@@ -167,25 +167,27 @@ export default function NewProgramScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.header}>
-          <View style={styles.headerRow}>
-            <Pressable
-              onPress={() => router.back()}
-              style={({ pressed }) => [
-                styles.headerBack,
-                pressed && styles.headerBackPressed,
-              ]}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={20}
-                color={theme.colors.text}
-              />
-            </Pressable>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.title}>New Program</Text>
-              <Text style={styles.subtitle}>Build a session with blocks</Text>
-            </View>
+        <View style={styles.headerSection}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            style={({ pressed }) => [
+              styles.headerBack,
+              pressed && styles.headerBackPressed,
+            ]}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={24}
+              color={theme.colors.text}
+            />
+          </Pressable>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle}>New Program</Text>
+            <Text style={styles.headerSubtitle}>
+              Build a session with blocks
+            </Text>
           </View>
         </View>
 
@@ -498,30 +500,32 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.lg,
+    paddingTop: 0,
     paddingBottom: theme.spacing.xxl,
   },
-  header: { gap: theme.spacing.xs },
-  headerRow: {
+  headerSection: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: theme.spacing.md,
   },
   headerBack: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.xs,
+    marginTop: -theme.spacing.xs,
+    marginLeft: -theme.spacing.xs,
   },
-  headerBackPressed: {
-    backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }],
+  headerBackPressed: { opacity: 0.6 },
+  headerTitle: {
+    ...theme.typography.h2,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
   },
-  title: { ...theme.typography.h2, color: theme.colors.text },
-  subtitle: { ...theme.typography.body, color: theme.colors.muted },
+  headerSubtitle: {
+    ...theme.typography.body,
+    color: theme.colors.muted,
+  },
   card: {
     backgroundColor: theme.colors.surface,
     borderColor: theme.colors.border,

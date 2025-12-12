@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   cardIconGradient: {
     width: 36,
     height: 36,
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.md,
     alignItems: "center",
     justifyContent: "center",
     marginRight: theme.spacing.sm,
