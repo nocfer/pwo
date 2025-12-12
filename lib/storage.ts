@@ -51,8 +51,12 @@ const KEYS = {
 // ============================================================================
 
 const isWeb = Platform.OS === "web";
-const FS_ANY = FileSystem as any;
-const DOC_DIR: string = FS_ANY.documentDirectory || FS_ANY.cacheDirectory || "";
+type FileSystemType = typeof FileSystem & {
+  documentDirectory?: string;
+  cacheDirectory?: string;
+};
+const FS = FileSystem as FileSystemType;
+const DOC_DIR: string = FS.documentDirectory || FS.cacheDirectory || "";
 
 function getFilePath(key: string): string {
   return `${DOC_DIR}${key}.json`;
@@ -119,11 +123,13 @@ async function write<T>(key: string, value: T): Promise<void> {
 
 function generateId(prefix: string): string {
   // Prefer crypto.randomUUID if available (web)
-  const anyCrypto: any =
-    typeof globalThis !== "undefined" ? (globalThis as any).crypto : undefined;
+  const crypto =
+    typeof globalThis !== "undefined"
+      ? (globalThis as typeof globalThis & { crypto: Crypto })?.crypto
+      : undefined;
   const rand =
-    typeof anyCrypto?.randomUUID === "function"
-      ? anyCrypto.randomUUID()
+    typeof crypto?.randomUUID === "function"
+      ? crypto.randomUUID()
       : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
   return `${prefix}_${rand}`;
 }

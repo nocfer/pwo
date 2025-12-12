@@ -4,14 +4,14 @@ import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, View, ViewStyle } from "react-native";
 
 type SkeletonProps = {
-  width?: number | string;
+  width?: number;
   height?: number;
   borderRadius?: number;
   style?: ViewStyle;
 };
 
 export function Skeleton({
-  width = "100%",
+  width,
   height = 20,
   borderRadius = theme.radius.sm,
   style
@@ -47,7 +47,7 @@ export function Skeleton({
       style={[
         styles.skeleton,
         {
-          width: width as any,
+          width,
           height,
           borderRadius
         },
@@ -85,7 +85,7 @@ export function SkeletonCard() {
         </View>
       </View>
       <Skeleton height={14} style={{ marginTop: theme.spacing.md }} />
-      <Skeleton width="70%" height={14} style={{ marginTop: 8 }} />
+      <Skeleton width={150} height={14} style={{ marginTop: 8 }} />
     </View>
   );
 }

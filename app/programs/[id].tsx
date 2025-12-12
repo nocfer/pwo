@@ -147,7 +147,7 @@ export default function ProgramDetail() {
                 key={s.index}
                 onPress={() =>
                   router.navigate({
-                    pathname: "/programs/[id]/session/[index]" as any,
+                    pathname: "/programs/[id]/session/[index]",
                     params: { id: program.id, index: String(s.index) }
                   })
                 }
@@ -188,7 +188,7 @@ export default function ProgramDetail() {
           disabled={!firstSession}
           onPress={() =>
             router.navigate({
-              pathname: "/programs/[id]/session/[index]" as any,
+              pathname: "/programs/[id]/session/[index]",
               params: {
                 id: program.id,
                 index: String(firstSession?.index ?? 1)
