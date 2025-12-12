@@ -26,6 +26,12 @@ export type DataState = {
   challenges: Challenge[];
   challengesLoading: boolean;
 
+  // Exercises & Programs (seeded + user)
+  exercises: import("./exercise").Exercise[];
+  exercisesLoading: boolean;
+  programs: import("./program").Program[];
+  programsLoading: boolean;
+
   // Last completed slug
   lastCompletedSlug: string | null;
 
@@ -38,6 +44,10 @@ export type DataState = {
 export type DataAction =
   | { type: "SET_CHALLENGES"; challenges: Challenge[] }
   | { type: "SET_CHALLENGES_LOADING"; loading: boolean }
+  | { type: "SET_EXERCISES"; exercises: import("./exercise").Exercise[] }
+  | { type: "SET_EXERCISES_LOADING"; loading: boolean }
+  | { type: "SET_PROGRAMS"; programs: import("./program").Program[] }
+  | { type: "SET_PROGRAMS_LOADING"; loading: boolean }
   | { type: "SET_LAST_COMPLETED_SLUG"; slug: string | null }
   | { type: "INCREMENT_PROGRESS_VERSION" }
   | { type: "INCREMENT_HISTORY_VERSION" }

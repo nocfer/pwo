@@ -13,7 +13,9 @@ import type {
   DataEvent,
   DataState,
   EventRecord,
+  Exercise,
   HistoryEntry,
+  Program,
   SessionState,
 } from "@/types";
 import React, {
@@ -59,6 +61,22 @@ type DataContextValue = {
     refreshProgress: () => void;
     refreshHistory: () => void;
     refreshCompleted: () => void;
+
+    // Exercises CRUD
+    upsertExercise: (
+      input: Pick<Exercise, "id" | "name" | "category" | "icon"> & {
+        id?: string;
+      },
+    ) => Promise<Exercise>;
+    deleteExercise: (id: string) => Promise<void>;
+
+    // Programs CRUD
+    upsertProgram: (
+      input: Pick<Program, "id" | "name" | "description" | "sessions"> & {
+        id?: string;
+      },
+    ) => Promise<Program>;
+    deleteProgram: (id: string) => Promise<void>;
   };
 };
 
@@ -69,6 +87,10 @@ type DataContextValue = {
 export const initialState: DataState = {
   challenges: [],
   challengesLoading: true,
+  exercises: [],
+  exercisesLoading: true,
+  programs: [],
+  programsLoading: true,
   lastCompletedSlug: null,
   progressVersion: 0,
   historyVersion: 0,
@@ -85,6 +107,14 @@ export function dataReducer(state: DataState, action: DataAction): DataState {
       };
     case "SET_CHALLENGES_LOADING":
       return { ...state, challengesLoading: action.loading };
+    case "SET_EXERCISES":
+      return { ...state, exercises: action.exercises, exercisesLoading: false };
+    case "SET_EXERCISES_LOADING":
+      return { ...state, exercisesLoading: action.loading };
+    case "SET_PROGRAMS":
+      return { ...state, programs: action.programs, programsLoading: false };
+    case "SET_PROGRAMS_LOADING":
+      return { ...state, programsLoading: action.loading };
     case "SET_LAST_COMPLETED_SLUG":
       return { ...state, lastCompletedSlug: action.slug };
     case "INCREMENT_PROGRESS_VERSION":
@@ -134,6 +164,68 @@ export function DataProvider({ children }: { children: ReactNode }) {
           dispatch({ type: "SET_CHALLENGES_LOADING", loading: false });
       }
     })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Load exercises & programs (seed + user) on mount
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const [seedExercises, userExercises] = await Promise.all([
+          (async () => {
+            try {
+              const mod = await import("@/assets/data/exercises.json");
+              return (mod as any).default as Exercise[];
+            } catch {
+              return [] as Exercise[];
+            }
+          })(),
+          storage.loadExercises(),
+        ]);
+
+        const exercisesById = new Map<string, Exercise>();
+        for (const e of seedExercises) exercisesById.set(e.id, e);
+        for (const e of userExercises) exercisesById.set(e.id, e);
+        const mergedExercises = Array.from(exercisesById.values()).sort((a, b) =>
+          a.name.localeCompare(b.name),
+        );
+
+        if (mounted)
+          dispatch({ type: "SET_EXERCISES", exercises: mergedExercises });
+      } catch {
+        if (mounted)
+          dispatch({ type: "SET_EXERCISES_LOADING", loading: false });
+      }
+
+      try {
+        const [seedPrograms, userPrograms] = await Promise.all([
+          (async () => {
+            try {
+              const mod = await import("@/assets/data/programs.json");
+              return (mod as any).default as Program[];
+            } catch {
+              return [] as Program[];
+            }
+          })(),
+          storage.loadPrograms(),
+        ]);
+
+        const programsById = new Map<string, Program>();
+        for (const p of seedPrograms) programsById.set(p.id, p);
+        for (const p of userPrograms) programsById.set(p.id, p);
+        const mergedPrograms = Array.from(programsById.values()).sort((a, b) =>
+          a.name.localeCompare(b.name),
+        );
+
+        if (mounted) dispatch({ type: "SET_PROGRAMS", programs: mergedPrograms });
+      } catch {
+        if (mounted) dispatch({ type: "SET_PROGRAMS_LOADING", loading: false });
+      }
+    })();
+
     return () => {
       mounted = false;
     };
@@ -252,6 +344,128 @@ export function DataProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "INCREMENT_COMPLETED_VERSION" });
   }, []);
 
+  const upsertExercise = useCallback(
+    async (
+      input: Pick<Exercise, "id" | "name" | "category" | "icon"> & {
+        id?: string;
+      },
+    ) => {
+      const id = input.id;
+      if (id) {
+        const existing = state.exercises.find((e) => e.id === id);
+        if (existing?.source === "builtin") {
+          throw new Error("Built-in exercises cannot be edited.");
+        }
+      }
+
+      const saved = await storage.upsertExercise({
+        id: input.id ?? "",
+        name: input.name,
+        category: input.category,
+        icon: input.icon,
+        source: "user",
+      });
+
+      const userExercises = await storage.loadExercises();
+      const exercisesById = new Map<string, Exercise>();
+      for (const e of state.exercises) {
+        // keep builtins from current state (already contains seeds)
+        if (e.source === "builtin") exercisesById.set(e.id, e);
+      }
+      for (const e of userExercises) exercisesById.set(e.id, e);
+      const merged = Array.from(exercisesById.values()).sort((a, b) =>
+        a.name.localeCompare(b.name),
+      );
+      dispatch({ type: "SET_EXERCISES", exercises: merged });
+      return saved;
+    },
+    [state.exercises],
+  );
+
+  const deleteExercise = useCallback(
+    async (id: string) => {
+      const existing = state.exercises.find((e) => e.id === id);
+      if (!existing) return;
+      if (existing.source === "builtin") {
+        throw new Error("Built-in exercises cannot be deleted.");
+      }
+
+      const referencedBy = state.programs.find((p) =>
+        p.sessions.some((s) =>
+          s.blocks.some((b) => b.type === "exercise" && b.exerciseId === id),
+        ),
+      );
+      if (referencedBy) {
+        throw new Error(
+          `This exercise is used by the program “${referencedBy.name}”. Remove it from the program first.`,
+        );
+      }
+
+      await storage.deleteExercise(id);
+
+      const userExercises = await storage.loadExercises();
+      const merged = [
+        ...state.exercises.filter((e) => e.source === "builtin"),
+        ...userExercises,
+      ].sort((a, b) => a.name.localeCompare(b.name));
+      dispatch({ type: "SET_EXERCISES", exercises: merged });
+    },
+    [state.exercises, state.programs],
+  );
+
+  const upsertProgram = useCallback(
+    async (
+      input: Pick<Program, "id" | "name" | "description" | "sessions"> & {
+        id?: string;
+      },
+    ) => {
+      const id = input.id;
+      if (id) {
+        const existing = state.programs.find((p) => p.id === id);
+        if (existing?.source === "builtin") {
+          throw new Error("Built-in programs cannot be edited.");
+        }
+      }
+
+      const saved = await storage.upsertProgram({
+        id: input.id ?? "",
+        name: input.name,
+        description: input.description,
+        sessions: input.sessions,
+        source: "user",
+      });
+
+      const userPrograms = await storage.loadPrograms();
+      const merged = [
+        ...state.programs.filter((p) => p.source === "builtin"),
+        ...userPrograms,
+      ].sort((a, b) => a.name.localeCompare(b.name));
+      dispatch({ type: "SET_PROGRAMS", programs: merged });
+      return saved;
+    },
+    [state.programs],
+  );
+
+  const deleteProgram = useCallback(
+    async (id: string) => {
+      const existing = state.programs.find((p) => p.id === id);
+      if (!existing) return;
+      if (existing.source === "builtin") {
+        throw new Error("Built-in programs cannot be deleted.");
+      }
+
+      await storage.deleteProgram(id);
+
+      const userPrograms = await storage.loadPrograms();
+      const merged = [
+        ...state.programs.filter((p) => p.source === "builtin"),
+        ...userPrograms,
+      ].sort((a, b) => a.name.localeCompare(b.name));
+      dispatch({ type: "SET_PROGRAMS", programs: merged });
+    },
+    [state.programs],
+  );
+
   const contextValue: DataContextValue = {
     state,
     actions: {
@@ -263,6 +477,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       refreshProgress,
       refreshHistory,
       refreshCompleted,
+      upsertExercise,
+      deleteExercise,
+      upsertProgram,
+      deleteProgram,
     },
   };
 

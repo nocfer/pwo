@@ -1,9 +1,6 @@
 import type { Challenge, Session } from "@/types";
 import { useEffect, useMemo, useState } from "react";
 
-// Re-export types for backwards compatibility
-export type { Program, Session } from "@/types";
-
 function distributeIntoSets(total: number, sets: number): number[] {
   const base = Math.floor(total / sets);
   const remainder = total - base * sets;

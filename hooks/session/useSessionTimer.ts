@@ -6,11 +6,11 @@
 
 import { haptics } from "@/lib/haptics";
 import type {
-  EventRecord,
-  Program,
-  Session,
-  SessionPhase,
-  SessionState,
+    Challenge,
+    EventRecord,
+    Session,
+    SessionPhase,
+    SessionState,
 } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -33,7 +33,7 @@ type TimerActions = {
 type UseSessionTimerOptions = {
   slug: string;
   session: Session | undefined;
-  program: Program | null | undefined;
+  program: Challenge | null | undefined;
   actions: TimerActions;
 };
 
