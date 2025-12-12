@@ -35,3 +35,10 @@ export type {
     ProgramWarmupBlock
 } from "./program";
 
+// Progress types
+export type {
+    ChallengeProgress,
+    ExerciseProgress, ProgramProgress, ProgressHistory,
+    ProgressHistoryEntry, SessionProgress
+} from "./progress";
+

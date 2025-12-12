@@ -5,17 +5,21 @@
  * when data changes anywhere in the app.
  */
 
+import { generateChallengeSessions } from "@/hooks/data/useChallengeSessions";
 import { dataEvents } from "@/lib/events";
 import { storage } from "@/lib/storage";
 import type {
+  ChallengeProgress,
   DataAction,
   DataEvent,
   DataState,
   EventRecord,
   Exercise,
+  ExerciseProgress,
   HistoryEntry,
   Program,
-  SessionState,
+  ProgramProgress,
+  SessionProgress
 } from "@/types";
 import React, {
   createContext,
@@ -369,6 +373,200 @@ export function DataProvider({ children }: { children: ReactNode }) {
       // Update streak
       await storage.saveStreakHit(slug, dateISO);
 
+      // Get program to determine type and calculate progress
+      const program = state.programs.find((p) => p.id === slug);
+      if (program) {
+        const isChallenge = Boolean(program.challengeConfig);
+        const events = await storage.loadEventsForSlug(slug);
+        const sessionEvents = events.filter(
+          (e) => e.sessionIndex === sessionIndex
+        );
+
+        // Calculate time spent from events
+        let timeSpentSeconds = 0;
+        const exerciseProgressMap = new Map<string, ExerciseProgress>();
+
+        for (const event of sessionEvents) {
+          if (event.type === "warmup_started" || event.type === "break_started") {
+            const data = event.data as any;
+            if (data?.durationSeconds) {
+              timeSpentSeconds += data.durationSeconds;
+            }
+          }
+          if (event.type === "set_completed") {
+            const data = event.data as any;
+            if (data?.exerciseId && data?.reps) {
+              const existing = exerciseProgressMap.get(data.exerciseId) || {
+                exerciseId: data.exerciseId,
+                repsCompleted: 0,
+                setsCompleted: 0,
+                lastCompletedAt: dateISO,
+              };
+              existing.repsCompleted += data.reps || 0;
+              existing.setsCompleted += 1;
+              exerciseProgressMap.set(data.exerciseId, existing);
+            }
+            if (data?.durationSeconds) {
+              timeSpentSeconds += data.durationSeconds;
+            }
+          }
+        }
+
+        const exerciseProgress = Array.from(exerciseProgressMap.values());
+
+        if (isChallenge && program.challengeConfig) {
+          // Update challenge progress
+          const existing = await storage.loadChallengeProgress(slug);
+          const sessions = generateChallengeSessions(program.challengeConfig);
+          const session = sessions.find((s) => s.index === sessionIndex);
+
+          let totalRepsCompleted = exerciseProgress.reduce(
+            (sum, e) => sum + e.repsCompleted,
+            0
+          );
+
+          if (existing) {
+            // Update existing progress
+            const sessionProgressIndex = existing.sessions.findIndex(
+              (s) => s.sessionIndex === sessionIndex
+            );
+            const sessionProgress: SessionProgress = {
+              sessionIndex,
+              completed: true,
+              completedAt: dateISO,
+              timeSpentSeconds,
+              exercises: exerciseProgress,
+            };
+
+            if (sessionProgressIndex >= 0) {
+              existing.sessions[sessionProgressIndex] = sessionProgress;
+            } else {
+              existing.sessions.push(sessionProgress);
+            }
+
+            // Recalculate total reps
+            totalRepsCompleted = existing.sessions
+              .filter((s) => s.completed)
+              .reduce((sum, s) => {
+                return (
+                  sum +
+                  s.exercises.reduce((eSum, e) => eSum + e.repsCompleted, 0)
+                );
+              }, 0);
+
+            existing.totalRepsCompleted = totalRepsCompleted;
+            existing.lastActivityAt = dateISO;
+            existing.updatedAt = dateISO;
+
+            // Check if challenge is completed
+            const completedSessions = existing.sessions.filter((s) => s.completed);
+            if (
+              completedSessions.length === sessions.length &&
+              totalRepsCompleted >= program.challengeConfig.targetReps
+            ) {
+              existing.completedAt = dateISO;
+            }
+
+            await storage.saveChallengeProgress(existing);
+          } else {
+            // Create new challenge progress
+            const newProgress: ChallengeProgress = {
+              challengeId: slug,
+              startedAt: dateISO,
+              sessions: [
+                {
+                  sessionIndex,
+                  completed: true,
+                  completedAt: dateISO,
+                  timeSpentSeconds,
+                  exercises: exerciseProgress,
+                },
+              ],
+              totalRepsCompleted,
+              targetReps: program.challengeConfig.targetReps,
+              lastActivityAt: dateISO,
+              updatedAt: dateISO,
+            };
+            await storage.saveChallengeProgress(newProgress);
+          }
+
+          // Store history entry
+          await storage.appendProgressHistory({
+            date: dateISO.slice(0, 10),
+            challengeId: slug,
+            sessionsCompleted: 1,
+            totalReps: totalRepsCompleted,
+          });
+        } else {
+          // Update program progress
+          const existing = await storage.loadProgramProgress(slug);
+          const session = program.sessions.find((s) => s.index === sessionIndex);
+
+          if (existing) {
+            // Update existing progress
+            const sessionProgressIndex = existing.sessions.findIndex(
+              (s) => s.sessionIndex === sessionIndex
+            );
+            const sessionProgress: SessionProgress = {
+              sessionIndex,
+              completed: true,
+              completedAt: dateISO,
+              timeSpentSeconds,
+              exercises: exerciseProgress,
+            };
+
+            if (sessionProgressIndex >= 0) {
+              existing.sessions[sessionProgressIndex] = sessionProgress;
+            } else {
+              existing.sessions.push(sessionProgress);
+            }
+
+            // Recalculate total time
+            existing.totalTimeSpentSeconds = existing.sessions
+              .filter((s) => s.completed)
+              .reduce((sum, s) => sum + (s.timeSpentSeconds || 0), 0);
+
+            existing.lastActivityAt = dateISO;
+            existing.updatedAt = dateISO;
+
+            // Check if program is completed
+            const completedSessions = existing.sessions.filter((s) => s.completed);
+            if (completedSessions.length === program.sessions.length) {
+              existing.completedAt = dateISO;
+            }
+
+            await storage.saveProgramProgress(existing);
+          } else {
+            // Create new program progress
+            const newProgress: ProgramProgress = {
+              programId: slug,
+              startedAt: dateISO,
+              sessions: [
+                {
+                  sessionIndex,
+                  completed: true,
+                  completedAt: dateISO,
+                  timeSpentSeconds,
+                  exercises: exerciseProgress,
+                },
+              ],
+              totalTimeSpentSeconds: timeSpentSeconds,
+              lastActivityAt: dateISO,
+              updatedAt: dateISO,
+            };
+            await storage.saveProgramProgress(newProgress);
+          }
+
+          // Store history entry
+          await storage.appendProgressHistory({
+            date: dateISO.slice(0, 10),
+            programId: slug,
+            sessionsCompleted: 1,
+            timeSpentSeconds,
+          });
+        }
+      }
+
       // Clear session state
       await storage.clearSessionState(slug, sessionIndex);
 
@@ -377,7 +575,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       dataEvents.emitProgressUpdated(slug);
       dataEvents.emitHistoryUpdated(slug);
     },
-    [],
+    [state.programs],
   );
 
   const recordEvent = useCallback(
