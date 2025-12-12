@@ -44,6 +44,14 @@ export type ProgramSession = {
   blocks: ProgramBlock[];
 };
 
+export type ChallengeConfig = {
+  exerciseId: string;
+  sets: number;
+  targetReps: number;
+  warmUpSeconds: number;
+  breakSeconds: number;
+};
+
 export type Program = {
   id: string;
   name: string;
@@ -52,4 +60,9 @@ export type Program = {
   createdAt: string; // ISO
   updatedAt: string; // ISO
   source: ProgramSource;
+  /**
+   * If present, this program is a challenge that generates sessions dynamically.
+   * Sessions will be generated from 20 reps to targetReps, +12% per session.
+   */
+  challengeConfig?: ChallengeConfig;
 };

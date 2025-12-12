@@ -1,31 +1,8 @@
 /**
- * Challenge-related type definitions
+ * Data state and action type definitions
  */
 
-export type ChallengeExercise = {
-  name: string;
-  warmUp?: number; // seconds
-  break?: number; // seconds between sets
-  sets: number;
-  targetReps?: number;
-};
-
-export type Challenge = {
-  slug: string;
-  name: string;
-  description?: string;
-  category?: "strength" | "cardio" | "flexibility";
-  icon?: string;
-  estimatedMinutes?: number;
-  difficulty?: "beginner" | "intermediate" | "advanced";
-  exercise?: ChallengeExercise;
-};
-
 export type DataState = {
-  // Challenges (from static assets)
-  challenges: Challenge[];
-  challengesLoading: boolean;
-
   // Exercises & Programs (seeded + user)
   exercises: import("./exercise").Exercise[];
   exercisesLoading: boolean;
@@ -42,8 +19,6 @@ export type DataState = {
 };
 
 export type DataAction =
-  | { type: "SET_CHALLENGES"; challenges: Challenge[] }
-  | { type: "SET_CHALLENGES_LOADING"; loading: boolean }
   | { type: "SET_EXERCISES"; exercises: import("./exercise").Exercise[] }
   | { type: "SET_EXERCISES_LOADING"; loading: boolean }
   | { type: "SET_PROGRAMS"; programs: import("./program").Program[] }

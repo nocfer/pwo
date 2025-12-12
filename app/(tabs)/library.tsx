@@ -41,7 +41,7 @@ export default function LibraryScreen() {
   const isLoading = tab === "programs" ? programsLoading : exercisesLoading;
 
   return (
-    <SafeAreaView style={styles.container} edges={["left", "right"]}>
+    <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}

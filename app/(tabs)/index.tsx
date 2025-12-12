@@ -1,21 +1,27 @@
 import { ProgressView, WeeklyChart } from "@/components";
 import {
-  useChallenges,
   useLastCompletedSlug,
+  usePrograms,
   useWeeklyActivity,
 } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Index() {
-  const { data: challenges } = useChallenges();
+  const { data: programs } = usePrograms();
+  // Filter for challenge programs
+  const challenges = useMemo(() => {
+    if (!programs) return [];
+    return programs.filter((p) => p.challengeConfig);
+  }, [programs]);
   const firstChallenge = challenges?.[0];
   const lastCompletedSlug = useLastCompletedSlug();
-  const targetSlug = lastCompletedSlug || firstChallenge?.slug;
+  const targetSlug = lastCompletedSlug || firstChallenge?.id;
   const { data: weeklyData } = useWeeklyActivity();
 
   return (
@@ -97,8 +103,8 @@ export default function Index() {
               onPress={() =>
                 firstChallenge &&
                 router.navigate({
-                  pathname: "/challenges/[slug]",
-                  params: { slug: firstChallenge.slug },
+                  pathname: "/programs/[id]",
+                  params: { id: firstChallenge.id },
                 })
               }
             >

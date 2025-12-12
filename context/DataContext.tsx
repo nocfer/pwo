@@ -8,7 +8,6 @@
 import { dataEvents } from "@/lib/events";
 import { storage } from "@/lib/storage";
 import type {
-  Challenge,
   DataAction,
   DataEvent,
   DataState,
@@ -26,9 +25,6 @@ import React, {
   useEffect,
   useReducer,
 } from "react";
-
-// Re-export Challenge type for convenience
-export type { Challenge } from "@/types";
 
 type DataContextValue = {
   state: DataState;
@@ -85,8 +81,6 @@ type DataContextValue = {
 // ============================================================================
 
 export const initialState: DataState = {
-  challenges: [],
-  challengesLoading: true,
   exercises: [],
   exercisesLoading: true,
   programs: [],
@@ -99,14 +93,6 @@ export const initialState: DataState = {
 
 export function dataReducer(state: DataState, action: DataAction): DataState {
   switch (action.type) {
-    case "SET_CHALLENGES":
-      return {
-        ...state,
-        challenges: action.challenges,
-        challengesLoading: false,
-      };
-    case "SET_CHALLENGES_LOADING":
-      return { ...state, challengesLoading: action.loading };
     case "SET_EXERCISES":
       return { ...state, exercises: action.exercises, exercisesLoading: false };
     case "SET_EXERCISES_LOADING":
@@ -229,7 +215,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       };
     });
 
-    return {
+    const result: Program = {
       id: String((p as any).id ?? ""),
       name: String((p as any).name ?? ""),
       description:
@@ -241,28 +227,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updatedAt: String((p as any).updatedAt ?? new Date().toISOString()),
       source: (p as any).source === "builtin" ? "builtin" : "user",
     };
-  }
 
-  // Load challenges from static assets on mount
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const mod = await import("@/assets/data/challenges.json");
-        if (!mounted) return;
-        dispatch({
-          type: "SET_CHALLENGES",
-          challenges: (mod as any).default as Challenge[],
-        });
-      } catch {
-        if (mounted)
-          dispatch({ type: "SET_CHALLENGES_LOADING", loading: false });
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    // Preserve challengeConfig if present
+    if ((p as any).challengeConfig && typeof (p as any).challengeConfig === "object") {
+      const config = (p as any).challengeConfig;
+      result.challengeConfig = {
+        exerciseId: String(config.exerciseId ?? ""),
+        sets: typeof config.sets === "number" ? config.sets : 5,
+        targetReps: typeof config.targetReps === "number" ? config.targetReps : 100,
+        warmUpSeconds: typeof config.warmUpSeconds === "number" ? config.warmUpSeconds : 0,
+        breakSeconds: typeof config.breakSeconds === "number" ? config.breakSeconds : 0,
+      };
+    }
+
+    return result;
+  }
 
   // Load exercises & programs (seed + user) on mount
   useEffect(() => {
@@ -598,15 +577,6 @@ export function useDataContext() {
 }
 
 // Convenience hooks
-export function useChallenges() {
-  const { state } = useDataContext();
-  return {
-    data: state.challenges.length > 0 ? state.challenges : null,
-    loading: state.challengesLoading,
-    error: null,
-  };
-}
-
 export function useLastCompletedSlug() {
   const { state } = useDataContext();
   return state.lastCompletedSlug;

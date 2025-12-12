@@ -1,4 +1,4 @@
-import { usePrograms } from "@/hooks/data";
+import { useChallengeSessions, usePrograms } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -15,6 +15,9 @@ export default function ProgramDetail() {
     () => programs?.find((p) => p.id === id) ?? null,
     [programs, id],
   );
+
+  // Get sessions (generated dynamically for challenge programs)
+  const sessions = useChallengeSessions(program);
 
   if (loading) {
     return (
@@ -45,7 +48,7 @@ export default function ProgramDetail() {
     );
   }
 
-  const firstSession = program.sessions[0];
+  const firstSession = sessions[0];
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
@@ -67,8 +70,8 @@ export default function ProgramDetail() {
             <Text style={styles.headerSubtitle}>{program.description}</Text>
           ) : (
             <Text style={styles.headerSubtitle}>
-              {program.sessions.length} session
-              {program.sessions.length === 1 ? "" : "s"}
+              {sessions.length} session
+              {sessions.length === 1 ? "" : "s"}
             </Text>
           )}
         </View>
@@ -80,10 +83,10 @@ export default function ProgramDetail() {
         <View style={styles.card}>
           <View style={styles.rowBetween}>
             <Text style={styles.sectionTitle}>Sessions</Text>
-            <Text style={styles.muted}>{program.sessions.length}</Text>
+            <Text style={styles.muted}>{sessions.length}</Text>
           </View>
           <View style={{ height: theme.spacing.md }} />
-          {program.sessions.map((s) => (
+          {sessions.map((s) => (
             <Pressable
               key={s.index}
               onPress={() =>
