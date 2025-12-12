@@ -1,6 +1,7 @@
 import { useDataActions } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
 import { theme } from "@/theme/theme";
+import type { ProgramBlock } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
@@ -89,7 +90,7 @@ export default function NewProgramScreen() {
     }
 
     // Validate blocks and normalize to Program model
-    const blocks = sessionBlocks.map((b) => {
+    const blocks: ProgramBlock[] = sessionBlocks.map((b) => {
       if (b.type === "warmup") {
         const seconds = Number(b.seconds);
         if (!Number.isFinite(seconds) || seconds < 0)
@@ -148,10 +149,11 @@ export default function NewProgramScreen() {
     setSaving(true);
     try {
       await actions.upsertProgram({
+        id: "",
         name: trimmed,
         description: description.trim() || undefined,
         sessions: [{ index: 1, name: "Session 1", blocks }]
-      } as any);
+      });
       router.back();
     } catch (e) {
       Alert.alert("Couldn’t save", e instanceof Error ? e.message : String(e));

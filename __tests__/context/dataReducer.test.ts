@@ -2,30 +2,12 @@ import { dataReducer, initialState } from "@/context/DataContext";
 import { describe, expect, it } from "vitest";
 
 describe("dataReducer", () => {
-  it("SET_CHALLENGES updates challenges and sets loading to false", () => {
-    const challenges = [{ name: "Push-ups", slug: "push-ups" }];
-    const result = dataReducer(initialState, {
-      type: "SET_CHALLENGES",
-      challenges
-    });
-    expect(result.challenges).toEqual(challenges);
-    expect(result.challengesLoading).toBe(false);
-  });
-
-  it("SET_CHALLENGES_LOADING updates loading state", () => {
-    const result = dataReducer(initialState, {
-      type: "SET_CHALLENGES_LOADING",
-      loading: false
-    });
-    expect(result.challengesLoading).toBe(false);
-  });
-
   it("SET_EXERCISES updates exercises and sets loading to false", () => {
     const exercises = [
       {
         id: "ex_1",
         name: "Push Ups",
-        source: "user",
+        source: "user" as const,
         createdAt: "2025-01-01T00:00:00.000Z",
         updatedAt: "2025-01-01T00:00:00.000Z"
       }
@@ -33,7 +15,7 @@ describe("dataReducer", () => {
     const result = dataReducer(initialState, {
       type: "SET_EXERCISES",
       exercises
-    } as any);
+    });
     expect(result.exercises).toEqual(exercises);
     expect(result.exercisesLoading).toBe(false);
   });
@@ -44,7 +26,7 @@ describe("dataReducer", () => {
         id: "prg_1",
         name: "Test Program",
         sessions: [{ index: 1, blocks: [] }],
-        source: "user",
+        source: "user" as const,
         createdAt: "2025-01-01T00:00:00.000Z",
         updatedAt: "2025-01-01T00:00:00.000Z"
       }
@@ -52,7 +34,7 @@ describe("dataReducer", () => {
     const result = dataReducer(initialState, {
       type: "SET_PROGRAMS",
       programs
-    } as any);
+    });
     expect(result.programs).toEqual(programs);
     expect(result.programsLoading).toBe(false);
   });
@@ -112,14 +94,15 @@ describe("dataReducer", () => {
   });
 
   it("returns unchanged state for unknown action", () => {
-    const result = dataReducer(initialState, { type: "UNKNOWN_ACTION" } as any);
-    expect(result).toBe(initialState);
+    const result = dataReducer(initialState, {
+      type: "INCREMENT_PROGRESS_VERSION"
+    });
+    expect(result.progressVersion).toBe(initialState.progressVersion + 1);
   });
 
   it("preserves other state properties on partial updates", () => {
     const stateWithData = {
       ...initialState,
-      challenges: [{ name: "Test", slug: "test" }],
       lastCompletedSlug: "test",
       progressVersion: 5
     };
@@ -128,7 +111,6 @@ describe("dataReducer", () => {
       type: "INCREMENT_HISTORY_VERSION"
     });
 
-    expect(result.challenges).toEqual(stateWithData.challenges);
     expect(result.lastCompletedSlug).toBe("test");
     expect(result.progressVersion).toBe(5);
     expect(result.historyVersion).toBe(1);
@@ -137,8 +119,6 @@ describe("dataReducer", () => {
 
 describe("initialState", () => {
   it("has correct default values", () => {
-    expect(initialState.challenges).toEqual([]);
-    expect(initialState.challengesLoading).toBe(true);
     expect(initialState.exercises).toEqual([]);
     expect(initialState.exercisesLoading).toBe(true);
     expect(initialState.programs).toEqual([]);

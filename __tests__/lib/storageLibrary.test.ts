@@ -13,22 +13,27 @@ function createLocalStorageMock() {
     },
     clear: () => {
       map.clear();
-    }
-  };
+    },
+    key: (index: number) => Array.from(map.keys())[index] || null,
+    length: 0
+  } as Storage;
 }
 
 describe("storage library CRUD", () => {
   beforeEach(() => {
-    (globalThis as any).window = {
-      localStorage: createLocalStorageMock()
-    };
+    Object.defineProperty(globalThis, "window", {
+      value: {
+        localStorage: createLocalStorageMock()
+      },
+      writable: true
+    });
   });
 
   it("upsert/load/delete exercise roundtrip", async () => {
     const saved = await storage.upsertExercise({
       id: "",
       name: "Bench Press",
-      category: "strength" as any,
+      category: "strength",
       icon: "barbell",
       source: "user"
     });
@@ -40,7 +45,7 @@ describe("storage library CRUD", () => {
     const updated = await storage.upsertExercise({
       id: saved.id,
       name: "Bench Press (Barbell)",
-      category: "strength" as any,
+      category: "strength",
       icon: "barbell",
       source: "user"
     });

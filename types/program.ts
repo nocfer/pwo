@@ -66,3 +66,43 @@ export type Program = {
    */
   challengeConfig?: ChallengeConfig;
 };
+
+/**
+ * Legacy program block format (used for migration from old data format)
+ * Supports old repsPerSet/sets structure for backward compatibility
+ */
+export type LegacyProgramBlock = {
+  type: "warmup" | "exercise" | "rest";
+  exerciseId?: string;
+  seconds?: number;
+  label?: string;
+  sets?: number;
+  repsPerSet?: number | number[];
+  restSecondsBetweenSets?: number;
+  targetReps?: number;
+  durationSeconds?: number;
+  note?: string;
+};
+
+/**
+ * Legacy program session format (used for migration from old data format)
+ */
+export type LegacyProgramSession = {
+  index?: number;
+  name?: string;
+  blocks?: LegacyProgramBlock[];
+};
+
+/**
+ * Legacy program format (used for migration from old data format)
+ */
+export type LegacyProgram = {
+  id?: string;
+  name?: string;
+  description?: string;
+  sessions?: LegacyProgramSession[];
+  createdAt?: string;
+  updatedAt?: string;
+  source?: ProgramSource;
+  challengeConfig?: Partial<ChallengeConfig>;
+};

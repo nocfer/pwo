@@ -1,6 +1,7 @@
 import { useDataActions } from "@/context/DataContext";
 import { useExercises, usePrograms } from "@/hooks/data";
 import { theme } from "@/theme/theme";
+import { ProgramBlock } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
@@ -27,7 +28,7 @@ type BlockDraft =
       note?: string;
     };
 
-function toDraftBlocks(blocks: any[]): BlockDraft[] {
+function toDraftBlocks(blocks: ProgramBlock[]): BlockDraft[] {
   return blocks.map((b) => {
     if (b.type === "warmup")
       return { type: "warmup", seconds: String(b.seconds ?? 0) };
@@ -188,7 +189,7 @@ export default function EditProgramScreen() {
             blocks
           }
         ]
-      } as any);
+      });
       router.back();
     } catch (e) {
       Alert.alert("Couldn’t save", e instanceof Error ? e.message : String(e));

@@ -26,6 +26,9 @@ export type { Exercise, ExerciseCategory, ExerciseSource } from "./exercise";
 // Program types
 export type {
   ChallengeConfig,
+  LegacyProgram,
+  LegacyProgramBlock,
+  LegacyProgramSession,
   Program,
   ProgramBlock,
   ProgramExerciseBlock,
