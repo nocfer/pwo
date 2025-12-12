@@ -50,8 +50,27 @@ export default function NewExerciseScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.title}>New Exercise</Text>
-          <Text style={styles.subtitle}>Add an exercise to your library</Text>
+          <View style={styles.headerRow}>
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => [
+                styles.headerBack,
+                pressed && styles.headerBackPressed,
+              ]}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={20}
+                color={theme.colors.text}
+              />
+            </Pressable>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.title}>New Exercise</Text>
+              <Text style={styles.subtitle}>
+                Add an exercise to your library
+              </Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.card}>
@@ -138,6 +157,25 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xxl,
   },
   header: { gap: theme.spacing.xs },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.md,
+  },
+  headerBack: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.surface,
+  },
+  headerBackPressed: {
+    backgroundColor: theme.colors.card,
+    transform: [{ scale: 0.98 }],
+  },
   title: { ...theme.typography.h2, color: theme.colors.text },
   subtitle: { ...theme.typography.body, color: theme.colors.muted },
   card: {

@@ -65,7 +65,9 @@ export default function LibraryScreen() {
             }}
           >
             <Ionicons name="add" size={22} color={theme.colors.primaryTextOn} />
-            <Text style={styles.addButtonText}>New</Text>
+            <Text style={styles.addButtonText}>
+              New {tab === "programs" ? "Program" : "Exercise"}
+            </Text>
           </Pressable>
         </View>
 
