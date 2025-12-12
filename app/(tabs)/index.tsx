@@ -1,5 +1,6 @@
-import { ProgressView, WeeklyChart } from "@/components";
+import { ProgressStats, ProgressView, WeeklyChart } from "@/components";
 import {
+  useAllProgress,
   useLastCompletedSlug,
   usePrograms,
   useWeeklyActivity,
@@ -23,6 +24,21 @@ export default function Index() {
   const lastCompletedSlug = useLastCompletedSlug();
   const targetSlug = lastCompletedSlug || firstChallenge?.id;
   const { data: weeklyData } = useWeeklyActivity();
+  const { data: aggregated } = useAllProgress();
+
+  const progressStats = useMemo(() => {
+    if (!aggregated) return [];
+    return [
+      {
+        label: "Total Workouts",
+        value: aggregated.totalWorkoutsCompleted,
+      },
+      {
+        label: "Current Streak",
+        value: `${aggregated.currentStreak} days`,
+      },
+    ];
+  }, [aggregated]);
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right"]}>
@@ -46,6 +62,41 @@ export default function Index() {
         {/* Gradient Header */}
 
         <View style={styles.content}>
+          {/* Progress Summary */}
+          {aggregated && progressStats.length > 0 && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <LinearGradient
+                  colors={[
+                    theme.colors.gradient.primaryStart,
+                    theme.colors.gradient.primaryEnd,
+                  ]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.cardIconGradient}
+                >
+                  <Ionicons name="stats-chart" size={20} color="#FFFFFF" />
+                </LinearGradient>
+                <Text style={styles.cardTitle}>Your Progress</Text>
+              </View>
+              <ProgressStats stats={progressStats} columns={2} />
+              <Pressable
+                style={({ pressed }) => [
+                  styles.viewProgressButton,
+                  pressed && styles.viewProgressButtonPressed,
+                ]}
+                onPress={() => router.navigate("/(tabs)/progress")}
+              >
+                <Text style={styles.viewProgressText}>View Full Progress</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={theme.colors.primary}
+                />
+              </Pressable>
+            </View>
+          )}
+
           {/* Weekly Activity Chart */}
           <WeeklyChart data={weeklyData} title="Last 7 days" />
 
@@ -260,5 +311,21 @@ const styles = StyleSheet.create({
   },
   actionDisabled: {
     opacity: 0.5,
+  },
+  viewProgressButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.xs,
+  },
+  viewProgressButtonPressed: {
+    opacity: 0.7,
+  },
+  viewProgressText: {
+    ...theme.typography.body,
+    color: theme.colors.primary,
+    fontFamily: theme.fonts.semiBold,
   },
 });

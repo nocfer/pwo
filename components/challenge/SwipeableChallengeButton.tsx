@@ -1,9 +1,10 @@
+import { useChallengeProgress, usePrograms } from "@/hooks/data";
 import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 
@@ -14,6 +15,12 @@ type Props = {
 
 export default function SwipeableChallengeButton({ label, programId }: Props) {
   const swipeableRef = useRef<Swipeable>(null);
+  const { data: programs } = usePrograms();
+  const challenge = useMemo(
+    () => programs?.find((p) => p.id === programId && p.challengeConfig),
+    [programs, programId]
+  );
+  const { metrics } = useChallengeProgress(challenge || undefined);
 
   const handleQuickStart = () => {
     void haptics.swipeAction();
@@ -91,7 +98,26 @@ export default function SwipeableChallengeButton({ label, programId }: Props) {
               color={theme.colors.primary}
             />
           </View>
-          <Text style={styles.label}>{label}</Text>
+          <View style={styles.labelContainer}>
+            <Text style={styles.label}>{label}</Text>
+            {metrics && (
+              <View style={styles.progressContainer}>
+                <View style={styles.progressBar}>
+                  <View
+                    style={[
+                      styles.progressFill,
+                      {
+                        width: `${metrics.completionPercentage}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.progressText}>
+                  {metrics.sessionsCompleted}/{metrics.totalSessions}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
         <View style={styles.chevronHint}>
           <Ionicons name="chevron-back" size={14} color={theme.colors.muted} />
@@ -133,10 +159,35 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: theme.spacing.md,
   },
+  labelContainer: {
+    flex: 1,
+  },
   label: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
+  },
+  progressContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.xs,
+  },
+  progressBar: {
     flex: 1,
+    height: 4,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.radius.xs,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: theme.colors.success,
+    borderRadius: theme.radius.xs,
+  },
+  progressText: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    fontSize: 11,
   },
   chevronHint: {
     flexDirection: "row",

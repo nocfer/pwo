@@ -1,4 +1,11 @@
-import { useChallengeSessions, usePrograms } from "@/hooks/data";
+import { ProgressCard } from "@/components";
+import {
+  useChallengeProgress,
+  useChallengeSessions,
+  useProgramProgress,
+  usePrograms,
+  useSessionCompletion,
+} from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -18,6 +25,14 @@ export default function ProgramDetail() {
 
   // Get sessions (generated dynamically for challenge programs)
   const sessions = useChallengeSessions(program);
+  const isChallenge = Boolean(program?.challengeConfig);
+  const { metrics: challengeMetrics } = useChallengeProgress(
+    isChallenge ? program : undefined
+  );
+  const { metrics: programMetrics } = useProgramProgress(
+    !isChallenge ? program : undefined
+  );
+  const { completed } = useSessionCompletion(id);
 
   if (loading) {
     return (
@@ -80,41 +95,93 @@ export default function ProgramDetail() {
         style={styles.container}
         contentContainerStyle={styles.content}
       >
+        {/* Progress Section */}
+        {isChallenge && challengeMetrics && (
+          <View style={styles.card}>
+            <ProgressCard
+              title={program.name}
+              completionPercentage={challengeMetrics.completionPercentage}
+              sessionsCompleted={challengeMetrics.sessionsCompleted}
+              totalSessions={challengeMetrics.totalSessions}
+              variant="challenge"
+            />
+            <View style={styles.progressStats}>
+              <View style={styles.progressStat}>
+                <Text style={styles.progressStatValue}>
+                  {challengeMetrics.totalRepsCompleted}
+                </Text>
+                <Text style={styles.progressStatLabel}>Reps Completed</Text>
+              </View>
+              <View style={styles.progressStat}>
+                <Text style={styles.progressStatValue}>
+                  {challengeMetrics.targetReps}
+                </Text>
+                <Text style={styles.progressStatLabel}>Target Reps</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {!isChallenge && programMetrics && (
+          <View style={styles.card}>
+            <ProgressCard
+              title={program.name}
+              completionPercentage={programMetrics.completionPercentage}
+              sessionsCompleted={programMetrics.sessionsCompleted}
+              totalSessions={programMetrics.totalSessions}
+              variant="program"
+            />
+          </View>
+        )}
+
         <View style={styles.card}>
           <View style={styles.rowBetween}>
             <Text style={styles.sectionTitle}>Sessions</Text>
             <Text style={styles.muted}>{sessions.length}</Text>
           </View>
           <View style={{ height: theme.spacing.md }} />
-          {sessions.map((s) => (
-            <Pressable
-              key={s.index}
-              onPress={() =>
-                router.navigate({
-                  pathname: "/programs/[id]/session/[index]" as any,
-                  params: { id: program.id, index: String(s.index) },
-                })
-              }
-              style={({ pressed }) => [
-                styles.sessionRow,
-                pressed && styles.sessionRowPressed,
-              ]}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={styles.sessionTitle}>
-                  {s.name ? s.name : `Session ${s.index}`}
-                </Text>
-                <Text style={styles.sessionSubtitle}>
-                  {s.blocks.length} block{s.blocks.length === 1 ? "" : "s"}
-                </Text>
-              </View>
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={theme.colors.muted}
-              />
-            </Pressable>
-          ))}
+          {sessions.map((s) => {
+            const isCompleted = completed.has(s.index);
+            return (
+              <Pressable
+                key={s.index}
+                onPress={() =>
+                  router.navigate({
+                    pathname: "/programs/[id]/session/[index]" as any,
+                    params: { id: program.id, index: String(s.index) },
+                  })
+                }
+                style={({ pressed }) => [
+                  styles.sessionRow,
+                  isCompleted && styles.sessionRowCompleted,
+                  pressed && styles.sessionRowPressed,
+                ]}
+              >
+                <View style={{ flex: 1 }}>
+                  <View style={styles.sessionTitleRow}>
+                    <Text style={styles.sessionTitle}>
+                      {s.name ? s.name : `Session ${s.index}`}
+                    </Text>
+                    {isCompleted && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={20}
+                        color={theme.colors.success}
+                      />
+                    )}
+                  </View>
+                  <Text style={styles.sessionSubtitle}>
+                    {s.blocks.length} block{s.blocks.length === 1 ? "" : "s"}
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={theme.colors.muted}
+                />
+              </Pressable>
+            );
+          })}
         </View>
 
         <Pressable
@@ -207,7 +274,38 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     transform: [{ scale: 0.98 }],
   },
+  sessionRowCompleted: {
+    borderColor: theme.colors.success,
+    backgroundColor: theme.colors.successLight,
+  },
+  sessionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+  },
   sessionTitle: { ...theme.typography.bodyBold, color: theme.colors.text },
+  progressStats: {
+    flexDirection: "row",
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.md,
+  },
+  progressStat: {
+    flex: 1,
+    alignItems: "center",
+    padding: theme.spacing.sm,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.radius.md,
+  },
+  progressStatValue: {
+    ...theme.typography.h3,
+    color: theme.colors.primary,
+    fontFamily: theme.fonts.bold,
+  },
+  progressStatLabel: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    marginTop: theme.spacing.xs,
+  },
   sessionSubtitle: {
     ...theme.typography.caption,
     color: theme.colors.muted,
