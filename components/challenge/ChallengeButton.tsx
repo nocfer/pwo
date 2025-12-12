@@ -5,17 +5,17 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type Props = {
   label: string;
-  slug: string;
+  programId: string;
 };
 
-export default function ChallengeButton({ label, slug }: Props) {
+export default function ChallengeButton({ label, programId }: Props) {
   return (
     <Pressable
       style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
       onPress={() =>
         router.navigate({
-          pathname: "/challenges/[slug]",
-          params: { slug },
+          pathname: "/programs/[id]",
+          params: { id: programId },
         })
       }
     >

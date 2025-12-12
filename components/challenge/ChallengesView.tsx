@@ -3,8 +3,9 @@ import {
   NoSearchResultsEmpty,
 } from "@/components/common/EmptyState";
 import { SkeletonChallengeButton } from "@/components/common/Skeleton";
-import { useChallenges } from "@/hooks/data";
+import { usePrograms } from "@/hooks/data";
 import { theme } from "@/theme/theme";
+import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import SwipeableChallengeButton from "./SwipeableChallengeButton";
 
@@ -13,7 +14,13 @@ type Props = {
 };
 
 export default function ChallengesView({ query }: Props) {
-  const { data, loading, error } = useChallenges();
+  const { data: programs, loading, error } = usePrograms();
+
+  // Filter for challenge programs (those with challengeConfig)
+  const challenges = useMemo(() => {
+    if (!programs) return [];
+    return programs.filter((p) => p.challengeConfig);
+  }, [programs]);
 
   if (loading) {
     return (
@@ -33,13 +40,15 @@ export default function ChallengesView({ query }: Props) {
     );
   }
 
-  if (!data || data.length === 0) {
+  if (!challenges || challenges.length === 0) {
     return <NoChallengesEmpty />;
   }
 
   const filtered = query
-    ? data.filter((r) => r.name.toLowerCase().includes(query.toLowerCase()))
-    : data;
+    ? challenges.filter((r) =>
+        r.name.toLowerCase().includes(query.toLowerCase()),
+      )
+    : challenges;
 
   if (filtered.length === 0) {
     return <NoSearchResultsEmpty query={query || ""} />;
@@ -51,7 +60,7 @@ export default function ChallengesView({ query }: Props) {
         <SwipeableChallengeButton
           label={challenge.name}
           key={i}
-          slug={challenge.slug}
+          programId={challenge.id}
         />
       ))}
     </View>

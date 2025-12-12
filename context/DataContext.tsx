@@ -5,15 +5,21 @@
  * when data changes anywhere in the app.
  */
 
+import { generateChallengeSessions } from "@/hooks/data/useChallengeSessions";
 import { dataEvents } from "@/lib/events";
 import { storage } from "@/lib/storage";
 import type {
-  Challenge,
+  ChallengeProgress,
   DataAction,
   DataEvent,
   DataState,
   EventRecord,
+  Exercise,
+  ExerciseProgress,
   HistoryEntry,
+  Program,
+  ProgramProgress,
+  SessionProgress,
   SessionState,
 } from "@/types";
 import React, {
@@ -25,9 +31,6 @@ import React, {
   useReducer,
 } from "react";
 
-// Re-export Challenge type for convenience
-export type { Challenge } from "@/types";
-
 type DataContextValue = {
   state: DataState;
 
@@ -37,12 +40,12 @@ type DataContextValue = {
     completeSession: (
       slug: string,
       sessionIndex: number,
-      summary: string,
+      summary: string
     ) => Promise<void>;
 
     // Record an event
     recordEvent: (
-      event: Omit<EventRecord, "ts"> & { ts?: string },
+      event: Omit<EventRecord, "ts"> & { ts?: string }
     ) => Promise<void>;
 
     // Save session state
@@ -51,7 +54,7 @@ type DataContextValue = {
     // Load session state
     loadSessionState: (
       slug: string,
-      sessionIndex: number,
+      sessionIndex: number
     ) => Promise<SessionState | null>;
 
     // Refresh data
@@ -59,6 +62,22 @@ type DataContextValue = {
     refreshProgress: () => void;
     refreshHistory: () => void;
     refreshCompleted: () => void;
+
+    // Exercises CRUD
+    upsertExercise: (
+      input: Pick<Exercise, "id" | "name" | "category" | "icon"> & {
+        id?: string;
+      }
+    ) => Promise<Exercise>;
+    deleteExercise: (id: string) => Promise<void>;
+
+    // Programs CRUD
+    upsertProgram: (
+      input: Pick<Program, "id" | "name" | "description" | "sessions"> & {
+        id?: string;
+      }
+    ) => Promise<Program>;
+    deleteProgram: (id: string) => Promise<void>;
   };
 };
 
@@ -67,8 +86,10 @@ type DataContextValue = {
 // ============================================================================
 
 export const initialState: DataState = {
-  challenges: [],
-  challengesLoading: true,
+  exercises: [],
+  exercisesLoading: true,
+  programs: [],
+  programsLoading: true,
   lastCompletedSlug: null,
   progressVersion: 0,
   historyVersion: 0,
@@ -77,14 +98,14 @@ export const initialState: DataState = {
 
 export function dataReducer(state: DataState, action: DataAction): DataState {
   switch (action.type) {
-    case "SET_CHALLENGES":
-      return {
-        ...state,
-        challenges: action.challenges,
-        challengesLoading: false,
-      };
-    case "SET_CHALLENGES_LOADING":
-      return { ...state, challengesLoading: action.loading };
+    case "SET_EXERCISES":
+      return { ...state, exercises: action.exercises, exercisesLoading: false };
+    case "SET_EXERCISES_LOADING":
+      return { ...state, exercisesLoading: action.loading };
+    case "SET_PROGRAMS":
+      return { ...state, programs: action.programs, programsLoading: false };
+    case "SET_PROGRAMS_LOADING":
+      return { ...state, programsLoading: action.loading };
     case "SET_LAST_COMPLETED_SLUG":
       return { ...state, lastCompletedSlug: action.slug };
     case "INCREMENT_PROGRESS_VERSION":
@@ -118,22 +139,179 @@ const DataContext = createContext<DataContextValue | null>(null);
 export function DataProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(dataReducer, initialState);
 
-  // Load challenges from static assets on mount
+  function migrateProgram(p: any): Program {
+    if (!p || typeof p !== "object") return p as Program;
+    if (!Array.isArray((p as any).sessions)) return p as Program;
+
+    const nextSessions = (p as any).sessions.map((s: any, idx: number) => {
+      const blocksRaw = Array.isArray(s?.blocks) ? s.blocks : [];
+      const blocks: any[] = [];
+
+      for (const b of blocksRaw) {
+        if (!b || typeof b !== "object") continue;
+
+        if (b.type === "warmup") {
+          blocks.push({ type: "warmup", seconds: Number(b.seconds) || 0 });
+          continue;
+        }
+
+        if (b.type === "rest") {
+          blocks.push({
+            type: "rest",
+            seconds: Number(b.seconds) || 0,
+            label: typeof b.label === "string" ? b.label : undefined,
+          });
+          continue;
+        }
+
+        if (b.type !== "exercise") continue;
+
+        // New shape already?
+        if ("targetReps" in b || "durationSeconds" in b || "note" in b) {
+          blocks.push({
+            type: "exercise",
+            exerciseId: String(b.exerciseId ?? ""),
+            targetReps:
+              typeof b.targetReps === "number" ? b.targetReps : undefined,
+            durationSeconds:
+              typeof b.durationSeconds === "number"
+                ? b.durationSeconds
+                : undefined,
+            note: typeof b.note === "string" ? b.note : undefined,
+          });
+          continue;
+        }
+
+        // Old shape: { sets, repsPerSet, restSecondsBetweenSets }
+        const sets = typeof b.sets === "number" ? b.sets : undefined;
+        const reps = (b as any).repsPerSet;
+        let targetReps: number | undefined;
+        const noteParts: string[] = [];
+
+        if (typeof reps === "number") {
+          targetReps = reps;
+          if (sets && sets > 1) noteParts.push(`Previously: ${sets} sets`);
+        } else if (Array.isArray(reps)) {
+          const repsList = reps.filter((x) => typeof x === "number");
+          if (repsList.length)
+            noteParts.push(`Previously: ${repsList.join(", ")} reps`);
+          if (sets && sets > 1) noteParts.push(`${sets} sets`);
+        } else if (sets && sets > 1) {
+          noteParts.push(`Previously: ${sets} sets`);
+        }
+
+        blocks.push({
+          type: "exercise",
+          exerciseId: String(b.exerciseId ?? ""),
+          targetReps,
+          note: noteParts.length ? noteParts.join(" • ") : undefined,
+        });
+
+        const restBetween = Number((b as any).restSecondsBetweenSets);
+        if (Number.isFinite(restBetween) && restBetween > 0) {
+          blocks.push({ type: "rest", seconds: restBetween, label: "Rest" });
+        }
+      }
+
+      return {
+        index: typeof s?.index === "number" ? s.index : idx + 1,
+        name: typeof s?.name === "string" ? s.name : undefined,
+        blocks,
+      };
+    });
+
+    const result: Program = {
+      id: String((p as any).id ?? ""),
+      name: String((p as any).name ?? ""),
+      description:
+        typeof (p as any).description === "string"
+          ? (p as any).description
+          : undefined,
+      sessions: nextSessions,
+      createdAt: String((p as any).createdAt ?? new Date().toISOString()),
+      updatedAt: String((p as any).updatedAt ?? new Date().toISOString()),
+      source: (p as any).source === "builtin" ? "builtin" : "user",
+    };
+
+    // Preserve challengeConfig if present
+    if (
+      (p as any).challengeConfig &&
+      typeof (p as any).challengeConfig === "object"
+    ) {
+      const config = (p as any).challengeConfig;
+      result.challengeConfig = {
+        exerciseId: String(config.exerciseId ?? ""),
+        sets: typeof config.sets === "number" ? config.sets : 5,
+        targetReps:
+          typeof config.targetReps === "number" ? config.targetReps : 100,
+        warmUpSeconds:
+          typeof config.warmUpSeconds === "number" ? config.warmUpSeconds : 0,
+        breakSeconds:
+          typeof config.breakSeconds === "number" ? config.breakSeconds : 0,
+      };
+    }
+
+    return result;
+  }
+
+  // Load exercises & programs (seed + user) on mount
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const mod = await import("@/assets/data/challenges.json");
-        if (!mounted) return;
-        dispatch({
-          type: "SET_CHALLENGES",
-          challenges: (mod as any).default as Challenge[],
-        });
+        const [seedExercises, userExercises] = await Promise.all([
+          (async () => {
+            try {
+              const mod = await import("@/assets/data/exercises.json");
+              return (mod as any).default as Exercise[];
+            } catch {
+              return [] as Exercise[];
+            }
+          })(),
+          storage.loadExercises(),
+        ]);
+
+        const exercisesById = new Map<string, Exercise>();
+        for (const e of seedExercises) exercisesById.set(e.id, e);
+        for (const e of userExercises) exercisesById.set(e.id, e);
+        const mergedExercises = Array.from(exercisesById.values()).sort(
+          (a, b) => a.name.localeCompare(b.name)
+        );
+
+        if (mounted)
+          dispatch({ type: "SET_EXERCISES", exercises: mergedExercises });
       } catch {
         if (mounted)
-          dispatch({ type: "SET_CHALLENGES_LOADING", loading: false });
+          dispatch({ type: "SET_EXERCISES_LOADING", loading: false });
+      }
+
+      try {
+        const [seedPrograms, userPrograms] = await Promise.all([
+          (async () => {
+            try {
+              const mod = await import("@/assets/data/programs.json");
+              return (mod as any).default as Program[];
+            } catch {
+              return [] as Program[];
+            }
+          })(),
+          storage.loadPrograms(),
+        ]);
+
+        const programsById = new Map<string, Program>();
+        for (const p of seedPrograms) programsById.set(p.id, migrateProgram(p));
+        for (const p of userPrograms) programsById.set(p.id, migrateProgram(p));
+        const mergedPrograms = Array.from(programsById.values()).sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+
+        if (mounted)
+          dispatch({ type: "SET_PROGRAMS", programs: mergedPrograms });
+      } catch {
+        if (mounted) dispatch({ type: "SET_PROGRAMS_LOADING", loading: false });
       }
     })();
+
     return () => {
       mounted = false;
     };
@@ -202,6 +380,209 @@ export function DataProvider({ children }: { children: ReactNode }) {
       // Update streak
       await storage.saveStreakHit(slug, dateISO);
 
+      // Get program to determine type and calculate progress
+      const program = state.programs.find((p) => p.id === slug);
+      if (program) {
+        const isChallenge = Boolean(program.challengeConfig);
+        const events = await storage.loadEventsForSlug(slug);
+        const sessionEvents = events.filter(
+          (e) => e.sessionIndex === sessionIndex
+        );
+
+        // Calculate time spent from events
+        let timeSpentSeconds = 0;
+        const exerciseProgressMap = new Map<string, ExerciseProgress>();
+
+        for (const event of sessionEvents) {
+          if (
+            event.type === "warmup_started" ||
+            event.type === "break_started"
+          ) {
+            const data = event.data as any;
+            if (data?.durationSeconds) {
+              timeSpentSeconds += data.durationSeconds;
+            }
+          }
+          if (event.type === "set_completed") {
+            const data = event.data as any;
+            if (data?.exerciseId && data?.reps) {
+              const existing = exerciseProgressMap.get(data.exerciseId) || {
+                exerciseId: data.exerciseId,
+                repsCompleted: 0,
+                setsCompleted: 0,
+                lastCompletedAt: dateISO,
+              };
+              existing.repsCompleted += data.reps || 0;
+              existing.setsCompleted += 1;
+              exerciseProgressMap.set(data.exerciseId, existing);
+            }
+            if (data?.durationSeconds) {
+              timeSpentSeconds += data.durationSeconds;
+            }
+          }
+        }
+
+        const exerciseProgress = Array.from(exerciseProgressMap.values());
+
+        if (isChallenge && program.challengeConfig) {
+          // Update challenge progress
+          const existing = await storage.loadChallengeProgress(slug);
+          const sessions = generateChallengeSessions(program.challengeConfig);
+          const session = sessions.find((s) => s.index === sessionIndex);
+
+          let totalRepsCompleted = exerciseProgress.reduce(
+            (sum, e) => sum + e.repsCompleted,
+            0
+          );
+
+          if (existing) {
+            // Update existing progress
+            const sessionProgressIndex = existing.sessions.findIndex(
+              (s) => s.sessionIndex === sessionIndex
+            );
+            const sessionProgress: SessionProgress = {
+              sessionIndex,
+              completed: true,
+              completedAt: dateISO,
+              timeSpentSeconds,
+              exercises: exerciseProgress,
+            };
+
+            if (sessionProgressIndex >= 0) {
+              existing.sessions[sessionProgressIndex] = sessionProgress;
+            } else {
+              existing.sessions.push(sessionProgress);
+            }
+
+            // Recalculate total reps
+            totalRepsCompleted = existing.sessions
+              .filter((s) => s.completed)
+              .reduce((sum, s) => {
+                return (
+                  sum +
+                  s.exercises.reduce((eSum, e) => eSum + e.repsCompleted, 0)
+                );
+              }, 0);
+
+            existing.totalRepsCompleted = totalRepsCompleted;
+            existing.lastActivityAt = dateISO;
+            existing.updatedAt = dateISO;
+
+            // Check if challenge is completed
+            const completedSessions = existing.sessions.filter(
+              (s) => s.completed
+            );
+            if (
+              completedSessions.length === sessions.length &&
+              totalRepsCompleted >= program.challengeConfig.targetReps
+            ) {
+              existing.completedAt = dateISO;
+            }
+
+            await storage.saveChallengeProgress(existing);
+          } else {
+            // Create new challenge progress
+            const newProgress: ChallengeProgress = {
+              challengeId: slug,
+              startedAt: dateISO,
+              sessions: [
+                {
+                  sessionIndex,
+                  completed: true,
+                  completedAt: dateISO,
+                  timeSpentSeconds,
+                  exercises: exerciseProgress,
+                },
+              ],
+              totalRepsCompleted,
+              targetReps: program.challengeConfig.targetReps,
+              lastActivityAt: dateISO,
+              updatedAt: dateISO,
+            };
+            await storage.saveChallengeProgress(newProgress);
+          }
+
+          // Store history entry
+          await storage.appendProgressHistory({
+            date: dateISO.slice(0, 10),
+            challengeId: slug,
+            sessionsCompleted: 1,
+            totalReps: totalRepsCompleted,
+          });
+        } else {
+          // Update program progress
+          const existing = await storage.loadProgramProgress(slug);
+          const session = program.sessions.find(
+            (s) => s.index === sessionIndex
+          );
+
+          if (existing) {
+            // Update existing progress
+            const sessionProgressIndex = existing.sessions.findIndex(
+              (s) => s.sessionIndex === sessionIndex
+            );
+            const sessionProgress: SessionProgress = {
+              sessionIndex,
+              completed: true,
+              completedAt: dateISO,
+              timeSpentSeconds,
+              exercises: exerciseProgress,
+            };
+
+            if (sessionProgressIndex >= 0) {
+              existing.sessions[sessionProgressIndex] = sessionProgress;
+            } else {
+              existing.sessions.push(sessionProgress);
+            }
+
+            // Recalculate total time
+            existing.totalTimeSpentSeconds = existing.sessions
+              .filter((s) => s.completed)
+              .reduce((sum, s) => sum + (s.timeSpentSeconds || 0), 0);
+
+            existing.lastActivityAt = dateISO;
+            existing.updatedAt = dateISO;
+
+            // Check if program is completed
+            const completedSessions = existing.sessions.filter(
+              (s) => s.completed
+            );
+            if (completedSessions.length === program.sessions.length) {
+              existing.completedAt = dateISO;
+            }
+
+            await storage.saveProgramProgress(existing);
+          } else {
+            // Create new program progress
+            const newProgress: ProgramProgress = {
+              programId: slug,
+              startedAt: dateISO,
+              sessions: [
+                {
+                  sessionIndex,
+                  completed: true,
+                  completedAt: dateISO,
+                  timeSpentSeconds,
+                  exercises: exerciseProgress,
+                },
+              ],
+              totalTimeSpentSeconds: timeSpentSeconds,
+              lastActivityAt: dateISO,
+              updatedAt: dateISO,
+            };
+            await storage.saveProgramProgress(newProgress);
+          }
+
+          // Store history entry
+          await storage.appendProgressHistory({
+            date: dateISO.slice(0, 10),
+            programId: slug,
+            sessionsCompleted: 1,
+            timeSpentSeconds,
+          });
+        }
+      }
+
       // Clear session state
       await storage.clearSessionState(slug, sessionIndex);
 
@@ -210,7 +591,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       dataEvents.emitProgressUpdated(slug);
       dataEvents.emitHistoryUpdated(slug);
     },
-    [],
+    [state.programs]
   );
 
   const recordEvent = useCallback(
@@ -218,14 +599,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await storage.appendEvent(event);
       dataEvents.emitEventRecorded(event.slug, event.type);
     },
-    [],
+    []
   );
 
   const saveSessionState = useCallback(async (sessionState: SessionState) => {
     await storage.saveSessionState(sessionState);
     dataEvents.emitSessionStateChanged(
       sessionState.slug,
-      sessionState.sessionIndex,
+      sessionState.sessionIndex
     );
   }, []);
 
@@ -233,7 +614,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     async (slug: string, sessionIndex: number) => {
       return storage.loadSessionState(slug, sessionIndex);
     },
-    [],
+    []
   );
 
   const refreshAll = useCallback(() => {
@@ -252,6 +633,128 @@ export function DataProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "INCREMENT_COMPLETED_VERSION" });
   }, []);
 
+  const upsertExercise = useCallback(
+    async (
+      input: Pick<Exercise, "id" | "name" | "category" | "icon"> & {
+        id?: string;
+      }
+    ) => {
+      const id = input.id;
+      if (id) {
+        const existing = state.exercises.find((e) => e.id === id);
+        if (existing?.source === "builtin") {
+          throw new Error("Built-in exercises cannot be edited.");
+        }
+      }
+
+      const saved = await storage.upsertExercise({
+        id: input.id ?? "",
+        name: input.name,
+        category: input.category,
+        icon: input.icon,
+        source: "user",
+      });
+
+      const userExercises = await storage.loadExercises();
+      const exercisesById = new Map<string, Exercise>();
+      for (const e of state.exercises) {
+        // keep builtins from current state (already contains seeds)
+        if (e.source === "builtin") exercisesById.set(e.id, e);
+      }
+      for (const e of userExercises) exercisesById.set(e.id, e);
+      const merged = Array.from(exercisesById.values()).sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
+      dispatch({ type: "SET_EXERCISES", exercises: merged });
+      return saved;
+    },
+    [state.exercises]
+  );
+
+  const deleteExercise = useCallback(
+    async (id: string) => {
+      const existing = state.exercises.find((e) => e.id === id);
+      if (!existing) return;
+      if (existing.source === "builtin") {
+        throw new Error("Built-in exercises cannot be deleted.");
+      }
+
+      const referencedBy = state.programs.find((p) =>
+        p.sessions.some((s) =>
+          s.blocks.some((b) => b.type === "exercise" && b.exerciseId === id)
+        )
+      );
+      if (referencedBy) {
+        throw new Error(
+          `This exercise is used by the program “${referencedBy.name}”. Remove it from the program first.`
+        );
+      }
+
+      await storage.deleteExercise(id);
+
+      const userExercises = await storage.loadExercises();
+      const merged = [
+        ...state.exercises.filter((e) => e.source === "builtin"),
+        ...userExercises,
+      ].sort((a, b) => a.name.localeCompare(b.name));
+      dispatch({ type: "SET_EXERCISES", exercises: merged });
+    },
+    [state.exercises, state.programs]
+  );
+
+  const upsertProgram = useCallback(
+    async (
+      input: Pick<Program, "id" | "name" | "description" | "sessions"> & {
+        id?: string;
+      }
+    ) => {
+      const id = input.id;
+      if (id) {
+        const existing = state.programs.find((p) => p.id === id);
+        if (existing?.source === "builtin") {
+          throw new Error("Built-in programs cannot be edited.");
+        }
+      }
+
+      const saved = await storage.upsertProgram({
+        id: input.id ?? "",
+        name: input.name,
+        description: input.description,
+        sessions: input.sessions,
+        source: "user",
+      });
+
+      const userPrograms = await storage.loadPrograms();
+      const merged = [
+        ...state.programs.filter((p) => p.source === "builtin"),
+        ...userPrograms,
+      ].sort((a, b) => a.name.localeCompare(b.name));
+      dispatch({ type: "SET_PROGRAMS", programs: merged });
+      return saved;
+    },
+    [state.programs]
+  );
+
+  const deleteProgram = useCallback(
+    async (id: string) => {
+      const existing = state.programs.find((p) => p.id === id);
+      if (!existing) return;
+      if (existing.source === "builtin") {
+        throw new Error("Built-in programs cannot be deleted.");
+      }
+
+      await storage.deleteProgram(id);
+
+      const userPrograms = await storage.loadPrograms();
+      const merged = [
+        ...state.programs.filter((p) => p.source === "builtin"),
+        ...userPrograms,
+      ].sort((a, b) => a.name.localeCompare(b.name));
+      dispatch({ type: "SET_PROGRAMS", programs: merged });
+    },
+    [state.programs]
+  );
+
   const contextValue: DataContextValue = {
     state,
     actions: {
@@ -263,6 +766,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       refreshProgress,
       refreshHistory,
       refreshCompleted,
+      upsertExercise,
+      deleteExercise,
+      upsertProgram,
+      deleteProgram,
     },
   };
 
@@ -284,15 +791,6 @@ export function useDataContext() {
 }
 
 // Convenience hooks
-export function useChallenges() {
-  const { state } = useDataContext();
-  return {
-    data: state.challenges.length > 0 ? state.challenges : null,
-    loading: state.challengesLoading,
-    error: null,
-  };
-}
-
 export function useLastCompletedSlug() {
   const { state } = useDataContext();
   return state.lastCompletedSlug;

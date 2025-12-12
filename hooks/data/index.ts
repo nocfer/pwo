@@ -2,15 +2,23 @@
  * Data hooks barrel export
  */
 
-export { useChallenges } from "./useChallenges";
+export { useAllProgress, type AggregatedProgress } from "./useAllProgress";
+export {
+  useChallengeProgress,
+  type ChallengeProgressMetrics,
+} from "./useChallengeProgress";
+export {
+  generateChallengeSessions,
+  useChallengeSessions,
+} from "./useChallengeSessions";
+export { useExercises } from "./useExercises";
 export { useLastCompletedSlug } from "./useLastCompletedSlug";
 export { useLiveHistory, type HistoryEntry } from "./useLiveHistory";
 export { useLiveProgress, type LiveProgress } from "./useLiveProgress";
 export {
-    useProgramSessions,
-    type Program,
-    type Session
-} from "./useProgramSessions";
+  useProgramProgress,
+  type ProgramProgressMetrics,
+} from "./useProgramProgress";
+export { usePrograms } from "./usePrograms";
 export { useSessionCompletion } from "./useSessionCompletion";
 export { useWeeklyActivity } from "./useWeeklyActivity";
-

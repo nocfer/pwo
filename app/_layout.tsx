@@ -55,14 +55,6 @@ export default function RootLayout() {
             name="(tabs)"
             options={{ title: "Challenges", headerShown: false }}
           />
-          <Stack.Screen
-            name="challenges/[slug]/session/[index]"
-            options={{ title: "", headerShown: false }}
-          />
-          <Stack.Screen
-            name="challenges/[slug]"
-            options={{ title: "", headerShown: false }}
-          />
         </Stack>
         <StatusBar style="dark" />
       </DataProvider>
