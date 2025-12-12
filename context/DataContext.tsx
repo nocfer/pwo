@@ -19,7 +19,8 @@ import type {
   HistoryEntry,
   Program,
   ProgramProgress,
-  SessionProgress
+  SessionProgress,
+  SessionState,
 } from "@/types";
 import React, {
   createContext,
@@ -39,12 +40,12 @@ type DataContextValue = {
     completeSession: (
       slug: string,
       sessionIndex: number,
-      summary: string,
+      summary: string
     ) => Promise<void>;
 
     // Record an event
     recordEvent: (
-      event: Omit<EventRecord, "ts"> & { ts?: string },
+      event: Omit<EventRecord, "ts"> & { ts?: string }
     ) => Promise<void>;
 
     // Save session state
@@ -53,7 +54,7 @@ type DataContextValue = {
     // Load session state
     loadSessionState: (
       slug: string,
-      sessionIndex: number,
+      sessionIndex: number
     ) => Promise<SessionState | null>;
 
     // Refresh data
@@ -66,7 +67,7 @@ type DataContextValue = {
     upsertExercise: (
       input: Pick<Exercise, "id" | "name" | "category" | "icon"> & {
         id?: string;
-      },
+      }
     ) => Promise<Exercise>;
     deleteExercise: (id: string) => Promise<void>;
 
@@ -74,7 +75,7 @@ type DataContextValue = {
     upsertProgram: (
       input: Pick<Program, "id" | "name" | "description" | "sessions"> & {
         id?: string;
-      },
+      }
     ) => Promise<Program>;
     deleteProgram: (id: string) => Promise<void>;
   };
@@ -233,14 +234,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     };
 
     // Preserve challengeConfig if present
-    if ((p as any).challengeConfig && typeof (p as any).challengeConfig === "object") {
+    if (
+      (p as any).challengeConfig &&
+      typeof (p as any).challengeConfig === "object"
+    ) {
       const config = (p as any).challengeConfig;
       result.challengeConfig = {
         exerciseId: String(config.exerciseId ?? ""),
         sets: typeof config.sets === "number" ? config.sets : 5,
-        targetReps: typeof config.targetReps === "number" ? config.targetReps : 100,
-        warmUpSeconds: typeof config.warmUpSeconds === "number" ? config.warmUpSeconds : 0,
-        breakSeconds: typeof config.breakSeconds === "number" ? config.breakSeconds : 0,
+        targetReps:
+          typeof config.targetReps === "number" ? config.targetReps : 100,
+        warmUpSeconds:
+          typeof config.warmUpSeconds === "number" ? config.warmUpSeconds : 0,
+        breakSeconds:
+          typeof config.breakSeconds === "number" ? config.breakSeconds : 0,
       };
     }
 
@@ -268,7 +275,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         for (const e of seedExercises) exercisesById.set(e.id, e);
         for (const e of userExercises) exercisesById.set(e.id, e);
         const mergedExercises = Array.from(exercisesById.values()).sort(
-          (a, b) => a.name.localeCompare(b.name),
+          (a, b) => a.name.localeCompare(b.name)
         );
 
         if (mounted)
@@ -295,7 +302,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         for (const p of seedPrograms) programsById.set(p.id, migrateProgram(p));
         for (const p of userPrograms) programsById.set(p.id, migrateProgram(p));
         const mergedPrograms = Array.from(programsById.values()).sort((a, b) =>
-          a.name.localeCompare(b.name),
+          a.name.localeCompare(b.name)
         );
 
         if (mounted)
@@ -387,7 +394,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const exerciseProgressMap = new Map<string, ExerciseProgress>();
 
         for (const event of sessionEvents) {
-          if (event.type === "warmup_started" || event.type === "break_started") {
+          if (
+            event.type === "warmup_started" ||
+            event.type === "break_started"
+          ) {
             const data = event.data as any;
             if (data?.durationSeconds) {
               timeSpentSeconds += data.durationSeconds;
@@ -459,7 +469,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
             existing.updatedAt = dateISO;
 
             // Check if challenge is completed
-            const completedSessions = existing.sessions.filter((s) => s.completed);
+            const completedSessions = existing.sessions.filter(
+              (s) => s.completed
+            );
             if (
               completedSessions.length === sessions.length &&
               totalRepsCompleted >= program.challengeConfig.targetReps
@@ -500,7 +512,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         } else {
           // Update program progress
           const existing = await storage.loadProgramProgress(slug);
-          const session = program.sessions.find((s) => s.index === sessionIndex);
+          const session = program.sessions.find(
+            (s) => s.index === sessionIndex
+          );
 
           if (existing) {
             // Update existing progress
@@ -530,7 +544,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
             existing.updatedAt = dateISO;
 
             // Check if program is completed
-            const completedSessions = existing.sessions.filter((s) => s.completed);
+            const completedSessions = existing.sessions.filter(
+              (s) => s.completed
+            );
             if (completedSessions.length === program.sessions.length) {
               existing.completedAt = dateISO;
             }
@@ -575,7 +591,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       dataEvents.emitProgressUpdated(slug);
       dataEvents.emitHistoryUpdated(slug);
     },
-    [state.programs],
+    [state.programs]
   );
 
   const recordEvent = useCallback(
@@ -583,14 +599,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await storage.appendEvent(event);
       dataEvents.emitEventRecorded(event.slug, event.type);
     },
-    [],
+    []
   );
 
   const saveSessionState = useCallback(async (sessionState: SessionState) => {
     await storage.saveSessionState(sessionState);
     dataEvents.emitSessionStateChanged(
       sessionState.slug,
-      sessionState.sessionIndex,
+      sessionState.sessionIndex
     );
   }, []);
 
@@ -598,7 +614,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     async (slug: string, sessionIndex: number) => {
       return storage.loadSessionState(slug, sessionIndex);
     },
-    [],
+    []
   );
 
   const refreshAll = useCallback(() => {
@@ -621,7 +637,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     async (
       input: Pick<Exercise, "id" | "name" | "category" | "icon"> & {
         id?: string;
-      },
+      }
     ) => {
       const id = input.id;
       if (id) {
@@ -647,12 +663,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
       for (const e of userExercises) exercisesById.set(e.id, e);
       const merged = Array.from(exercisesById.values()).sort((a, b) =>
-        a.name.localeCompare(b.name),
+        a.name.localeCompare(b.name)
       );
       dispatch({ type: "SET_EXERCISES", exercises: merged });
       return saved;
     },
-    [state.exercises],
+    [state.exercises]
   );
 
   const deleteExercise = useCallback(
@@ -665,12 +681,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       const referencedBy = state.programs.find((p) =>
         p.sessions.some((s) =>
-          s.blocks.some((b) => b.type === "exercise" && b.exerciseId === id),
-        ),
+          s.blocks.some((b) => b.type === "exercise" && b.exerciseId === id)
+        )
       );
       if (referencedBy) {
         throw new Error(
-          `This exercise is used by the program “${referencedBy.name}”. Remove it from the program first.`,
+          `This exercise is used by the program “${referencedBy.name}”. Remove it from the program first.`
         );
       }
 
@@ -683,14 +699,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ].sort((a, b) => a.name.localeCompare(b.name));
       dispatch({ type: "SET_EXERCISES", exercises: merged });
     },
-    [state.exercises, state.programs],
+    [state.exercises, state.programs]
   );
 
   const upsertProgram = useCallback(
     async (
       input: Pick<Program, "id" | "name" | "description" | "sessions"> & {
         id?: string;
-      },
+      }
     ) => {
       const id = input.id;
       if (id) {
@@ -716,7 +732,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "SET_PROGRAMS", programs: merged });
       return saved;
     },
-    [state.programs],
+    [state.programs]
   );
 
   const deleteProgram = useCallback(
@@ -736,7 +752,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ].sort((a, b) => a.name.localeCompare(b.name));
       dispatch({ type: "SET_PROGRAMS", programs: merged });
     },
-    [state.programs],
+    [state.programs]
   );
 
   const contextValue: DataContextValue = {

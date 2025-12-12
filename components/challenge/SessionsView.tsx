@@ -1,4 +1,9 @@
-import { useChallengeSessions, useExercises, usePrograms, useSessionCompletion } from "@/hooks/data";
+import {
+  useChallengeSessions,
+  useExercises,
+  usePrograms,
+  useSessionCompletion,
+} from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
@@ -131,7 +136,7 @@ export default function SessionsView({ programId }: Props) {
             <Text style={[styles.subtitle, isLocked && styles.subtitleLocked]}>
               {isLocked
                 ? `Complete Session ${s.index - 1} first`
-                : exerciseName ?? "Exercise"}
+                : (exerciseName ?? "Exercise")}
             </Text>
             <View style={styles.setsRow}>
               {repsPerSet.map((r, i) => (

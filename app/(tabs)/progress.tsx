@@ -134,7 +134,10 @@ export default function ProgressScreen() {
             {challenges.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Reps Progression</Text>
-                <RepsProgressionChart challengeId={challenges[0]?.id} days={30} />
+                <RepsProgressionChart
+                  challengeId={challenges[0]?.id}
+                  days={30}
+                />
               </View>
             )}
 

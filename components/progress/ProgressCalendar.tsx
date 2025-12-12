@@ -33,7 +33,7 @@ export default function ProgressCalendar({
         const history = await storage.getProgressHistory(
           programId,
           challengeId,
-          60 // Last 60 days
+          60, // Last 60 days
         );
 
         if (!mounted) return;
@@ -61,7 +61,7 @@ export default function ProgressCalendar({
   const daysInMonth = new Date(
     targetDate.getFullYear(),
     targetDate.getMonth() + 1,
-    0
+    0,
   ).getDate();
 
   const firstDayOfWeek = targetDate.getDay();
@@ -81,7 +81,11 @@ export default function ProgressCalendar({
 
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(targetDate.getFullYear(), targetDate.getMonth(), day);
+      const date = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        day,
+      );
       const dateStr = date.toISOString().slice(0, 10);
       const isToday =
         date.getTime() === today.getTime() &&

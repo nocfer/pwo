@@ -13,7 +13,7 @@ export default function ChallengeProgressView({ challengeId }: Props) {
   const { data: programs } = usePrograms();
   const challenge = useMemo(
     () => programs?.find((p) => p.id === challengeId && p.challengeConfig),
-    [programs, challengeId]
+    [programs, challengeId],
   );
   const { metrics, loading } = useChallengeProgress(challenge || undefined);
 

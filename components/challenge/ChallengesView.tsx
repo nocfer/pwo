@@ -45,7 +45,9 @@ export default function ChallengesView({ query }: Props) {
   }
 
   const filtered = query
-    ? challenges.filter((r) => r.name.toLowerCase().includes(query.toLowerCase()))
+    ? challenges.filter((r) =>
+        r.name.toLowerCase().includes(query.toLowerCase()),
+      )
     : challenges;
 
   if (filtered.length === 0) {

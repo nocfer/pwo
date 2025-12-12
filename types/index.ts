@@ -4,11 +4,11 @@
 
 // Storage types
 export type {
-    EventRecord,
-    HistoryEntry,
-    HistoryFile,
-    SessionState,
-    StreakEntry
+  EventRecord,
+  HistoryEntry,
+  HistoryFile,
+  SessionState,
+  StreakEntry,
 } from "./storage";
 
 // Event types
@@ -25,20 +25,22 @@ export type { Exercise, ExerciseCategory, ExerciseSource } from "./exercise";
 
 // Program types
 export type {
-    ChallengeConfig,
-    Program,
-    ProgramBlock,
-    ProgramExerciseBlock,
-    ProgramRestBlock,
-    ProgramSession,
-    ProgramSource,
-    ProgramWarmupBlock
+  ChallengeConfig,
+  Program,
+  ProgramBlock,
+  ProgramExerciseBlock,
+  ProgramRestBlock,
+  ProgramSession,
+  ProgramSource,
+  ProgramWarmupBlock,
 } from "./program";
 
 // Progress types
 export type {
-    ChallengeProgress,
-    ExerciseProgress, ProgramProgress, ProgressHistory,
-    ProgressHistoryEntry, SessionProgress
+  ChallengeProgress,
+  ExerciseProgress,
+  ProgramProgress,
+  ProgressHistory,
+  ProgressHistoryEntry,
+  SessionProgress,
 } from "./progress";
-

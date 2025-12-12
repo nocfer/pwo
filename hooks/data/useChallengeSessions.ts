@@ -107,7 +107,10 @@ export function generateChallengeSessions(
  * Hook to get sessions for a program, generating them dynamically if it's a challenge.
  */
 export function useChallengeSessions(
-  program: { sessions: ProgramSession[]; challengeConfig?: ChallengeConfig } | null | undefined,
+  program:
+    | { sessions: ProgramSession[]; challengeConfig?: ChallengeConfig }
+    | null
+    | undefined,
 ): ProgramSession[] {
   return useMemo(() => {
     if (!program) return [];
