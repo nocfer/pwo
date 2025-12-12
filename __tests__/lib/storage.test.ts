@@ -14,15 +14,23 @@ const localStorageMock = (() => {
     },
     clear: () => {
       store = {};
-    }
-  };
+    },
+    key: (index: number) => Object.keys(store)[index] || null,
+    length: 0
+  } as Storage;
 })();
 
 // Set up global localStorage and window object for Node.js
-(global as any).localStorage = localStorageMock;
-(global as any).window = {
-  localStorage: localStorageMock
-};
+Object.defineProperty(globalThis, "localStorage", {
+  value: localStorageMock,
+  writable: true
+});
+Object.defineProperty(globalThis, "window", {
+  value: {
+    localStorage: localStorageMock
+  },
+  writable: true
+});
 
 describe("storage", () => {
   beforeEach(() => {

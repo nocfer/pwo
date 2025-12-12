@@ -17,7 +17,9 @@ import type {
   Exercise,
   ExerciseProgress,
   HistoryEntry,
+  LegacyProgram,
   Program,
+  ProgramBlock,
   ProgramProgress,
   SessionProgress,
   SessionState
@@ -139,13 +141,13 @@ const DataContext = createContext<DataContextValue | null>(null);
 export function DataProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(dataReducer, initialState);
 
-  function migrateProgram(p: any): Program {
+  function migrateProgram(p: LegacyProgram): Program {
     if (!p || typeof p !== "object") return p as Program;
-    if (!Array.isArray((p as any).sessions)) return p as Program;
+    if (!Array.isArray(p.sessions)) return p as Program;
 
-    const nextSessions = (p as any).sessions.map((s: any, idx: number) => {
+    const nextSessions = p.sessions.map((s, idx) => {
       const blocksRaw = Array.isArray(s?.blocks) ? s.blocks : [];
-      const blocks: any[] = [];
+      const blocks: ProgramBlock[] = [];
 
       for (const b of blocksRaw) {
         if (!b || typeof b !== "object") continue;
@@ -184,7 +186,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
         // Old shape: { sets, repsPerSet, restSecondsBetweenSets }
         const sets = typeof b.sets === "number" ? b.sets : undefined;
-        const reps = (b as any).repsPerSet;
+        const reps = b.repsPerSet;
         let targetReps: number | undefined;
         const noteParts: string[] = [];
 
@@ -207,7 +209,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           note: noteParts.length ? noteParts.join(" • ") : undefined
         });
 
-        const restBetween = Number((b as any).restSecondsBetweenSets);
+        const restBetween = Number(b.restSecondsBetweenSets);
         if (Number.isFinite(restBetween) && restBetween > 0) {
           blocks.push({ type: "rest", seconds: restBetween, label: "Rest" });
         }
@@ -221,24 +223,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
 
     const result: Program = {
-      id: String((p as any).id ?? ""),
-      name: String((p as any).name ?? ""),
+      id: String(p.id ?? ""),
+      name: String(p.name ?? ""),
       description:
-        typeof (p as any).description === "string"
-          ? (p as any).description
-          : undefined,
+        typeof p.description === "string" ? p.description : undefined,
       sessions: nextSessions,
-      createdAt: String((p as any).createdAt ?? new Date().toISOString()),
-      updatedAt: String((p as any).updatedAt ?? new Date().toISOString()),
-      source: (p as any).source === "builtin" ? "builtin" : "user"
+      createdAt: String(p.createdAt ?? new Date().toISOString()),
+      updatedAt: String(p.updatedAt ?? new Date().toISOString()),
+      source: p.source === "builtin" ? "builtin" : "user"
     };
 
     // Preserve challengeConfig if present
-    if (
-      (p as any).challengeConfig &&
-      typeof (p as any).challengeConfig === "object"
-    ) {
-      const config = (p as any).challengeConfig;
+    if (p.challengeConfig && typeof p.challengeConfig === "object") {
+      const config = p.challengeConfig;
       result.challengeConfig = {
         exerciseId: String(config.exerciseId ?? ""),
         sets: typeof config.sets === "number" ? config.sets : 5,
@@ -262,8 +259,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const [seedExercises, userExercises] = await Promise.all([
           (async () => {
             try {
+              type ExerciseModule = { default: Exercise[] };
               const mod = await import("@/assets/data/exercises.json");
-              return (mod as any).default as Exercise[];
+              return (mod as unknown as ExerciseModule).default;
             } catch {
               return [] as Exercise[];
             }
@@ -289,18 +287,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const [seedPrograms, userPrograms] = await Promise.all([
           (async () => {
             try {
+              type ProgramModule = { default: LegacyProgram[] };
               const mod = await import("@/assets/data/programs.json");
-              return (mod as any).default as Program[];
+              return (mod as unknown as ProgramModule).default;
             } catch {
-              return [] as Program[];
+              return [] as LegacyProgram[];
             }
           })(),
           storage.loadPrograms()
         ]);
 
         const programsById = new Map<string, Program>();
-        for (const p of seedPrograms) programsById.set(p.id, migrateProgram(p));
-        for (const p of userPrograms) programsById.set(p.id, migrateProgram(p));
+        for (const p of seedPrograms) {
+          const migrated = migrateProgram(p);
+          programsById.set(migrated.id, migrated);
+        }
+        for (const p of userPrograms) {
+          const migrated = migrateProgram(p);
+          programsById.set(migrated.id, migrated);
+        }
         const mergedPrograms = Array.from(programsById.values()).sort((a, b) =>
           a.name.localeCompare(b.name)
         );
@@ -398,26 +403,31 @@ export function DataProvider({ children }: { children: ReactNode }) {
             event.type === "warmup_started" ||
             event.type === "break_started"
           ) {
-            const data = event.data as any;
-            if (data?.durationSeconds) {
-              timeSpentSeconds += data.durationSeconds;
+            const data = event.data as Record<string, unknown>;
+            const durationSeconds = data?.["durationSeconds"];
+            if (typeof durationSeconds === "number") {
+              timeSpentSeconds += durationSeconds;
             }
           }
           if (event.type === "set_completed") {
-            const data = event.data as any;
-            if (data?.exerciseId && data?.reps) {
-              const existing = exerciseProgressMap.get(data.exerciseId) || {
-                exerciseId: data.exerciseId,
+            const data = event.data as Record<string, unknown>;
+            const exerciseId = data?.["exerciseId"];
+            const reps = data?.["reps"];
+            const durationSeconds = data?.["durationSeconds"];
+
+            if (typeof exerciseId === "string" && typeof reps === "number") {
+              const existing = exerciseProgressMap.get(exerciseId) || {
+                exerciseId,
                 repsCompleted: 0,
                 setsCompleted: 0,
                 lastCompletedAt: dateISO
               };
-              existing.repsCompleted += data.reps || 0;
+              existing.repsCompleted += reps;
               existing.setsCompleted += 1;
-              exerciseProgressMap.set(data.exerciseId, existing);
+              exerciseProgressMap.set(exerciseId, existing);
             }
-            if (data?.durationSeconds) {
-              timeSpentSeconds += data.durationSeconds;
+            if (typeof durationSeconds === "number") {
+              timeSpentSeconds += durationSeconds;
             }
           }
         }

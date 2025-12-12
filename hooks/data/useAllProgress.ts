@@ -6,6 +6,7 @@
 
 import { useRefreshVersions } from "@/context/DataContext";
 import { storage } from "@/lib/storage";
+import type { ChallengeProgress, ProgramProgress } from "@/types";
 import { useEffect, useMemo, useState } from "react";
 
 export type AggregatedProgress = {
@@ -28,8 +29,10 @@ export function useAllProgress(): {
   loading: boolean;
   error: Error | null;
 } {
-  const [programProgress, setProgramProgress] = useState<any[]>([]);
-  const [challengeProgress, setChallengeProgress] = useState<any[]>([]);
+  const [programProgress, setProgramProgress] = useState<ProgramProgress[]>([]);
+  const [challengeProgress, setChallengeProgress] = useState<
+    ChallengeProgress[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -74,13 +77,11 @@ export function useAllProgress(): {
 
     // Process program progress
     programProgress.forEach((progress) => {
-      const completedSessions = progress.sessions.filter(
-        (s: any) => s.completed
-      );
+      const completedSessions = progress.sessions.filter((s) => s.completed);
       totalWorkoutsCompleted += completedSessions.length;
       totalTimeSpentSeconds += progress.totalTimeSpentSeconds || 0;
 
-      completedSessions.forEach((session: any) => {
+      completedSessions.forEach((session) => {
         if (session.completedAt) {
           recentActivity.push({
             date: session.completedAt,
@@ -94,13 +95,11 @@ export function useAllProgress(): {
 
     // Process challenge progress
     challengeProgress.forEach((progress) => {
-      const completedSessions = progress.sessions.filter(
-        (s: any) => s.completed
-      );
+      const completedSessions = progress.sessions.filter((s) => s.completed);
       totalWorkoutsCompleted += completedSessions.length;
       totalRepsCompleted += progress.totalRepsCompleted || 0;
 
-      completedSessions.forEach((session: any) => {
+      completedSessions.forEach((session) => {
         if (session.completedAt) {
           recentActivity.push({
             date: session.completedAt,
@@ -166,12 +165,12 @@ export function useAllProgress(): {
 
     // Count active programs/challenges (those with at least one session completed but not all)
     const activePrograms = programProgress.filter((p) => {
-      const completed = p.sessions.filter((s: any) => s.completed).length;
+      const completed = p.sessions.filter((s) => s.completed).length;
       return completed > 0 && completed < p.sessions.length;
     }).length;
 
     const activeChallenges = challengeProgress.filter((c) => {
-      const completed = c.sessions.filter((s: any) => s.completed).length;
+      const completed = c.sessions.filter((s) => s.completed).length;
       return completed > 0 && completed < c.sessions.length;
     }).length;
 

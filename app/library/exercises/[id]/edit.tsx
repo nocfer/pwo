@@ -1,6 +1,7 @@
 import { useDataActions } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
 import { theme } from "@/theme/theme";
+import type { ExerciseCategory } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
@@ -27,7 +28,7 @@ export default function EditExerciseScreen() {
   );
 
   const [name, setName] = useState(exercise?.name ?? "");
-  const [category, setCategory] = useState<string>(
+  const [category, setCategory] = useState<ExerciseCategory>(
     exercise?.category ?? "strength"
   );
   const [icon, setIcon] = useState<string>(exercise?.icon ?? "barbell");
@@ -44,9 +45,9 @@ export default function EditExerciseScreen() {
       await actions.upsertExercise({
         id,
         name: trimmed,
-        category: category as any,
+        category,
         icon
-      } as any);
+      });
       router.back();
     } catch (e) {
       Alert.alert("Couldn’t save", e instanceof Error ? e.message : String(e));
@@ -112,22 +113,27 @@ export default function EditExerciseScreen() {
 
           <Text style={styles.label}>Category</Text>
           <View style={styles.segmented}>
-            {["strength", "cardio", "flexibility", "skill"].map((c) => (
-              <Pressable
-                key={c}
-                onPress={() => setCategory(c)}
-                style={[styles.segment, category === c && styles.segmentActive]}
-              >
-                <Text
+            {(["strength", "cardio", "flexibility", "skill"] as const).map(
+              (c) => (
+                <Pressable
+                  key={c}
+                  onPress={() => setCategory(c)}
                   style={[
-                    styles.segmentText,
-                    category === c && styles.segmentTextActive
+                    styles.segment,
+                    category === c && styles.segmentActive
                   ]}
                 >
-                  {c}
-                </Text>
-              </Pressable>
-            ))}
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      category === c && styles.segmentTextActive
+                    ]}
+                  >
+                    {c}
+                  </Text>
+                </Pressable>
+              )
+            )}
           </View>
 
           <View style={{ height: theme.spacing.lg }} />
@@ -142,7 +148,7 @@ export default function EditExerciseScreen() {
           />
           <View style={styles.iconPreview}>
             <Ionicons
-              name={icon as any}
+              name={(icon || "help") as any}
               size={22}
               color={theme.colors.primary}
             />
