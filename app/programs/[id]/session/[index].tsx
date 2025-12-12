@@ -529,30 +529,27 @@ export default function ProgramSessionRunner() {
                 </Pressable>
               </View>
             ) : (
-              <>
-                <View style={styles.secondaryRow}>
-                  <Pressable
-                    onPress={timer.handleSkip}
-                    style={({ pressed }) => [
-                      styles.secondaryBtnInline,
-                      pressed && styles.secondaryBtnPressedInline
-                    ]}
-                  >
-                    <Ionicons
-                      name="play-skip-forward"
-                      size={20}
-                      color={theme.colors.text}
-                    />
-                    <Text style={styles.secondaryBtnTextInline}>Skip</Text>
-                  </Pressable>
-                  <View style={{ flex: 1 }} />
-                </View>
+              <View style={styles.secondaryRow}>
+                <Pressable
+                  onPress={timer.handleSkip}
+                  style={({ pressed }) => [
+                    styles.secondaryBtnInline,
+                    pressed && styles.secondaryBtnPressedInline
+                  ]}
+                >
+                  <Ionicons
+                    name="play-skip-forward"
+                    size={20}
+                    color={theme.colors.text}
+                  />
+                  <Text style={styles.secondaryBtnTextInline}>Skip</Text>
+                </Pressable>
 
                 <Pressable
                   onPress={timer.handleComplete}
                   style={({ pressed }) => [
-                    styles.primaryBtn,
-                    pressed && styles.primaryBtnPressed
+                    styles.primaryBtnInline,
+                    pressed && styles.primaryBtnPressedInline
                   ]}
                 >
                   <Ionicons
@@ -561,23 +558,22 @@ export default function ProgramSessionRunner() {
                         ? "checkmark-circle"
                         : "play"
                     }
-                    size={24}
+                    size={20}
                     color={theme.colors.primaryTextOn}
-                    style={{ marginRight: theme.spacing.sm }}
                   />
-                  <Text style={styles.primaryBtnText}>
+                  <Text style={styles.primaryBtnTextInline}>
                     {timer.currentStep?.type === "warmup"
                       ? "Start Warm-up"
                       : timer.currentStep?.type === "rest"
                         ? "Start Rest"
                         : timer.currentStep?.type === "exercise"
                           ? timer.currentStep.durationSeconds
-                            ? "Start Exercise Timer"
-                            : "Complete Exercise"
+                            ? "Start Timer"
+                            : "Complete"
                           : "Continue"}
                   </Text>
                 </Pressable>
-              </>
+              </View>
             )}
           </View>
         </SafeAreaView>
@@ -824,14 +820,20 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.md,
     gap: theme.spacing.md
   },
-  secondaryRow: { flexDirection: "row", gap: theme.spacing.md },
+  secondaryRow: {
+    flexDirection: "row",
+    gap: theme.spacing.md,
+    flexWrap: "nowrap"
+  },
   secondaryBtnInline: {
     flex: 1,
+    minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: theme.spacing.sm,
+    gap: theme.spacing.xs,
     paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.lg,
     backgroundColor: theme.colors.card
   },
@@ -857,6 +859,27 @@ const styles = StyleSheet.create({
     ...theme.typography.bodyBold,
     color: theme.colors.primaryTextOn,
     fontSize: 16
+  },
+  primaryBtnInline: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.xs,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.primary,
+    ...theme.shadows.sm
+  },
+  primaryBtnPressedInline: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }]
+  },
+  primaryBtnTextInline: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primaryTextOn
   },
 
   secondaryBtn: {
