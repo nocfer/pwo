@@ -19,4 +19,3 @@ export type Exercise = {
   updatedAt: string; // ISO
   source: ExerciseSource;
 };
-

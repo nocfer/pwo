@@ -6,13 +6,13 @@
  */
 
 import type {
-    EventRecord,
-    Exercise,
-    HistoryEntry,
-    HistoryFile,
-    Program,
-    SessionState,
-    StreakEntry,
+  EventRecord,
+  Exercise,
+  HistoryEntry,
+  HistoryFile,
+  Program,
+  SessionState,
+  StreakEntry,
 } from "@/types";
 import * as FileSystem from "expo-file-system/legacy";
 import { Platform } from "react-native";
@@ -20,11 +20,11 @@ import { getMondayBasedDayIndex, normalizeStreak } from "./utils/date";
 
 // Re-export types for backwards compatibility
 export type {
-    EventRecord,
-    HistoryEntry,
-    HistoryFile,
-    SessionState,
-    StreakEntry
+  EventRecord,
+  HistoryEntry,
+  HistoryFile,
+  SessionState,
+  StreakEntry
 } from "@/types";
 
 // ============================================================================
@@ -147,8 +147,7 @@ export const storage = {
     const arr = await this.loadExercises();
     const id = input.id || generateId("ex");
     const idx = arr.findIndex((e) => e.id === id);
-    const createdAt =
-      idx >= 0 ? arr[idx].createdAt : input.createdAt ?? now;
+    const createdAt = idx >= 0 ? arr[idx].createdAt : (input.createdAt ?? now);
     const next: Exercise = {
       id,
       name: input.name,
@@ -189,8 +188,7 @@ export const storage = {
     const arr = await this.loadPrograms();
     const id = input.id || generateId("prg");
     const idx = arr.findIndex((p) => p.id === id);
-    const createdAt =
-      idx >= 0 ? arr[idx].createdAt : input.createdAt ?? now;
+    const createdAt = idx >= 0 ? arr[idx].createdAt : (input.createdAt ?? now);
     const next: Program = {
       id,
       name: input.name,

@@ -183,7 +183,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
             targetReps:
               typeof b.targetReps === "number" ? b.targetReps : undefined,
             durationSeconds:
-              typeof b.durationSeconds === "number" ? b.durationSeconds : undefined,
+              typeof b.durationSeconds === "number"
+                ? b.durationSeconds
+                : undefined,
             note: typeof b.note === "string" ? b.note : undefined,
           });
           continue;
@@ -282,8 +284,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const exercisesById = new Map<string, Exercise>();
         for (const e of seedExercises) exercisesById.set(e.id, e);
         for (const e of userExercises) exercisesById.set(e.id, e);
-        const mergedExercises = Array.from(exercisesById.values()).sort((a, b) =>
-          a.name.localeCompare(b.name),
+        const mergedExercises = Array.from(exercisesById.values()).sort(
+          (a, b) => a.name.localeCompare(b.name),
         );
 
         if (mounted)
@@ -313,7 +315,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
           a.name.localeCompare(b.name),
         );
 
-        if (mounted) dispatch({ type: "SET_PROGRAMS", programs: mergedPrograms });
+        if (mounted)
+          dispatch({ type: "SET_PROGRAMS", programs: mergedPrograms });
       } catch {
         if (mounted) dispatch({ type: "SET_PROGRAMS_LOADING", loading: false });
       }

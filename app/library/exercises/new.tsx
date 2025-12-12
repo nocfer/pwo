@@ -59,11 +59,7 @@ export default function NewExerciseScreen() {
               pressed && styles.headerBackPressed,
             ]}
           >
-            <Ionicons
-              name="chevron-back"
-              size={24}
-              color={theme.colors.text}
-            />
+            <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>New Exercise</Text>

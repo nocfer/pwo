@@ -53,7 +53,7 @@ export default function ProgramSessionRunner() {
         animated: true,
         viewPosition: 0.5,
       });
-    } catch { }
+    } catch {}
   }, [currentStepIndex, steps.length]);
 
   if (programsLoading) {
@@ -379,9 +379,7 @@ export default function ProgramSessionRunner() {
             >
               <Text style={styles.focusTitle}>Ready</Text>
               <Text style={styles.focusSub}>
-                {nextLabel
-                  ? `Next: ${nextLabel}`
-                  : "Start the next step"}
+                {nextLabel ? `Next: ${nextLabel}` : "Start the next step"}
               </Text>
             </View>
           )}
@@ -395,7 +393,7 @@ export default function ProgramSessionRunner() {
             <View style={{ height: theme.spacing.sm }} />
           )}
           contentContainerStyle={styles.listContent}
-          onScrollToIndexFailed={() => { }}
+          onScrollToIndexFailed={() => {}}
           renderItem={({ item, index: idx }) => {
             const isDone = idx < currentStepIndex || timer.phase === "done";
             const isActive = idx === currentStepIndex && timer.phase !== "done";

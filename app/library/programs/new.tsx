@@ -20,12 +20,12 @@ type BlockDraft =
   | { type: "warmup"; seconds: string }
   | { type: "rest"; seconds: string; label?: string }
   | {
-    type: "exercise";
-    exerciseId: string;
-    targetReps?: string;
-    durationSeconds?: string;
-    note?: string;
-  };
+      type: "exercise";
+      exerciseId: string;
+      targetReps?: string;
+      durationSeconds?: string;
+      note?: string;
+    };
 
 export default function NewProgramScreen() {
   const actions = useDataActions();
@@ -177,11 +177,7 @@ export default function NewProgramScreen() {
               pressed && styles.headerBackPressed,
             ]}
           >
-            <Ionicons
-              name="chevron-back"
-              size={24}
-              color={theme.colors.text}
-            />
+            <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>New Program</Text>

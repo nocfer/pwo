@@ -6,11 +6,11 @@
 
 import { haptics } from "@/lib/haptics";
 import type {
-    Challenge,
-    EventRecord,
-    Session,
-    SessionPhase,
-    SessionState,
+  Challenge,
+  EventRecord,
+  Session,
+  SessionPhase,
+  SessionState,
 } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 

@@ -59,11 +59,7 @@ export default function ProgramDetail() {
             pressed && styles.headerBackPressed,
           ]}
         >
-          <Ionicons
-            name="chevron-back"
-            size={24}
-            color={theme.colors.text}
-          />
+          <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{program.name}</Text>
@@ -81,7 +77,6 @@ export default function ProgramDetail() {
         style={styles.container}
         contentContainerStyle={styles.content}
       >
-
         <View style={styles.card}>
           <View style={styles.rowBetween}>
             <Text style={styles.sectionTitle}>Sessions</Text>
