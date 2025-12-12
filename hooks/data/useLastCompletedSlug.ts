@@ -11,13 +11,9 @@ import { useContext, useEffect, useState } from "react";
 export function useLastCompletedSlug(): string | null {
   const context = useContext(DataContext);
 
-  // If we're inside DataProvider, use context
-  if (context) {
-    return context.state.lastCompletedSlug;
-  }
+  const [slug, setSlug] = useState<string | null>(null);
 
   // Fallback for usage outside provider
-  const [slug, setSlug] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -33,6 +29,11 @@ export function useLastCompletedSlug(): string | null {
       mounted = false;
     };
   }, []);
+
+  // If we're inside DataProvider, use context
+  if (context) {
+    return context.state.lastCompletedSlug;
+  }
 
   return slug;
 }

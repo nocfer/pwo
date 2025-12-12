@@ -14,7 +14,7 @@ export {
   useSessionCompletion,
   type HistoryEntry,
   type LiveProgress,
-  type Session,
+  type Session
 } from "./data";
 
 // Session hooks
@@ -22,5 +22,5 @@ export {
   useSessionSteps,
   useSessionTimer,
   type Step,
-  type UseSessionTimerReturn,
+  type UseSessionTimerReturn
 } from "./session";

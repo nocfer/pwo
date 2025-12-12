@@ -6,7 +6,7 @@ function distributeIntoSets(total: number, sets: number): number[] {
   const remainder = total - base * sets;
   const arr = Array.from(
     { length: sets },
-    (_, i) => base + (i < remainder ? 1 : 0),
+    (_, i) => base + (i < remainder ? 1 : 0)
   );
   return arr;
 }
@@ -16,7 +16,7 @@ function distributeIntoSets(total: number, sets: number): number[] {
  * Sessions progress from 20 reps to targetReps, +12% per session.
  */
 export function generateChallengeSessions(
-  config: ChallengeConfig,
+  config: ChallengeConfig
 ): ProgramSession[] {
   const { exerciseId, sets, targetReps, warmUpSeconds, breakSeconds } = config;
   const result: ProgramSession[] = [];
@@ -39,7 +39,7 @@ export function generateChallengeSessions(
       blocks.push({
         type: "exercise",
         exerciseId,
-        targetReps: dist[setIdx],
+        targetReps: dist[setIdx]
       });
 
       // Add rest block after each set except the last one
@@ -47,7 +47,7 @@ export function generateChallengeSessions(
         blocks.push({
           type: "rest",
           seconds: breakSeconds,
-          label: "Rest",
+          label: "Rest"
         });
       }
     }
@@ -55,7 +55,7 @@ export function generateChallengeSessions(
     result.push({
       index: i,
       name: `Session ${i}`,
-      blocks,
+      blocks
     });
 
     i += 1;
@@ -80,14 +80,14 @@ export function generateChallengeSessions(
         blocks.push({
           type: "exercise",
           exerciseId,
-          targetReps: dist[setIdx],
+          targetReps: dist[setIdx]
         });
 
         if (setIdx < sets - 1 && breakSeconds > 0) {
           blocks.push({
             type: "rest",
             seconds: breakSeconds,
-            label: "Rest",
+            label: "Rest"
           });
         }
       }
@@ -95,7 +95,7 @@ export function generateChallengeSessions(
       result.push({
         index: i,
         name: `Session ${i}`,
-        blocks,
+        blocks
       });
     }
   }
@@ -110,7 +110,7 @@ export function useChallengeSessions(
   program:
     | { sessions: ProgramSession[]; challengeConfig?: ChallengeConfig }
     | null
-    | undefined,
+    | undefined
 ): ProgramSession[] {
   return useMemo(() => {
     if (!program) return [];

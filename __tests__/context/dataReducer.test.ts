@@ -6,7 +6,7 @@ describe("dataReducer", () => {
     const challenges = [{ name: "Push-ups", slug: "push-ups" }];
     const result = dataReducer(initialState, {
       type: "SET_CHALLENGES",
-      challenges,
+      challenges
     });
     expect(result.challenges).toEqual(challenges);
     expect(result.challengesLoading).toBe(false);
@@ -15,7 +15,7 @@ describe("dataReducer", () => {
   it("SET_CHALLENGES_LOADING updates loading state", () => {
     const result = dataReducer(initialState, {
       type: "SET_CHALLENGES_LOADING",
-      loading: false,
+      loading: false
     });
     expect(result.challengesLoading).toBe(false);
   });
@@ -27,12 +27,12 @@ describe("dataReducer", () => {
         name: "Push Ups",
         source: "user",
         createdAt: "2025-01-01T00:00:00.000Z",
-        updatedAt: "2025-01-01T00:00:00.000Z",
-      },
+        updatedAt: "2025-01-01T00:00:00.000Z"
+      }
     ];
     const result = dataReducer(initialState, {
       type: "SET_EXERCISES",
-      exercises,
+      exercises
     } as any);
     expect(result.exercises).toEqual(exercises);
     expect(result.exercisesLoading).toBe(false);
@@ -46,12 +46,12 @@ describe("dataReducer", () => {
         sessions: [{ index: 1, blocks: [] }],
         source: "user",
         createdAt: "2025-01-01T00:00:00.000Z",
-        updatedAt: "2025-01-01T00:00:00.000Z",
-      },
+        updatedAt: "2025-01-01T00:00:00.000Z"
+      }
     ];
     const result = dataReducer(initialState, {
       type: "SET_PROGRAMS",
-      programs,
+      programs
     } as any);
     expect(result.programs).toEqual(programs);
     expect(result.programsLoading).toBe(false);
@@ -60,7 +60,7 @@ describe("dataReducer", () => {
   it("SET_LAST_COMPLETED_SLUG updates slug", () => {
     const result = dataReducer(initialState, {
       type: "SET_LAST_COMPLETED_SLUG",
-      slug: "test-slug",
+      slug: "test-slug"
     });
     expect(result.lastCompletedSlug).toBe("test-slug");
   });
@@ -69,7 +69,7 @@ describe("dataReducer", () => {
     const stateWithSlug = { ...initialState, lastCompletedSlug: "test-slug" };
     const result = dataReducer(stateWithSlug, {
       type: "SET_LAST_COMPLETED_SLUG",
-      slug: null,
+      slug: null
     });
     expect(result.lastCompletedSlug).toBeNull();
   });
@@ -77,7 +77,7 @@ describe("dataReducer", () => {
   it("INCREMENT_PROGRESS_VERSION increments version", () => {
     expect(initialState.progressVersion).toBe(0);
     const result = dataReducer(initialState, {
-      type: "INCREMENT_PROGRESS_VERSION",
+      type: "INCREMENT_PROGRESS_VERSION"
     });
     expect(result.progressVersion).toBe(1);
   });
@@ -85,7 +85,7 @@ describe("dataReducer", () => {
   it("INCREMENT_HISTORY_VERSION increments version", () => {
     expect(initialState.historyVersion).toBe(0);
     const result = dataReducer(initialState, {
-      type: "INCREMENT_HISTORY_VERSION",
+      type: "INCREMENT_HISTORY_VERSION"
     });
     expect(result.historyVersion).toBe(1);
   });
@@ -93,7 +93,7 @@ describe("dataReducer", () => {
   it("INCREMENT_COMPLETED_VERSION increments version", () => {
     expect(initialState.completedVersion).toBe(0);
     const result = dataReducer(initialState, {
-      type: "INCREMENT_COMPLETED_VERSION",
+      type: "INCREMENT_COMPLETED_VERSION"
     });
     expect(result.completedVersion).toBe(1);
   });
@@ -103,7 +103,7 @@ describe("dataReducer", () => {
       ...initialState,
       progressVersion: 5,
       historyVersion: 3,
-      completedVersion: 2,
+      completedVersion: 2
     };
     const result = dataReducer(state, { type: "REFRESH_ALL" });
     expect(result.progressVersion).toBe(6);
@@ -121,11 +121,11 @@ describe("dataReducer", () => {
       ...initialState,
       challenges: [{ name: "Test", slug: "test" }],
       lastCompletedSlug: "test",
-      progressVersion: 5,
+      progressVersion: 5
     };
 
     const result = dataReducer(stateWithData, {
-      type: "INCREMENT_HISTORY_VERSION",
+      type: "INCREMENT_HISTORY_VERSION"
     });
 
     expect(result.challenges).toEqual(stateWithData.challenges);

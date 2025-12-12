@@ -10,23 +10,23 @@ import type {
   EventRecord,
   Session,
   SessionPhase,
-  SessionState,
+  SessionState
 } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type TimerActions = {
   recordEvent: (
-    event: Omit<EventRecord, "ts"> & { ts?: string },
+    event: Omit<EventRecord, "ts"> & { ts?: string }
   ) => Promise<void>;
   completeSession: (
     slug: string,
     sessionIndex: number,
-    summary: string,
+    summary: string
   ) => Promise<void>;
   saveSessionState: (state: SessionState) => Promise<void>;
   loadSessionState: (
     slug: string,
-    sessionIndex: number,
+    sessionIndex: number
   ) => Promise<SessionState | null>;
 };
 
@@ -62,7 +62,7 @@ export function useSessionTimer({
   slug,
   session,
   program,
-  actions,
+  actions
 }: UseSessionTimerOptions): UseSessionTimerReturn {
   const { recordEvent, completeSession, saveSessionState, loadSessionState } =
     actions;
@@ -71,11 +71,11 @@ export function useSessionTimer({
   const breakSeconds = program?.exercise?.break ?? 0;
 
   const [phase, setPhase] = useState<SessionPhase>(
-    warmUpSeconds > 0 ? "warmup" : "working",
+    warmUpSeconds > 0 ? "warmup" : "working"
   );
   const [currentSet, setCurrentSet] = useState(1);
   const [timer, setTimer] = useState(() =>
-    phase === "warmup" ? warmUpSeconds : 0,
+    phase === "warmup" ? warmUpSeconds : 0
   );
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isPaused, setIsPaused] = useState(false);
@@ -105,7 +105,7 @@ export function useSessionTimer({
       }, 1000);
       setIsPaused(false);
     },
-    [clearTimer],
+    [clearTimer]
   );
 
   const pauseTimer = useCallback(() => {
@@ -159,7 +159,7 @@ export function useSessionTimer({
       currentSet,
       timer,
       isPaused,
-      warmupDone,
+      warmupDone
     });
   }, [
     slug,
@@ -169,7 +169,7 @@ export function useSessionTimer({
     timer,
     isPaused,
     warmupDone,
-    saveSessionState,
+    saveSessionState
   ]);
 
   // Start warmup timer when phase changes to warmup
@@ -179,7 +179,7 @@ export function useSessionTimer({
       void recordEvent({
         slug,
         sessionIndex: session?.index ?? 0,
-        type: "warmup_started",
+        type: "warmup_started"
       });
     }
   }, [phase, warmUpSeconds, startTimer, slug, session?.index, recordEvent]);
@@ -211,7 +211,7 @@ export function useSessionTimer({
     phase,
     currentSet,
     timer,
-    startTimer,
+    startTimer
   ]);
 
   // Handle timer completion transitions
@@ -222,7 +222,7 @@ export function useSessionTimer({
       void recordEvent({
         slug,
         sessionIndex: session?.index ?? 0,
-        type: "warmup_completed",
+        type: "warmup_completed"
       });
     }
     if (timer === 0 && phase === "break") {
@@ -233,7 +233,7 @@ export function useSessionTimer({
         void recordEvent({
           slug,
           sessionIndex: session.index,
-          type: "break_completed",
+          type: "break_completed"
         });
         const summary = `${program?.exercise?.name ?? slug} ${
           session.sets.length
@@ -245,7 +245,7 @@ export function useSessionTimer({
         void recordEvent({
           slug,
           sessionIndex: session.index,
-          type: "break_completed",
+          type: "break_completed"
         });
       }
     }
@@ -257,7 +257,7 @@ export function useSessionTimer({
     slug,
     program?.exercise?.name,
     recordEvent,
-    completeSession,
+    completeSession
   ]);
 
   // Handler functions
@@ -268,7 +268,7 @@ export function useSessionTimer({
       void recordEvent({
         slug,
         sessionIndex: session.index,
-        type: phase === "warmup" ? "warmup_resumed" : "break_resumed",
+        type: phase === "warmup" ? "warmup_resumed" : "break_resumed"
       });
       void haptics.resumeTimer();
     } else {
@@ -276,7 +276,7 @@ export function useSessionTimer({
       void recordEvent({
         slug,
         sessionIndex: session.index,
-        type: phase === "warmup" ? "warmup_paused" : "break_paused",
+        type: phase === "warmup" ? "warmup_paused" : "break_paused"
       });
       void haptics.pauseTimer();
     }
@@ -293,7 +293,7 @@ export function useSessionTimer({
       void recordEvent({
         slug,
         sessionIndex: session.index,
-        type: "warmup_skipped",
+        type: "warmup_skipped"
       });
       void haptics.skipAction();
       return;
@@ -308,7 +308,7 @@ export function useSessionTimer({
       void recordEvent({
         slug,
         sessionIndex: session.index,
-        type: "break_skipped",
+        type: "break_skipped"
       });
       void haptics.skipAction();
       return;
@@ -321,13 +321,13 @@ export function useSessionTimer({
           slug,
           sessionIndex: session.index,
           type: "set_skipped",
-          data: { set: currentSet },
+          data: { set: currentSet }
         });
         void recordEvent({
           slug,
           sessionIndex: session.index,
           type: "break_started",
-          data: { afterSet: currentSet },
+          data: { afterSet: currentSet }
         });
         void haptics.skipAction();
       } else {
@@ -336,7 +336,7 @@ export function useSessionTimer({
           slug,
           sessionIndex: session.index,
           type: "set_skipped",
-          data: { set: currentSet },
+          data: { set: currentSet }
         });
         if (next > session.sets.length) {
           setPhase("done");
@@ -362,7 +362,7 @@ export function useSessionTimer({
     clearTimer,
     startTimer,
     recordEvent,
-    completeSession,
+    completeSession
   ]);
 
   const handleComplete = useCallback(() => {
@@ -376,13 +376,13 @@ export function useSessionTimer({
         slug,
         sessionIndex: session.index,
         type: "set_completed",
-        data: { set: setNum, reps },
+        data: { set: setNum, reps }
       });
       void recordEvent({
         slug,
         sessionIndex: session.index,
         type: "break_started",
-        data: { afterSet: setNum },
+        data: { afterSet: setNum }
       });
       void haptics.setComplete();
     } else {
@@ -391,7 +391,7 @@ export function useSessionTimer({
         slug,
         sessionIndex: session.index,
         type: "set_completed",
-        data: { set: setNum, reps },
+        data: { set: setNum, reps }
       });
       if (next > session.sets.length) {
         setPhase("done");
@@ -415,7 +415,7 @@ export function useSessionTimer({
     program?.exercise?.name,
     startTimer,
     recordEvent,
-    completeSession,
+    completeSession
   ]);
 
   // Calculate progress
@@ -442,6 +442,6 @@ export function useSessionTimer({
     handlePauseResume,
     handleSkip,
     handleComplete,
-    setShowConfetti,
+    setShowConfetti
   };
 }

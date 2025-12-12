@@ -18,7 +18,7 @@ export {
   SkeletonCard,
   SkeletonChallengeButton,
   SkeletonSessionCard,
-  SkeletonStreakDots,
+  SkeletonStreakDots
 } from "./common";
 
 // Session components
@@ -28,7 +28,7 @@ export {
   SessionFooter,
   SessionHeader,
   SessionProgressBar,
-  StepCard,
+  StepCard
 } from "./session";
 
 // Challenge components
@@ -36,7 +36,7 @@ export {
   ChallengeButton,
   ChallengesView,
   SessionsView,
-  SwipeableChallengeButton,
+  SwipeableChallengeButton
 } from "./challenge";
 
 // Progress components
@@ -51,7 +51,7 @@ export {
   SessionsCompletedChart,
   TargetView,
   WeeklyChart,
-  WeeklyChartCompact,
+  WeeklyChartCompact
 } from "./progress";
 
 // Individual components (not moved)

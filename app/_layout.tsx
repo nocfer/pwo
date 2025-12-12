@@ -5,7 +5,7 @@ import {
   DMSans_500Medium,
   DMSans_600SemiBold,
   DMSans_700Bold,
-  useFonts,
+  useFonts
 } from "@expo-google-fonts/dm-sans";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -22,7 +22,7 @@ export default function RootLayout() {
     DMSans_400Regular,
     DMSans_500Medium,
     DMSans_600SemiBold,
-    DMSans_700Bold,
+    DMSans_700Bold
   });
 
   useEffect(() => {
@@ -47,8 +47,8 @@ export default function RootLayout() {
             animation: "slide_from_right",
             headerShown: false,
             headerTitleStyle: {
-              fontFamily: theme.fonts.semiBold,
-            },
+              fontFamily: theme.fonts.semiBold
+            }
           }}
         >
           <Stack.Screen
@@ -67,6 +67,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
     alignItems: "center",
-    justifyContent: "center",
-  },
+    justifyContent: "center"
+  }
 });

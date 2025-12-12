@@ -15,7 +15,7 @@ const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export function WeeklyChart({
   data,
   maxValue,
-  title = "Last 7 days",
+  title = "Last 7 days"
 }: WeeklyChartProps) {
   const todayIndex = getTodayIndex(); // 0=Mon, 6=Sun
 
@@ -42,7 +42,7 @@ export function WeeklyChart({
   }, [data, todayIndex]);
 
   const animatedValues = useRef(
-    shiftedData.map(() => new Animated.Value(0)),
+    shiftedData.map(() => new Animated.Value(0))
   ).current;
 
   // Calculate max value for scaling
@@ -55,7 +55,7 @@ export function WeeklyChart({
         toValue: value / max,
         duration: 600,
         delay: index * 80,
-        useNativeDriver: false,
+        useNativeDriver: false
       });
     });
 
@@ -87,7 +87,7 @@ export function WeeklyChart({
         {shiftedData.map((value, index) => {
           const height = animatedValues[index].interpolate({
             inputRange: [0, 1],
-            outputRange: ["0%", "100%"],
+            outputRange: ["0%", "100%"]
           });
 
           const isActive = value > 0;
@@ -101,7 +101,7 @@ export function WeeklyChart({
                     <LinearGradient
                       colors={[
                         theme.colors.gradient.primaryStart,
-                        theme.colors.gradient.primaryEnd,
+                        theme.colors.gradient.primaryEnd
                       ]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 0, y: 1 }}
@@ -155,7 +155,7 @@ export function WeeklyChartCompact({ data }: { data: number[] }) {
                 <LinearGradient
                   colors={[
                     theme.colors.gradient.successStart,
-                    theme.colors.gradient.successEnd,
+                    theme.colors.gradient.successEnd
                   ]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 0, y: 1 }}
@@ -179,46 +179,46 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     padding: theme.spacing.lg,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   header: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.lg
   },
   title: {
     ...theme.typography.h3,
     color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   statsRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "center"
   },
   stat: {
-    alignItems: "center",
+    alignItems: "center"
   },
   statValue: {
     ...theme.typography.h2,
-    color: theme.colors.primary,
+    color: theme.colors.primary
   },
   statLabel: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   statDivider: {
     width: 1,
     height: 30,
     backgroundColor: theme.colors.border,
-    marginHorizontal: theme.spacing.lg,
+    marginHorizontal: theme.spacing.lg
   },
   chartContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    height: 120,
+    height: 120
   },
   barContainer: {
     flex: 1,
-    alignItems: "center",
+    alignItems: "center"
   },
   barWrapper: {
     width: 24,
@@ -226,68 +226,68 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.sm,
     overflow: "hidden",
-    justifyContent: "flex-end",
+    justifyContent: "flex-end"
   },
   bar: {
     width: "100%",
     borderRadius: theme.radius.sm,
-    overflow: "hidden",
+    overflow: "hidden"
   },
   barGradient: {
-    flex: 1,
+    flex: 1
   },
   barEmpty: {
     width: "100%",
     height: 4,
     backgroundColor: theme.colors.border,
-    borderRadius: 2,
+    borderRadius: 2
   },
   dayLabel: {
     ...theme.typography.caption,
     color: theme.colors.muted,
     marginTop: theme.spacing.xs,
-    fontSize: 11,
+    fontSize: 11
   },
   dayLabelToday: {
     color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold,
+    fontFamily: theme.fonts.semiBold
   },
   todayDot: {
     width: 4,
     height: 4,
     borderRadius: 2,
     backgroundColor: theme.colors.primary,
-    marginTop: 2,
+    marginTop: 2
   },
   // Compact styles
   compactContainer: {
     flexDirection: "row",
     alignItems: "flex-end",
     height: 40,
-    gap: 4,
+    gap: 4
   },
   compactBarContainer: {
     flex: 1,
-    height: "100%",
+    height: "100%"
   },
   compactBarWrapper: {
     flex: 1,
     backgroundColor: theme.colors.card,
     borderRadius: 4,
     overflow: "hidden",
-    justifyContent: "flex-end",
+    justifyContent: "flex-end"
   },
   compactBar: {
     width: "100%",
     borderRadius: 4,
-    minHeight: 4,
+    minHeight: 4
   },
   compactBarEmpty: {
     width: "100%",
     height: 4,
     backgroundColor: theme.colors.border,
-    borderRadius: 2,
-  },
+    borderRadius: 2
+  }
 });
 
 export default WeeklyChart;

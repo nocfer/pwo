@@ -2,7 +2,7 @@ import {
   useChallengeSessions,
   useExercises,
   usePrograms,
-  useSessionCompletion,
+  useSessionCompletion
 } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -19,7 +19,7 @@ export default function SessionsView({ programId }: Props) {
   const { data: exercises } = useExercises();
   const program = useMemo(
     () => programs?.find((p) => p.id === programId) ?? null,
-    [programs, programId],
+    [programs, programId]
   );
   const sessions = useChallengeSessions(program);
   const { completed } = useSessionCompletion(programId);
@@ -28,7 +28,7 @@ export default function SessionsView({ programId }: Props) {
   const exerciseName = useMemo(() => {
     if (!program?.challengeConfig) return null;
     const exercise = exercises?.find(
-      (e) => e.id === program.challengeConfig?.exerciseId,
+      (e) => e.id === program.challengeConfig?.exerciseId
     );
     return exercise?.name ?? null;
   }, [program, exercises]);
@@ -53,11 +53,11 @@ export default function SessionsView({ programId }: Props) {
 
         // Calculate total reps and rep distribution from blocks
         const exerciseBlocks = s.blocks.filter(
-          (b) => b.type === "exercise",
-        ) as Array<{ type: "exercise"; targetReps?: number }>;
+          (b) => b.type === "exercise"
+        ) as { type: "exercise"; targetReps?: number }[];
         const totalReps = exerciseBlocks.reduce(
           (sum, b) => sum + (b.targetReps || 0),
-          0,
+          0
         );
         const repsPerSet = exerciseBlocks.map((b) => b.targetReps || 0);
 
@@ -68,14 +68,14 @@ export default function SessionsView({ programId }: Props) {
               if (isLocked) return; // Prevent navigation for locked sessions
               router.navigate({
                 pathname: "/programs/[id]/session/[index]",
-                params: { id: programId, index: String(s.index) },
+                params: { id: programId, index: String(s.index) }
               });
             }}
             style={({ pressed }) => [
               styles.card,
               isDone && styles.cardDone,
               isLocked && styles.cardLocked,
-              pressed && !isLocked && styles.cardPressed,
+              pressed && !isLocked && styles.cardPressed
             ]}
           >
             <View style={styles.rowBetween}>
@@ -84,7 +84,7 @@ export default function SessionsView({ programId }: Props) {
                   style={[
                     styles.sessionIcon,
                     isDone && styles.sessionIconDone,
-                    isLocked && styles.sessionIconLocked,
+                    isLocked && styles.sessionIconLocked
                   ]}
                 >
                   <Ionicons
@@ -109,7 +109,7 @@ export default function SessionsView({ programId }: Props) {
                   style={[
                     styles.title,
                     isDone && styles.titleDone,
-                    isLocked && styles.titleLocked,
+                    isLocked && styles.titleLocked
                   ]}
                 >
                   Session {s.index}
@@ -119,14 +119,14 @@ export default function SessionsView({ programId }: Props) {
                 style={[
                   styles.badge,
                   isDone && styles.badgeDone,
-                  isLocked && styles.badgeLocked,
+                  isLocked && styles.badgeLocked
                 ]}
               >
                 <Text
                   style={[
                     styles.badgeText,
                     isDone && styles.badgeTextDone,
-                    isLocked && styles.badgeTextLocked,
+                    isLocked && styles.badgeTextLocked
                   ]}
                 >
                   {totalReps} reps
@@ -147,7 +147,7 @@ export default function SessionsView({ programId }: Props) {
                   <Text
                     style={[
                       styles.setPillText,
-                      isLocked && styles.setPillTextLocked,
+                      isLocked && styles.setPillTextLocked
                     ]}
                   >
                     {r}
@@ -164,11 +164,11 @@ export default function SessionsView({ programId }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    padding: theme.spacing.md,
+    padding: theme.spacing.md
   },
   list: {
     gap: theme.spacing.md,
-    paddingBottom: theme.spacing.xxl,
+    paddingBottom: theme.spacing.xxl
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -176,31 +176,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   cardDone: {
     borderColor: theme.colors.success,
-    backgroundColor: theme.colors.successLight,
+    backgroundColor: theme.colors.successLight
   },
   cardLocked: {
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.card,
-    opacity: 0.6,
+    opacity: 0.6
   },
   cardPressed: {
     backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
+    gap: theme.spacing.sm
   },
   sessionIcon: {
     width: 28,
@@ -208,59 +208,59 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.primaryLight,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   sessionIconDone: {
-    backgroundColor: theme.colors.successLight,
+    backgroundColor: theme.colors.successLight
   },
   sessionIconLocked: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.card
   },
   title: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text,
+    color: theme.colors.text
   },
   titleDone: {
-    color: theme.colors.success,
+    color: theme.colors.success
   },
   titleLocked: {
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   subtitle: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   subtitleLocked: {
-    fontStyle: "italic",
+    fontStyle: "italic"
   },
   badge: {
     backgroundColor: theme.colors.primaryLight,
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.sm
   },
   badgeDone: {
-    backgroundColor: theme.colors.successLight,
+    backgroundColor: theme.colors.successLight
   },
   badgeLocked: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.card
   },
   badgeText: {
     ...theme.typography.caption,
     fontFamily: theme.fonts.semiBold,
-    color: theme.colors.primary,
+    color: theme.colors.primary
   },
   badgeTextDone: {
-    color: theme.colors.success,
+    color: theme.colors.success
   },
   badgeTextLocked: {
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   setsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.sm,
+    gap: theme.spacing.sm
   },
   setPill: {
     borderRadius: theme.radius.sm,
@@ -268,21 +268,21 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.card,
     paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md
   },
   setPillText: {
     ...theme.typography.caption,
-    color: theme.colors.text,
+    color: theme.colors.text
   },
   setPillLocked: {
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.background
   },
   setPillTextLocked: {
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   muted: {
     ...theme.typography.body,
-    color: theme.colors.muted,
-  },
+    color: theme.colors.muted
+  }
 });

@@ -16,7 +16,7 @@ export function TimerControls({
   onPause,
   onResume,
   onSkip,
-  layout = "row",
+  layout = "row"
 }: TimerControlsProps) {
   return (
     <View style={[styles.container, layout === "row" && styles.row]}>
@@ -25,7 +25,7 @@ export function TimerControls({
           style={({ pressed }) => [
             styles.button,
             styles.buttonSecondary,
-            pressed && styles.buttonPressed,
+            pressed && styles.buttonPressed
           ]}
           onPress={onPause}
         >
@@ -42,7 +42,7 @@ export function TimerControls({
           style={({ pressed }) => [
             styles.button,
             styles.buttonPrimary,
-            pressed && styles.buttonPrimaryPressed,
+            pressed && styles.buttonPrimaryPressed
           ]}
           onPress={onResume}
         >
@@ -59,7 +59,7 @@ export function TimerControls({
         style={({ pressed }) => [
           styles.button,
           styles.buttonSecondary,
-          pressed && styles.buttonPressed,
+          pressed && styles.buttonPressed
         ]}
         onPress={onSkip}
       >
@@ -77,11 +77,11 @@ export function TimerControls({
 
 const styles = StyleSheet.create({
   container: {
-    gap: theme.spacing.sm,
+    gap: theme.spacing.sm
   },
   row: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "center"
   },
   button: {
     flex: 1,
@@ -91,37 +91,37 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
     borderRadius: theme.radius.lg,
-    minHeight: 48,
+    minHeight: 48
   },
   buttonPrimary: {
     backgroundColor: theme.colors.primary,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   buttonSecondary: {
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   buttonPressed: {
     backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   buttonPrimaryPressed: {
     opacity: 0.9,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   icon: {
-    marginRight: theme.spacing.sm,
+    marginRight: theme.spacing.sm
   },
   buttonPrimaryText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn,
+    color: theme.colors.primaryTextOn
   },
   buttonSecondaryText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text,
-  },
+    color: theme.colors.text
+  }
 });
 
 export default TimerControls;

@@ -4,7 +4,7 @@ import {
   getMondayBasedDayIndex,
   getWeekStart,
   isSameWeek,
-  normalizeStreak,
+  normalizeStreak
 } from "@/lib/utils/date";
 import { describe, expect, it } from "vitest";
 

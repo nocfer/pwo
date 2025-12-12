@@ -8,7 +8,7 @@ module.exports = defineConfig([
   {
     ignores: ["dist/*"],
     rules: {
-      "@typescript-eslint/comma-dangle": "off",
-    },
-  },
+      "comma-dangle": ["error", "never"]
+    }
+  }
 ]);

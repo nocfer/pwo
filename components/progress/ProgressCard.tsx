@@ -14,7 +14,7 @@ export default function ProgressCard({
   completionPercentage,
   sessionsCompleted,
   totalSessions,
-  variant = "program",
+  variant = "program"
 }: Props) {
   const percentage = Math.round(completionPercentage);
 
@@ -33,8 +33,8 @@ export default function ProgressCard({
               backgroundColor:
                 variant === "challenge"
                   ? theme.colors.success
-                  : theme.colors.primary,
-            },
+                  : theme.colors.primary
+            }
           ]}
         />
       </View>
@@ -52,37 +52,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   title: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
-    flex: 1,
+    flex: 1
   },
   percentage: {
     ...theme.typography.h3,
     color: theme.colors.primary,
-    fontFamily: theme.fonts.bold,
+    fontFamily: theme.fonts.bold
   },
   progressBarContainer: {
     height: 8,
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.sm,
     overflow: "hidden",
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   progressBar: {
     height: "100%",
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.sm
   },
   caption: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
-  },
+    color: theme.colors.muted
+  }
 });

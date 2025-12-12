@@ -19,19 +19,19 @@ export function StepCard({
   locked,
   right,
   style,
-  children,
+  children
 }: StepCardProps) {
   const containerStyles = [
     styles.card,
     active && styles.cardActive,
     done && styles.cardDone,
     locked && styles.cardLocked,
-    style,
+    style
   ];
   const titleStyles = [
     styles.cardTitle,
     done && styles.cardTitleDone,
-    locked && styles.cardTitleLocked,
+    locked && styles.cardTitleLocked
   ];
 
   return (
@@ -52,40 +52,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   cardActive: {
     borderColor: theme.colors.primary,
     borderLeftWidth: 4,
     borderLeftColor: theme.colors.primary,
-    backgroundColor: theme.colors.primaryLight,
+    backgroundColor: theme.colors.primaryLight
   },
   cardDone: {
     borderColor: theme.colors.phases.done,
     backgroundColor: theme.colors.phases.doneBg,
     borderLeftWidth: 3,
-    borderLeftColor: theme.colors.phases.done,
+    borderLeftColor: theme.colors.phases.done
   },
   cardLocked: {
     opacity: 0.5,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   cardTitle: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   cardTitleDone: {
-    color: theme.colors.success,
+    color: theme.colors.success
   },
   cardTitleLocked: {
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   rowBetween: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-  },
+    justifyContent: "space-between"
+  }
 });
 
 export default StepCard;

@@ -20,7 +20,7 @@ export default function ProgressStats({ stats, columns = 2 }: Props) {
           key={index}
           style={[
             styles.statItem,
-            columns === 3 && styles.statItemThreeColumns,
+            columns === 3 && styles.statItemThreeColumns
           ]}
         >
           <Text style={styles.value}>{stat.value}</Text>
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   statItem: {
     flex: 1,
@@ -46,20 +46,20 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
     alignItems: "center",
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   statItemThreeColumns: {
-    minWidth: "30%",
+    minWidth: "30%"
   },
   value: {
     ...theme.typography.h2,
     color: theme.colors.primary,
     fontFamily: theme.fonts.bold,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   label: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    textAlign: "center",
-  },
+    textAlign: "center"
+  }
 });

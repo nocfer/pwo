@@ -4,7 +4,7 @@ import {
   clearAllListeners,
   subscribe,
   emit,
-  getListenerCount,
+  getListenerCount
 } from "@/lib/events";
 
 describe("dataEvents", () => {
@@ -19,7 +19,7 @@ describe("dataEvents", () => {
     expect(callback).toHaveBeenCalledOnce();
     expect(callback).toHaveBeenCalledWith({
       type: "PROGRESS_UPDATED",
-      slug: "test",
+      slug: "test"
     });
   });
 
@@ -91,7 +91,7 @@ describe("dataEvents", () => {
 
     // Should not throw
     expect(() =>
-      emit({ type: "PROGRESS_UPDATED", slug: "test" }),
+      emit({ type: "PROGRESS_UPDATED", slug: "test" })
     ).not.toThrow();
 
     // Both callbacks should have been called
@@ -112,7 +112,7 @@ describe("dataEvents convenience methods", () => {
     expect(callback).toHaveBeenCalledWith({
       type: "SESSION_COMPLETED",
       slug: "test-slug",
-      sessionIndex: 3,
+      sessionIndex: 3
     });
   });
 
@@ -122,7 +122,7 @@ describe("dataEvents convenience methods", () => {
     dataEvents.emitProgressUpdated("test-slug");
     expect(callback).toHaveBeenCalledWith({
       type: "PROGRESS_UPDATED",
-      slug: "test-slug",
+      slug: "test-slug"
     });
   });
 
@@ -132,7 +132,7 @@ describe("dataEvents convenience methods", () => {
     dataEvents.emitHistoryUpdated("test-slug");
     expect(callback).toHaveBeenCalledWith({
       type: "HISTORY_UPDATED",
-      slug: "test-slug",
+      slug: "test-slug"
     });
   });
 
@@ -143,7 +143,7 @@ describe("dataEvents convenience methods", () => {
     expect(callback).toHaveBeenCalledWith({
       type: "EVENT_RECORDED",
       slug: "test-slug",
-      eventType: "set_completed",
+      eventType: "set_completed"
     });
   });
 });

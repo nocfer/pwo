@@ -3,7 +3,7 @@ import {
   useAllProgress,
   useLastCompletedSlug,
   usePrograms,
-  useWeeklyActivity,
+  useWeeklyActivity
 } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -31,12 +31,12 @@ export default function Index() {
     return [
       {
         label: "Total Workouts",
-        value: aggregated.totalWorkoutsCompleted,
+        value: aggregated.totalWorkoutsCompleted
       },
       {
         label: "Current Streak",
-        value: `${aggregated.currentStreak} days`,
-      },
+        value: `${aggregated.currentStreak} days`
+      }
     ];
   }, [aggregated]);
 
@@ -45,7 +45,7 @@ export default function Index() {
       <LinearGradient
         colors={[
           theme.colors.gradient.primaryStart,
-          theme.colors.gradient.primaryEnd,
+          theme.colors.gradient.primaryEnd
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -69,7 +69,7 @@ export default function Index() {
                 <LinearGradient
                   colors={[
                     theme.colors.gradient.primaryStart,
-                    theme.colors.gradient.primaryEnd,
+                    theme.colors.gradient.primaryEnd
                   ]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
@@ -83,7 +83,7 @@ export default function Index() {
               <Pressable
                 style={({ pressed }) => [
                   styles.viewProgressButton,
-                  pressed && styles.viewProgressButtonPressed,
+                  pressed && styles.viewProgressButtonPressed
                 ]}
                 onPress={() => router.navigate("/(tabs)/progress")}
               >
@@ -106,7 +106,7 @@ export default function Index() {
               <LinearGradient
                 colors={[
                   theme.colors.gradient.warmStart,
-                  theme.colors.gradient.warmEnd,
+                  theme.colors.gradient.warmEnd
                 ]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -130,7 +130,7 @@ export default function Index() {
             <Pressable
               style={({ pressed }) => [
                 styles.actionButton,
-                pressed && styles.actionPressed,
+                pressed && styles.actionPressed
               ]}
               onPress={() => router.navigate("/(tabs)/challenges")}
             >
@@ -148,21 +148,21 @@ export default function Index() {
               style={({ pressed }) => [
                 styles.actionButtonPrimary,
                 pressed && styles.actionPrimaryPressed,
-                !firstChallenge && styles.actionDisabled,
+                !firstChallenge && styles.actionDisabled
               ]}
               disabled={!firstChallenge}
               onPress={() =>
                 firstChallenge &&
                 router.navigate({
                   pathname: "/programs/[id]",
-                  params: { id: firstChallenge.id },
+                  params: { id: firstChallenge.id }
                 })
               }
             >
               <LinearGradient
                 colors={[
                   theme.colors.gradient.primaryStart,
-                  theme.colors.gradient.primaryEnd,
+                  theme.colors.gradient.primaryEnd
                 ]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -190,7 +190,7 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.background
   },
   headerGradient: {
     paddingTop: theme.spacing.xxl,
@@ -198,25 +198,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     borderBottomLeftRadius: theme.radius.xl,
     borderBottomRightRadius: theme.radius.xl,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.md
   },
   headerContent: {
-    paddingTop: theme.spacing.lg,
+    paddingTop: theme.spacing.lg
   },
   greeting: {
     ...theme.typography.h1,
     color: "#FFFFFF",
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   headerSubtitle: {
     ...theme.typography.body,
-    color: "rgba(255,255,255,0.85)",
+    color: "rgba(255,255,255,0.85)"
   },
   content: {
     flex: 1,
     padding: theme.spacing.lg,
     marginTop: -theme.spacing.md,
-    gap: theme.spacing.lg,
+    gap: theme.spacing.lg
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -224,12 +224,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.md
   },
   cardIconGradient: {
     width: 36,
@@ -237,21 +237,21 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: theme.spacing.sm,
+    marginRight: theme.spacing.sm
   },
   cardTitle: {
     ...theme.typography.h3,
-    color: theme.colors.text,
+    color: theme.colors.text
   },
   muted: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textAlign: "center",
-    paddingVertical: theme.spacing.lg,
+    paddingVertical: theme.spacing.lg
   },
   actionsRow: {
     flexDirection: "row",
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   actionButton: {
     flex: 1,
@@ -262,11 +262,11 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.lg,
     paddingHorizontal: theme.spacing.md,
     alignItems: "center",
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   actionPressed: {
     backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   actionIconContainer: {
     width: 44,
@@ -275,26 +275,26 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.card,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   actionText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text,
+    color: theme.colors.text
   },
   actionButtonPrimary: {
     flex: 1,
     borderRadius: theme.radius.lg,
     overflow: "hidden",
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   actionGradient: {
     paddingVertical: theme.spacing.lg,
     paddingHorizontal: theme.spacing.md,
-    alignItems: "center",
+    alignItems: "center"
   },
   actionPrimaryPressed: {
     opacity: 0.9,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   actionIconContainerPrimary: {
     width: 44,
@@ -303,14 +303,14 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   actionPrimaryText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn,
+    color: theme.colors.primaryTextOn
   },
   actionDisabled: {
-    opacity: 0.5,
+    opacity: 0.5
   },
   viewProgressButton: {
     flexDirection: "row",
@@ -318,14 +318,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    gap: theme.spacing.xs,
+    gap: theme.spacing.xs
   },
   viewProgressButtonPressed: {
-    opacity: 0.7,
+    opacity: 0.7
   },
   viewProgressText: {
     ...theme.typography.body,
     color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold,
-  },
+    fontFamily: theme.fonts.semiBold
+  }
 });

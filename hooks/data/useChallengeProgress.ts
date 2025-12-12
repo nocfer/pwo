@@ -104,7 +104,7 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
         isCompleted: false,
         startedAt: null,
         completedAt: null,
-        lastActivityAt: null,
+        lastActivityAt: null
       };
     }
 
@@ -125,7 +125,7 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
       const sortedByDate = [...completedSessions].sort(
         (a, b) =>
           new Date(b.completedAt || "").getTime() -
-          new Date(a.completedAt || "").getTime(),
+          new Date(a.completedAt || "").getTime()
       );
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -137,7 +137,7 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
         sessionDate.setHours(0, 0, 0, 0);
 
         const daysDiff = Math.floor(
-          (checkDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24),
+          (checkDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24)
         );
 
         if (daysDiff === 0 || (currentStreak === 0 && daysDiff <= 1)) {
@@ -152,7 +152,7 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
 
     // Find next session to complete
     const completedIndices = new Set(
-      completedSessions.map((s) => s.sessionIndex),
+      completedSessions.map((s) => s.sessionIndex)
     );
     let nextSessionIndex: number | null = null;
     for (let i = 1; i <= totalSessions; i++) {
@@ -179,7 +179,7 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
       isCompleted,
       startedAt: progress.startedAt,
       completedAt: progress.completedAt || null,
-      lastActivityAt: progress.lastActivityAt,
+      lastActivityAt: progress.lastActivityAt
     };
   }, [challenge, isChallenge, progress, sessions]);
 

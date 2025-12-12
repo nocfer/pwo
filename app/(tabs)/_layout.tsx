@@ -18,18 +18,18 @@ export default function TabLayout() {
               shadowColor: theme.shadows.sm.shadowColor,
               shadowOpacity: theme.shadows.sm.shadowOpacity,
               shadowOffset: theme.shadows.sm.shadowOffset,
-              shadowRadius: theme.shadows.sm.shadowRadius,
+              shadowRadius: theme.shadows.sm.shadowRadius
             },
             android: {
-              elevation: theme.shadows.sm.elevation,
-            },
-          }),
+              elevation: theme.shadows.sm.elevation
+            }
+          })
         },
         headerShadowVisible: false,
         headerTintColor: theme.colors.text,
         headerTitleStyle: {
           fontFamily: theme.fonts.semiBold,
-          fontSize: 18,
+          fontSize: 18
         },
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
@@ -42,21 +42,21 @@ export default function TabLayout() {
               shadowColor: theme.shadows.md.shadowColor,
               shadowOpacity: theme.shadows.md.shadowOpacity,
               shadowOffset: { width: 0, height: -2 },
-              shadowRadius: theme.shadows.md.shadowRadius,
+              shadowRadius: theme.shadows.md.shadowRadius
             },
             android: {
-              elevation: theme.shadows.md.elevation,
-            },
-          }),
+              elevation: theme.shadows.md.elevation
+            }
+          })
         },
         tabBarLabelStyle: {
           fontFamily: theme.fonts.medium,
           fontSize: 12,
-          marginTop: theme.spacing.xs,
+          marginTop: theme.spacing.xs
         },
         tabBarIconStyle: {
-          marginTop: theme.spacing.xs,
-        },
+          marginTop: theme.spacing.xs
+        }
       }}
     >
       <Tabs.Screen
@@ -70,7 +70,7 @@ export default function TabLayout() {
               color={color}
               size={26}
             />
-          ),
+          )
         }}
       />
       <Tabs.Screen
@@ -84,7 +84,7 @@ export default function TabLayout() {
               color={color}
               size={26}
             />
-          ),
+          )
         }}
       />
       <Tabs.Screen
@@ -98,7 +98,7 @@ export default function TabLayout() {
               color={color}
               size={26}
             />
-          ),
+          )
         }}
       />
       <Tabs.Screen
@@ -112,7 +112,7 @@ export default function TabLayout() {
               color={color}
               size={26}
             />
-          ),
+          )
         }}
       />
       <Tabs.Screen
@@ -128,7 +128,7 @@ export default function TabLayout() {
               color={color}
               size={26}
             />
-          ),
+          )
         }}
       />
     </Tabs>

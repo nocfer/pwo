@@ -5,17 +5,17 @@ import type { WorkoutStep } from "./useWorkoutSteps";
 
 type TimerActions = {
   recordEvent: (
-    event: Omit<EventRecord, "ts"> & { ts?: string },
+    event: Omit<EventRecord, "ts"> & { ts?: string }
   ) => Promise<void>;
   completeSession: (
     slug: string,
     sessionIndex: number,
-    summary: string,
+    summary: string
   ) => Promise<void>;
   saveSessionState: (state: SessionState) => Promise<void>;
   loadSessionState: (
     slug: string,
-    sessionIndex: number,
+    sessionIndex: number
   ) => Promise<SessionState | null>;
 };
 
@@ -89,7 +89,7 @@ export function useWorkoutTimer(opts: {
       }, 1000);
       setIsPaused(false);
     },
-    [clearTimer],
+    [clearTimer]
   );
 
   // Cleanup
@@ -105,7 +105,7 @@ export function useWorkoutTimer(opts: {
       // Map existing SessionState fields into this runner
       setCurrentIndex(Math.max(0, saved.currentSet - 1));
       setPhase(
-        saved.phase === "done" ? "done" : saved.timer > 0 ? "timed" : "working",
+        saved.phase === "done" ? "done" : saved.timer > 0 ? "timed" : "working"
       );
       setTimer(saved.timer);
       setIsPaused(saved.isPaused);
@@ -126,7 +126,7 @@ export function useWorkoutTimer(opts: {
       currentSet: currentIndex + 1,
       timer,
       isPaused,
-      warmupDone: true,
+      warmupDone: true
     });
   }, [
     slug,
@@ -135,7 +135,7 @@ export function useWorkoutTimer(opts: {
     currentIndex,
     timer,
     isPaused,
-    saveSessionState,
+    saveSessionState
   ]);
 
   const progress = useMemo(() => {
@@ -171,8 +171,8 @@ export function useWorkoutTimer(opts: {
         data: {
           exerciseId: finished.exerciseId,
           reps: finished.targetReps,
-          durationSeconds: finished.durationSeconds,
-        },
+          durationSeconds: finished.durationSeconds
+        }
       });
     }
 
@@ -224,7 +224,7 @@ export function useWorkoutTimer(opts: {
           slug,
           sessionIndex,
           type: "set_skipped",
-          data: { exerciseId: skipped.exerciseId },
+          data: { exerciseId: skipped.exerciseId }
         });
       }
       timedStepRef.current = null;
@@ -250,7 +250,7 @@ export function useWorkoutTimer(opts: {
         slug,
         sessionIndex,
         type: "set_skipped",
-        data: { exerciseId: currentStep.exerciseId },
+        data: { exerciseId: currentStep.exerciseId }
       });
     }
     setCurrentIndex((i) => {
@@ -261,7 +261,16 @@ export function useWorkoutTimer(opts: {
       }
       return next;
     });
-  }, [currentStep, phase, clearTimer, steps.length, goDone]);
+  }, [
+    currentStep,
+    phase,
+    clearTimer,
+    steps.length,
+    goDone,
+    recordEvent,
+    sessionIndex,
+    slug
+  ]);
 
   const handleComplete = useCallback(() => {
     if (!currentStep) return;
@@ -271,7 +280,7 @@ export function useWorkoutTimer(opts: {
       void recordEvent({
         slug,
         sessionIndex,
-        type: "warmup_started",
+        type: "warmup_started"
       });
       void haptics.buttonTap();
       return;
@@ -283,7 +292,7 @@ export function useWorkoutTimer(opts: {
         slug,
         sessionIndex,
         type: "break_started",
-        data: { label: currentStep.label },
+        data: { label: currentStep.label }
       });
       void haptics.buttonTap();
       return;
@@ -301,8 +310,8 @@ export function useWorkoutTimer(opts: {
           exerciseId: currentStep.exerciseId,
           started: true,
           durationSeconds: duration,
-          reps: currentStep.targetReps,
-        },
+          reps: currentStep.targetReps
+        }
       } as any);
       void haptics.buttonTap();
       return;
@@ -314,8 +323,8 @@ export function useWorkoutTimer(opts: {
       type: "set_completed",
       data: {
         exerciseId: currentStep.exerciseId,
-        reps: currentStep.targetReps,
-      },
+        reps: currentStep.targetReps
+      }
     });
     void haptics.setComplete();
     setCurrentIndex((i) => {
@@ -329,12 +338,11 @@ export function useWorkoutTimer(opts: {
   }, [
     currentStep,
     goDone,
-    haptics,
     recordEvent,
     sessionIndex,
     slug,
     startTimer,
-    steps.length,
+    steps.length
   ]);
 
   // Keep phase consistent if we land on a timed step without timer running
@@ -358,6 +366,6 @@ export function useWorkoutTimer(opts: {
     handlePauseResume,
     handleSkip,
     handleComplete,
-    setShowConfetti,
+    setShowConfetti
   };
 }

@@ -6,7 +6,7 @@ export {
   AnimatedCard,
   AnimatedProgressBar,
   FadeIn,
-  PulseAnimation,
+  PulseAnimation
 } from "./AnimatedCard";
 export { default as Button } from "./Button";
 export {
@@ -14,12 +14,12 @@ export {
   NoChallengesEmpty,
   NoHistoryEmpty,
   NoProgressEmpty,
-  NoSearchResultsEmpty,
+  NoSearchResultsEmpty
 } from "./EmptyState";
 export {
   Skeleton,
   SkeletonCard,
   SkeletonChallengeButton,
   SkeletonSessionCard,
-  SkeletonStreakDots,
+  SkeletonStreakDots
 } from "./Skeleton";

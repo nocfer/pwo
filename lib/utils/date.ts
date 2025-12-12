@@ -49,7 +49,7 @@ export function isSameWeek(a: Date, b: Date): boolean {
 export function normalizeStreak(
   streak: number[],
   lastDate: Date,
-  today: Date,
+  today: Date
 ): number[] {
   // If in a different week, reset the streak
   if (!isSameWeek(lastDate, today)) {

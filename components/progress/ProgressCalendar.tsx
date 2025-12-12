@@ -14,7 +14,7 @@ export default function ProgressCalendar({
   programId,
   challengeId,
   month,
-  year,
+  year
 }: Props) {
   const [completedDates, setCompletedDates] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -33,7 +33,7 @@ export default function ProgressCalendar({
         const history = await storage.getProgressHistory(
           programId,
           challengeId,
-          60, // Last 60 days
+          60 // Last 60 days
         );
 
         if (!mounted) return;
@@ -61,7 +61,7 @@ export default function ProgressCalendar({
   const daysInMonth = new Date(
     targetDate.getFullYear(),
     targetDate.getMonth() + 1,
-    0,
+    0
   ).getDate();
 
   const firstDayOfWeek = targetDate.getDay();
@@ -69,7 +69,7 @@ export default function ProgressCalendar({
   const yearNum = targetDate.getFullYear();
 
   const days = useMemo(() => {
-    const result: Array<{ day: number; date: string; isToday: boolean }> = [];
+    const result: { day: number; date: string; isToday: boolean }[] = [];
 
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfWeek; i++) {
@@ -84,7 +84,7 @@ export default function ProgressCalendar({
       const date = new Date(
         targetDate.getFullYear(),
         targetDate.getMonth(),
-        day,
+        day
       );
       const dateStr = date.toISOString().slice(0, 10);
       const isToday =
@@ -138,14 +138,14 @@ export default function ProgressCalendar({
               style={[
                 styles.dayCell,
                 isCompleted && styles.dayCellCompleted,
-                item.isToday && styles.dayCellToday,
+                item.isToday && styles.dayCellToday
               ]}
             >
               <Text
                 style={[
                   styles.dayText,
                   isCompleted && styles.dayTextCompleted,
-                  item.isToday && styles.dayTextToday,
+                  item.isToday && styles.dayTextToday
                 ]}
               >
                 {item.day}
@@ -166,67 +166,67 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   header: {
     marginBottom: theme.spacing.md,
-    alignItems: "center",
+    alignItems: "center"
   },
   monthYear: {
     ...theme.typography.h3,
     color: theme.colors.text,
-    fontFamily: theme.fonts.bold,
+    fontFamily: theme.fonts.bold
   },
   muted: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textAlign: "center",
-    padding: theme.spacing.lg,
+    padding: theme.spacing.lg
   },
   weekDays: {
     flexDirection: "row",
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   weekDay: {
     flex: 1,
-    alignItems: "center",
+    alignItems: "center"
   },
   weekDayText: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    fontFamily: theme.fonts.semiBold,
+    fontFamily: theme.fonts.semiBold
   },
   daysGrid: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    flexWrap: "wrap"
   },
   dayCell: {
     width: "14.28%",
     aspectRatio: 1,
     alignItems: "center",
     justifyContent: "center",
-    position: "relative",
+    position: "relative"
   },
   dayCellCompleted: {
     backgroundColor: theme.colors.successLight,
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.sm
   },
   dayCellToday: {
     borderWidth: 2,
     borderColor: theme.colors.primary,
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.sm
   },
   dayText: {
     ...theme.typography.body,
-    color: theme.colors.text,
+    color: theme.colors.text
   },
   dayTextCompleted: {
     color: theme.colors.success,
-    fontFamily: theme.fonts.semiBold,
+    fontFamily: theme.fonts.semiBold
   },
   dayTextToday: {
     color: theme.colors.primary,
-    fontFamily: theme.fonts.bold,
+    fontFamily: theme.fonts.bold
   },
   checkmark: {
     position: "absolute",
@@ -235,6 +235,6 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: theme.colors.success,
-  },
+    backgroundColor: theme.colors.success
+  }
 });

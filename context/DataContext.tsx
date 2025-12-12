@@ -20,7 +20,7 @@ import type {
   Program,
   ProgramProgress,
   SessionProgress,
-  SessionState,
+  SessionState
 } from "@/types";
 import React, {
   createContext,
@@ -28,7 +28,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useReducer,
+  useReducer
 } from "react";
 
 type DataContextValue = {
@@ -93,7 +93,7 @@ export const initialState: DataState = {
   lastCompletedSlug: null,
   progressVersion: 0,
   historyVersion: 0,
-  completedVersion: 0,
+  completedVersion: 0
 };
 
 export function dataReducer(state: DataState, action: DataAction): DataState {
@@ -119,7 +119,7 @@ export function dataReducer(state: DataState, action: DataAction): DataState {
         ...state,
         progressVersion: state.progressVersion + 1,
         historyVersion: state.historyVersion + 1,
-        completedVersion: state.completedVersion + 1,
+        completedVersion: state.completedVersion + 1
       };
     default:
       return state;
@@ -159,7 +159,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           blocks.push({
             type: "rest",
             seconds: Number(b.seconds) || 0,
-            label: typeof b.label === "string" ? b.label : undefined,
+            label: typeof b.label === "string" ? b.label : undefined
           });
           continue;
         }
@@ -177,7 +177,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
               typeof b.durationSeconds === "number"
                 ? b.durationSeconds
                 : undefined,
-            note: typeof b.note === "string" ? b.note : undefined,
+            note: typeof b.note === "string" ? b.note : undefined
           });
           continue;
         }
@@ -204,7 +204,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           type: "exercise",
           exerciseId: String(b.exerciseId ?? ""),
           targetReps,
-          note: noteParts.length ? noteParts.join(" • ") : undefined,
+          note: noteParts.length ? noteParts.join(" • ") : undefined
         });
 
         const restBetween = Number((b as any).restSecondsBetweenSets);
@@ -216,7 +216,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       return {
         index: typeof s?.index === "number" ? s.index : idx + 1,
         name: typeof s?.name === "string" ? s.name : undefined,
-        blocks,
+        blocks
       };
     });
 
@@ -230,7 +230,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       sessions: nextSessions,
       createdAt: String((p as any).createdAt ?? new Date().toISOString()),
       updatedAt: String((p as any).updatedAt ?? new Date().toISOString()),
-      source: (p as any).source === "builtin" ? "builtin" : "user",
+      source: (p as any).source === "builtin" ? "builtin" : "user"
     };
 
     // Preserve challengeConfig if present
@@ -247,7 +247,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         warmUpSeconds:
           typeof config.warmUpSeconds === "number" ? config.warmUpSeconds : 0,
         breakSeconds:
-          typeof config.breakSeconds === "number" ? config.breakSeconds : 0,
+          typeof config.breakSeconds === "number" ? config.breakSeconds : 0
       };
     }
 
@@ -268,7 +268,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
               return [] as Exercise[];
             }
           })(),
-          storage.loadExercises(),
+          storage.loadExercises()
         ]);
 
         const exercisesById = new Map<string, Exercise>();
@@ -295,7 +295,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
               return [] as Program[];
             }
           })(),
-          storage.loadPrograms(),
+          storage.loadPrograms()
         ]);
 
         const programsById = new Map<string, Program>();
@@ -370,7 +370,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         slug,
         sessionIndex,
         type: "session_completed",
-        ts: dateISO,
+        ts: dateISO
       });
 
       // Append to history
@@ -410,7 +410,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 exerciseId: data.exerciseId,
                 repsCompleted: 0,
                 setsCompleted: 0,
-                lastCompletedAt: dateISO,
+                lastCompletedAt: dateISO
               };
               existing.repsCompleted += data.reps || 0;
               existing.setsCompleted += 1;
@@ -428,7 +428,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
           // Update challenge progress
           const existing = await storage.loadChallengeProgress(slug);
           const sessions = generateChallengeSessions(program.challengeConfig);
-          const session = sessions.find((s) => s.index === sessionIndex);
 
           let totalRepsCompleted = exerciseProgress.reduce(
             (sum, e) => sum + e.repsCompleted,
@@ -445,7 +444,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
               completed: true,
               completedAt: dateISO,
               timeSpentSeconds,
-              exercises: exerciseProgress,
+              exercises: exerciseProgress
             };
 
             if (sessionProgressIndex >= 0) {
@@ -491,13 +490,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
                   completed: true,
                   completedAt: dateISO,
                   timeSpentSeconds,
-                  exercises: exerciseProgress,
-                },
+                  exercises: exerciseProgress
+                }
               ],
               totalRepsCompleted,
               targetReps: program.challengeConfig.targetReps,
               lastActivityAt: dateISO,
-              updatedAt: dateISO,
+              updatedAt: dateISO
             };
             await storage.saveChallengeProgress(newProgress);
           }
@@ -507,14 +506,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
             date: dateISO.slice(0, 10),
             challengeId: slug,
             sessionsCompleted: 1,
-            totalReps: totalRepsCompleted,
+            totalReps: totalRepsCompleted
           });
         } else {
           // Update program progress
           const existing = await storage.loadProgramProgress(slug);
-          const session = program.sessions.find(
-            (s) => s.index === sessionIndex
-          );
 
           if (existing) {
             // Update existing progress
@@ -526,7 +522,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
               completed: true,
               completedAt: dateISO,
               timeSpentSeconds,
-              exercises: exerciseProgress,
+              exercises: exerciseProgress
             };
 
             if (sessionProgressIndex >= 0) {
@@ -563,12 +559,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
                   completed: true,
                   completedAt: dateISO,
                   timeSpentSeconds,
-                  exercises: exerciseProgress,
-                },
+                  exercises: exerciseProgress
+                }
               ],
               totalTimeSpentSeconds: timeSpentSeconds,
               lastActivityAt: dateISO,
-              updatedAt: dateISO,
+              updatedAt: dateISO
             };
             await storage.saveProgramProgress(newProgress);
           }
@@ -578,7 +574,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             date: dateISO.slice(0, 10),
             programId: slug,
             sessionsCompleted: 1,
-            timeSpentSeconds,
+            timeSpentSeconds
           });
         }
       }
@@ -652,7 +648,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         name: input.name,
         category: input.category,
         icon: input.icon,
-        source: "user",
+        source: "user"
       });
 
       const userExercises = await storage.loadExercises();
@@ -695,7 +691,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const userExercises = await storage.loadExercises();
       const merged = [
         ...state.exercises.filter((e) => e.source === "builtin"),
-        ...userExercises,
+        ...userExercises
       ].sort((a, b) => a.name.localeCompare(b.name));
       dispatch({ type: "SET_EXERCISES", exercises: merged });
     },
@@ -721,13 +717,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
         name: input.name,
         description: input.description,
         sessions: input.sessions,
-        source: "user",
+        source: "user"
       });
 
       const userPrograms = await storage.loadPrograms();
       const merged = [
         ...state.programs.filter((p) => p.source === "builtin"),
-        ...userPrograms,
+        ...userPrograms
       ].sort((a, b) => a.name.localeCompare(b.name));
       dispatch({ type: "SET_PROGRAMS", programs: merged });
       return saved;
@@ -748,7 +744,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const userPrograms = await storage.loadPrograms();
       const merged = [
         ...state.programs.filter((p) => p.source === "builtin"),
-        ...userPrograms,
+        ...userPrograms
       ].sort((a, b) => a.name.localeCompare(b.name));
       dispatch({ type: "SET_PROGRAMS", programs: merged });
     },
@@ -769,8 +765,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       upsertExercise,
       deleteExercise,
       upsertProgram,
-      deleteProgram,
-    },
+      deleteProgram
+    }
   };
 
   return (
@@ -806,7 +802,7 @@ export function useRefreshVersions() {
   return {
     progressVersion: state.progressVersion,
     historyVersion: state.historyVersion,
-    completedVersion: state.completedVersion,
+    completedVersion: state.completedVersion
   };
 }
 

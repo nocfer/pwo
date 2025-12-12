@@ -20,14 +20,14 @@ const CONFETTI_COLORS = [
   "#FF6B6B", // coral
   "#4ECDC4", // teal
   "#FFE66D", // yellow
-  "#95E1D3", // mint
+  "#95E1D3" // mint
 ];
 
 export function ConfettiCelebration({
   show,
   onComplete,
   message = "Amazing! 🎉",
-  subMessage = "You crushed it!",
+  subMessage = "You crushed it!"
 }: ConfettiCelebrationProps) {
   const [isVisible, setIsVisible] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -46,14 +46,14 @@ export function ConfettiCelebration({
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 300,
-          useNativeDriver: true,
+          useNativeDriver: true
         }),
         Animated.spring(scaleAnim, {
           toValue: 1,
           friction: 4,
           tension: 100,
-          useNativeDriver: true,
-        }),
+          useNativeDriver: true
+        })
       ]).start();
 
       // Auto-hide after delay
@@ -61,7 +61,7 @@ export function ConfettiCelebration({
         Animated.timing(fadeAnim, {
           toValue: 0,
           duration: 300,
-          useNativeDriver: true,
+          useNativeDriver: true
         }).start(() => {
           setIsVisible(false);
           onComplete?.();
@@ -107,8 +107,8 @@ export function ConfettiCelebration({
           styles.messageContainer,
           {
             opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          },
+            transform: [{ scale: scaleAnim }]
+          }
         ]}
       >
         <Text style={styles.message}>{message}</Text>
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 1000,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
   messageContainer: {
     backgroundColor: theme.colors.surface,
@@ -131,17 +131,17 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xl,
     paddingHorizontal: theme.spacing.xxl,
     alignItems: "center",
-    ...theme.shadows.lg,
+    ...theme.shadows.lg
   },
   message: {
     ...theme.typography.h1,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   subMessage: {
     ...theme.typography.body,
-    color: theme.colors.muted,
-  },
+    color: theme.colors.muted
+  }
 });
 
 export default ConfettiCelebration;

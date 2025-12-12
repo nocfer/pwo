@@ -15,7 +15,7 @@ export default function ChallengeButton({ label, programId }: Props) {
       onPress={() =>
         router.navigate({
           pathname: "/programs/[id]",
-          params: { id: programId },
+          params: { id: programId }
         })
       }
     >
@@ -45,16 +45,16 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     paddingVertical: theme.spacing.lg,
     paddingHorizontal: theme.spacing.lg,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   buttonPressed: {
     backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   content: {
     flexDirection: "row",
     alignItems: "center",
-    flex: 1,
+    flex: 1
   },
   iconContainer: {
     width: 44,
@@ -63,11 +63,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: theme.spacing.md,
+    marginRight: theme.spacing.md
   },
   label: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
-    flex: 1,
-  },
+    flex: 1
+  }
 });
