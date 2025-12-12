@@ -22,9 +22,9 @@ type BlockDraft =
   | {
     type: "exercise";
     exerciseId: string;
-    sets: string;
-    repsPerSet?: string;
-    restSecondsBetweenSets?: string;
+    targetReps?: string;
+    durationSeconds?: string;
+    note?: string;
   };
 
 export default function NewProgramScreen() {
@@ -62,9 +62,9 @@ export default function NewProgramScreen() {
         {
           type,
           exerciseId: first,
-          sets: "3",
-          repsPerSet: "",
-          restSecondsBetweenSets: "60",
+          targetReps: "",
+          durationSeconds: "",
+          note: "",
         },
       ]);
     }
@@ -107,37 +107,33 @@ export default function NewProgramScreen() {
         };
       }
       // exercise
-      const sets = Number(b.sets);
       if (!b.exerciseId)
         throw new Error("Pick an exercise for each exercise block.");
-      if (!Number.isFinite(sets) || sets <= 0)
-        throw new Error("Sets must be > 0.");
 
-      const restSecondsBetweenSets = b.restSecondsBetweenSets
-        ? Number(b.restSecondsBetweenSets)
-        : undefined;
+      const targetRaw = b.targetReps?.trim();
+      const targetReps = targetRaw ? Number(targetRaw) : undefined;
       if (
-        restSecondsBetweenSets != null &&
-        (!Number.isFinite(restSecondsBetweenSets) || restSecondsBetweenSets < 0)
+        targetReps != null &&
+        (!Number.isFinite(targetReps) || targetReps < 0)
       ) {
-        throw new Error("Invalid rest-between-sets seconds.");
+        throw new Error("Invalid target reps value.");
       }
 
-      const repsRaw = b.repsPerSet?.trim();
-      const repsPerSet = repsRaw ? Number(repsRaw) : undefined;
+      const durationRaw = b.durationSeconds?.trim();
+      const durationSeconds = durationRaw ? Number(durationRaw) : undefined;
       if (
-        repsPerSet != null &&
-        (!Number.isFinite(repsPerSet) || repsPerSet < 0)
+        durationSeconds != null &&
+        (!Number.isFinite(durationSeconds) || durationSeconds < 0)
       ) {
-        throw new Error("Invalid reps value.");
+        throw new Error("Invalid duration seconds value.");
       }
 
       return {
         type: "exercise" as const,
         exerciseId: b.exerciseId,
-        sets,
-        repsPerSet,
-        restSecondsBetweenSets,
+        targetReps,
+        durationSeconds,
+        note: b.note?.trim() || undefined,
       };
     });
 
@@ -172,8 +168,25 @@ export default function NewProgramScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.title}>New Program</Text>
-          <Text style={styles.subtitle}>Build a session with blocks</Text>
+          <View style={styles.headerRow}>
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => [
+                styles.headerBack,
+                pressed && styles.headerBackPressed,
+              ]}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={20}
+                color={theme.colors.text}
+              />
+            </Pressable>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.title}>New Program</Text>
+              <Text style={styles.subtitle}>Build a session with blocks</Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.card}>
@@ -345,29 +358,15 @@ export default function NewProgramScreen() {
                     </View>
 
                     <View style={styles.fieldRow}>
-                      <Text style={styles.fieldLabel}>Sets</Text>
+                      <Text style={styles.fieldLabel}>
+                        Target reps (optional)
+                      </Text>
                       <TextInput
-                        value={b.sets}
+                        value={b.targetReps ?? ""}
                         onChangeText={(v) =>
                           setSessionBlocks((prev) =>
                             prev.map((x, i) =>
-                              i === idx ? { ...x, sets: v } : x,
-                            ),
-                          )
-                        }
-                        keyboardType="number-pad"
-                        style={styles.fieldInput}
-                      />
-                    </View>
-
-                    <View style={styles.fieldRow}>
-                      <Text style={styles.fieldLabel}>Reps (optional)</Text>
-                      <TextInput
-                        value={b.repsPerSet ?? ""}
-                        onChangeText={(v) =>
-                          setSessionBlocks((prev) =>
-                            prev.map((x, i) =>
-                              i === idx ? { ...x, repsPerSet: v } : x,
+                              i === idx ? { ...x, targetReps: v } : x,
                             ),
                           )
                         }
@@ -378,21 +377,37 @@ export default function NewProgramScreen() {
 
                     <View style={styles.fieldRow}>
                       <Text style={styles.fieldLabel}>
-                        Rest between sets (s)
+                        Duration (seconds, optional)
                       </Text>
                       <TextInput
-                        value={b.restSecondsBetweenSets ?? ""}
+                        value={b.durationSeconds ?? ""}
                         onChangeText={(v) =>
                           setSessionBlocks((prev) =>
                             prev.map((x, i) =>
-                              i === idx
-                                ? { ...x, restSecondsBetweenSets: v }
-                                : x,
+                              i === idx ? { ...x, durationSeconds: v } : x,
                             ),
                           )
                         }
                         keyboardType="number-pad"
                         style={styles.fieldInput}
+                      />
+                    </View>
+
+                    <View style={styles.fieldRow}>
+                      <Text style={styles.fieldLabel}>Note (optional)</Text>
+                      <TextInput
+                        value={b.note ?? ""}
+                        onChangeText={(v) =>
+                          setSessionBlocks((prev) =>
+                            prev.map((x, i) =>
+                              i === idx ? { ...x, note: v } : x,
+                            ),
+                          )
+                        }
+                        style={[
+                          styles.fieldInput,
+                          { width: 200, textAlign: "left" },
+                        ]}
                       />
                     </View>
                   </>
@@ -486,6 +501,25 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xxl,
   },
   header: { gap: theme.spacing.xs },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.md,
+  },
+  headerBack: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.surface,
+  },
+  headerBackPressed: {
+    backgroundColor: theme.colors.card,
+    transform: [{ scale: 0.98 }],
+  },
   title: { ...theme.typography.h2, color: theme.colors.text },
   subtitle: { ...theme.typography.body, color: theme.colors.muted },
   card: {

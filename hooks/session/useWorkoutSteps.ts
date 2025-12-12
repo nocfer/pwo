@@ -1,28 +1,17 @@
-import type { Program, ProgramBlock } from "@/types";
+import type { Program } from "@/types";
 import { useMemo } from "react";
 
 export type WorkoutStep =
   | { key: string; type: "warmup"; seconds: number }
   | {
       key: string;
-      type: "exercise_set";
+      type: "exercise";
       exerciseId: string;
-      setIndex: number; // 1-based within the block
-      totalSets: number;
-      reps?: number;
-      restSecondsBetweenSets?: number;
+      targetReps?: number;
+      durationSeconds?: number;
+      note?: string;
     }
   | { key: string; type: "rest"; seconds: number; label?: string };
-
-function getRepsForSet(
-  block: Extract<ProgramBlock, { type: "exercise" }>,
-  setIndex: number,
-): number | undefined {
-  const reps = block.repsPerSet;
-  if (reps == null) return undefined;
-  if (Array.isArray(reps)) return reps[setIndex - 1];
-  return reps;
-}
 
 export function useWorkoutSteps(
   program: Program | null | undefined,
@@ -59,19 +48,15 @@ export function useWorkoutSteps(
         continue;
       }
 
-      // exercise block → explode into per-set steps
-      const totalSets = Math.max(1, block.sets);
-      for (let i = 1; i <= totalSets; i++) {
-        list.push({
-          key: `ex-${block.exerciseId}-set-${i}-${list.length}`,
-          type: "exercise_set",
-          exerciseId: block.exerciseId,
-          setIndex: i,
-          totalSets,
-          reps: getRepsForSet(block, i),
-          restSecondsBetweenSets: block.restSecondsBetweenSets,
-        });
-      }
+      // exercise block → one step
+      list.push({
+        key: `ex-${block.exerciseId}-${list.length}`,
+        type: "exercise",
+        exerciseId: block.exerciseId,
+        targetReps: block.targetReps,
+        durationSeconds: block.durationSeconds,
+        note: block.note,
+      });
     }
 
     return list;

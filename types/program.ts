@@ -18,20 +18,25 @@ export type ProgramRestBlock = {
 export type ProgramExerciseBlock = {
   type: "exercise";
   exerciseId: string;
-  sets: number;
   /**
-   * Either a single number applied to all sets, or per-set reps.
-   * If omitted, the runner will treat as an unprescribed set (user self-guided).
+   * Optional rep target for the exercise.
+   * If omitted, the step is self-guided (user does their reps).
    */
-  repsPerSet?: number | number[];
+  targetReps?: number;
   /**
-   * Optional rest between sets for this exercise block.
-   * (This is separate from the generic `rest` block used between exercises.)
+   * Optional timed work (seconds). If set, the runner will start a timer.
    */
-  restSecondsBetweenSets?: number;
+  durationSeconds?: number;
+  /**
+   * Optional short note (e.g. form cue, load, previous sets info after migration).
+   */
+  note?: string;
 };
 
-export type ProgramBlock = ProgramWarmupBlock | ProgramExerciseBlock | ProgramRestBlock;
+export type ProgramBlock =
+  | ProgramWarmupBlock
+  | ProgramExerciseBlock
+  | ProgramRestBlock;
 
 export type ProgramSession = {
   index: number; // 1-based

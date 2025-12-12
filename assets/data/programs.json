@@ -15,33 +15,30 @@
           {
             "type": "exercise",
             "exerciseId": "ex_squats",
-            "sets": 3,
-            "repsPerSet": 12,
-            "restSecondsBetweenSets": 60
+            "targetReps": 12,
+            "note": "Steady tempo, full depth"
           },
           {
             "type": "rest",
-            "seconds": 90,
+            "seconds": 60,
             "label": "Rest"
           },
           {
             "type": "exercise",
             "exerciseId": "ex_pushups",
-            "sets": 3,
-            "repsPerSet": 10,
-            "restSecondsBetweenSets": 60
+            "targetReps": 10,
+            "note": "Keep ribs down"
           },
           {
             "type": "rest",
-            "seconds": 90,
+            "seconds": 60,
             "label": "Rest"
           },
           {
             "type": "exercise",
             "exerciseId": "ex_pullups",
-            "sets": 3,
-            "repsPerSet": 5,
-            "restSecondsBetweenSets": 90
+            "targetReps": 5,
+            "note": "Controlled descent"
           }
         ]
       }

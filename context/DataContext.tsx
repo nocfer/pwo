@@ -148,6 +148,99 @@ const DataContext = createContext<DataContextValue | null>(null);
 export function DataProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(dataReducer, initialState);
 
+  function migrateProgram(p: any): Program {
+    if (!p || typeof p !== "object") return p as Program;
+    if (!Array.isArray((p as any).sessions)) return p as Program;
+
+    const nextSessions = (p as any).sessions.map((s: any, idx: number) => {
+      const blocksRaw = Array.isArray(s?.blocks) ? s.blocks : [];
+      const blocks: any[] = [];
+
+      for (const b of blocksRaw) {
+        if (!b || typeof b !== "object") continue;
+
+        if (b.type === "warmup") {
+          blocks.push({ type: "warmup", seconds: Number(b.seconds) || 0 });
+          continue;
+        }
+
+        if (b.type === "rest") {
+          blocks.push({
+            type: "rest",
+            seconds: Number(b.seconds) || 0,
+            label: typeof b.label === "string" ? b.label : undefined,
+          });
+          continue;
+        }
+
+        if (b.type !== "exercise") continue;
+
+        // New shape already?
+        if ("targetReps" in b || "durationSeconds" in b || "note" in b) {
+          blocks.push({
+            type: "exercise",
+            exerciseId: String(b.exerciseId ?? ""),
+            targetReps:
+              typeof b.targetReps === "number" ? b.targetReps : undefined,
+            durationSeconds:
+              typeof b.durationSeconds === "number" ? b.durationSeconds : undefined,
+            note: typeof b.note === "string" ? b.note : undefined,
+          });
+          continue;
+        }
+
+        // Old shape: { sets, repsPerSet, restSecondsBetweenSets }
+        const sets = typeof b.sets === "number" ? b.sets : undefined;
+        const reps = (b as any).repsPerSet;
+        let targetReps: number | undefined;
+        const noteParts: string[] = [];
+
+        if (typeof reps === "number") {
+          targetReps = reps;
+          if (sets && sets > 1) noteParts.push(`Previously: ${sets} sets`);
+        } else if (Array.isArray(reps)) {
+          const repsList = reps.filter((x) => typeof x === "number");
+          if (repsList.length)
+            noteParts.push(`Previously: ${repsList.join(", ")} reps`);
+          if (sets && sets > 1) noteParts.push(`${sets} sets`);
+        } else if (sets && sets > 1) {
+          noteParts.push(`Previously: ${sets} sets`);
+        }
+
+        blocks.push({
+          type: "exercise",
+          exerciseId: String(b.exerciseId ?? ""),
+          targetReps,
+          note: noteParts.length ? noteParts.join(" • ") : undefined,
+        });
+
+        const restBetween = Number((b as any).restSecondsBetweenSets);
+        if (Number.isFinite(restBetween) && restBetween > 0) {
+          blocks.push({ type: "rest", seconds: restBetween, label: "Rest" });
+        }
+      }
+
+      return {
+        index: typeof s?.index === "number" ? s.index : idx + 1,
+        name: typeof s?.name === "string" ? s.name : undefined,
+        blocks,
+      };
+    });
+
+    return {
+      id: String((p as any).id ?? ""),
+      name: String((p as any).name ?? ""),
+      description:
+        typeof (p as any).description === "string"
+          ? (p as any).description
+          : undefined,
+      sessions: nextSessions,
+      createdAt: String((p as any).createdAt ?? new Date().toISOString()),
+      updatedAt: String((p as any).updatedAt ?? new Date().toISOString()),
+      source: (p as any).source === "builtin" ? "builtin" : "user",
+    };
+  }
+
   // Load challenges from static assets on mount
   useEffect(() => {
     let mounted = true;
@@ -214,8 +307,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         ]);
 
         const programsById = new Map<string, Program>();
-        for (const p of seedPrograms) programsById.set(p.id, p);
-        for (const p of userPrograms) programsById.set(p.id, p);
+        for (const p of seedPrograms) programsById.set(p.id, migrateProgram(p));
+        for (const p of userPrograms) programsById.set(p.id, migrateProgram(p));
         const mergedPrograms = Array.from(programsById.values()).sort((a, b) =>
           a.name.localeCompare(b.name),
         );

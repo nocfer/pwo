@@ -58,8 +58,13 @@ export function useWorkoutTimer(opts: {
   const [showConfetti, setShowConfetti] = useState(false);
 
   const currentStep = steps[currentIndex] ?? null;
+  const currentStepRef = useRef<WorkoutStep | null>(null);
+  useEffect(() => {
+    currentStepRef.current = currentStep;
+  }, [currentStep]);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timedStepRef = useRef<WorkoutStep | null>(null);
   const clearTimer = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -70,6 +75,7 @@ export function useWorkoutTimer(opts: {
   const startTimer = useCallback(
     (seconds: number) => {
       clearTimer();
+      timedStepRef.current = currentStepRef.current;
       setTimer(seconds);
       setPhase("timed");
       intervalRef.current = setInterval(() => {
@@ -139,14 +145,6 @@ export function useWorkoutTimer(opts: {
     return Math.min(1, Math.max(0, done / total));
   }, [steps.length, phase, currentIndex]);
 
-  // When timer hits 0, transition to next step
-  useEffect(() => {
-    if (timer !== 0 || phase !== "timed") return;
-    setPhase("working");
-    // Advance automatically after timed steps
-    setCurrentIndex((i) => Math.min(i + 1, Math.max(0, steps.length - 1)));
-  }, [timer, phase, steps.length]);
-
   const goDone = useCallback(async () => {
     setPhase("done");
     setShowConfetti(true);
@@ -154,6 +152,44 @@ export function useWorkoutTimer(opts: {
     const summary = `${program?.name ?? slug} · Session ${sessionIndex} · ${steps.length} steps`;
     await completeSession(slug, sessionIndex, summary);
   }, [completeSession, program?.name, sessionIndex, slug, steps.length]);
+
+  // When timer hits 0, transition to next step
+  useEffect(() => {
+    if (timer !== 0 || phase !== "timed") return;
+
+    // Record completion for the timed step we were on
+    const finished = timedStepRef.current;
+    if (finished?.type === "warmup") {
+      void recordEvent({ slug, sessionIndex, type: "warmup_completed" });
+    } else if (finished?.type === "rest") {
+      void recordEvent({ slug, sessionIndex, type: "break_completed" });
+    } else if (finished?.type === "exercise") {
+      void recordEvent({
+        slug,
+        sessionIndex,
+        type: "set_completed",
+        data: {
+          exerciseId: finished.exerciseId,
+          reps: finished.targetReps,
+          durationSeconds: finished.durationSeconds,
+        },
+      });
+    }
+
+    timedStepRef.current = null;
+    setIsPaused(false);
+    setPhase("working");
+
+    // Advance automatically after timed steps
+    setCurrentIndex((i) => {
+      const next = i + 1;
+      if (next >= steps.length) {
+        void goDone();
+        return i;
+      }
+      return next;
+    });
+  }, [timer, phase, steps.length, recordEvent, slug, sessionIndex, goDone]);
 
   const handlePauseResume = useCallback(() => {
     if (phase !== "timed") return;
@@ -177,6 +213,21 @@ export function useWorkoutTimer(opts: {
       setIsPaused(false);
       setPhase("working");
       void haptics.skipAction();
+      // Record skipped for the timed step
+      const skipped = timedStepRef.current ?? currentStep;
+      if (skipped.type === "warmup") {
+        void recordEvent({ slug, sessionIndex, type: "warmup_skipped" });
+      } else if (skipped.type === "rest") {
+        void recordEvent({ slug, sessionIndex, type: "break_skipped" });
+      } else if (skipped.type === "exercise") {
+        void recordEvent({
+          slug,
+          sessionIndex,
+          type: "set_skipped",
+          data: { exerciseId: skipped.exerciseId },
+        });
+      }
+      timedStepRef.current = null;
       setCurrentIndex((i) => {
         const next = i + 1;
         if (next >= steps.length) {
@@ -190,6 +241,18 @@ export function useWorkoutTimer(opts: {
 
     // working: just move on
     void haptics.skipAction();
+    if (currentStep.type === "warmup") {
+      void recordEvent({ slug, sessionIndex, type: "warmup_skipped" });
+    } else if (currentStep.type === "rest") {
+      void recordEvent({ slug, sessionIndex, type: "break_skipped" });
+    } else if (currentStep.type === "exercise") {
+      void recordEvent({
+        slug,
+        sessionIndex,
+        type: "set_skipped",
+        data: { exerciseId: currentStep.exerciseId },
+      });
+    }
     setCurrentIndex((i) => {
       const next = i + 1;
       if (next >= steps.length) {
@@ -226,34 +289,34 @@ export function useWorkoutTimer(opts: {
       return;
     }
 
-    // exercise set
+    // exercise step: timed if durationSeconds, otherwise immediate completion
+    const duration = currentStep.durationSeconds ?? 0;
+    if (duration > 0) {
+      startTimer(duration);
+      void recordEvent({
+        slug,
+        sessionIndex,
+        type: "set_completed",
+        data: {
+          exerciseId: currentStep.exerciseId,
+          started: true,
+          durationSeconds: duration,
+          reps: currentStep.targetReps,
+        },
+      } as any);
+      void haptics.buttonTap();
+      return;
+    }
+
     void recordEvent({
       slug,
       sessionIndex,
       type: "set_completed",
       data: {
         exerciseId: currentStep.exerciseId,
-        set: currentStep.setIndex,
-        reps: currentStep.reps,
+        reps: currentStep.targetReps,
       },
     });
-
-    const rest = currentStep.restSecondsBetweenSets ?? 0;
-    if (rest > 0 && currentStep.setIndex < currentStep.totalSets) {
-      startTimer(rest);
-      void recordEvent({
-        slug,
-        sessionIndex,
-        type: "break_started",
-        data: {
-          afterSet: currentStep.setIndex,
-          exerciseId: currentStep.exerciseId,
-        },
-      });
-      void haptics.setComplete();
-      return;
-    }
-
     void haptics.setComplete();
     setCurrentIndex((i) => {
       const next = i + 1;
