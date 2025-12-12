@@ -6,9 +6,14 @@
  */
 
 import type {
+  ChallengeProgress,
   EventRecord,
+  Exercise,
   HistoryEntry,
   HistoryFile,
+  Program,
+  ProgramProgress,
+  ProgressHistory,
   SessionState,
   StreakEntry,
 } from "@/types";
@@ -22,7 +27,7 @@ export type {
   HistoryEntry,
   HistoryFile,
   SessionState,
-  StreakEntry
+  StreakEntry,
 } from "@/types";
 
 // ============================================================================
@@ -34,6 +39,11 @@ const KEYS = {
   EVENTS: "pwo.events",
   HISTORY: "pwo.history",
   PROGRESS: "pwo.progress",
+  EXERCISES: "pwo.exercises",
+  PROGRAMS: "pwo.programs",
+  PROGRAM_PROGRESS: "pwo.program_progress",
+  CHALLENGE_PROGRESS: "pwo.challenge_progress",
+  PROGRESS_HISTORY: "pwo.progress_history",
 } as const;
 
 // ============================================================================
@@ -107,11 +117,104 @@ async function write<T>(key: string, value: T): Promise<void> {
   await nativeWrite(key, value);
 }
 
+function generateId(prefix: string): string {
+  // Prefer crypto.randomUUID if available (web)
+  const anyCrypto: any =
+    typeof globalThis !== "undefined" ? (globalThis as any).crypto : undefined;
+  const rand =
+    typeof anyCrypto?.randomUUID === "function"
+      ? anyCrypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  return `${prefix}_${rand}`;
+}
+
 // ============================================================================
 // Storage API
 // ============================================================================
 
 export const storage = {
+  // --------------------------------------------------------------------------
+  // Exercises
+  // --------------------------------------------------------------------------
+
+  async loadExercises(): Promise<Exercise[]> {
+    return read<Exercise[]>(KEYS.EXERCISES, []);
+  },
+
+  async saveExercises(exercises: Exercise[]): Promise<void> {
+    await write(KEYS.EXERCISES, exercises);
+  },
+
+  async upsertExercise(
+    input: Omit<Exercise, "createdAt" | "updatedAt"> &
+      Partial<Pick<Exercise, "createdAt" | "updatedAt">>,
+  ): Promise<Exercise> {
+    const now = new Date().toISOString();
+    const arr = await this.loadExercises();
+    const id = input.id || generateId("ex");
+    const idx = arr.findIndex((e) => e.id === id);
+    const createdAt = idx >= 0 ? arr[idx].createdAt : (input.createdAt ?? now);
+    const next: Exercise = {
+      id,
+      name: input.name,
+      category: input.category,
+      icon: input.icon,
+      source: input.source,
+      createdAt,
+      updatedAt: input.updatedAt ?? now,
+    };
+    if (idx >= 0) arr[idx] = next;
+    else arr.push(next);
+    await this.saveExercises(arr);
+    return next;
+  },
+
+  async deleteExercise(id: string): Promise<void> {
+    const arr = await this.loadExercises();
+    await this.saveExercises(arr.filter((e) => e.id !== id));
+  },
+
+  // --------------------------------------------------------------------------
+  // Programs
+  // --------------------------------------------------------------------------
+
+  async loadPrograms(): Promise<Program[]> {
+    return read<Program[]>(KEYS.PROGRAMS, []);
+  },
+
+  async savePrograms(programs: Program[]): Promise<void> {
+    await write(KEYS.PROGRAMS, programs);
+  },
+
+  async upsertProgram(
+    input: Omit<Program, "createdAt" | "updatedAt"> &
+      Partial<Pick<Program, "createdAt" | "updatedAt">>,
+  ): Promise<Program> {
+    const now = new Date().toISOString();
+    const arr = await this.loadPrograms();
+    const id = input.id || generateId("prg");
+    const idx = arr.findIndex((p) => p.id === id);
+    const createdAt = idx >= 0 ? arr[idx].createdAt : (input.createdAt ?? now);
+    const next: Program = {
+      id,
+      name: input.name,
+      description: input.description,
+      sessions: input.sessions,
+      source: input.source,
+      createdAt,
+      updatedAt: input.updatedAt ?? now,
+    };
+    if (idx >= 0) arr[idx] = next;
+    else arr.push(next);
+    await this.savePrograms(arr);
+    return next;
+  },
+
+  async deleteProgram(id: string): Promise<void> {
+    const arr = await this.loadPrograms();
+    await this.savePrograms(arr.filter((p) => p.id !== id));
+  },
+
   // --------------------------------------------------------------------------
   // Session State
   // --------------------------------------------------------------------------
@@ -270,6 +373,90 @@ export const storage = {
       .reverse()
       .find((e) => e.type === "session_completed");
     return last?.slug ?? null;
+  },
+
+  // --------------------------------------------------------------------------
+  // Program Progress
+  // --------------------------------------------------------------------------
+
+  async loadProgramProgress(
+    programId: string,
+  ): Promise<ProgramProgress | null> {
+    const arr = await read<ProgramProgress[]>(KEYS.PROGRAM_PROGRESS, []);
+    return arr.find((p) => p.programId === programId) ?? null;
+  },
+
+  async saveProgramProgress(progress: ProgramProgress): Promise<void> {
+    const arr = await read<ProgramProgress[]>(KEYS.PROGRAM_PROGRESS, []);
+    const idx = arr.findIndex((p) => p.programId === progress.programId);
+    if (idx >= 0) {
+      arr[idx] = progress;
+    } else {
+      arr.push(progress);
+    }
+    await write(KEYS.PROGRAM_PROGRESS, arr);
+  },
+
+  async loadAllProgramProgress(): Promise<ProgramProgress[]> {
+    return read<ProgramProgress[]>(KEYS.PROGRAM_PROGRESS, []);
+  },
+
+  // --------------------------------------------------------------------------
+  // Challenge Progress
+  // --------------------------------------------------------------------------
+
+  async loadChallengeProgress(
+    challengeId: string,
+  ): Promise<ChallengeProgress | null> {
+    const arr = await read<ChallengeProgress[]>(KEYS.CHALLENGE_PROGRESS, []);
+    return arr.find((c) => c.challengeId === challengeId) ?? null;
+  },
+
+  async saveChallengeProgress(progress: ChallengeProgress): Promise<void> {
+    const arr = await read<ChallengeProgress[]>(KEYS.CHALLENGE_PROGRESS, []);
+    const idx = arr.findIndex((c) => c.challengeId === progress.challengeId);
+    if (idx >= 0) {
+      arr[idx] = progress;
+    } else {
+      arr.push(progress);
+    }
+    await write(KEYS.CHALLENGE_PROGRESS, arr);
+  },
+
+  async loadAllChallengeProgress(): Promise<ChallengeProgress[]> {
+    return read<ChallengeProgress[]>(KEYS.CHALLENGE_PROGRESS, []);
+  },
+
+  // --------------------------------------------------------------------------
+  // Progress History
+  // --------------------------------------------------------------------------
+
+  async appendProgressHistory(entry: ProgressHistory[number]): Promise<void> {
+    const history = await read<ProgressHistory>(KEYS.PROGRESS_HISTORY, []);
+    history.push(entry);
+    // Keep only last 365 days of history
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 365);
+    const filtered = history.filter((e) => new Date(e.date) >= cutoff);
+    await write(KEYS.PROGRESS_HISTORY, filtered);
+  },
+
+  async getProgressHistory(
+    programId?: string,
+    challengeId?: string,
+    days: number = 30,
+  ): Promise<ProgressHistory> {
+    const history = await read<ProgressHistory>(KEYS.PROGRESS_HISTORY, []);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+
+    return history.filter((entry) => {
+      if (new Date(entry.date) < cutoff) return false;
+      if (programId && entry.programId === programId) return true;
+      if (challengeId && entry.challengeId === challengeId) return true;
+      if (!programId && !challengeId) return true;
+      return false;
+    });
   },
 };
 

@@ -2,13 +2,9 @@
  * Session and Program type definitions
  */
 
-import type { Challenge } from "./challenge";
-
 /**
- * @deprecated Use Challenge type instead. Program is kept for backwards compatibility.
+ * Session type used by the existing Challenge flow.
  */
-export type Program = Challenge;
-
 export type Session = {
   index: number; // 1-based
   totalReps: number;
