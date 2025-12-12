@@ -1,8 +1,8 @@
+import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, StyleSheet, Text, View } from "react-native";
 import ConfettiCannon from "react-native-confetti-cannon";
-import haptics from "@/lib/haptics";
 
 type ConfettiCelebrationProps = {
   show: boolean;

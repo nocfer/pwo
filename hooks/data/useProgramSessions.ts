@@ -1,4 +1,4 @@
-import type { Routine, Session } from "@/types";
+import type { Challenge, Session } from "@/types";
 import { useEffect, useMemo, useState } from "react";
 
 // Re-export types for backwards compatibility
@@ -15,7 +15,7 @@ function distributeIntoSets(total: number, sets: number): number[] {
 }
 
 export function useProgramSessions(slug: string) {
-  const [program, setProgram] = useState<Routine | null>(null);
+  const [program, setProgram] = useState<Challenge | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -23,10 +23,10 @@ export function useProgramSessions(slug: string) {
     let mounted = true;
     (async () => {
       try {
-        const mod = await import("@/assets/data/routines.json");
+        const mod = await import("@/assets/data/challenges.json");
         if (!mounted) return;
-        const routines = (mod as any).default as Routine[];
-        const p = routines.find((x) => x.slug === slug) ?? null;
+        const challenges = (mod as any).default as Challenge[];
+        const p = challenges.find((x) => x.slug === slug) ?? null;
         setProgram(p);
       } catch (e) {
         if (!mounted) return;

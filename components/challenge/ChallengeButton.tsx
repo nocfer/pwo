@@ -8,13 +8,13 @@ type Props = {
   slug: string;
 };
 
-export default function RoutineButton({ label, slug }: Props) {
+export default function ChallengeButton({ label, slug }: Props) {
   return (
     <Pressable
       style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
       onPress={() =>
         router.navigate({
-          pathname: "/routines/[slug]",
+          pathname: "/challenges/[slug]",
           params: { slug },
         })
       }

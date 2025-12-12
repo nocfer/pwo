@@ -53,14 +53,14 @@ export default function RootLayout() {
         >
           <Stack.Screen
             name="(tabs)"
-            options={{ title: "Routines", headerShown: false }}
+            options={{ title: "Challenges", headerShown: false }}
           />
           <Stack.Screen
-            name="routines/[slug]/session/[index]"
+            name="challenges/[slug]/session/[index]"
             options={{ title: "", headerShown: false }}
           />
           <Stack.Screen
-            name="routines/[slug]"
+            name="challenges/[slug]"
             options={{ title: "", headerShown: false }}
           />
         </Stack>
