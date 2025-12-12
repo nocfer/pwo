@@ -1,1 +1,0 @@
-__d(function(e,l,u,s,a,t,p){a.exports=[{slug:"pull-ups",targets:[{label:"Max consecutive",value:20,unit:"reps"},{label:"Total reps",value:100,unit:"reps"}]},{slug:"push-ups",targets:[{label:"Max consecutive",value:20,unit:"reps"},{label:"Total reps",value:100,unit:"reps"}]}]},1304,[]);
