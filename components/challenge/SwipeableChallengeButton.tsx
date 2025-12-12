@@ -9,10 +9,10 @@ import { Swipeable } from "react-native-gesture-handler";
 
 type Props = {
   label: string;
-  slug: string;
+  programId: string;
 };
 
-export default function SwipeableChallengeButton({ label, slug }: Props) {
+export default function SwipeableChallengeButton({ label, programId }: Props) {
   const swipeableRef = useRef<Swipeable>(null);
 
   const handleQuickStart = () => {
@@ -20,8 +20,8 @@ export default function SwipeableChallengeButton({ label, slug }: Props) {
     swipeableRef.current?.close();
     // Navigate to the first session
     router.navigate({
-      pathname: "/challenges/[slug]/session/[index]",
-      params: { slug, index: "1" },
+      pathname: "/programs/[id]/session/[index]",
+      params: { id: programId, index: "1" },
     });
   };
 
@@ -78,8 +78,8 @@ export default function SwipeableChallengeButton({ label, slug }: Props) {
         ]}
         onPress={() =>
           router.navigate({
-            pathname: "/challenges/[slug]",
-            params: { slug },
+            pathname: "/programs/[id]",
+            params: { id: programId },
           })
         }
       >

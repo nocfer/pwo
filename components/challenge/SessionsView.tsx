@@ -1,34 +1,33 @@
-import { SkeletonSessionCard } from "@/components/common/Skeleton";
-import { useProgramSessions, useSessionCompletion } from "@/hooks/data";
+import { useChallengeSessions, useExercises, usePrograms, useSessionCompletion } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
+import { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 type Props = {
-  slug: string;
+  programId: string;
 };
 
-export default function SessionsView({ slug }: Props) {
-  const { sessions, program, loading, error } = useProgramSessions(slug);
-  const { completed } = useSessionCompletion(slug);
+export default function SessionsView({ programId }: Props) {
+  const { data: programs } = usePrograms();
+  const { data: exercises } = useExercises();
+  const program = useMemo(
+    () => programs?.find((p) => p.id === programId) ?? null,
+    [programs, programId],
+  );
+  const sessions = useChallengeSessions(program);
+  const { completed } = useSessionCompletion(programId);
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <SkeletonSessionCard />
-        <View style={{ height: theme.spacing.md }} />
-        <SkeletonSessionCard />
-      </View>
+  // Get exercise name for challenge programs
+  const exerciseName = useMemo(() => {
+    if (!program?.challengeConfig) return null;
+    const exercise = exercises?.find(
+      (e) => e.id === program.challengeConfig?.exerciseId,
     );
-  }
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.muted}>Failed to load sessions.</Text>
-      </View>
-    );
-  }
+    return exercise?.name ?? null;
+  }, [program, exercises]);
+
   if (!program || sessions.length === 0) {
     return (
       <View style={styles.container}>
@@ -46,13 +45,26 @@ export default function SessionsView({ slug }: Props) {
         const isDone = completed.has(s.index);
         // Session is locked if it's not the first and previous session is not completed
         const isLocked = s.index > 1 && !completed.has(s.index - 1);
+
+        // Calculate total reps and rep distribution from blocks
+        const exerciseBlocks = s.blocks.filter(
+          (b) => b.type === "exercise",
+        ) as Array<{ type: "exercise"; targetReps?: number }>;
+        const totalReps = exerciseBlocks.reduce(
+          (sum, b) => sum + (b.targetReps || 0),
+          0,
+        );
+        const repsPerSet = exerciseBlocks.map((b) => b.targetReps || 0);
+
         return (
           <Pressable
             key={s.index}
             onPress={() => {
               if (isLocked) return; // Prevent navigation for locked sessions
-              const href = `/challenges/${slug}/session/${s.index}` as any;
-              router.navigate(href);
+              router.navigate({
+                pathname: "/programs/[id]/session/[index]",
+                params: { id: programId, index: String(s.index) },
+              });
             }}
             style={({ pressed }) => [
               styles.card,
@@ -112,17 +124,17 @@ export default function SessionsView({ slug }: Props) {
                     isLocked && styles.badgeTextLocked,
                   ]}
                 >
-                  {s.totalReps} reps
+                  {totalReps} reps
                 </Text>
               </View>
             </View>
             <Text style={[styles.subtitle, isLocked && styles.subtitleLocked]}>
               {isLocked
                 ? `Complete Session ${s.index - 1} first`
-                : program.exercise.name}
+                : exerciseName ?? "Exercise"}
             </Text>
             <View style={styles.setsRow}>
-              {s.sets.map((r, i) => (
+              {repsPerSet.map((r, i) => (
                 <View
                   key={i}
                   style={[styles.setPill, isLocked && styles.setPillLocked]}

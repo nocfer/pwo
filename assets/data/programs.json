@@ -46,5 +46,37 @@
     "createdAt": "2025-01-01T00:00:00.000Z",
     "updatedAt": "2025-01-01T00:00:00.000Z",
     "source": "builtin"
+  },
+  {
+    "id": "challenge_pull-ups",
+    "name": "Pull Ups",
+    "description": "Build upper body pulling strength with progressive overload",
+    "sessions": [],
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-01-01T00:00:00.000Z",
+    "source": "builtin",
+    "challengeConfig": {
+      "exerciseId": "ex_pullups",
+      "sets": 5,
+      "targetReps": 100,
+      "warmUpSeconds": 180,
+      "breakSeconds": 90
+    }
+  },
+  {
+    "id": "challenge_push-ups",
+    "name": "Push Ups",
+    "description": "Classic bodyweight exercise for chest and triceps",
+    "sessions": [],
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-01-01T00:00:00.000Z",
+    "source": "builtin",
+    "challengeConfig": {
+      "exerciseId": "ex_pushups",
+      "sets": 5,
+      "targetReps": 100,
+      "warmUpSeconds": 300,
+      "breakSeconds": 120
+    }
   }
 ]
