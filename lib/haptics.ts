@@ -80,7 +80,7 @@ export const haptics = {
   // General
   refresh: tapLight,
   swipeAction: tapMedium,
-  celebration: notifySuccess,
+  celebration: notifySuccess
 };
 
 export default haptics;

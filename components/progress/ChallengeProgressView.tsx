@@ -13,7 +13,7 @@ export default function ChallengeProgressView({ challengeId }: Props) {
   const { data: programs } = usePrograms();
   const challenge = useMemo(
     () => programs?.find((p) => p.id === challengeId && p.challengeConfig),
-    [programs, challengeId],
+    [programs, challengeId]
   );
   const { metrics, loading } = useChallengeProgress(challenge || undefined);
 
@@ -28,20 +28,20 @@ export default function ChallengeProgressView({ challengeId }: Props) {
   const stats = [
     {
       label: "Total Reps",
-      value: metrics.totalRepsCompleted,
+      value: metrics.totalRepsCompleted
     },
     {
       label: "Target Reps",
-      value: metrics.targetReps,
+      value: metrics.targetReps
     },
     {
       label: "Current Streak",
-      value: `${metrics.currentStreak} days`,
+      value: `${metrics.currentStreak} days`
     },
     {
       label: "Sessions Done",
-      value: `${metrics.sessionsCompleted}/${metrics.totalSessions}`,
-    },
+      value: `${metrics.sessionsCompleted}/${metrics.totalSessions}`
+    }
   ];
 
   return (
@@ -62,8 +62,8 @@ export default function ChallengeProgressView({ challengeId }: Props) {
               styles.progressBar,
               {
                 width: `${Math.min(100, metrics.repsProgressPercentage)}%`,
-                backgroundColor: theme.colors.success,
-              },
+                backgroundColor: theme.colors.success
+              }
             ]}
           />
         </View>
@@ -98,37 +98,37 @@ export default function ChallengeProgressView({ challengeId }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 1
   },
   muted: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textAlign: "center",
-    padding: theme.spacing.lg,
+    padding: theme.spacing.lg
   },
   section: {
     marginTop: theme.spacing.lg,
-    gap: theme.spacing.sm,
+    gap: theme.spacing.sm
   },
   sectionTitle: {
     ...theme.typography.h3,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   progressBarContainer: {
     height: 12,
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.md,
-    overflow: "hidden",
+    overflow: "hidden"
   },
   progressBar: {
     height: "100%",
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.md
   },
   caption: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    marginTop: theme.spacing.xs,
+    marginTop: theme.spacing.xs
   },
   nextSession: {
     marginTop: theme.spacing.lg,
@@ -137,17 +137,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
-    alignItems: "center",
+    alignItems: "center"
   },
   nextSessionLabel: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   nextSessionValue: {
     ...theme.typography.h3,
     color: theme.colors.primary,
-    fontFamily: theme.fonts.bold,
+    fontFamily: theme.fonts.bold
   },
   completedBadge: {
     marginTop: theme.spacing.lg,
@@ -156,10 +156,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
-    alignItems: "center",
+    alignItems: "center"
   },
   completedText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.success,
-  },
+    color: theme.colors.success
+  }
 });

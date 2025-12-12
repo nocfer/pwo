@@ -1,6 +1,6 @@
 import {
   NoChallengesEmpty,
-  NoSearchResultsEmpty,
+  NoSearchResultsEmpty
 } from "@/components/common/EmptyState";
 import { SkeletonChallengeButton } from "@/components/common/Skeleton";
 import { usePrograms } from "@/hooks/data";
@@ -46,7 +46,7 @@ export default function ChallengesView({ query }: Props) {
 
   const filtered = query
     ? challenges.filter((r) =>
-        r.name.toLowerCase().includes(query.toLowerCase()),
+        r.name.toLowerCase().includes(query.toLowerCase())
       )
     : challenges;
 
@@ -70,13 +70,13 @@ export default function ChallengesView({ query }: Props) {
 const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
-    alignItems: "center",
+    alignItems: "center"
   },
   listContainer: {
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   message: {
     ...theme.typography.body,
-    color: theme.colors.subtext,
-  },
+    color: theme.colors.subtext
+  }
 });

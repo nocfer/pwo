@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -53,7 +53,7 @@ export default function ChallengesScreen() {
         <View
           style={[
             styles.searchContainer,
-            isFocused && styles.searchContainerFocused,
+            isFocused && styles.searchContainerFocused
           ]}
         >
           <Ionicons
@@ -90,23 +90,23 @@ export default function ChallengesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.background
   },
   content: {
     padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
+    gap: theme.spacing.lg
   },
   header: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   title: {
     ...theme.typography.h2,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   subtitle: {
     ...theme.typography.body,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   searchContainer: {
     flexDirection: "row",
@@ -117,19 +117,19 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   searchContainerFocused: {
     borderColor: theme.colors.primary,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   searchIcon: {
-    marginRight: theme.spacing.sm,
+    marginRight: theme.spacing.sm
   },
   searchInput: {
     flex: 1,
     ...theme.typography.body,
     color: theme.colors.text,
-    paddingVertical: theme.spacing.xs,
-  },
+    paddingVertical: theme.spacing.xs
+  }
 });

@@ -12,7 +12,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -35,7 +35,7 @@ function toDraftBlocks(blocks: any[]): BlockDraft[] {
       return {
         type: "rest",
         seconds: String(b.seconds ?? 0),
-        label: b.label ?? "",
+        label: b.label ?? ""
       };
     return {
       type: "exercise",
@@ -43,7 +43,7 @@ function toDraftBlocks(blocks: any[]): BlockDraft[] {
       targetReps: b.targetReps == null ? "" : String(b.targetReps),
       durationSeconds:
         b.durationSeconds == null ? "" : String(b.durationSeconds),
-      note: b.note == null ? "" : String(b.note),
+      note: b.note == null ? "" : String(b.note)
     };
   });
 }
@@ -57,7 +57,7 @@ export default function EditProgramScreen() {
 
   const program = useMemo(
     () => programs?.find((p) => p.id === id) ?? null,
-    [programs, id],
+    [programs, id]
   );
 
   const [name, setName] = useState(program?.name ?? "");
@@ -66,13 +66,13 @@ export default function EditProgramScreen() {
 
   const [sessionBlocks, setSessionBlocks] = useState<BlockDraft[]>(
     toDraftBlocks(
-      program?.sessions?.[0]?.blocks ?? [{ type: "warmup", seconds: 180 }],
-    ),
+      program?.sessions?.[0]?.blocks ?? [{ type: "warmup", seconds: 180 }]
+    )
   );
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerTargetIndex, setPickerTargetIndex] = useState<number | null>(
-    null,
+    null
   );
 
   const exerciseNameById = useMemo(() => {
@@ -95,8 +95,8 @@ export default function EditProgramScreen() {
           exerciseId: first,
           targetReps: "",
           durationSeconds: "",
-          note: "",
-        },
+          note: ""
+        }
       ]);
     }
   }
@@ -135,7 +135,7 @@ export default function EditProgramScreen() {
           return {
             type: "rest" as const,
             seconds,
-            label: b.label?.trim() || undefined,
+            label: b.label?.trim() || undefined
           };
         }
         if (!b.exerciseId)
@@ -164,14 +164,14 @@ export default function EditProgramScreen() {
           exerciseId: b.exerciseId,
           targetReps,
           durationSeconds,
-          note: b.note?.trim() || undefined,
+          note: b.note?.trim() || undefined
         };
       });
 
       if (!blocks.some((b) => b.type === "exercise")) {
         Alert.alert(
           "Add an exercise",
-          "Programs need at least one exercise block.",
+          "Programs need at least one exercise block."
         );
         return;
       }
@@ -185,9 +185,9 @@ export default function EditProgramScreen() {
           {
             index: 1,
             name: program.sessions?.[0]?.name ?? "Session 1",
-            blocks,
-          },
-        ],
+            blocks
+          }
+        ]
       } as any);
       router.back();
     } catch (e) {
@@ -206,7 +206,7 @@ export default function EditProgramScreen() {
             onPress={() => router.back()}
             style={({ pressed }) => [
               styles.secondaryBtn,
-              pressed && styles.secondaryBtnPressed,
+              pressed && styles.secondaryBtnPressed
             ]}
           >
             <Text style={styles.secondaryBtnText}>Back</Text>
@@ -225,7 +225,7 @@ export default function EditProgramScreen() {
           accessibilityLabel="Back"
           style={({ pressed }) => [
             styles.headerBack,
-            pressed && styles.headerBackPressed,
+            pressed && styles.headerBackPressed
           ]}
         >
           <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
@@ -270,7 +270,7 @@ export default function EditProgramScreen() {
               <Pressable
                 style={({ pressed }) => [
                   styles.smallBtn,
-                  pressed && styles.smallBtnPressed,
+                  pressed && styles.smallBtnPressed
                 ]}
                 onPress={() => addBlock("warmup")}
               >
@@ -279,7 +279,7 @@ export default function EditProgramScreen() {
               <Pressable
                 style={({ pressed }) => [
                   styles.smallBtn,
-                  pressed && styles.smallBtnPressed,
+                  pressed && styles.smallBtnPressed
                 ]}
                 onPress={() => addBlock("exercise")}
               >
@@ -288,7 +288,7 @@ export default function EditProgramScreen() {
               <Pressable
                 style={({ pressed }) => [
                   styles.smallBtn,
-                  pressed && styles.smallBtnPressed,
+                  pressed && styles.smallBtnPressed
                 ]}
                 onPress={() => addBlock("rest")}
               >
@@ -319,7 +319,7 @@ export default function EditProgramScreen() {
                     onPress={() => removeBlock(idx)}
                     style={({ pressed }) => [
                       styles.iconBtn,
-                      pressed && styles.iconBtnPressed,
+                      pressed && styles.iconBtnPressed
                     ]}
                   >
                     <Ionicons
@@ -338,8 +338,8 @@ export default function EditProgramScreen() {
                       onChangeText={(v) =>
                         setSessionBlocks((prev) =>
                           prev.map((x, i) =>
-                            i === idx ? { ...x, seconds: v } : x,
-                          ),
+                            i === idx ? { ...x, seconds: v } : x
+                          )
                         )
                       }
                       keyboardType="number-pad"
@@ -357,8 +357,8 @@ export default function EditProgramScreen() {
                         onChangeText={(v) =>
                           setSessionBlocks((prev) =>
                             prev.map((x, i) =>
-                              i === idx ? { ...x, label: v } : x,
-                            ),
+                              i === idx ? { ...x, label: v } : x
+                            )
                           )
                         }
                         style={styles.fieldInput}
@@ -371,8 +371,8 @@ export default function EditProgramScreen() {
                         onChangeText={(v) =>
                           setSessionBlocks((prev) =>
                             prev.map((x, i) =>
-                              i === idx ? { ...x, seconds: v } : x,
-                            ),
+                              i === idx ? { ...x, seconds: v } : x
+                            )
                           )
                         }
                         keyboardType="number-pad"
@@ -389,7 +389,7 @@ export default function EditProgramScreen() {
                       <Pressable
                         style={({ pressed }) => [
                           styles.pickerBtn,
-                          pressed && styles.pickerBtnPressed,
+                          pressed && styles.pickerBtnPressed
                         ]}
                         onPress={() => {
                           setPickerTargetIndex(idx);
@@ -417,8 +417,8 @@ export default function EditProgramScreen() {
                         onChangeText={(v) =>
                           setSessionBlocks((prev) =>
                             prev.map((x, i) =>
-                              i === idx ? { ...x, targetReps: v } : x,
-                            ),
+                              i === idx ? { ...x, targetReps: v } : x
+                            )
                           )
                         }
                         keyboardType="number-pad"
@@ -435,8 +435,8 @@ export default function EditProgramScreen() {
                         onChangeText={(v) =>
                           setSessionBlocks((prev) =>
                             prev.map((x, i) =>
-                              i === idx ? { ...x, durationSeconds: v } : x,
-                            ),
+                              i === idx ? { ...x, durationSeconds: v } : x
+                            )
                           )
                         }
                         keyboardType="number-pad"
@@ -451,13 +451,13 @@ export default function EditProgramScreen() {
                         onChangeText={(v) =>
                           setSessionBlocks((prev) =>
                             prev.map((x, i) =>
-                              i === idx ? { ...x, note: v } : x,
-                            ),
+                              i === idx ? { ...x, note: v } : x
+                            )
                           )
                         }
                         style={[
                           styles.fieldInput,
-                          { width: 200, textAlign: "left" },
+                          { width: 200, textAlign: "left" }
                         ]}
                       />
                     </View>
@@ -478,7 +478,7 @@ export default function EditProgramScreen() {
               program.source !== "builtin" &&
               styles.primaryBtnPressed,
             (saving || program.source === "builtin") &&
-              styles.primaryBtnDisabled,
+              styles.primaryBtnDisabled
           ]}
         >
           <Ionicons
@@ -511,7 +511,7 @@ export default function EditProgramScreen() {
                 onPress={() => setPickerOpen(false)}
                 style={({ pressed }) => [
                   styles.iconBtn,
-                  pressed && styles.iconBtnPressed,
+                  pressed && styles.iconBtnPressed
                 ]}
               >
                 <Ionicons name="close" size={18} color={theme.colors.text} />
@@ -527,15 +527,15 @@ export default function EditProgramScreen() {
                       prev.map((b, i) =>
                         i === pickerTargetIndex && b.type === "exercise"
                           ? { ...b, exerciseId: ex.id }
-                          : b,
-                      ),
+                          : b
+                      )
                     );
                     setPickerOpen(false);
                     setPickerTargetIndex(null);
                   }}
                   style={({ pressed }) => [
                     styles.modalRow,
-                    pressed && styles.modalRowPressed,
+                    pressed && styles.modalRowPressed
                   ]}
                 >
                   <Text style={styles.modalRowText}>{ex.name}</Text>
@@ -560,28 +560,28 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.md,
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   headerBack: {
     padding: theme.spacing.xs,
     marginTop: -theme.spacing.xs,
-    marginLeft: -theme.spacing.xs,
+    marginLeft: -theme.spacing.xs
   },
   headerBackPressed: { opacity: 0.6 },
   headerTitle: {
     ...theme.typography.h2,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   headerSubtitle: {
     ...theme.typography.body,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.lg,
     paddingTop: 0,
-    paddingBottom: theme.spacing.xxl,
+    paddingBottom: theme.spacing.xxl
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
     ...theme.shadows.sm,
-    gap: theme.spacing.sm,
+    gap: theme.spacing.sm
   },
   label: { ...theme.typography.caption, color: theme.colors.muted },
   input: {
@@ -602,19 +602,19 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.card,
     color: theme.colors.text,
-    ...theme.typography.body,
+    ...theme.typography.body
   },
   sectionTitle: { ...theme.typography.h3, color: theme.colors.text },
   rowBetween: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "space-between"
   },
   blockButtonsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: theme.spacing.sm,
-    justifyContent: "flex-end",
+    justifyContent: "flex-end"
   },
   smallBtn: {
     borderWidth: 1,
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.lg,
     paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm
   },
   smallBtnPressed: { backgroundColor: theme.colors.border },
   smallBtnText: { ...theme.typography.caption, color: theme.colors.text },
@@ -633,17 +633,17 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
-    gap: theme.spacing.sm,
+    gap: theme.spacing.sm
   },
   blockTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
+    gap: theme.spacing.sm
   },
   blockTitle: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
-    textTransform: "capitalize",
+    textTransform: "capitalize"
   },
   iconBtn: {
     width: 36,
@@ -653,22 +653,22 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.surface
   },
   iconBtnPressed: {
     backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   fieldRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   fieldLabel: {
     ...theme.typography.caption,
     color: theme.colors.subtext,
-    flex: 1,
+    flex: 1
   },
   fieldInput: {
     width: 110,
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     color: theme.colors.text,
     ...theme.typography.body,
-    textAlign: "right",
+    textAlign: "right"
   },
   pickerBtn: {
     flexDirection: "row",
@@ -693,13 +693,13 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.surface
   },
   pickerBtnPressed: { backgroundColor: theme.colors.card },
   pickerBtnText: {
     ...theme.typography.body,
     color: theme.colors.text,
-    flex: 1,
+    flex: 1
   },
   primaryBtn: {
     flexDirection: "row",
@@ -708,13 +708,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.lg,
     paddingVertical: theme.spacing.lg,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   primaryBtnPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
   primaryBtnDisabled: { opacity: 0.6 },
   primaryBtnText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn,
+    color: theme.colors.primaryTextOn
   },
   muted: { ...theme.typography.body, color: theme.colors.muted },
   secondaryBtn: {
@@ -723,14 +723,14 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.border
   },
   secondaryBtnPressed: { backgroundColor: theme.colors.card },
   secondaryBtnText: { ...theme.typography.bodyBold, color: theme.colors.text },
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "flex-end",
+    justifyContent: "flex-end"
   },
   modalCard: {
     backgroundColor: theme.colors.surface,
@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: theme.radius.xl,
     padding: theme.spacing.lg,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.border
   },
   modalTitle: { ...theme.typography.h3, color: theme.colors.text },
   modalRow: {
@@ -748,9 +748,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   modalRowPressed: { backgroundColor: theme.colors.card },
   modalRowText: { ...theme.typography.body, color: theme.colors.text },
-  modalRowHint: { ...theme.typography.caption, color: theme.colors.muted },
+  modalRowHint: { ...theme.typography.caption, color: theme.colors.muted }
 });

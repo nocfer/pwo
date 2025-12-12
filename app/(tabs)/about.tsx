@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    padding: theme.spacing.lg,
+    padding: theme.spacing.lg
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.xxl,
     alignItems: "center",
     marginBottom: theme.spacing.lg,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   iconContainer: {
     width: 80,
@@ -95,21 +95,21 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.lg
   },
   title: {
     ...theme.typography.h1,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   subtitle: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   version: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   infoCard: {
     backgroundColor: theme.colors.surface,
@@ -117,12 +117,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     padding: theme.spacing.lg,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm
   },
   infoIconContainer: {
     width: 36,
@@ -131,23 +131,23 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: theme.spacing.md,
+    marginRight: theme.spacing.md
   },
   infoContent: {
-    flex: 1,
+    flex: 1
   },
   infoTitle: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
-    marginBottom: 2,
+    marginBottom: 2
   },
   infoText: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   divider: {
     height: 1,
     backgroundColor: theme.colors.border,
-    marginVertical: theme.spacing.sm,
-  },
+    marginVertical: theme.spacing.sm
+  }
 });

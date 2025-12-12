@@ -18,7 +18,7 @@ export function SessionHeader({
   totalReps,
   phase,
   phaseBg,
-  phaseFg,
+  phaseFg
 }: SessionHeaderProps) {
   const phaseLabel =
     phase === "warmup"
@@ -40,7 +40,7 @@ export function SessionHeader({
       <View
         style={[
           styles.phaseChip,
-          { backgroundColor: phaseBg, borderColor: phaseFg },
+          { backgroundColor: phaseBg, borderColor: phaseFg }
         ]}
       >
         <View style={[styles.phaseChipDot, { backgroundColor: phaseFg }]} />
@@ -56,18 +56,18 @@ const styles = StyleSheet.create({
   headerTop: {
     flexDirection: "row",
     alignItems: "flex-start",
-    justifyContent: "space-between",
+    justifyContent: "space-between"
   },
   headerInfo: {
-    flex: 1,
+    flex: 1
   },
   title: {
     ...theme.typography.h2,
-    color: theme.colors.text,
+    color: theme.colors.text
   },
   subtitle: {
     ...theme.typography.body,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   phaseChip: {
     flexDirection: "row",
@@ -76,15 +76,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.md,
-    gap: theme.spacing.xs,
+    gap: theme.spacing.xs
   },
   phaseChipDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: 4
   },
   phaseChipText: {
     ...theme.typography.caption,
-    fontWeight: "600",
-  },
+    fontWeight: "600"
+  }
 });

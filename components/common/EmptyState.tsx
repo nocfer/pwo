@@ -19,27 +19,27 @@ const variantConfig = {
     icon: "barbell-outline" as const,
     gradientColors: [
       theme.colors.gradient.primaryStart,
-      theme.colors.gradient.primaryEnd,
-    ] as const,
+      theme.colors.gradient.primaryEnd
+    ] as const
   },
   search: {
     icon: "search-outline" as const,
-    gradientColors: [theme.colors.muted, theme.colors.subtext] as const,
+    gradientColors: [theme.colors.muted, theme.colors.subtext] as const
   },
   progress: {
     icon: "trending-up-outline" as const,
     gradientColors: [
       theme.colors.gradient.successStart,
-      theme.colors.gradient.successEnd,
-    ] as const,
+      theme.colors.gradient.successEnd
+    ] as const
   },
   history: {
     icon: "time-outline" as const,
     gradientColors: [
       theme.colors.gradient.warmStart,
-      theme.colors.gradient.warmEnd,
-    ] as const,
-  },
+      theme.colors.gradient.warmEnd
+    ] as const
+  }
 };
 
 export function EmptyState({
@@ -49,7 +49,7 @@ export function EmptyState({
   actionLabel,
   onAction,
   variant = "default",
-  style,
+  style
 }: EmptyStateProps) {
   const config = variantConfig[variant];
   const iconName = icon || config.icon;
@@ -73,7 +73,7 @@ export function EmptyState({
         <Pressable
           style={({ pressed }) => [
             styles.button,
-            pressed && styles.buttonPressed,
+            pressed && styles.buttonPressed
           ]}
           onPress={onAction}
         >
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     paddingVertical: theme.spacing.xxl,
-    paddingHorizontal: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.xl
   },
   iconContainer: {
     width: 72,
@@ -141,20 +141,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: theme.spacing.lg,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   title: {
     ...theme.typography.h3,
     color: theme.colors.text,
     textAlign: "center",
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   description: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textAlign: "center",
     maxWidth: 280,
-    lineHeight: 22,
+    lineHeight: 22
   },
   button: {
     marginTop: theme.spacing.lg,
@@ -162,16 +162,16 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.xl,
     borderRadius: theme.radius.lg,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   buttonPressed: {
     opacity: 0.9,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   buttonText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn,
-  },
+    color: theme.colors.primaryTextOn
+  }
 });
 
 export default EmptyState;

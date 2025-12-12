@@ -18,7 +18,7 @@ export default function SwipeableChallengeButton({ label, programId }: Props) {
   const { data: programs } = usePrograms();
   const challenge = useMemo(
     () => programs?.find((p) => p.id === programId && p.challengeConfig),
-    [programs, programId],
+    [programs, programId]
   );
   const { metrics } = useChallengeProgress(challenge || undefined);
 
@@ -28,24 +28,24 @@ export default function SwipeableChallengeButton({ label, programId }: Props) {
     // Navigate to the first session
     router.navigate({
       pathname: "/programs/[id]/session/[index]",
-      params: { id: programId, index: "1" },
+      params: { id: programId, index: "1" }
     });
   };
 
   const renderRightActions = (
     progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>
   ) => {
     const scale = dragX.interpolate({
       inputRange: [-100, 0],
       outputRange: [1, 0.5],
-      extrapolate: "clamp",
+      extrapolate: "clamp"
     });
 
     const opacity = dragX.interpolate({
       inputRange: [-100, -50, 0],
       outputRange: [1, 0.5, 0],
-      extrapolate: "clamp",
+      extrapolate: "clamp"
     });
 
     return (
@@ -54,7 +54,7 @@ export default function SwipeableChallengeButton({ label, programId }: Props) {
           <LinearGradient
             colors={[
               theme.colors.gradient.successStart,
-              theme.colors.gradient.successEnd,
+              theme.colors.gradient.successEnd
             ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -81,12 +81,12 @@ export default function SwipeableChallengeButton({ label, programId }: Props) {
       <Pressable
         style={({ pressed }) => [
           styles.button,
-          pressed && styles.buttonPressed,
+          pressed && styles.buttonPressed
         ]}
         onPress={() =>
           router.navigate({
             pathname: "/programs/[id]",
-            params: { id: programId },
+            params: { id: programId }
           })
         }
       >
@@ -107,8 +107,8 @@ export default function SwipeableChallengeButton({ label, programId }: Props) {
                     style={[
                       styles.progressFill,
                       {
-                        width: `${metrics.completionPercentage}%`,
-                      },
+                        width: `${metrics.completionPercentage}%`
+                      }
                     ]}
                   />
                 </View>
@@ -139,16 +139,16 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     paddingVertical: theme.spacing.lg,
     paddingHorizontal: theme.spacing.lg,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   buttonPressed: {
     backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   content: {
     flexDirection: "row",
     alignItems: "center",
-    flex: 1,
+    flex: 1
   },
   iconContainer: {
     width: 44,
@@ -157,56 +157,56 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: theme.spacing.md,
+    marginRight: theme.spacing.md
   },
   labelContainer: {
-    flex: 1,
+    flex: 1
   },
   label: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text,
+    color: theme.colors.text
   },
   progressContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.xs,
-    marginTop: theme.spacing.xs,
+    marginTop: theme.spacing.xs
   },
   progressBar: {
     flex: 1,
     height: 4,
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.xs,
-    overflow: "hidden",
+    overflow: "hidden"
   },
   progressFill: {
     height: "100%",
     backgroundColor: theme.colors.success,
-    borderRadius: theme.radius.xs,
+    borderRadius: theme.radius.xs
   },
   progressText: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    fontSize: 11,
+    fontSize: 11
   },
   chevronHint: {
     flexDirection: "row",
     alignItems: "center",
-    opacity: 0.5,
+    opacity: 0.5
   },
   hintText: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    marginLeft: 2,
+    marginLeft: 2
   },
   rightAction: {
     justifyContent: "center",
     alignItems: "flex-end",
-    marginLeft: theme.spacing.sm,
+    marginLeft: theme.spacing.sm
   },
   actionButton: {
     borderRadius: theme.radius.lg,
-    overflow: "hidden",
+    overflow: "hidden"
   },
   actionGradient: {
     paddingVertical: theme.spacing.lg,
@@ -214,12 +214,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     height: "100%",
-    minWidth: 80,
+    minWidth: 80
   },
   actionText: {
     ...theme.typography.caption,
     color: "#FFFFFF",
     marginTop: theme.spacing.xs,
-    fontFamily: theme.fonts.semiBold,
-  },
+    fontFamily: theme.fonts.semiBold
+  }
 });

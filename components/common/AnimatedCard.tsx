@@ -14,7 +14,7 @@ type AnimatedCardProps = {
 export function AnimatedCard({
   children,
   delay = 0,
-  style,
+  style
 }: AnimatedCardProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -25,14 +25,14 @@ export function AnimatedCard({
         toValue: 1,
         duration: 400,
         delay,
-        useNativeDriver: true,
+        useNativeDriver: true
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 400,
         delay,
-        useNativeDriver: true,
-      }),
+        useNativeDriver: true
+      })
     ]).start();
   }, [fadeAnim, slideAnim, delay]);
 
@@ -41,9 +41,9 @@ export function AnimatedCard({
       style={[
         {
           opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
+          transform: [{ translateY: slideAnim }]
         },
-        style,
+        style
       ]}
     >
       {children}
@@ -65,7 +65,7 @@ export function AnimatedProgressBar({
   progress,
   color,
   height = 8,
-  duration = 500,
+  duration = 500
 }: AnimatedProgressBarProps) {
   const widthAnim = useRef(new Animated.Value(0)).current;
 
@@ -73,13 +73,13 @@ export function AnimatedProgressBar({
     Animated.timing(widthAnim, {
       toValue: progress,
       duration,
-      useNativeDriver: false,
+      useNativeDriver: false
     }).start();
   }, [progress, widthAnim, duration]);
 
   const width = widthAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0%", "100%"],
+    outputRange: ["0%", "100%"]
   });
 
   return (
@@ -88,7 +88,7 @@ export function AnimatedProgressBar({
         height,
         width,
         backgroundColor: color,
-        borderRadius: theme.radius.sm,
+        borderRadius: theme.radius.sm
       }}
     />
   );
@@ -106,7 +106,7 @@ type PulseAnimationProps = {
 export function PulseAnimation({
   children,
   isActive = false,
-  style,
+  style
 }: PulseAnimationProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -117,14 +117,14 @@ export function PulseAnimation({
           Animated.timing(scaleAnim, {
             toValue: 1.02,
             duration: 800,
-            useNativeDriver: true,
+            useNativeDriver: true
           }),
           Animated.timing(scaleAnim, {
             toValue: 1,
             duration: 800,
-            useNativeDriver: true,
-          }),
-        ]),
+            useNativeDriver: true
+          })
+        ])
       );
       pulse.start();
       return () => pulse.stop();
@@ -154,7 +154,7 @@ export function FadeIn({
   children,
   delay = 0,
   duration = 300,
-  style,
+  style
 }: FadeInProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -163,7 +163,7 @@ export function FadeIn({
       toValue: 1,
       duration,
       delay,
-      useNativeDriver: true,
+      useNativeDriver: true
     }).start();
   }, [fadeAnim, duration, delay]);
 

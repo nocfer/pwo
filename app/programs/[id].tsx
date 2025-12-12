@@ -4,7 +4,7 @@ import {
   useChallengeSessions,
   useProgramProgress,
   usePrograms,
-  useSessionCompletion,
+  useSessionCompletion
 } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -20,17 +20,17 @@ export default function ProgramDetail() {
 
   const program = useMemo(
     () => programs?.find((p) => p.id === id) ?? null,
-    [programs, id],
+    [programs, id]
   );
 
   // Get sessions (generated dynamically for challenge programs)
   const sessions = useChallengeSessions(program);
   const isChallenge = Boolean(program?.challengeConfig);
   const { metrics: challengeMetrics } = useChallengeProgress(
-    isChallenge ? program : undefined,
+    isChallenge ? program : undefined
   );
   const { metrics: programMetrics } = useProgramProgress(
-    !isChallenge ? program : undefined,
+    !isChallenge ? program : undefined
   );
   const { completed } = useSessionCompletion(id);
 
@@ -53,7 +53,7 @@ export default function ProgramDetail() {
             onPress={() => router.back()}
             style={({ pressed }) => [
               styles.secondaryBtn,
-              pressed && styles.secondaryBtnPressed,
+              pressed && styles.secondaryBtnPressed
             ]}
           >
             <Text style={styles.secondaryBtnText}>Back</Text>
@@ -74,7 +74,7 @@ export default function ProgramDetail() {
           accessibilityLabel="Back"
           style={({ pressed }) => [
             styles.headerBack,
-            pressed && styles.headerBackPressed,
+            pressed && styles.headerBackPressed
           ]}
         >
           <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
@@ -148,13 +148,13 @@ export default function ProgramDetail() {
                 onPress={() =>
                   router.navigate({
                     pathname: "/programs/[id]/session/[index]" as any,
-                    params: { id: program.id, index: String(s.index) },
+                    params: { id: program.id, index: String(s.index) }
                   })
                 }
                 style={({ pressed }) => [
                   styles.sessionRow,
                   isCompleted && styles.sessionRowCompleted,
-                  pressed && styles.sessionRowPressed,
+                  pressed && styles.sessionRowPressed
                 ]}
               >
                 <View style={{ flex: 1 }}>
@@ -191,14 +191,14 @@ export default function ProgramDetail() {
               pathname: "/programs/[id]/session/[index]" as any,
               params: {
                 id: program.id,
-                index: String(firstSession?.index ?? 1),
-              },
+                index: String(firstSession?.index ?? 1)
+              }
             })
           }
           style={({ pressed }) => [
             styles.primaryBtn,
             pressed && styles.primaryBtnPressed,
-            !firstSession && styles.primaryBtnDisabled,
+            !firstSession && styles.primaryBtnDisabled
           ]}
         >
           <Ionicons
@@ -222,28 +222,28 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.md,
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   headerBack: {
     padding: theme.spacing.xs,
     marginTop: -theme.spacing.xs,
-    marginLeft: -theme.spacing.xs,
+    marginLeft: -theme.spacing.xs
   },
   headerBackPressed: { opacity: 0.6 },
   headerTitle: {
     ...theme.typography.h2,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   headerSubtitle: {
     ...theme.typography.body,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.lg,
     paddingTop: 0,
-    paddingBottom: theme.spacing.xxl,
+    paddingBottom: theme.spacing.xxl
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -251,12 +251,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   rowBetween: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "space-between"
   },
   sectionTitle: { ...theme.typography.h3, color: theme.colors.text },
   sessionRow: {
@@ -268,48 +268,48 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   sessionRowPressed: {
     backgroundColor: theme.colors.background,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   sessionRowCompleted: {
     borderColor: theme.colors.success,
-    backgroundColor: theme.colors.successLight,
+    backgroundColor: theme.colors.successLight
   },
   sessionTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
+    gap: theme.spacing.xs
   },
   sessionTitle: { ...theme.typography.bodyBold, color: theme.colors.text },
   progressStats: {
     flexDirection: "row",
     gap: theme.spacing.md,
-    marginTop: theme.spacing.md,
+    marginTop: theme.spacing.md
   },
   progressStat: {
     flex: 1,
     alignItems: "center",
     padding: theme.spacing.sm,
     backgroundColor: theme.colors.card,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.md
   },
   progressStatValue: {
     ...theme.typography.h3,
     color: theme.colors.primary,
-    fontFamily: theme.fonts.bold,
+    fontFamily: theme.fonts.bold
   },
   progressStatLabel: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    marginTop: theme.spacing.xs,
+    marginTop: theme.spacing.xs
   },
   sessionSubtitle: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    marginTop: theme.spacing.xs,
+    marginTop: theme.spacing.xs
   },
   muted: { ...theme.typography.caption, color: theme.colors.muted },
   primaryBtn: {
@@ -319,13 +319,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.lg,
     paddingVertical: theme.spacing.lg,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   primaryBtnPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
   primaryBtnDisabled: { opacity: 0.6 },
   primaryBtnText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn,
+    color: theme.colors.primaryTextOn
   },
   secondaryBtn: {
     marginTop: theme.spacing.md,
@@ -333,8 +333,8 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.border
   },
   secondaryBtnPressed: { backgroundColor: theme.colors.card },
-  secondaryBtnText: { ...theme.typography.bodyBold, color: theme.colors.text },
+  secondaryBtnText: { ...theme.typography.bodyBold, color: theme.colors.text }
 });

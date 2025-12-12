@@ -11,7 +11,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -23,12 +23,12 @@ export default function EditExerciseScreen() {
 
   const exercise = useMemo(
     () => data?.find((e) => e.id === id) ?? null,
-    [data, id],
+    [data, id]
   );
 
   const [name, setName] = useState(exercise?.name ?? "");
   const [category, setCategory] = useState<string>(
-    exercise?.category ?? "strength",
+    exercise?.category ?? "strength"
   );
   const [icon, setIcon] = useState<string>(exercise?.icon ?? "barbell");
   const [saving, setSaving] = useState(false);
@@ -45,7 +45,7 @@ export default function EditExerciseScreen() {
         id,
         name: trimmed,
         category: category as any,
-        icon,
+        icon
       } as any);
       router.back();
     } catch (e) {
@@ -64,7 +64,7 @@ export default function EditExerciseScreen() {
             onPress={() => router.back()}
             style={({ pressed }) => [
               styles.secondaryBtn,
-              pressed && styles.secondaryBtnPressed,
+              pressed && styles.secondaryBtnPressed
             ]}
           >
             <Text style={styles.secondaryBtnText}>Back</Text>
@@ -83,7 +83,7 @@ export default function EditExerciseScreen() {
           accessibilityLabel="Back"
           style={({ pressed }) => [
             styles.headerBack,
-            pressed && styles.headerBackPressed,
+            pressed && styles.headerBackPressed
           ]}
         >
           <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
@@ -121,7 +121,7 @@ export default function EditExerciseScreen() {
                 <Text
                   style={[
                     styles.segmentText,
-                    category === c && styles.segmentTextActive,
+                    category === c && styles.segmentTextActive
                   ]}
                 >
                   {c}
@@ -156,7 +156,7 @@ export default function EditExerciseScreen() {
           style={({ pressed }) => [
             styles.primaryBtn,
             pressed && !saving && styles.primaryBtnPressed,
-            saving && styles.primaryBtnDisabled,
+            saving && styles.primaryBtnDisabled
           ]}
         >
           <Ionicons
@@ -182,28 +182,28 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.md,
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   headerBack: {
     padding: theme.spacing.xs,
     marginTop: -theme.spacing.xs,
-    marginLeft: -theme.spacing.xs,
+    marginLeft: -theme.spacing.xs
   },
   headerBackPressed: { opacity: 0.6 },
   headerTitle: {
     ...theme.typography.h2,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   headerSubtitle: {
     ...theme.typography.body,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.lg,
     paddingTop: 0,
-    paddingBottom: theme.spacing.xxl,
+    paddingBottom: theme.spacing.xxl
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
     ...theme.shadows.sm,
-    gap: theme.spacing.xs,
+    gap: theme.spacing.xs
   },
   label: { ...theme.typography.caption, color: theme.colors.muted },
   input: {
@@ -224,13 +224,13 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.card,
     color: theme.colors.text,
-    ...theme.typography.body,
+    ...theme.typography.body
   },
   segmented: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: theme.spacing.sm,
-    marginTop: theme.spacing.sm,
+    marginTop: theme.spacing.sm
   },
   segment: {
     borderWidth: 1,
@@ -238,26 +238,26 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.lg,
     paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md
   },
   segmentActive: {
     borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primaryLight,
+    backgroundColor: theme.colors.primaryLight
   },
   segmentText: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    textTransform: "capitalize",
+    textTransform: "capitalize"
   },
   segmentTextActive: {
     color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold,
+    fontFamily: theme.fonts.semiBold
   },
   iconPreview: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.sm,
-    marginTop: theme.spacing.sm,
+    marginTop: theme.spacing.sm
   },
   iconPreviewText: { ...theme.typography.caption, color: theme.colors.subtext },
   primaryBtn: {
@@ -267,13 +267,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.lg,
     paddingVertical: theme.spacing.lg,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   primaryBtnPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
   primaryBtnDisabled: { opacity: 0.6 },
   primaryBtnText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn,
+    color: theme.colors.primaryTextOn
   },
   muted: { ...theme.typography.body, color: theme.colors.muted },
   secondaryBtn: {
@@ -282,8 +282,8 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.border
   },
   secondaryBtnPressed: { backgroundColor: theme.colors.card },
-  secondaryBtnText: { ...theme.typography.bodyBold, color: theme.colors.text },
+  secondaryBtnText: { ...theme.typography.bodyBold, color: theme.colors.text }
 });

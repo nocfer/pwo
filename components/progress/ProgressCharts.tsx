@@ -17,7 +17,7 @@ type ChartDataPoint = {
 
 export function RepsProgressionChart({
   challengeId,
-  days = 30,
+  days = 30
 }: {
   challengeId?: string;
   days?: number;
@@ -34,7 +34,7 @@ export function RepsProgressionChart({
         const history = await storage.getProgressHistory(
           undefined,
           challengeId,
-          days,
+          days
         );
 
         if (!mounted) return;
@@ -55,8 +55,8 @@ export function RepsProgressionChart({
             value,
             label: new Date(date).toLocaleDateString("en-US", {
               month: "short",
-              day: "numeric",
-            }),
+              day: "numeric"
+            })
           }));
 
         setData(sorted);
@@ -111,8 +111,8 @@ export function RepsProgressionChart({
                       styles.bar,
                       {
                         height: `${height}%`,
-                        backgroundColor: theme.colors.success,
-                      },
+                        backgroundColor: theme.colors.success
+                      }
                     ]}
                   />
                 </View>
@@ -132,7 +132,7 @@ export function RepsProgressionChart({
 export function SessionsCompletedChart({
   programId,
   challengeId,
-  days = 30,
+  days = 30
 }: Props) {
   const [data, setData] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,7 +146,7 @@ export function SessionsCompletedChart({
         const history = await storage.getProgressHistory(
           programId,
           challengeId,
-          days,
+          days
         );
 
         if (!mounted) return;
@@ -165,8 +165,8 @@ export function SessionsCompletedChart({
             value,
             label: new Date(date).toLocaleDateString("en-US", {
               month: "short",
-              day: "numeric",
-            }),
+              day: "numeric"
+            })
           }));
 
         setData(sorted);
@@ -217,8 +217,8 @@ export function SessionsCompletedChart({
                       styles.bar,
                       {
                         height: `${height}%`,
-                        backgroundColor: theme.colors.primary,
-                      },
+                        backgroundColor: theme.colors.primary
+                      }
                     ]}
                   />
                 </View>
@@ -242,55 +242,55 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   title: {
     ...theme.typography.h3,
     color: theme.colors.text,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.md
   },
   muted: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textAlign: "center",
-    padding: theme.spacing.lg,
+    padding: theme.spacing.lg
   },
   chartContainer: {
-    height: 200,
+    height: 200
   },
   chart: {
     flexDirection: "row",
     alignItems: "flex-end",
     height: "100%",
-    gap: theme.spacing.xs,
+    gap: theme.spacing.xs
   },
   barContainer: {
     flex: 1,
     alignItems: "center",
-    height: "100%",
+    height: "100%"
   },
   barWrapper: {
     flex: 1,
     width: "100%",
     justifyContent: "flex-end",
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   bar: {
     width: "100%",
     minHeight: 4,
-    borderRadius: theme.radius.xs,
+    borderRadius: theme.radius.xs
   },
   barLabel: {
     ...theme.typography.caption,
     color: theme.colors.muted,
     fontSize: 10,
-    textAlign: "center",
+    textAlign: "center"
   },
   barValue: {
     ...theme.typography.caption,
     color: theme.colors.text,
     fontFamily: theme.fonts.semiBold,
     fontSize: 10,
-    marginTop: 2,
-  },
+    marginTop: 2
+  }
 });

@@ -15,12 +15,12 @@ export type AggregatedProgress = {
   activeChallenges: number;
   activePrograms: number;
   currentStreak: number;
-  recentActivity: Array<{
+  recentActivity: {
     date: string;
     type: "challenge" | "program";
     id: string;
     sessionIndex: number;
-  }>;
+  }[];
 };
 
 export function useAllProgress(): {
@@ -43,7 +43,7 @@ export function useAllProgress(): {
         setLoading(true);
         const [programs, challenges] = await Promise.all([
           storage.loadAllProgramProgress(),
-          storage.loadAllChallengeProgress(),
+          storage.loadAllChallengeProgress()
         ]);
 
         if (mounted) {
@@ -75,7 +75,7 @@ export function useAllProgress(): {
     // Process program progress
     programProgress.forEach((progress) => {
       const completedSessions = progress.sessions.filter(
-        (s: any) => s.completed,
+        (s: any) => s.completed
       );
       totalWorkoutsCompleted += completedSessions.length;
       totalTimeSpentSeconds += progress.totalTimeSpentSeconds || 0;
@@ -86,7 +86,7 @@ export function useAllProgress(): {
             date: session.completedAt,
             type: "program",
             id: progress.programId,
-            sessionIndex: session.sessionIndex,
+            sessionIndex: session.sessionIndex
           });
         }
       });
@@ -95,7 +95,7 @@ export function useAllProgress(): {
     // Process challenge progress
     challengeProgress.forEach((progress) => {
       const completedSessions = progress.sessions.filter(
-        (s: any) => s.completed,
+        (s: any) => s.completed
       );
       totalWorkoutsCompleted += completedSessions.length;
       totalRepsCompleted += progress.totalRepsCompleted || 0;
@@ -106,7 +106,7 @@ export function useAllProgress(): {
             date: session.completedAt,
             type: "challenge",
             id: progress.challengeId,
-            sessionIndex: session.sessionIndex,
+            sessionIndex: session.sessionIndex
           });
         }
       });
@@ -114,32 +114,32 @@ export function useAllProgress(): {
 
     // Sort recent activity by date (most recent first)
     recentActivity.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 
     // Calculate overall streak (longest streak across all programs/challenges)
     let currentStreak = 0;
     const allLastActivity = [
       ...programProgress.map((p) => p.lastActivityAt).filter(Boolean),
-      ...challengeProgress.map((c) => c.lastActivityAt).filter(Boolean),
+      ...challengeProgress.map((c) => c.lastActivityAt).filter(Boolean)
     ];
 
     if (allLastActivity.length > 0) {
       const mostRecent = new Date(
-        Math.max(...allLastActivity.map((d) => new Date(d).getTime())),
+        Math.max(...allLastActivity.map((d) => new Date(d).getTime()))
       );
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       mostRecent.setHours(0, 0, 0, 0);
 
       const daysDiff = Math.floor(
-        (today.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24),
+        (today.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24)
       );
 
       if (daysDiff <= 1) {
         // Count consecutive days with activity
         const activityDates = new Set(
-          recentActivity.map((a) => a.date.slice(0, 10)),
+          recentActivity.map((a) => a.date.slice(0, 10))
         );
         const sortedDates = Array.from(activityDates).sort().reverse();
 
@@ -150,7 +150,7 @@ export function useAllProgress(): {
 
           const daysDiff2 = Math.floor(
             (checkDate.getTime() - activityDate.getTime()) /
-              (1000 * 60 * 60 * 24),
+              (1000 * 60 * 60 * 24)
           );
 
           if (daysDiff2 === 0 || (currentStreak === 0 && daysDiff2 <= 1)) {
@@ -182,7 +182,7 @@ export function useAllProgress(): {
       activeChallenges,
       activePrograms,
       currentStreak,
-      recentActivity: recentActivity.slice(0, 20), // Last 20 activities
+      recentActivity: recentActivity.slice(0, 20) // Last 20 activities
     };
   }, [programProgress, challengeProgress, loading]);
 

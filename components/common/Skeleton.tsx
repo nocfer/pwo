@@ -14,7 +14,7 @@ export function Skeleton({
   width = "100%",
   height = 20,
   borderRadius = theme.radius.sm,
-  style,
+  style
 }: SkeletonProps) {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
@@ -24,14 +24,14 @@ export function Skeleton({
         Animated.timing(shimmerAnim, {
           toValue: 1,
           duration: 1000,
-          useNativeDriver: true,
+          useNativeDriver: true
         }),
         Animated.timing(shimmerAnim, {
           toValue: 0,
           duration: 1000,
-          useNativeDriver: true,
-        }),
-      ]),
+          useNativeDriver: true
+        })
+      ])
     );
     animation.start();
     return () => animation.stop();
@@ -39,7 +39,7 @@ export function Skeleton({
 
   const translateX = shimmerAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [-200, 200],
+    outputRange: [-200, 200]
   });
 
   return (
@@ -49,17 +49,17 @@ export function Skeleton({
         {
           width: width as any,
           height,
-          borderRadius,
+          borderRadius
         },
-        style,
+        style
       ]}
     >
       <Animated.View
         style={[
           styles.shimmer,
           {
-            transform: [{ translateX }],
-          },
+            transform: [{ translateX }]
+          }
         ]}
       >
         <LinearGradient
@@ -162,7 +162,7 @@ export function SkeletonStreakDots() {
 const styles = StyleSheet.create({
   skeleton: {
     backgroundColor: theme.colors.skeleton,
-    overflow: "hidden",
+    overflow: "hidden"
   },
   shimmer: {
     position: "absolute",
@@ -170,26 +170,26 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    width: 200,
+    width: 200
   },
   gradient: {
     flex: 1,
-    width: 200,
+    width: 200
   },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.border
   },
   cardHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "center"
   },
   cardHeaderText: {
     marginLeft: theme.spacing.sm,
-    flex: 1,
+    flex: 1
   },
   routineButton: {
     flexDirection: "row",
@@ -200,44 +200,44 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg
   },
   routineButtonContent: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "center"
   },
   sessionCard: {
     backgroundColor: theme.colors.surface,
     borderColor: theme.colors.border,
     borderWidth: 1,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
+    padding: theme.spacing.lg
   },
   sessionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "center"
   },
   sessionTitleRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "center"
   },
   pillRow: {
     flexDirection: "row",
     gap: theme.spacing.sm,
-    marginTop: theme.spacing.sm,
+    marginTop: theme.spacing.sm
   },
   streakContainer: {
     alignItems: "center",
-    paddingVertical: theme.spacing.md,
+    paddingVertical: theme.spacing.md
   },
   streakRow: {
     flexDirection: "row",
-    gap: theme.spacing.sm,
+    gap: theme.spacing.sm
   },
   dayContainer: {
-    alignItems: "center",
-  },
+    alignItems: "center"
+  }
 });
 
 export default Skeleton;

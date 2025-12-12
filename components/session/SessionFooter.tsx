@@ -20,7 +20,7 @@ export function SessionFooter({
   isPaused,
   onPauseResume,
   onSkip,
-  onComplete,
+  onComplete
 }: SessionFooterProps) {
   if (phase === "done") return null;
 
@@ -35,7 +35,7 @@ export function SessionFooter({
             style={({ pressed }) => [
               styles.secondaryBtn,
               phase === "working" && styles.btnDisabled,
-              pressed && styles.secondaryBtnPressed,
+              pressed && styles.secondaryBtnPressed
             ]}
           >
             <Ionicons
@@ -48,7 +48,7 @@ export function SessionFooter({
             <Text
               style={[
                 styles.secondaryBtnText,
-                phase === "working" && styles.textDisabled,
+                phase === "working" && styles.textDisabled
               ]}
             >
               {isPaused ? "Resume" : "Pause"}
@@ -59,7 +59,7 @@ export function SessionFooter({
             onPress={onSkip}
             style={({ pressed }) => [
               styles.secondaryBtn,
-              pressed && styles.secondaryBtnPressed,
+              pressed && styles.secondaryBtnPressed
             ]}
           >
             <Ionicons
@@ -78,7 +78,7 @@ export function SessionFooter({
           style={({ pressed }) => [
             styles.primaryBtn,
             phase !== "working" && styles.primaryBtnDisabled,
-            pressed && phase === "working" && styles.primaryBtnPressed,
+            pressed && phase === "working" && styles.primaryBtnPressed
           ]}
         >
           <Ionicons
@@ -109,17 +109,17 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    ...theme.shadows.lg,
+    ...theme.shadows.lg
   },
   footerContent: {
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.lg,
     paddingBottom: theme.spacing.md,
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   secondaryRow: {
     flexDirection: "row",
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   secondaryBtn: {
     flex: 1,
@@ -129,15 +129,15 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.card
   },
   secondaryBtnPressed: {
     backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   secondaryBtnText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text,
+    color: theme.colors.text
   },
   primaryBtn: {
     flexDirection: "row",
@@ -146,24 +146,24 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.lg,
     borderRadius: theme.radius.lg,
     backgroundColor: theme.colors.primary,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   primaryBtnDisabled: {
-    backgroundColor: theme.colors.muted,
+    backgroundColor: theme.colors.muted
   },
   primaryBtnPressed: {
     opacity: 0.9,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   primaryBtnText: {
     ...theme.typography.bodyBold,
     color: theme.colors.primaryTextOn,
-    fontSize: 16,
+    fontSize: 16
   },
   btnDisabled: {
-    opacity: 0.5,
+    opacity: 0.5
   },
   textDisabled: {
-    color: theme.colors.muted,
-  },
+    color: theme.colors.muted
+  }
 });

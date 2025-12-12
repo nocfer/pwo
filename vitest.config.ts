@@ -9,12 +9,12 @@ export default defineConfig({
     include: ["__tests__/**/*.test.ts"],
     coverage: {
       provider: "v8",
-      include: ["lib/**/*.ts", "hooks/**/*.ts", "context/**/*.tsx"],
-    },
+      include: ["lib/**/*.ts", "hooks/**/*.ts", "context/**/*.tsx"]
+    }
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./"),
-    },
-  },
+      "@": path.resolve(__dirname, "./")
+    }
+  }
 });

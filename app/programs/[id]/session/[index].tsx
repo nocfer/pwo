@@ -22,7 +22,7 @@ export default function ProgramSessionRunner() {
 
   const program = useMemo(
     () => programs?.find((p) => p.id === id) ?? null,
-    [programs, id],
+    [programs, id]
   );
 
   const exerciseNameById = useMemo(() => {
@@ -37,7 +37,7 @@ export default function ProgramSessionRunner() {
     program,
     sessionIndex: index,
     steps,
-    actions,
+    actions
   });
 
   const listRef = useRef<FlatList<any> | null>(null);
@@ -51,7 +51,7 @@ export default function ProgramSessionRunner() {
       listRef.current.scrollToIndex({
         index: currentStepIndex,
         animated: true,
-        viewPosition: 0.5,
+        viewPosition: 0.5
       });
     } catch {}
   }, [currentStepIndex, steps.length]);
@@ -75,7 +75,7 @@ export default function ProgramSessionRunner() {
             onPress={() => router.back()}
             style={({ pressed }) => [
               styles.secondaryBtn,
-              pressed && styles.secondaryBtnPressed,
+              pressed && styles.secondaryBtnPressed
             ]}
           >
             <Text style={styles.secondaryBtnText}>Back</Text>
@@ -114,15 +114,6 @@ export default function ProgramSessionRunner() {
           ? theme.colors.phases.working
           : theme.colors.phases.done;
 
-  const phaseLabel =
-    phaseKind === "warmup"
-      ? "Warm-up"
-      : phaseKind === "break"
-        ? "Rest"
-        : phaseKind === "working"
-          ? "Exercise"
-          : "Done";
-
   const currentExerciseName =
     current && current.type === "exercise"
       ? (exerciseNameById.get(current.exerciseId) ?? "Exercise")
@@ -154,7 +145,7 @@ export default function ProgramSessionRunner() {
               accessibilityLabel="Back"
               style={({ pressed }) => [
                 styles.headerBack,
-                pressed && styles.headerBackPressed,
+                pressed && styles.headerBackPressed
               ]}
             >
               <Ionicons
@@ -175,8 +166,8 @@ export default function ProgramSessionRunner() {
                     styles.progressFill,
                     {
                       width: `${Math.round(timer.progress * 100)}%`,
-                      backgroundColor: phaseAccent,
-                    },
+                      backgroundColor: phaseAccent
+                    }
                   ]}
                 />
               </View>
@@ -195,7 +186,7 @@ export default function ProgramSessionRunner() {
               </View>
               <Text style={styles.focusTitle}>Session Complete</Text>
               <Text style={styles.focusSub}>
-                Great work! You've finished all exercises.
+                {"Great work! You've finished all exercises."}
               </Text>
             </View>
           ) : timer.phase === "timed" ? (
@@ -204,15 +195,15 @@ export default function ProgramSessionRunner() {
                 styles.focusCard,
                 {
                   borderColor: phaseAccent,
-                  backgroundColor: phaseBg,
-                },
+                  backgroundColor: phaseBg
+                }
               ]}
             >
               <View style={styles.focusTopRow}>
                 <View
                   style={[
                     styles.focusIconSmall,
-                    { backgroundColor: phaseAccent + "20" },
+                    { backgroundColor: phaseAccent + "20" }
                   ]}
                 >
                   <Ionicons
@@ -254,15 +245,15 @@ export default function ProgramSessionRunner() {
                 styles.focusCard,
                 {
                   borderColor: phaseAccent,
-                  backgroundColor: theme.colors.surface,
-                },
+                  backgroundColor: theme.colors.surface
+                }
               ]}
             >
               <View style={styles.focusTopRow}>
                 <View
                   style={[
                     styles.focusIconSmall,
-                    { backgroundColor: phaseAccent + "15" },
+                    { backgroundColor: phaseAccent + "15" }
                   ]}
                 >
                   <Ionicons name="barbell" size={20} color={phaseAccent} />
@@ -315,15 +306,15 @@ export default function ProgramSessionRunner() {
                 styles.focusCard,
                 {
                   borderColor: phaseAccent,
-                  backgroundColor: phaseBg,
-                },
+                  backgroundColor: phaseBg
+                }
               ]}
             >
               <View style={styles.focusTopRow}>
                 <View
                   style={[
                     styles.focusIconSmall,
-                    { backgroundColor: phaseAccent + "20" },
+                    { backgroundColor: phaseAccent + "20" }
                   ]}
                 >
                   <Ionicons name="flame" size={20} color={phaseAccent} />
@@ -343,15 +334,15 @@ export default function ProgramSessionRunner() {
                 styles.focusCard,
                 {
                   borderColor: phaseAccent,
-                  backgroundColor: phaseBg,
-                },
+                  backgroundColor: phaseBg
+                }
               ]}
             >
               <View style={styles.focusTopRow}>
                 <View
                   style={[
                     styles.focusIconSmall,
-                    { backgroundColor: phaseAccent + "20" },
+                    { backgroundColor: phaseAccent + "20" }
                   ]}
                 >
                   <Ionicons name="pause-circle" size={20} color={phaseAccent} />
@@ -373,8 +364,8 @@ export default function ProgramSessionRunner() {
                 styles.focusCard,
                 {
                   borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.surface,
-                },
+                  backgroundColor: theme.colors.surface
+                }
               ]}
             >
               <Text style={styles.focusTitle}>Ready</Text>
@@ -481,7 +472,7 @@ export default function ProgramSessionRunner() {
                 <Pressable
                   style={({ pressed }) => [
                     styles.doneButton,
-                    pressed && styles.buttonPressed,
+                    pressed && styles.buttonPressed
                   ]}
                   onPress={() => router.back()}
                 >
@@ -509,7 +500,7 @@ export default function ProgramSessionRunner() {
                   onPress={timer.handlePauseResume}
                   style={({ pressed }) => [
                     styles.secondaryBtnInline,
-                    pressed && styles.secondaryBtnPressedInline,
+                    pressed && styles.secondaryBtnPressedInline
                   ]}
                 >
                   <Ionicons
@@ -526,7 +517,7 @@ export default function ProgramSessionRunner() {
                   onPress={timer.handleSkip}
                   style={({ pressed }) => [
                     styles.secondaryBtnInline,
-                    pressed && styles.secondaryBtnPressedInline,
+                    pressed && styles.secondaryBtnPressedInline
                   ]}
                 >
                   <Ionicons
@@ -544,7 +535,7 @@ export default function ProgramSessionRunner() {
                     onPress={timer.handleSkip}
                     style={({ pressed }) => [
                       styles.secondaryBtnInline,
-                      pressed && styles.secondaryBtnPressedInline,
+                      pressed && styles.secondaryBtnPressedInline
                     ]}
                   >
                     <Ionicons
@@ -561,7 +552,7 @@ export default function ProgramSessionRunner() {
                   onPress={timer.handleComplete}
                   style={({ pressed }) => [
                     styles.primaryBtn,
-                    pressed && styles.primaryBtnPressed,
+                    pressed && styles.primaryBtnPressed
                   ]}
                 >
                   <Ionicons
@@ -602,38 +593,38 @@ const styles = StyleSheet.create({
   headerSection: {
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
+    paddingBottom: theme.spacing.md
   },
   headerTop: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   headerBack: {
     padding: theme.spacing.xs,
     marginTop: -theme.spacing.xs,
-    marginLeft: -theme.spacing.xs,
+    marginLeft: -theme.spacing.xs
   },
   headerBackPressed: { opacity: 0.6 },
   headerTitle: {
     ...theme.typography.h2,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   headerSubtitle: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   progressTrack: {
     height: 6,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.card,
-    overflow: "hidden",
+    overflow: "hidden"
   },
   progressFill: {
     height: "100%",
-    borderRadius: theme.radius.full,
+    borderRadius: theme.radius.full
   },
 
   // (kept for potential reuse)
@@ -645,7 +636,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.surface
   },
   headerClosePressed: { backgroundColor: theme.colors.card },
   focusCard: {
@@ -654,19 +645,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: theme.spacing.xl,
     paddingHorizontal: theme.spacing.lg,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   focusCardComplete: {
     borderColor: theme.colors.success,
     backgroundColor: theme.colors.successLight,
-    alignItems: "center",
+    alignItems: "center"
   },
   focusTopRow: {
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.sm,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.md
   },
   focusIconContainer: {
     width: 64,
@@ -676,14 +667,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: theme.spacing.md,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   focusIconSmall: {
     width: 32,
     height: 32,
     borderRadius: theme.radius.md,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   phaseChip: {
     flexDirection: "row",
@@ -693,54 +684,54 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.md,
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.card
   },
   phaseChipDot: { width: 8, height: 8, borderRadius: 4 },
   phaseChipText: {
     ...theme.typography.caption,
     fontFamily: theme.fonts.semiBold,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.5
   },
   timerHero: {
     fontSize: 64,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
     marginBottom: theme.spacing.sm,
-    textAlign: "center",
+    textAlign: "center"
   },
   focusLabel: {
     ...theme.typography.body,
     color: theme.colors.subtext,
-    textAlign: "center",
+    textAlign: "center"
   },
   focusTitle: {
     ...theme.typography.h2,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
-    textAlign: "center",
+    textAlign: "center"
   },
   focusSub: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center",
+    textAlign: "center"
   },
   focusMetrics: {
     flexDirection: "row",
     gap: theme.spacing.lg,
     marginTop: theme.spacing.md,
     marginBottom: theme.spacing.sm,
-    justifyContent: "center",
+    justifyContent: "center"
   },
   focusMetric: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
+    gap: theme.spacing.xs
   },
   focusMetricText: {
     ...theme.typography.body,
     color: theme.colors.text,
-    fontFamily: theme.fonts.semiBold,
+    fontFamily: theme.fonts.semiBold
   },
   focusNoteContainer: {
     flexDirection: "row",
@@ -749,35 +740,35 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
     paddingTop: theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    borderTopColor: theme.colors.border
   },
   focusNote: {
     ...theme.typography.caption,
     color: theme.colors.subtext,
     flex: 1,
-    lineHeight: 18,
+    lineHeight: 18
   },
   listContent: {
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md,
-    paddingBottom: 220,
+    paddingBottom: 220
   },
   stepMeta: { ...theme.typography.caption, color: theme.colors.muted },
   stepNote: {
     ...theme.typography.caption,
     color: theme.colors.subtext,
-    marginTop: theme.spacing.xs,
+    marginTop: theme.spacing.xs
   },
   nowPill: {
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 999,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary
   },
   nowPillText: {
     ...theme.typography.caption,
     color: theme.colors.primaryTextOn,
-    fontFamily: theme.fonts.semiBold,
+    fontFamily: theme.fonts.semiBold
   },
 
   doneCard: {
@@ -788,18 +779,18 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xl,
     padding: theme.spacing.xl,
     alignItems: "center",
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   doneTitle: {
     ...theme.typography.h2,
     color: theme.colors.success,
-    marginTop: theme.spacing.sm,
+    marginTop: theme.spacing.sm
   },
   doneSubtitle: {
     ...theme.typography.body,
     color: theme.colors.subtext,
     marginTop: theme.spacing.xs,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.lg
   },
   doneButton: {
     flexDirection: "row",
@@ -809,11 +800,11 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.xl,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   doneButtonText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn,
+    color: theme.colors.primaryTextOn
   },
   buttonPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
 
@@ -825,13 +816,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    ...theme.shadows.lg,
+    ...theme.shadows.lg
   },
   footerContent: {
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.lg,
     paddingBottom: theme.spacing.md,
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   secondaryRow: { flexDirection: "row", gap: theme.spacing.md },
   secondaryBtnInline: {
@@ -842,15 +833,15 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.card
   },
   secondaryBtnPressedInline: {
     backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   secondaryBtnTextInline: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text,
+    color: theme.colors.text
   },
   primaryBtn: {
     flexDirection: "row",
@@ -859,13 +850,13 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.lg,
     borderRadius: theme.radius.lg,
     backgroundColor: theme.colors.primary,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   primaryBtnPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
   primaryBtnText: {
     ...theme.typography.bodyBold,
     color: theme.colors.primaryTextOn,
-    fontSize: 16,
+    fontSize: 16
   },
 
   secondaryBtn: {
@@ -874,8 +865,8 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.border
   },
   secondaryBtnPressed: { backgroundColor: theme.colors.card },
-  secondaryBtnText: { ...theme.typography.bodyBold, color: theme.colors.text },
+  secondaryBtnText: { ...theme.typography.bodyBold, color: theme.colors.text }
 });

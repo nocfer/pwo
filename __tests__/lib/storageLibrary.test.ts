@@ -13,14 +13,14 @@ function createLocalStorageMock() {
     },
     clear: () => {
       map.clear();
-    },
+    }
   };
 }
 
 describe("storage library CRUD", () => {
   beforeEach(() => {
     (globalThis as any).window = {
-      localStorage: createLocalStorageMock(),
+      localStorage: createLocalStorageMock()
     };
   });
 
@@ -30,7 +30,7 @@ describe("storage library CRUD", () => {
       name: "Bench Press",
       category: "strength" as any,
       icon: "barbell",
-      source: "user",
+      source: "user"
     });
 
     expect(saved.id).toBeTruthy();
@@ -42,12 +42,12 @@ describe("storage library CRUD", () => {
       name: "Bench Press (Barbell)",
       category: "strength" as any,
       icon: "barbell",
-      source: "user",
+      source: "user"
     });
     expect(updated.id).toBe(saved.id);
     const loaded2 = await storage.loadExercises();
     expect(loaded2.find((e) => e.id === saved.id)?.name).toBe(
-      "Bench Press (Barbell)",
+      "Bench Press (Barbell)"
     );
 
     await storage.deleteExercise(saved.id);
@@ -64,10 +64,10 @@ describe("storage library CRUD", () => {
         {
           index: 1,
           name: "Session 1",
-          blocks: [{ type: "warmup", seconds: 60 }],
-        },
+          blocks: [{ type: "warmup", seconds: 60 }]
+        }
       ],
-      source: "user",
+      source: "user"
     });
 
     expect(saved.id).toBeTruthy();

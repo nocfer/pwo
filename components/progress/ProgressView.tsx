@@ -63,7 +63,7 @@ export default function ProgressView({ slug }: Props) {
                 style={[
                   styles.streakDot,
                   active ? styles.streakDotActive : styles.streakDotInactive,
-                  isToday && styles.streakDotToday,
+                  isToday && styles.streakDotToday
                 ]}
               >
                 {active && <Text style={styles.checkmark}>✓</Text>}
@@ -86,16 +86,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm
   },
   streakRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
+    gap: theme.spacing.sm
   },
   dayContainer: {
     alignItems: "center",
-    gap: theme.spacing.xs,
+    gap: theme.spacing.xs
   },
   streakDot: {
     width: 36,
@@ -103,46 +103,46 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
+    borderWidth: 2
   },
   streakDotActive: {
     backgroundColor: theme.colors.successLight,
-    borderColor: theme.colors.success,
+    borderColor: theme.colors.success
   },
   streakDotInactive: {
     backgroundColor: theme.colors.card,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.border
   },
   streakDotToday: {
     borderColor: theme.colors.primary,
-    borderWidth: 2,
+    borderWidth: 2
   },
   checkmark: {
     color: theme.colors.success,
     fontFamily: theme.fonts.bold,
-    fontSize: 16,
+    fontSize: 16
   },
   dayLabel: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   dayLabelToday: {
     color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold,
+    fontFamily: theme.fonts.semiBold
   },
   todayDot: {
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary
   },
   message: {
     ...theme.typography.body,
-    color: theme.colors.subtext,
+    color: theme.colors.subtext
   },
   caption: {
     marginTop: theme.spacing.md,
     ...theme.typography.caption,
-    color: theme.colors.muted,
-  },
+    color: theme.colors.muted
+  }
 });

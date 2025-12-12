@@ -17,6 +17,6 @@ export function usePrograms() {
   return {
     data: context.state.programs,
     loading: context.state.programsLoading,
-    error: null,
+    error: null
   } as const;
 }

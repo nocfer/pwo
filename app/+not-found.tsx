@@ -19,12 +19,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#25292e",
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
 
   button: {
     fontSize: 20,
     textDecorationLine: "underline",
-    color: "#fff",
-  },
+    color: "#fff"
+  }
 });

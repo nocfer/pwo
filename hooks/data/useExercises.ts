@@ -17,6 +17,6 @@ export function useExercises() {
   return {
     data: context.state.exercises,
     loading: context.state.exercisesLoading,
-    error: null,
+    error: null
   } as const;
 }

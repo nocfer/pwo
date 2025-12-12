@@ -21,12 +21,12 @@ export function TargetView({ slug }: TargetViewProps) {
 const styles = StyleSheet.create({
   container: {
     padding: theme.spacing.lg,
-    alignItems: "center",
+    alignItems: "center"
   },
   text: {
     ...theme.typography.body,
-    color: theme.colors.muted,
-  },
+    color: theme.colors.muted
+  }
 });
 
 export default TargetView;

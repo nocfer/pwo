@@ -16,7 +16,7 @@ export type WorkoutStep =
 
 export function useWorkoutSteps(
   program: Program | null | undefined,
-  sessionIndex: number | undefined,
+  sessionIndex: number | undefined
 ) {
   // Generate sessions dynamically if this is a challenge program
   const sessions = useChallengeSessions(program);
@@ -36,7 +36,7 @@ export function useWorkoutSteps(
           list.push({
             key: `warmup-${list.length}`,
             type: "warmup",
-            seconds: block.seconds,
+            seconds: block.seconds
           });
         continue;
       }
@@ -47,7 +47,7 @@ export function useWorkoutSteps(
             key: `rest-${list.length}`,
             type: "rest",
             seconds: block.seconds,
-            label: block.label,
+            label: block.label
           });
         continue;
       }
@@ -59,7 +59,7 @@ export function useWorkoutSteps(
         exerciseId: block.exerciseId,
         targetReps: block.targetReps,
         durationSeconds: block.durationSeconds,
-        note: block.note,
+        note: block.note
       });
     }
 

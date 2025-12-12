@@ -11,7 +11,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -57,7 +57,7 @@ export default function LibraryScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.addButton,
-              pressed && styles.addButtonPressed,
+              pressed && styles.addButtonPressed
             ]}
             onPress={() => {
               if (tab === "programs") router.navigate("/library/programs/new");
@@ -79,7 +79,7 @@ export default function LibraryScreen() {
             <Text
               style={[
                 styles.segmentText,
-                tab === "programs" && styles.segmentTextActive,
+                tab === "programs" && styles.segmentTextActive
               ]}
             >
               Programs
@@ -88,14 +88,14 @@ export default function LibraryScreen() {
           <Pressable
             style={[
               styles.segment,
-              tab === "exercises" && styles.segmentActive,
+              tab === "exercises" && styles.segmentActive
             ]}
             onPress={() => setTab("exercises")}
           >
             <Text
               style={[
                 styles.segmentText,
-                tab === "exercises" && styles.segmentTextActive,
+                tab === "exercises" && styles.segmentTextActive
               ]}
             >
               Exercises
@@ -145,12 +145,12 @@ export default function LibraryScreen() {
                   key={p.id}
                   style={({ pressed }) => [
                     styles.rowCard,
-                    pressed && styles.rowCardPressed,
+                    pressed && styles.rowCardPressed
                   ]}
                   onPress={() =>
                     router.navigate({
                       pathname: "/programs/[id]" as any,
-                      params: { id: p.id },
+                      params: { id: p.id }
                     })
                   }
                 >
@@ -184,12 +184,12 @@ export default function LibraryScreen() {
                         onPress={() =>
                           router.navigate({
                             pathname: "/library/programs/[id]/edit" as any,
-                            params: { id: p.id },
+                            params: { id: p.id }
                           })
                         }
                         style={({ pressed }) => [
                           styles.iconBtn,
-                          pressed && styles.iconBtnPressed,
+                          pressed && styles.iconBtnPressed
                         ]}
                       >
                         <Ionicons
@@ -216,14 +216,14 @@ export default function LibraryScreen() {
                                   } catch (e) {
                                     Alert.alert("Couldn’t delete", String(e));
                                   }
-                                },
-                              },
-                            ],
+                                }
+                              }
+                            ]
                           );
                         }}
                         style={({ pressed }) => [
                           styles.iconBtn,
-                          pressed && styles.iconBtnPressed,
+                          pressed && styles.iconBtnPressed
                         ]}
                       >
                         <Ionicons
@@ -277,12 +277,12 @@ export default function LibraryScreen() {
                         onPress={() =>
                           router.navigate({
                             pathname: "/library/exercises/[id]/edit" as any,
-                            params: { id: e.id },
+                            params: { id: e.id }
                           })
                         }
                         style={({ pressed }) => [
                           styles.iconBtn,
-                          pressed && styles.iconBtnPressed,
+                          pressed && styles.iconBtnPressed
                         ]}
                       >
                         <Ionicons
@@ -311,17 +311,17 @@ export default function LibraryScreen() {
                                       "Couldn’t delete",
                                       err instanceof Error
                                         ? err.message
-                                        : String(err),
+                                        : String(err)
                                     );
                                   }
-                                },
-                              },
-                            ],
+                                }
+                              }
+                            ]
                           );
                         }}
                         style={({ pressed }) => [
                           styles.iconBtn,
-                          pressed && styles.iconBtnPressed,
+                          pressed && styles.iconBtnPressed
                         ]}
                       >
                         <Ionicons
@@ -345,26 +345,26 @@ export default function LibraryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.background
   },
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
+    paddingBottom: theme.spacing.xxl
   },
   headerRow: {
     flexDirection: "row",
     gap: theme.spacing.md,
-    alignItems: "center",
+    alignItems: "center"
   },
   title: {
     ...theme.typography.h2,
-    color: theme.colors.text,
+    color: theme.colors.text
   },
   subtitle: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    marginTop: theme.spacing.xs,
+    marginTop: theme.spacing.xs
   },
   addButton: {
     flexDirection: "row",
@@ -374,15 +374,15 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.lg,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   addButtonPressed: {
     opacity: 0.9,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   addButtonText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn,
+    color: theme.colors.primaryTextOn
   },
   segmented: {
     flexDirection: "row",
@@ -390,22 +390,22 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    overflow: "hidden",
+    overflow: "hidden"
   },
   segment: {
     flex: 1,
     paddingVertical: theme.spacing.md,
-    alignItems: "center",
+    alignItems: "center"
   },
   segmentActive: {
-    backgroundColor: theme.colors.primaryLight,
+    backgroundColor: theme.colors.primaryLight
   },
   segmentText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   segmentTextActive: {
-    color: theme.colors.primary,
+    color: theme.colors.primary
   },
   searchContainer: {
     flexDirection: "row",
@@ -415,16 +415,16 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm
   },
   searchInput: {
     flex: 1,
     ...theme.typography.body,
     color: theme.colors.text,
-    paddingVertical: theme.spacing.xs,
+    paddingVertical: theme.spacing.xs
   },
   list: {
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -432,11 +432,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   muted: {
     ...theme.typography.body,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   rowCard: {
     flexDirection: "row",
@@ -447,37 +447,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    ...theme.shadows.sm,
+    ...theme.shadows.sm
   },
   rowCardPressed: {
     backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   rowTitle: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.sm,
-    flexWrap: "wrap",
+    flexWrap: "wrap"
   },
   rowTitleText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text,
+    color: theme.colors.text
   },
   rowSubtitle: {
     ...theme.typography.caption,
     color: theme.colors.subtext,
-    marginTop: theme.spacing.xs,
+    marginTop: theme.spacing.xs
   },
   rowSubtitleMuted: {
     ...theme.typography.caption,
     color: theme.colors.muted,
     marginTop: theme.spacing.xs,
-    textTransform: "capitalize",
+    textTransform: "capitalize"
   },
   rowActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
+    gap: theme.spacing.sm
   },
   iconBtn: {
     width: 36,
@@ -487,11 +487,11 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.surface
   },
   iconBtnPressed: {
     backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.98 }]
   },
   lockPill: {
     flexDirection: "row",
@@ -502,10 +502,10 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: theme.colors.card,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.border
   },
   lockPillText: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
-  },
+    color: theme.colors.muted
+  }
 });

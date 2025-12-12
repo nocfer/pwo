@@ -8,7 +8,7 @@ export type {
   HistoryEntry,
   HistoryFile,
   SessionState,
-  StreakEntry,
+  StreakEntry
 } from "./storage";
 
 // Event types
@@ -32,7 +32,7 @@ export type {
   ProgramRestBlock,
   ProgramSession,
   ProgramSource,
-  ProgramWarmupBlock,
+  ProgramWarmupBlock
 } from "./program";
 
 // Progress types
@@ -42,5 +42,5 @@ export type {
   ProgramProgress,
   ProgressHistory,
   ProgressHistoryEntry,
-  SessionProgress,
+  SessionProgress
 } from "./progress";

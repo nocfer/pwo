@@ -13,7 +13,7 @@ export function SessionProgressBar({
   completedSets,
   totalSets,
   progress,
-  phaseFg,
+  phaseFg
 }: SessionProgressBarProps) {
   return (
     <View style={styles.progressSection}>
@@ -29,8 +29,8 @@ export function SessionProgressBar({
             styles.progressBarFill,
             {
               width: `${Math.round(progress * 100)}%`,
-              backgroundColor: phaseFg,
-            },
+              backgroundColor: phaseFg
+            }
           ]}
         />
       </View>
@@ -40,31 +40,31 @@ export function SessionProgressBar({
 
 const styles = StyleSheet.create({
   progressSection: {
-    gap: theme.spacing.xs,
+    gap: theme.spacing.xs
   },
   progressHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "center"
   },
   progressLabel: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   progressValue: {
     ...theme.typography.caption,
     fontWeight: "600",
-    color: theme.colors.subtext,
+    color: theme.colors.subtext
   },
   progressBarTrack: {
     height: 8,
     width: "100%",
     borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.card,
-    overflow: "hidden",
+    overflow: "hidden"
   },
   progressBarFill: {
     height: "100%",
-    borderRadius: theme.radius.sm,
-  },
+    borderRadius: theme.radius.sm
+  }
 });

@@ -19,7 +19,7 @@ export function SessionComplete() {
       <Pressable
         style={({ pressed }) => [
           styles.doneButton,
-          pressed && styles.buttonPressed,
+          pressed && styles.buttonPressed
         ]}
         onPress={() => router.back()}
       >
@@ -43,20 +43,20 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xl,
     padding: theme.spacing.xl,
     alignItems: "center",
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   doneIconContainer: {
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.md
   },
   doneTitle: {
     ...theme.typography.h2,
     color: theme.colors.success,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   doneSubtitle: {
     ...theme.typography.body,
     color: theme.colors.subtext,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.lg
   },
   doneButton: {
     flexDirection: "row",
@@ -66,14 +66,14 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.xl,
-    ...theme.shadows.md,
+    ...theme.shadows.md
   },
   doneButtonText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn,
+    color: theme.colors.primaryTextOn
   },
   buttonPressed: {
     opacity: 0.9,
-    transform: [{ scale: 0.98 }],
-  },
+    transform: [{ scale: 0.98 }]
+  }
 });

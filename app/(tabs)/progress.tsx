@@ -4,7 +4,7 @@ import {
   ProgressCalendar,
   ProgressStats,
   RepsProgressionChart,
-  SessionsCompletedChart,
+  SessionsCompletedChart
 } from "@/components";
 import { useAllProgress, usePrograms } from "@/hooks/data";
 import { haptics } from "@/lib/haptics";
@@ -15,7 +15,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -55,20 +55,20 @@ export default function ProgressScreen() {
     return [
       {
         label: "Total Workouts",
-        value: aggregated.totalWorkoutsCompleted,
+        value: aggregated.totalWorkoutsCompleted
       },
       {
         label: "Total Time",
-        value: formatTime(aggregated.totalTimeSpentSeconds),
+        value: formatTime(aggregated.totalTimeSpentSeconds)
       },
       {
         label: "Current Streak",
-        value: `${aggregated.currentStreak} days`,
+        value: `${aggregated.currentStreak} days`
       },
       {
         label: "Active Programs",
-        value: aggregated.activePrograms + aggregated.activeChallenges,
-      },
+        value: aggregated.activePrograms + aggregated.activeChallenges
+      }
     ];
   }, [aggregated]);
 
@@ -155,42 +155,42 @@ export default function ProgressScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.background
   },
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
+    paddingBottom: theme.spacing.xxl
   },
   header: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   title: {
     ...theme.typography.h1,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   subtitle: {
     ...theme.typography.body,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   loading: {
     padding: theme.spacing.xl,
-    alignItems: "center",
+    alignItems: "center"
   },
   muted: {
     ...theme.typography.body,
-    color: theme.colors.muted,
+    color: theme.colors.muted
   },
   section: {
-    gap: theme.spacing.md,
+    gap: theme.spacing.md
   },
   sectionTitle: {
     ...theme.typography.h2,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.xs
   },
   progressItem: {
-    marginBottom: theme.spacing.md,
-  },
+    marginBottom: theme.spacing.md
+  }
 });

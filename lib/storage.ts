@@ -15,7 +15,7 @@ import type {
   ProgramProgress,
   ProgressHistory,
   SessionState,
-  StreakEntry,
+  StreakEntry
 } from "@/types";
 import * as FileSystem from "expo-file-system/legacy";
 import { Platform } from "react-native";
@@ -27,7 +27,7 @@ export type {
   HistoryEntry,
   HistoryFile,
   SessionState,
-  StreakEntry,
+  StreakEntry
 } from "@/types";
 
 // ============================================================================
@@ -43,7 +43,7 @@ const KEYS = {
   PROGRAMS: "pwo.programs",
   PROGRAM_PROGRESS: "pwo.program_progress",
   CHALLENGE_PROGRESS: "pwo.challenge_progress",
-  PROGRESS_HISTORY: "pwo.progress_history",
+  PROGRESS_HISTORY: "pwo.progress_history"
 } as const;
 
 // ============================================================================
@@ -147,7 +147,7 @@ export const storage = {
 
   async upsertExercise(
     input: Omit<Exercise, "createdAt" | "updatedAt"> &
-      Partial<Pick<Exercise, "createdAt" | "updatedAt">>,
+      Partial<Pick<Exercise, "createdAt" | "updatedAt">>
   ): Promise<Exercise> {
     const now = new Date().toISOString();
     const arr = await this.loadExercises();
@@ -161,7 +161,7 @@ export const storage = {
       icon: input.icon,
       source: input.source,
       createdAt,
-      updatedAt: input.updatedAt ?? now,
+      updatedAt: input.updatedAt ?? now
     };
     if (idx >= 0) arr[idx] = next;
     else arr.push(next);
@@ -188,7 +188,7 @@ export const storage = {
 
   async upsertProgram(
     input: Omit<Program, "createdAt" | "updatedAt"> &
-      Partial<Pick<Program, "createdAt" | "updatedAt">>,
+      Partial<Pick<Program, "createdAt" | "updatedAt">>
   ): Promise<Program> {
     const now = new Date().toISOString();
     const arr = await this.loadPrograms();
@@ -202,7 +202,7 @@ export const storage = {
       sessions: input.sessions,
       source: input.source,
       createdAt,
-      updatedAt: input.updatedAt ?? now,
+      updatedAt: input.updatedAt ?? now
     };
     if (idx >= 0) arr[idx] = next;
     else arr.push(next);
@@ -221,7 +221,7 @@ export const storage = {
 
   async loadSessionState(
     slug: string,
-    sessionIndex: number,
+    sessionIndex: number
   ): Promise<SessionState | null> {
     const arr = await read<SessionState[]>(KEYS.SESSIONS, []);
     return (
@@ -233,7 +233,7 @@ export const storage = {
   async saveSessionState(state: SessionState): Promise<void> {
     const arr = await read<SessionState[]>(KEYS.SESSIONS, []);
     const idx = arr.findIndex(
-      (s) => s.slug === state.slug && s.sessionIndex === state.sessionIndex,
+      (s) => s.slug === state.slug && s.sessionIndex === state.sessionIndex
     );
     if (idx >= 0) {
       arr[idx] = state;
@@ -246,7 +246,7 @@ export const storage = {
   async clearSessionState(slug: string, sessionIndex: number): Promise<void> {
     const arr = await read<SessionState[]>(KEYS.SESSIONS, []);
     const filtered = arr.filter(
-      (s) => !(s.slug === slug && s.sessionIndex === sessionIndex),
+      (s) => !(s.slug === slug && s.sessionIndex === sessionIndex)
     );
     await write(KEYS.SESSIONS, filtered);
   },
@@ -265,12 +265,12 @@ export const storage = {
   },
 
   async appendEvent(
-    event: Omit<EventRecord, "ts"> & { ts?: string },
+    event: Omit<EventRecord, "ts"> & { ts?: string }
   ): Promise<void> {
     const arr = await read<EventRecord[]>(KEYS.EVENTS, []);
     const record: EventRecord = {
       ...event,
-      ts: event.ts ?? new Date().toISOString(),
+      ts: event.ts ?? new Date().toISOString()
     };
     arr.push(record);
     await write(KEYS.EVENTS, arr);
@@ -380,7 +380,7 @@ export const storage = {
   // --------------------------------------------------------------------------
 
   async loadProgramProgress(
-    programId: string,
+    programId: string
   ): Promise<ProgramProgress | null> {
     const arr = await read<ProgramProgress[]>(KEYS.PROGRAM_PROGRESS, []);
     return arr.find((p) => p.programId === programId) ?? null;
@@ -406,7 +406,7 @@ export const storage = {
   // --------------------------------------------------------------------------
 
   async loadChallengeProgress(
-    challengeId: string,
+    challengeId: string
   ): Promise<ChallengeProgress | null> {
     const arr = await read<ChallengeProgress[]>(KEYS.CHALLENGE_PROGRESS, []);
     return arr.find((c) => c.challengeId === challengeId) ?? null;
@@ -444,7 +444,7 @@ export const storage = {
   async getProgressHistory(
     programId?: string,
     challengeId?: string,
-    days: number = 30,
+    days: number = 30
   ): Promise<ProgressHistory> {
     const history = await read<ProgressHistory>(KEYS.PROGRESS_HISTORY, []);
     const cutoff = new Date();
@@ -457,7 +457,7 @@ export const storage = {
       if (!programId && !challengeId) return true;
       return false;
     });
-  },
+  }
 };
 
 export default storage;
