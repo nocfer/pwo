@@ -47,15 +47,34 @@ export default function ChallengePage() {
   }, [slug]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
+      <View style={styles.headerSection}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          style={({ pressed }) => [
+            styles.headerBack,
+            pressed && styles.headerBackPressed,
+          ]}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={24}
+            color={theme.colors.text}
+          />
+        </Pressable>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>Challenge</Text>
+          <Text style={styles.headerSubtitle}>
+            {slug.replace(/-/g, " ")}
+          </Text>
+        </View>
+      </View>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>Challenge</Text>
-          <Text style={styles.subtitle}>{slug.replace(/-/g, " ")}</Text>
-        </View>
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -258,22 +277,35 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  content: {
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
+  headerSection: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: theme.spacing.md,
   },
-  header: {
-    marginBottom: theme.spacing.sm,
+  headerBack: {
+    padding: theme.spacing.xs,
+    marginTop: -theme.spacing.xs,
+    marginLeft: -theme.spacing.xs,
   },
-  title: {
+  headerBackPressed: { opacity: 0.6 },
+  headerTitle: {
     ...theme.typography.h2,
     color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
   },
-  subtitle: {
+  headerSubtitle: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textTransform: "capitalize",
+  },
+  content: {
+    padding: theme.spacing.lg,
+    gap: theme.spacing.lg,
+    paddingTop: 0,
+    paddingBottom: theme.spacing.xxl,
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -289,9 +321,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   cardIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: theme.radius.sm,
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.md,
     backgroundColor: theme.colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",

@@ -1,44 +1,54 @@
 export const theme = {
   colors: {
-    background: "#F1F5F9", // slate-100, slightly warmer
+    // Neutral palette - refined slate with better contrast
+    background: "#FAFBFC", // softer, more neutral background
     surface: "#FFFFFF",
-    text: "#0F172A", // slate-900
-    subtext: "#334155", // slate-700
+    text: "#1A1F2E", // deeper, richer black for better readability
+    subtext: "#475569", // slate-600 - better contrast than slate-700
     muted: "#64748B", // slate-500
     border: "#E2E8F0", // slate-200
-    primary: "#3B82F6", // blue-500, slightly lighter for soft feel
-    primaryDark: "#2563EB", // blue-600
-    primaryLight: "#DBEAFE", // blue-100
-    primaryTextOn: "#FFFFFF",
-    accent: "#ffd33d", // keep project accent
     card: "#F8FAFC", // slate-50
-    success: "#22C55E", // green-500
-    successLight: "#DCFCE7", // green-100
+    
+    // Primary palette - sophisticated indigo/blue
+    primary: "#4F46E5", // indigo-600 - more professional than bright blue
+    primaryDark: "#4338CA", // indigo-700
+    primaryLight: "#EEF2FF", // indigo-50
+    primaryTextOn: "#FFFFFF",
+    
+    // Accent - refined gold/amber
+    accent: "#F59E0B", // amber-500 - more professional than bright yellow
+    
+    // Status colors - refined and cohesive
+    success: "#10B981", // emerald-500 - more sophisticated green
+    successLight: "#D1FAE5", // emerald-100
     danger: "#EF4444", // red-500
     dangerLight: "#FEE2E2", // red-100
     warning: "#F59E0B", // amber-500
     warningLight: "#FEF3C7", // amber-100
-    // Phase palette for workout states
+    
+    // Phase palette for workout states - more cohesive and professional
     phases: {
-      warmup: "#EA580C", // orange-600
+      warmup: "#F97316", // orange-500 - slightly softer
       warmupBg: "#FFF7ED", // orange-50
-      working: "#7C3AED", // violet-600
-      workingBg: "#F5F3FF", // violet-50
-      break: "#06B6D4", // cyan-500
+      working: "#6366F1", // indigo-500 - matches primary theme
+      workingBg: "#EEF2FF", // indigo-50
+      break: "#0891B2", // cyan-600 - deeper, more professional
       breakBg: "#ECFEFF", // cyan-50
-      done: "#22C55E", // green-500
-      doneBg: "#F0FDF4", // green-50
+      done: "#10B981", // emerald-500 - matches success
+      doneBg: "#D1FAE5", // emerald-100
     },
-    // Gradient colors
+    
+    // Gradient colors - refined and cohesive
     gradient: {
-      primaryStart: "#3B82F6", // blue-500
-      primaryEnd: "#8B5CF6", // violet-500
+      primaryStart: "#4F46E5", // indigo-600
+      primaryEnd: "#7C3AED", // violet-600 - complementary
       warmStart: "#F97316", // orange-500
       warmEnd: "#EF4444", // red-500
-      successStart: "#22C55E", // green-500
+      successStart: "#10B981", // emerald-500
       successEnd: "#14B8A6", // teal-500
     },
-    overlayGlass: "#FFFFFFEE",
+    
+    overlayGlass: "#FFFFFFF5", // slightly more opaque
     skeleton: "#E2E8F0", // slate-200
     skeletonHighlight: "#F1F5F9", // slate-100
   },

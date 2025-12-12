@@ -48,22 +48,39 @@ export default function ProgramDetail() {
   const firstSession = program.sessions[0];
 
   return (
-    <SafeAreaView style={styles.container} edges={["left", "right"]}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>{program.name}</Text>
+    <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
+      <View style={styles.headerSection}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          style={({ pressed }) => [
+            styles.headerBack,
+            pressed && styles.headerBackPressed,
+          ]}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={24}
+            color={theme.colors.text}
+          />
+        </Pressable>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>{program.name}</Text>
           {program.description ? (
-            <Text style={styles.subtitle}>{program.description}</Text>
+            <Text style={styles.headerSubtitle}>{program.description}</Text>
           ) : (
-            <Text style={styles.subtitleMuted}>
+            <Text style={styles.headerSubtitle}>
               {program.sessions.length} session
               {program.sessions.length === 1 ? "" : "s"}
             </Text>
           )}
         </View>
+      </View>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
 
         <View style={styles.card}>
           <View style={styles.rowBetween}>
@@ -134,15 +151,35 @@ export default function ProgramDetail() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
+  headerSection: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: theme.spacing.md,
+  },
+  headerBack: {
+    padding: theme.spacing.xs,
+    marginTop: -theme.spacing.xs,
+    marginLeft: -theme.spacing.xs,
+  },
+  headerBackPressed: { opacity: 0.6 },
+  headerTitle: {
+    ...theme.typography.h2,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  headerSubtitle: {
+    ...theme.typography.body,
+    color: theme.colors.muted,
+  },
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.lg,
+    paddingTop: 0,
     paddingBottom: theme.spacing.xxl,
   },
-  header: { gap: theme.spacing.xs },
-  title: { ...theme.typography.h2, color: theme.colors.text },
-  subtitle: { ...theme.typography.body, color: theme.colors.muted },
-  subtitleMuted: { ...theme.typography.body, color: theme.colors.muted },
   card: {
     backgroundColor: theme.colors.surface,
     borderColor: theme.colors.border,
