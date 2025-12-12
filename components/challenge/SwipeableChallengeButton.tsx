@@ -18,7 +18,7 @@ export default function SwipeableChallengeButton({ label, programId }: Props) {
   const { data: programs } = usePrograms();
   const challenge = useMemo(
     () => programs?.find((p) => p.id === programId && p.challengeConfig),
-    [programs, programId]
+    [programs, programId],
   );
   const { metrics } = useChallengeProgress(challenge || undefined);
 

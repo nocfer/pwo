@@ -74,7 +74,9 @@ export function useAllProgress(): {
 
     // Process program progress
     programProgress.forEach((progress) => {
-      const completedSessions = progress.sessions.filter((s: any) => s.completed);
+      const completedSessions = progress.sessions.filter(
+        (s: any) => s.completed,
+      );
       totalWorkoutsCompleted += completedSessions.length;
       totalTimeSpentSeconds += progress.totalTimeSpentSeconds || 0;
 
@@ -92,7 +94,9 @@ export function useAllProgress(): {
 
     // Process challenge progress
     challengeProgress.forEach((progress) => {
-      const completedSessions = progress.sessions.filter((s: any) => s.completed);
+      const completedSessions = progress.sessions.filter(
+        (s: any) => s.completed,
+      );
       totalWorkoutsCompleted += completedSessions.length;
       totalRepsCompleted += progress.totalRepsCompleted || 0;
 
@@ -110,7 +114,7 @@ export function useAllProgress(): {
 
     // Sort recent activity by date (most recent first)
     recentActivity.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
 
     // Calculate overall streak (longest streak across all programs/challenges)
@@ -122,20 +126,20 @@ export function useAllProgress(): {
 
     if (allLastActivity.length > 0) {
       const mostRecent = new Date(
-        Math.max(...allLastActivity.map((d) => new Date(d).getTime()))
+        Math.max(...allLastActivity.map((d) => new Date(d).getTime())),
       );
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       mostRecent.setHours(0, 0, 0, 0);
 
       const daysDiff = Math.floor(
-        (today.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24)
+        (today.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24),
       );
 
       if (daysDiff <= 1) {
         // Count consecutive days with activity
         const activityDates = new Set(
-          recentActivity.map((a) => a.date.slice(0, 10))
+          recentActivity.map((a) => a.date.slice(0, 10)),
         );
         const sortedDates = Array.from(activityDates).sort().reverse();
 
@@ -145,7 +149,8 @@ export function useAllProgress(): {
           activityDate.setHours(0, 0, 0, 0);
 
           const daysDiff2 = Math.floor(
-            (checkDate.getTime() - activityDate.getTime()) / (1000 * 60 * 60 * 24)
+            (checkDate.getTime() - activityDate.getTime()) /
+              (1000 * 60 * 60 * 24),
           );
 
           if (daysDiff2 === 0 || (currentStreak === 0 && daysDiff2 <= 1)) {

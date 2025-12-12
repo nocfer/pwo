@@ -34,7 +34,7 @@ export function RepsProgressionChart({
         const history = await storage.getProgressHistory(
           undefined,
           challengeId,
-          days
+          days,
         );
 
         if (!mounted) return;
@@ -146,7 +146,7 @@ export function SessionsCompletedChart({
         const history = await storage.getProgressHistory(
           programId,
           challengeId,
-          days
+          days,
         );
 
         if (!mounted) return;

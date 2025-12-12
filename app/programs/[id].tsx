@@ -27,10 +27,10 @@ export default function ProgramDetail() {
   const sessions = useChallengeSessions(program);
   const isChallenge = Boolean(program?.challengeConfig);
   const { metrics: challengeMetrics } = useChallengeProgress(
-    isChallenge ? program : undefined
+    isChallenge ? program : undefined,
   );
   const { metrics: programMetrics } = useProgramProgress(
-    !isChallenge ? program : undefined
+    !isChallenge ? program : undefined,
   );
   const { completed } = useSessionCompletion(id);
 

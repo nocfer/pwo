@@ -11,4 +11,3 @@ export { default as ProgressStats } from "./ProgressStats";
 export { default as ProgressView } from "./ProgressView";
 export { TargetView } from "./TargetView";
 export { WeeklyChart, WeeklyChartCompact } from "./WeeklyChart";
-

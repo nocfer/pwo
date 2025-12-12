@@ -27,7 +27,7 @@ export type {
   HistoryEntry,
   HistoryFile,
   SessionState,
-  StreakEntry
+  StreakEntry,
 } from "@/types";
 
 // ============================================================================

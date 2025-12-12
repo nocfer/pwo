@@ -28,9 +28,7 @@ export type ChallengeProgressMetrics = {
   lastActivityAt: string | null;
 };
 
-export function useChallengeProgress(
-  challenge: Program | null | undefined
-): {
+export function useChallengeProgress(challenge: Program | null | undefined): {
   metrics: ChallengeProgressMetrics | null;
   loading: boolean;
   error: Error | null;
@@ -117,7 +115,9 @@ export function useChallengeProgress(
 
     const totalRepsCompleted = progress.totalRepsCompleted;
     const repsProgressPercentage =
-      targetReps > 0 ? Math.min(100, (totalRepsCompleted / targetReps) * 100) : 0;
+      targetReps > 0
+        ? Math.min(100, (totalRepsCompleted / targetReps) * 100)
+        : 0;
 
     // Calculate current streak (consecutive days with activity)
     let currentStreak = 0;
@@ -125,7 +125,7 @@ export function useChallengeProgress(
       const sortedByDate = [...completedSessions].sort(
         (a, b) =>
           new Date(b.completedAt || "").getTime() -
-          new Date(a.completedAt || "").getTime()
+          new Date(a.completedAt || "").getTime(),
       );
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -137,7 +137,7 @@ export function useChallengeProgress(
         sessionDate.setHours(0, 0, 0, 0);
 
         const daysDiff = Math.floor(
-          (checkDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24)
+          (checkDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24),
         );
 
         if (daysDiff === 0 || (currentStreak === 0 && daysDiff <= 1)) {
@@ -152,7 +152,7 @@ export function useChallengeProgress(
 
     // Find next session to complete
     const completedIndices = new Set(
-      completedSessions.map((s) => s.sessionIndex)
+      completedSessions.map((s) => s.sessionIndex),
     );
     let nextSessionIndex: number | null = null;
     for (let i = 1; i <= totalSessions; i++) {
@@ -162,7 +162,8 @@ export function useChallengeProgress(
       }
     }
 
-    const isCompleted = sessionsCompleted === totalSessions && totalRepsCompleted >= targetReps;
+    const isCompleted =
+      sessionsCompleted === totalSessions && totalRepsCompleted >= targetReps;
 
     return {
       challengeId: challenge.id,

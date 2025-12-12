@@ -22,7 +22,7 @@ export default function ProgramProgressView({ programId }: Props) {
   const { data: programs } = usePrograms();
   const program = useMemo(
     () => programs?.find((p) => p.id === programId && !p.challengeConfig),
-    [programs, programId]
+    [programs, programId],
   );
   const { metrics, loading } = useProgramProgress(program || undefined);
 
@@ -80,10 +80,11 @@ export default function ProgramProgressView({ programId }: Props) {
                     style={[
                       styles.exerciseProgressBar,
                       {
-                        width: `${progress.total > 0
+                        width: `${
+                          progress.total > 0
                             ? (progress.completed / progress.total) * 100
                             : 0
-                          }%`,
+                        }%`,
                       },
                     ]}
                   />
@@ -92,7 +93,7 @@ export default function ProgramProgressView({ programId }: Props) {
                   {progress.completed} / {progress.total}
                 </Text>
               </View>
-            )
+            ),
           )}
         </View>
       )}
