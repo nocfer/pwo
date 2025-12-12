@@ -1,23 +1,23 @@
-import { describe, it, expect } from "vitest";
 import { dataReducer, initialState } from "@/context/DataContext";
+import { describe, expect, it } from "vitest";
 
 describe("dataReducer", () => {
-  it("SET_ROUTINES updates routines and sets loading to false", () => {
-    const routines = [{ name: "Push-ups", slug: "push-ups" }];
+  it("SET_CHALLENGES updates challenges and sets loading to false", () => {
+    const challenges = [{ name: "Push-ups", slug: "push-ups" }];
     const result = dataReducer(initialState, {
-      type: "SET_ROUTINES",
-      routines,
+      type: "SET_CHALLENGES",
+      challenges,
     });
-    expect(result.routines).toEqual(routines);
-    expect(result.routinesLoading).toBe(false);
+    expect(result.challenges).toEqual(challenges);
+    expect(result.challengesLoading).toBe(false);
   });
 
-  it("SET_ROUTINES_LOADING updates loading state", () => {
+  it("SET_CHALLENGES_LOADING updates loading state", () => {
     const result = dataReducer(initialState, {
-      type: "SET_ROUTINES_LOADING",
+      type: "SET_CHALLENGES_LOADING",
       loading: false,
     });
-    expect(result.routinesLoading).toBe(false);
+    expect(result.challengesLoading).toBe(false);
   });
 
   it("SET_LAST_COMPLETED_SLUG updates slug", () => {
@@ -82,7 +82,7 @@ describe("dataReducer", () => {
   it("preserves other state properties on partial updates", () => {
     const stateWithData = {
       ...initialState,
-      routines: [{ name: "Test", slug: "test" }],
+      challenges: [{ name: "Test", slug: "test" }],
       lastCompletedSlug: "test",
       progressVersion: 5,
     };
@@ -91,7 +91,7 @@ describe("dataReducer", () => {
       type: "INCREMENT_HISTORY_VERSION",
     });
 
-    expect(result.routines).toEqual(stateWithData.routines);
+    expect(result.challenges).toEqual(stateWithData.challenges);
     expect(result.lastCompletedSlug).toBe("test");
     expect(result.progressVersion).toBe(5);
     expect(result.historyVersion).toBe(1);
@@ -100,8 +100,8 @@ describe("dataReducer", () => {
 
 describe("initialState", () => {
   it("has correct default values", () => {
-    expect(initialState.routines).toEqual([]);
-    expect(initialState.routinesLoading).toBe(true);
+    expect(initialState.challenges).toEqual([]);
+    expect(initialState.challengesLoading).toBe(true);
     expect(initialState.lastCompletedSlug).toBeNull();
     expect(initialState.progressVersion).toBe(0);
     expect(initialState.historyVersion).toBe(0);

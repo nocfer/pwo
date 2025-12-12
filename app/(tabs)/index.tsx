@@ -1,7 +1,7 @@
 import { ProgressView, WeeklyChart } from "@/components";
 import {
+  useChallenges,
   useLastCompletedSlug,
-  useRoutines,
   useWeeklyActivity,
 } from "@/hooks/data";
 import { theme } from "@/theme/theme";
@@ -12,10 +12,10 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Index() {
-  const { data: routines } = useRoutines();
-  const firstRoutine = routines?.[0];
+  const { data: challenges } = useChallenges();
+  const firstChallenge = challenges?.[0];
   const lastCompletedSlug = useLastCompletedSlug();
-  const targetSlug = lastCompletedSlug || firstRoutine?.slug;
+  const targetSlug = lastCompletedSlug || firstChallenge?.slug;
   const { data: weeklyData } = useWeeklyActivity();
 
   return (
@@ -62,7 +62,9 @@ export default function Index() {
             {targetSlug ? (
               <ProgressView slug={targetSlug} />
             ) : (
-              <Text style={styles.muted}>Add a routine to start tracking.</Text>
+              <Text style={styles.muted}>
+                Add a challenge to start tracking.
+              </Text>
             )}
           </View>
 
@@ -73,7 +75,7 @@ export default function Index() {
                 styles.actionButton,
                 pressed && styles.actionPressed,
               ]}
-              onPress={() => router.navigate("/(tabs)/routines")}
+              onPress={() => router.navigate("/(tabs)/challenges")}
             >
               <View style={styles.actionIconContainer}>
                 <Ionicons
@@ -82,21 +84,21 @@ export default function Index() {
                   color={theme.colors.text}
                 />
               </View>
-              <Text style={styles.actionText}>All Routines</Text>
+              <Text style={styles.actionText}>All Challenges</Text>
             </Pressable>
 
             <Pressable
               style={({ pressed }) => [
                 styles.actionButtonPrimary,
                 pressed && styles.actionPrimaryPressed,
-                !firstRoutine && styles.actionDisabled,
+                !firstChallenge && styles.actionDisabled,
               ]}
-              disabled={!firstRoutine}
+              disabled={!firstChallenge}
               onPress={() =>
-                firstRoutine &&
+                firstChallenge &&
                 router.navigate({
-                  pathname: "/routines/[slug]",
-                  params: { slug: firstRoutine.slug },
+                  pathname: "/challenges/[slug]",
+                  params: { slug: firstChallenge.slug },
                 })
               }
             >
@@ -117,7 +119,7 @@ export default function Index() {
                   />
                 </View>
                 <Text style={styles.actionPrimaryText}>
-                  {firstRoutine ? "Quick Start" : "No routine"}
+                  {firstChallenge ? "Quick Start" : "No challenge"}
                 </Text>
               </LinearGradient>
             </Pressable>

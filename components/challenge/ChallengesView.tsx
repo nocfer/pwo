@@ -1,26 +1,26 @@
 import {
-  NoRoutinesEmpty,
+  NoChallengesEmpty,
   NoSearchResultsEmpty,
 } from "@/components/common/EmptyState";
-import { SkeletonRoutineButton } from "@/components/common/Skeleton";
-import { useRoutines } from "@/hooks/data";
+import { SkeletonChallengeButton } from "@/components/common/Skeleton";
+import { useChallenges } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import { StyleSheet, Text, View } from "react-native";
-import SwipeableRoutineButton from "./SwipeableRoutineButton";
+import SwipeableChallengeButton from "./SwipeableChallengeButton";
 
 type Props = {
   query?: string;
 };
 
-export default function RoutinesView({ query }: Props) {
-  const { data, loading, error } = useRoutines();
+export default function ChallengesView({ query }: Props) {
+  const { data, loading, error } = useChallenges();
 
   if (loading) {
     return (
       <View style={styles.listContainer}>
-        <SkeletonRoutineButton />
-        <SkeletonRoutineButton />
-        <SkeletonRoutineButton />
+        <SkeletonChallengeButton />
+        <SkeletonChallengeButton />
+        <SkeletonChallengeButton />
       </View>
     );
   }
@@ -28,13 +28,13 @@ export default function RoutinesView({ query }: Props) {
   if (error) {
     return (
       <View style={styles.container}>
-        <Text style={styles.message}>Failed to load routines.</Text>
+        <Text style={styles.message}>Failed to load challenges.</Text>
       </View>
     );
   }
 
   if (!data || data.length === 0) {
-    return <NoRoutinesEmpty />;
+    return <NoChallengesEmpty />;
   }
 
   const filtered = query
@@ -47,11 +47,11 @@ export default function RoutinesView({ query }: Props) {
 
   return (
     <View style={styles.listContainer}>
-      {filtered.map((routine, i) => (
-        <SwipeableRoutineButton
-          label={routine.name}
+      {filtered.map((challenge, i) => (
+        <SwipeableChallengeButton
+          label={challenge.name}
           key={i}
-          slug={routine.slug}
+          slug={challenge.slug}
         />
       ))}
     </View>

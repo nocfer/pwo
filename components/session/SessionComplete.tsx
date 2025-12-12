@@ -29,7 +29,7 @@ export function SessionComplete() {
           color={theme.colors.primaryTextOn}
           style={{ marginRight: theme.spacing.sm }}
         />
-        <Text style={styles.doneButtonText}>Back to Routine</Text>
+        <Text style={styles.doneButtonText}>Back to Challenge</Text>
       </Pressable>
     </View>
   );

@@ -4,50 +4,35 @@
 
 // Common components
 export {
-  Button,
-  EmptyState,
-  NoRoutinesEmpty,
-  NoSearchResultsEmpty,
-  NoProgressEmpty,
-  NoHistoryEmpty,
-  Skeleton,
-  SkeletonCard,
-  SkeletonRoutineButton,
-  SkeletonSessionCard,
-  SkeletonStreakDots,
-  AnimatedCard,
-  AnimatedProgressBar,
-  PulseAnimation,
-  FadeIn,
+    AnimatedCard,
+    AnimatedProgressBar, Button,
+    EmptyState, FadeIn, NoChallengesEmpty, NoHistoryEmpty, NoProgressEmpty, NoSearchResultsEmpty, PulseAnimation, Skeleton,
+    SkeletonCard,
+    SkeletonChallengeButton,
+    SkeletonSessionCard,
+    SkeletonStreakDots
 } from "./common";
 
 // Session components
 export {
-  SessionHeader,
-  SessionProgressBar,
-  FocusCard,
-  SessionFooter,
-  SessionComplete,
-  StepCard,
+    FocusCard, SessionComplete, SessionFooter, SessionHeader,
+    SessionProgressBar, StepCard
 } from "./session";
 
-// Routine components
+// Challenge components
 export {
-  RoutineButton,
-  SwipeableRoutineButton,
-  RoutinesView,
-  SessionsView,
-} from "./routine";
+    ChallengeButton, ChallengesView,
+    SessionsView, SwipeableChallengeButton
+} from "./challenge";
 
 // Progress components
 export {
-  ProgressView,
-  WeeklyChart,
-  WeeklyChartCompact,
-  TargetView,
+    ProgressView, TargetView, WeeklyChart,
+    WeeklyChartCompact
 } from "./progress";
 
 // Individual components (not moved)
 export { ConfettiCelebration } from "./ConfettiCelebration";
 export { default as ImageViewer } from "./ImageViewer";
 export { default as TimerControls } from "./TimerControls";
+

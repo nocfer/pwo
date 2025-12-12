@@ -90,7 +90,7 @@ export function SkeletonCard() {
   );
 }
 
-export function SkeletonRoutineButton() {
+export function SkeletonChallengeButton() {
   return (
     <View style={styles.routineButton}>
       <View style={styles.routineButtonContent}>

@@ -1,4 +1,4 @@
-import haptics from "@/lib/haptics";
+import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,7 +12,7 @@ type Props = {
   slug: string;
 };
 
-export default function SwipeableRoutineButton({ label, slug }: Props) {
+export default function SwipeableChallengeButton({ label, slug }: Props) {
   const swipeableRef = useRef<Swipeable>(null);
 
   const handleQuickStart = () => {
@@ -20,7 +20,7 @@ export default function SwipeableRoutineButton({ label, slug }: Props) {
     swipeableRef.current?.close();
     // Navigate to the first session
     router.navigate({
-      pathname: "/routines/[slug]/session/[index]",
+      pathname: "/challenges/[slug]/session/[index]",
       params: { slug, index: "1" },
     });
   };
@@ -78,7 +78,7 @@ export default function SwipeableRoutineButton({ label, slug }: Props) {
         ]}
         onPress={() =>
           router.navigate({
-            pathname: "/routines/[slug]",
+            pathname: "/challenges/[slug]",
             params: { slug },
           })
         }
