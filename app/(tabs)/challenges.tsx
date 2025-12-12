@@ -1,4 +1,4 @@
-import { RoutinesView } from "@/components";
+import { ChallengesView } from "@/components";
 import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function RoutinesScreen() {
+export default function ChallengesScreen() {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -22,7 +22,7 @@ export default function RoutinesScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     void haptics.refresh();
-    // Trigger a re-render of RoutinesView by changing the key
+    // Trigger a re-render of ChallengesView by changing the key
     setRefreshKey((prev) => prev + 1);
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 800));
@@ -44,8 +44,10 @@ export default function RoutinesScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Routines</Text>
-          <Text style={styles.subtitle}>Browse and start your workouts</Text>
+          <Text style={styles.title}>Challenges</Text>
+          <Text style={styles.subtitle}>
+            Pick one exercise and hit your target
+          </Text>
         </View>
 
         <View
@@ -61,7 +63,7 @@ export default function RoutinesScreen() {
             style={styles.searchIcon}
           />
           <TextInput
-            placeholder="Search routines..."
+            placeholder="Search challenges..."
             placeholderTextColor={theme.colors.muted}
             value={query}
             onChangeText={setQuery}
@@ -79,7 +81,7 @@ export default function RoutinesScreen() {
           )}
         </View>
 
-        <RoutinesView key={refreshKey} query={query} />
+        <ChallengesView key={refreshKey} query={query} />
       </ScrollView>
     </SafeAreaView>
   );

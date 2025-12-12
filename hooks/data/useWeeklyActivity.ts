@@ -1,5 +1,5 @@
 /**
- * useWeeklyActivity - Hook for aggregating weekly activity across all routines
+ * useWeeklyActivity - Hook for aggregating weekly activity across all challenges
  *
  * Loads all streaks and merges them into a single weekly array showing
  * if any workout was completed on each day.
@@ -22,7 +22,7 @@ export function useWeeklyActivity() {
         const allStreaks = await storage.loadAllStreaks();
         if (!mounted) return;
 
-        // Merge: if any routine has activity on a day, mark it as 1
+        // Merge: if any challenge has activity on a day, mark it as 1
         const merged = [0, 0, 0, 0, 0, 0, 0];
         for (const entry of allStreaks) {
           for (let i = 0; i < 7; i++) {

@@ -8,12 +8,12 @@
 import { dataEvents } from "@/lib/events";
 import { storage } from "@/lib/storage";
 import type {
+  Challenge,
   DataAction,
   DataEvent,
   DataState,
   EventRecord,
   HistoryEntry,
-  Routine,
   SessionState,
 } from "@/types";
 import React, {
@@ -25,8 +25,8 @@ import React, {
   useReducer,
 } from "react";
 
-// Re-export Routine type for backwards compatibility
-export type { Routine } from "@/types";
+// Re-export Challenge type for convenience
+export type { Challenge } from "@/types";
 
 type DataContextValue = {
   state: DataState;
@@ -67,8 +67,8 @@ type DataContextValue = {
 // ============================================================================
 
 export const initialState: DataState = {
-  routines: [],
-  routinesLoading: true,
+  challenges: [],
+  challengesLoading: true,
   lastCompletedSlug: null,
   progressVersion: 0,
   historyVersion: 0,
@@ -77,10 +77,14 @@ export const initialState: DataState = {
 
 export function dataReducer(state: DataState, action: DataAction): DataState {
   switch (action.type) {
-    case "SET_ROUTINES":
-      return { ...state, routines: action.routines, routinesLoading: false };
-    case "SET_ROUTINES_LOADING":
-      return { ...state, routinesLoading: action.loading };
+    case "SET_CHALLENGES":
+      return {
+        ...state,
+        challenges: action.challenges,
+        challengesLoading: false,
+      };
+    case "SET_CHALLENGES_LOADING":
+      return { ...state, challengesLoading: action.loading };
     case "SET_LAST_COMPLETED_SLUG":
       return { ...state, lastCompletedSlug: action.slug };
     case "INCREMENT_PROGRESS_VERSION":
@@ -114,19 +118,20 @@ const DataContext = createContext<DataContextValue | null>(null);
 export function DataProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(dataReducer, initialState);
 
-  // Load routines from static assets on mount
+  // Load challenges from static assets on mount
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const mod = await import("@/assets/data/routines.json");
+        const mod = await import("@/assets/data/challenges.json");
         if (!mounted) return;
         dispatch({
-          type: "SET_ROUTINES",
-          routines: (mod as any).default as Routine[],
+          type: "SET_CHALLENGES",
+          challenges: (mod as any).default as Challenge[],
         });
       } catch {
-        if (mounted) dispatch({ type: "SET_ROUTINES_LOADING", loading: false });
+        if (mounted)
+          dispatch({ type: "SET_CHALLENGES_LOADING", loading: false });
       }
     })();
     return () => {
@@ -279,11 +284,11 @@ export function useDataContext() {
 }
 
 // Convenience hooks
-export function useRoutines() {
+export function useChallenges() {
   const { state } = useDataContext();
   return {
-    data: state.routines.length > 0 ? state.routines : null,
-    loading: state.routinesLoading,
+    data: state.challenges.length > 0 ? state.challenges : null,
+    loading: state.challengesLoading,
     error: null,
   };
 }

@@ -66,7 +66,7 @@ export default function SessionDetail() {
         animated: true,
         viewPosition: 0.5,
       });
-    } catch {}
+    } catch { }
   }, [currentStepIndex, steps.length]);
 
   if (loading) {
@@ -239,7 +239,7 @@ export default function SessionDetail() {
                 index: Math.max(0, validIndex),
                 animated: true,
               });
-            } catch {}
+            } catch { }
           }}
           renderItem={({ item, index: idx }) => {
             const isDone = idx < currentStepIndex;
@@ -333,7 +333,7 @@ export default function SessionDetail() {
                     color={theme.colors.primaryTextOn}
                     style={{ marginRight: theme.spacing.sm }}
                   />
-                  <Text style={styles.doneButtonText}>Back to Routine</Text>
+                  <Text style={styles.doneButtonText}>Back to Challenge</Text>
                 </Pressable>
               </View>
             ) : null

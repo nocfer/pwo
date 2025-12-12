@@ -1,12 +1,12 @@
 /**
- * useLastCompletedSlug - Hook for getting the last completed routine slug
+ * useLastCompletedSlug - Hook for getting the last completed challenge slug
  *
  * Uses the DataContext for reactive updates.
  */
 
-import { useContext, useEffect, useState } from "react";
 import DataContext from "@/context/DataContext";
 import { storage } from "@/lib/storage";
+import { useContext, useEffect, useState } from "react";
 
 export function useLastCompletedSlug(): string | null {
   const context = useContext(DataContext);

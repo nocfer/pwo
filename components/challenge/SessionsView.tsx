@@ -51,7 +51,7 @@ export default function SessionsView({ slug }: Props) {
             key={s.index}
             onPress={() => {
               if (isLocked) return; // Prevent navigation for locked sessions
-              const href = `/routines/${slug}/session/${s.index}` as any;
+              const href = `/challenges/${slug}/session/${s.index}` as any;
               router.navigate(href);
             }}
             style={({ pressed }) => [

@@ -1,8 +1,8 @@
 /**
- * Routine-related type definitions
+ * Challenge-related type definitions
  */
 
-export type RoutineExercise = {
+export type ChallengeExercise = {
   name: string;
   warmUp?: number; // seconds
   break?: number; // seconds between sets
@@ -10,7 +10,7 @@ export type RoutineExercise = {
   targetReps?: number;
 };
 
-export type Routine = {
+export type Challenge = {
   slug: string;
   name: string;
   description?: string;
@@ -18,13 +18,13 @@ export type Routine = {
   icon?: string;
   estimatedMinutes?: number;
   difficulty?: "beginner" | "intermediate" | "advanced";
-  exercise?: RoutineExercise;
+  exercise?: ChallengeExercise;
 };
 
 export type DataState = {
-  // Routines (from static assets)
-  routines: Routine[];
-  routinesLoading: boolean;
+  // Challenges (from static assets)
+  challenges: Challenge[];
+  challengesLoading: boolean;
 
   // Last completed slug
   lastCompletedSlug: string | null;
@@ -36,8 +36,8 @@ export type DataState = {
 };
 
 export type DataAction =
-  | { type: "SET_ROUTINES"; routines: Routine[] }
-  | { type: "SET_ROUTINES_LOADING"; loading: boolean }
+  | { type: "SET_CHALLENGES"; challenges: Challenge[] }
+  | { type: "SET_CHALLENGES_LOADING"; loading: boolean }
   | { type: "SET_LAST_COMPLETED_SLUG"; slug: string | null }
   | { type: "INCREMENT_PROGRESS_VERSION" }
   | { type: "INCREMENT_HISTORY_VERSION" }

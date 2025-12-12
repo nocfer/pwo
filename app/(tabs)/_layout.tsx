@@ -74,10 +74,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="routines"
+        name="challenges"
         options={{
           headerShown: false,
-          title: "Routines",
+          title: "Challenges",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "barbell" : "barbell-outline"}

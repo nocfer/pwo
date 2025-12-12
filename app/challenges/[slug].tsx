@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function RoutinePage() {
+export default function ChallengePage() {
   const params = useLocalSearchParams();
   const slug = params.slug as string;
 
@@ -53,7 +53,7 @@ export default function RoutinePage() {
         contentContainerStyle={styles.content}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Routine</Text>
+          <Text style={styles.title}>Challenge</Text>
           <Text style={styles.subtitle}>{slug.replace(/-/g, " ")}</Text>
         </View>
 
@@ -140,7 +140,7 @@ export default function RoutinePage() {
             ]}
             onPress={() => {
               const href =
-                `/routines/${slug}/session/${nextSession.index}` as any;
+                `/challenges/${slug}/session/${nextSession.index}` as any;
               router.navigate(href);
             }}
           >

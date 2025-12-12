@@ -85,13 +85,13 @@ export function EmptyState({
 }
 
 // Pre-built empty states
-export function NoRoutinesEmpty({ onAction }: { onAction?: () => void }) {
+export function NoChallengesEmpty({ onAction }: { onAction?: () => void }) {
   return (
     <EmptyState
       variant="default"
-      title="No routines yet"
-      description="Create your first workout routine to get started on your fitness journey"
-      actionLabel={onAction ? "Create Routine" : undefined}
+      title="No challenges yet"
+      description="Create your first challenge to get started on your fitness journey"
+      actionLabel={onAction ? "Create Challenge" : undefined}
       onAction={onAction}
     />
   );
@@ -102,7 +102,7 @@ export function NoSearchResultsEmpty({ query }: { query: string }) {
     <EmptyState
       variant="search"
       title="No results found"
-      description={`We couldn't find any routines matching "${query}". Try a different search term.`}
+      description={`We couldn't find any challenges matching "${query}". Try a different search term.`}
     />
   );
 }

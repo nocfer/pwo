@@ -2,12 +2,12 @@
  * Session and Program type definitions
  */
 
-import type { Routine } from "./routine";
+import type { Challenge } from "./challenge";
 
 /**
- * @deprecated Use Routine type instead. Program is kept for backwards compatibility.
+ * @deprecated Use Challenge type instead. Program is kept for backwards compatibility.
  */
-export type Program = Routine;
+export type Program = Challenge;
 
 export type Session = {
   index: number; // 1-based

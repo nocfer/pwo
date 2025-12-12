@@ -45,7 +45,7 @@ export default function AboutScreen() {
           <View style={styles.infoContent}>
             <Text style={styles.infoTitle}>Guided Sessions</Text>
             <Text style={styles.infoText}>
-              Follow structured workout routines with timers
+              Follow structured challenge sessions with timers
             </Text>
           </View>
         </View>
