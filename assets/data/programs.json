@@ -1,0 +1,53 @@
+[
+  {
+    "id": "prg_starter_full_body",
+    "name": "Starter Full Body",
+    "description": "A simple, repeatable full body session.",
+    "sessions": [
+      {
+        "index": 1,
+        "name": "Session 1",
+        "blocks": [
+          {
+            "type": "warmup",
+            "seconds": 180
+          },
+          {
+            "type": "exercise",
+            "exerciseId": "ex_squats",
+            "sets": 3,
+            "repsPerSet": 12,
+            "restSecondsBetweenSets": 60
+          },
+          {
+            "type": "rest",
+            "seconds": 90,
+            "label": "Rest"
+          },
+          {
+            "type": "exercise",
+            "exerciseId": "ex_pushups",
+            "sets": 3,
+            "repsPerSet": 10,
+            "restSecondsBetweenSets": 60
+          },
+          {
+            "type": "rest",
+            "seconds": 90,
+            "label": "Rest"
+          },
+          {
+            "type": "exercise",
+            "exerciseId": "ex_pullups",
+            "sets": 3,
+            "repsPerSet": 5,
+            "restSecondsBetweenSets": 90
+          }
+        ]
+      }
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-01-01T00:00:00.000Z",
+    "source": "builtin"
+  }
+]

@@ -6,11 +6,13 @@
  */
 
 import type {
-  EventRecord,
-  HistoryEntry,
-  HistoryFile,
-  SessionState,
-  StreakEntry,
+    EventRecord,
+    Exercise,
+    HistoryEntry,
+    HistoryFile,
+    Program,
+    SessionState,
+    StreakEntry,
 } from "@/types";
 import * as FileSystem from "expo-file-system/legacy";
 import { Platform } from "react-native";
@@ -18,11 +20,11 @@ import { getMondayBasedDayIndex, normalizeStreak } from "./utils/date";
 
 // Re-export types for backwards compatibility
 export type {
-  EventRecord,
-  HistoryEntry,
-  HistoryFile,
-  SessionState,
-  StreakEntry
+    EventRecord,
+    HistoryEntry,
+    HistoryFile,
+    SessionState,
+    StreakEntry
 } from "@/types";
 
 // ============================================================================
@@ -34,6 +36,8 @@ const KEYS = {
   EVENTS: "pwo.events",
   HISTORY: "pwo.history",
   PROGRESS: "pwo.progress",
+  EXERCISES: "pwo.exercises",
+  PROGRAMS: "pwo.programs",
 } as const;
 
 // ============================================================================
@@ -107,11 +111,106 @@ async function write<T>(key: string, value: T): Promise<void> {
   await nativeWrite(key, value);
 }
 
+function generateId(prefix: string): string {
+  // Prefer crypto.randomUUID if available (web)
+  const anyCrypto: any =
+    typeof globalThis !== "undefined" ? (globalThis as any).crypto : undefined;
+  const rand =
+    typeof anyCrypto?.randomUUID === "function"
+      ? anyCrypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  return `${prefix}_${rand}`;
+}
+
 // ============================================================================
 // Storage API
 // ============================================================================
 
 export const storage = {
+  // --------------------------------------------------------------------------
+  // Exercises
+  // --------------------------------------------------------------------------
+
+  async loadExercises(): Promise<Exercise[]> {
+    return read<Exercise[]>(KEYS.EXERCISES, []);
+  },
+
+  async saveExercises(exercises: Exercise[]): Promise<void> {
+    await write(KEYS.EXERCISES, exercises);
+  },
+
+  async upsertExercise(
+    input: Omit<Exercise, "createdAt" | "updatedAt"> &
+      Partial<Pick<Exercise, "createdAt" | "updatedAt">>,
+  ): Promise<Exercise> {
+    const now = new Date().toISOString();
+    const arr = await this.loadExercises();
+    const id = input.id || generateId("ex");
+    const idx = arr.findIndex((e) => e.id === id);
+    const createdAt =
+      idx >= 0 ? arr[idx].createdAt : input.createdAt ?? now;
+    const next: Exercise = {
+      id,
+      name: input.name,
+      category: input.category,
+      icon: input.icon,
+      source: input.source,
+      createdAt,
+      updatedAt: input.updatedAt ?? now,
+    };
+    if (idx >= 0) arr[idx] = next;
+    else arr.push(next);
+    await this.saveExercises(arr);
+    return next;
+  },
+
+  async deleteExercise(id: string): Promise<void> {
+    const arr = await this.loadExercises();
+    await this.saveExercises(arr.filter((e) => e.id !== id));
+  },
+
+  // --------------------------------------------------------------------------
+  // Programs
+  // --------------------------------------------------------------------------
+
+  async loadPrograms(): Promise<Program[]> {
+    return read<Program[]>(KEYS.PROGRAMS, []);
+  },
+
+  async savePrograms(programs: Program[]): Promise<void> {
+    await write(KEYS.PROGRAMS, programs);
+  },
+
+  async upsertProgram(
+    input: Omit<Program, "createdAt" | "updatedAt"> &
+      Partial<Pick<Program, "createdAt" | "updatedAt">>,
+  ): Promise<Program> {
+    const now = new Date().toISOString();
+    const arr = await this.loadPrograms();
+    const id = input.id || generateId("prg");
+    const idx = arr.findIndex((p) => p.id === id);
+    const createdAt =
+      idx >= 0 ? arr[idx].createdAt : input.createdAt ?? now;
+    const next: Program = {
+      id,
+      name: input.name,
+      description: input.description,
+      sessions: input.sessions,
+      source: input.source,
+      createdAt,
+      updatedAt: input.updatedAt ?? now,
+    };
+    if (idx >= 0) arr[idx] = next;
+    else arr.push(next);
+    await this.savePrograms(arr);
+    return next;
+  },
+
+  async deleteProgram(id: string): Promise<void> {
+    const arr = await this.loadPrograms();
+    await this.savePrograms(arr.filter((p) => p.id !== id));
+  },
+
   // --------------------------------------------------------------------------
   // Session State
   // --------------------------------------------------------------------------

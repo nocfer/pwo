@@ -20,6 +20,43 @@ describe("dataReducer", () => {
     expect(result.challengesLoading).toBe(false);
   });
 
+  it("SET_EXERCISES updates exercises and sets loading to false", () => {
+    const exercises = [
+      {
+        id: "ex_1",
+        name: "Push Ups",
+        source: "user",
+        createdAt: "2025-01-01T00:00:00.000Z",
+        updatedAt: "2025-01-01T00:00:00.000Z",
+      },
+    ];
+    const result = dataReducer(initialState, {
+      type: "SET_EXERCISES",
+      exercises,
+    } as any);
+    expect(result.exercises).toEqual(exercises);
+    expect(result.exercisesLoading).toBe(false);
+  });
+
+  it("SET_PROGRAMS updates programs and sets loading to false", () => {
+    const programs = [
+      {
+        id: "prg_1",
+        name: "Test Program",
+        sessions: [{ index: 1, blocks: [] }],
+        source: "user",
+        createdAt: "2025-01-01T00:00:00.000Z",
+        updatedAt: "2025-01-01T00:00:00.000Z",
+      },
+    ];
+    const result = dataReducer(initialState, {
+      type: "SET_PROGRAMS",
+      programs,
+    } as any);
+    expect(result.programs).toEqual(programs);
+    expect(result.programsLoading).toBe(false);
+  });
+
   it("SET_LAST_COMPLETED_SLUG updates slug", () => {
     const result = dataReducer(initialState, {
       type: "SET_LAST_COMPLETED_SLUG",
@@ -102,6 +139,10 @@ describe("initialState", () => {
   it("has correct default values", () => {
     expect(initialState.challenges).toEqual([]);
     expect(initialState.challengesLoading).toBe(true);
+    expect(initialState.exercises).toEqual([]);
+    expect(initialState.exercisesLoading).toBe(true);
+    expect(initialState.programs).toEqual([]);
+    expect(initialState.programsLoading).toBe(true);
     expect(initialState.lastCompletedSlug).toBeNull();
     expect(initialState.progressVersion).toBe(0);
     expect(initialState.historyVersion).toBe(0);

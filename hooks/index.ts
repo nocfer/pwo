@@ -4,7 +4,13 @@
 
 // Data hooks
 export {
-    useChallenges, useLastCompletedSlug, useLiveHistory, useLiveProgress, useProgramSessions, useSessionCompletion, type HistoryEntry, type LiveProgress, type Program,
+    useChallenges,
+    useExercises,
+    useLastCompletedSlug,
+    useLiveHistory,
+    useLiveProgress, useProgramSessions, usePrograms, useSessionCompletion,
+    type HistoryEntry,
+    type LiveProgress,
     type Session
 } from "./data";
 
