@@ -312,7 +312,7 @@ export function useWorkoutTimer(opts: {
           durationSeconds: duration,
           reps: currentStep.targetReps
         }
-      } as any);
+      });
       void haptics.buttonTap();
       return;
     }

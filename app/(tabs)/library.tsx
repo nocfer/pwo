@@ -149,7 +149,7 @@ export default function LibraryScreen() {
                   ]}
                   onPress={() =>
                     router.navigate({
-                      pathname: "/programs/[id]" as any,
+                      pathname: "/programs/[id]",
                       params: { id: p.id }
                     })
                   }
@@ -183,7 +183,7 @@ export default function LibraryScreen() {
                       <Pressable
                         onPress={() =>
                           router.navigate({
-                            pathname: "/library/programs/[id]/edit" as any,
+                            pathname: "/library/programs/[id]/edit",
                             params: { id: p.id }
                           })
                         }
@@ -276,7 +276,7 @@ export default function LibraryScreen() {
                       <Pressable
                         onPress={() =>
                           router.navigate({
-                            pathname: "/library/exercises/[id]/edit" as any,
+                            pathname: "/library/exercises/[id]/edit",
                             params: { id: e.id }
                           })
                         }
