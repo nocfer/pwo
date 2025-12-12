@@ -20,12 +20,12 @@ type BlockDraft =
   | { type: "warmup"; seconds: string }
   | { type: "rest"; seconds: string; label?: string }
   | {
-    type: "exercise";
-    exerciseId: string;
-    targetReps?: string;
-    durationSeconds?: string;
-    note?: string;
-  };
+      type: "exercise";
+      exerciseId: string;
+      targetReps?: string;
+      durationSeconds?: string;
+      note?: string;
+    };
 
 function toDraftBlocks(blocks: any[]): BlockDraft[] {
   return blocks.map((b) => {
@@ -228,11 +228,7 @@ export default function EditProgramScreen() {
             pressed && styles.headerBackPressed,
           ]}
         >
-          <Ionicons
-            name="chevron-back"
-            size={24}
-            color={theme.colors.text}
-          />
+          <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>Edit Program</Text>
@@ -244,7 +240,6 @@ export default function EditProgramScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-
         <View style={styles.card}>
           <Text style={styles.label}>Name</Text>
           <TextInput
@@ -479,11 +474,11 @@ export default function EditProgramScreen() {
           style={({ pressed }) => [
             styles.primaryBtn,
             pressed &&
-            !saving &&
-            program.source !== "builtin" &&
-            styles.primaryBtnPressed,
+              !saving &&
+              program.source !== "builtin" &&
+              styles.primaryBtnPressed,
             (saving || program.source === "builtin") &&
-            styles.primaryBtnDisabled,
+              styles.primaryBtnDisabled,
           ]}
         >
           <Ionicons

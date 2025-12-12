@@ -86,11 +86,7 @@ export default function EditExerciseScreen() {
             pressed && styles.headerBackPressed,
           ]}
         >
-          <Ionicons
-            name="chevron-back"
-            size={24}
-            color={theme.colors.text}
-          />
+          <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>Edit Exercise</Text>
@@ -102,7 +98,6 @@ export default function EditExerciseScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-
         <View style={styles.card}>
           <Text style={styles.label}>Name</Text>
           <TextInput

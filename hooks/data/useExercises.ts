@@ -20,4 +20,3 @@ export function useExercises() {
     error: null,
   } as const;
 }
-

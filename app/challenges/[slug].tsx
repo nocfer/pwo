@@ -58,24 +58,17 @@ export default function ChallengePage() {
             pressed && styles.headerBackPressed,
           ]}
         >
-          <Ionicons
-            name="chevron-back"
-            size={24}
-            color={theme.colors.text}
-          />
+          <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>Challenge</Text>
-          <Text style={styles.headerSubtitle}>
-            {slug.replace(/-/g, " ")}
-          </Text>
+          <Text style={styles.headerSubtitle}>{slug.replace(/-/g, " ")}</Text>
         </View>
       </View>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
       >
-
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.cardIconContainer}>

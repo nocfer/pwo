@@ -8,16 +8,16 @@ export const theme = {
     muted: "#64748B", // slate-500
     border: "#E2E8F0", // slate-200
     card: "#F8FAFC", // slate-50
-    
+
     // Primary palette - sophisticated indigo/blue
     primary: "#4F46E5", // indigo-600 - more professional than bright blue
     primaryDark: "#4338CA", // indigo-700
     primaryLight: "#EEF2FF", // indigo-50
     primaryTextOn: "#FFFFFF",
-    
+
     // Accent - refined gold/amber
     accent: "#F59E0B", // amber-500 - more professional than bright yellow
-    
+
     // Status colors - refined and cohesive
     success: "#10B981", // emerald-500 - more sophisticated green
     successLight: "#D1FAE5", // emerald-100
@@ -25,7 +25,7 @@ export const theme = {
     dangerLight: "#FEE2E2", // red-100
     warning: "#F59E0B", // amber-500
     warningLight: "#FEF3C7", // amber-100
-    
+
     // Phase palette for workout states - more cohesive and professional
     phases: {
       warmup: "#F97316", // orange-500 - slightly softer
@@ -37,7 +37,7 @@ export const theme = {
       done: "#10B981", // emerald-500 - matches success
       doneBg: "#D1FAE5", // emerald-100
     },
-    
+
     // Gradient colors - refined and cohesive
     gradient: {
       primaryStart: "#4F46E5", // indigo-600
@@ -47,7 +47,7 @@ export const theme = {
       successStart: "#10B981", // emerald-500
       successEnd: "#14B8A6", // teal-500
     },
-    
+
     overlayGlass: "#FFFFFFF5", // slightly more opaque
     skeleton: "#E2E8F0", // slate-200
     skeletonHighlight: "#F1F5F9", // slate-100
