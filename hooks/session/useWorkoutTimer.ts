@@ -52,6 +52,7 @@ export function useWorkoutTimer(opts: {
   const completeSound = useAudioPlayer(
     require("@/assets/sounds/completed.mp3")
   );
+  const tickSound = useAudioPlayer(require("@/assets/sounds/tick.mp3"));
 
   const { slug, program, sessionIndex, steps, actions } = opts;
   const { recordEvent, completeSession, saveSessionState, loadSessionState } =
@@ -368,6 +369,14 @@ export function useWorkoutTimer(opts: {
     setIsPaused(false);
     setPhase("working");
   }, [currentStep, phase, timer]);
+
+  // Log last 3 seconds
+  useEffect(() => {
+    if (timer > 0 && timer <= 3) {
+      tickSound.seekTo(0);
+      tickSound.play();
+    }
+  }, [timer, tickSound]);
 
   return {
     phase,
