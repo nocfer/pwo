@@ -11,6 +11,7 @@ type FocusCardProps = {
   subTitle: string;
   icon: string;
   current?: WorkoutStep;
+  timerEnabled?: boolean;
 };
 
 export default function FocusCard({
@@ -20,7 +21,8 @@ export default function FocusCard({
   phaseChipText,
   title,
   icon,
-  current
+  current,
+  timerEnabled = false
 }: FocusCardProps) {
   return (
     <View
@@ -44,8 +46,13 @@ export default function FocusCard({
         <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
           {phaseChipText}
         </Text>
+        <Text style={[styles.phaseChipTextRight, { color: phaseAccent }]}>
+          {phaseChipText}
+        </Text>
       </View>
-      <Text style={styles.focusTitle}>{title}</Text>
+      <Text style={timerEnabled ? styles.timerHero : styles.focusTitle}>
+        {title}
+      </Text>
       <Text style={styles.focusSub}>{subTitle}</Text>
       {current?.type === "exercise" && (
         <View style={styles.focusMetrics}>
@@ -90,6 +97,12 @@ const styles = StyleSheet.create({
   focusTopRow: theme.cards.focus.topRow,
   focusIconSmall: theme.cards.focus.icons.sm,
   phaseChipText: theme.cards.focus.chipText,
+  phaseChipTextRight: {
+    ...theme.cards.focus.chipText,
+
+    position: "absolute",
+    right: theme.spacing.xs
+  },
   focusTitle: {
     ...theme.typography.h2,
     color: theme.colors.text,
@@ -132,5 +145,12 @@ const styles = StyleSheet.create({
     color: theme.colors.subtext,
     flex: 1,
     lineHeight: 18
+  },
+  timerHero: {
+    fontSize: 54,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+    marginBottom: theme.spacing.sm,
+    textAlign: "center"
   }
 });

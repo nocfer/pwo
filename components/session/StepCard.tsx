@@ -1,5 +1,3 @@
-import { WorkoutStep } from "@/hooks/session";
-import { getPhaseColors } from "@/lib/utils/colors";
 import { theme } from "@/theme/theme";
 import React, { ReactNode } from "react";
 import { StyleSheet, Text, View, ViewStyle } from "react-native";
@@ -7,7 +5,6 @@ import { AnimatedCard } from "../common";
 
 export type StepCardProps = {
   title: string;
-  stepType: WorkoutStep["type"];
   active?: boolean;
   done?: boolean;
   locked?: boolean;
@@ -15,6 +12,8 @@ export type StepCardProps = {
   style?: ViewStyle | ViewStyle[];
   children?: ReactNode;
   delayMultiplier?: number;
+  phaseAccent?: string;
+  phaseBg?: string;
 };
 
 export function StepCard({
@@ -25,14 +24,23 @@ export function StepCard({
   right,
   style,
   children,
-  delayMultiplier = 0,
-  stepType
+  phaseAccent,
+  phaseBg,
+  delayMultiplier = 0
 }: StepCardProps) {
   const containerStyles = [
     styles.card,
-    active && getPhaseColors(stepType),
+    active && {
+      ...styles.cardActive,
+      backgroundColor: phaseBg,
+      borderColor: phaseAccent
+    },
     done && styles.cardDone,
-    locked && styles.cardLocked,
+    locked && {
+      ...styles.cardLocked,
+      backgroundColor: phaseBg,
+      borderColor: phaseAccent
+    },
     style
   ];
 
@@ -71,10 +79,10 @@ const styles = StyleSheet.create({
   cardDone: {
     borderColor: theme.colors.phases.done,
     backgroundColor: theme.colors.phases.doneBg,
-    borderLeftColor: theme.colors.phases.done
+    opacity: 0.75
   },
   cardLocked: {
-    opacity: 0.5,
+    opacity: 0.4,
     ...theme.shadows.sm
   },
   cardTitle: {
