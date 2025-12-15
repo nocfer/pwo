@@ -1,10 +1,5 @@
-import { ProgressStats, ProgressView, WeeklyChart } from "@/components";
-import {
-  useAllProgress,
-  useLastCompletedSlug,
-  usePrograms,
-  useWeeklyActivity
-} from "@/hooks/data";
+import { ProgressStats, WeeklyChart } from "@/components";
+import { useAllProgress, usePrograms, useWeeklyActivity } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,8 +16,6 @@ export default function Index() {
     return programs.filter((p) => p.challengeConfig);
   }, [programs]);
   const firstChallenge = challenges?.[0];
-  const lastCompletedSlug = useLastCompletedSlug();
-  const targetSlug = lastCompletedSlug || firstChallenge?.id;
   const { data: weeklyData } = useWeeklyActivity();
   const { data: aggregated } = useAllProgress();
 
@@ -99,31 +92,6 @@ export default function Index() {
 
           {/* Weekly Activity Chart */}
           <WeeklyChart data={weeklyData} title="Last 7 days" />
-
-          {/* Streak Card */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <LinearGradient
-                colors={[
-                  theme.colors.gradient.warmStart,
-                  theme.colors.gradient.warmEnd
-                ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.cardIconGradient}
-              >
-                <Ionicons name="flame" size={20} color="#FFFFFF" />
-              </LinearGradient>
-              <Text style={styles.cardTitle}>Your Streak</Text>
-            </View>
-            {targetSlug ? (
-              <ProgressView slug={targetSlug} />
-            ) : (
-              <Text style={styles.muted}>
-                Add a challenge to start tracking.
-              </Text>
-            )}
-          </View>
 
           {/* Action Buttons */}
           <View style={styles.actionsRow}>

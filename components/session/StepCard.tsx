@@ -1,15 +1,20 @@
+import { WorkoutStep } from "@/hooks/session";
+import { getPhaseColors } from "@/lib/utils/colors";
 import { theme } from "@/theme/theme";
 import React, { ReactNode } from "react";
 import { StyleSheet, Text, View, ViewStyle } from "react-native";
+import { AnimatedCard } from "../common";
 
 export type StepCardProps = {
   title: string;
+  stepType: WorkoutStep["type"];
   active?: boolean;
   done?: boolean;
   locked?: boolean;
   right?: ReactNode;
   style?: ViewStyle | ViewStyle[];
   children?: ReactNode;
+  delayMultiplier?: number;
 };
 
 export function StepCard({
@@ -19,15 +24,18 @@ export function StepCard({
   locked,
   right,
   style,
-  children
+  children,
+  delayMultiplier = 0,
+  stepType
 }: StepCardProps) {
   const containerStyles = [
     styles.card,
-    active && styles.cardActive,
+    active && getPhaseColors(stepType),
     done && styles.cardDone,
     locked && styles.cardLocked,
     style
   ];
+
   const titleStyles = [
     styles.cardTitle,
     done && styles.cardTitleDone,
@@ -35,13 +43,15 @@ export function StepCard({
   ];
 
   return (
-    <View style={containerStyles}>
-      <View style={styles.rowBetween}>
-        <Text style={titleStyles}>{title}</Text>
-        {right}
+    <AnimatedCard delay={100 * delayMultiplier}>
+      <View style={containerStyles}>
+        <View style={styles.rowBetween}>
+          <Text style={titleStyles}>{title}</Text>
+          {right}
+        </View>
+        {children}
       </View>
-      {children}
-    </View>
+    </AnimatedCard>
   );
 }
 
@@ -56,14 +66,11 @@ const styles = StyleSheet.create({
   },
   cardActive: {
     borderColor: theme.colors.primary,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
     backgroundColor: theme.colors.primaryLight
   },
   cardDone: {
     borderColor: theme.colors.phases.done,
     backgroundColor: theme.colors.phases.doneBg,
-    borderLeftWidth: 3,
     borderLeftColor: theme.colors.phases.done
   },
   cardLocked: {
