@@ -56,6 +56,17 @@ export default function ProgramSessionRunner() {
     } catch {}
   }, [currentStepIndex, steps.length]);
 
+  // Auto-start timer for rest steps
+  useEffect(() => {
+    if (
+      timer.currentStep?.type === "rest" &&
+      timer.phase !== "timed" &&
+      timer.phase !== "done"
+    ) {
+      timer.handleComplete();
+    }
+  }, [timer, timer.currentStep?.key, timer.phase]);
+
   if (programsLoading) {
     return (
       <SafeAreaView style={styles.container}>
