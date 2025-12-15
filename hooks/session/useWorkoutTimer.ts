@@ -1,5 +1,6 @@
 import { haptics } from "@/lib/haptics";
 import type { EventRecord, Program, SessionState } from "@/types";
+import { useAudioPlayer } from "expo-audio";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { WorkoutStep } from "./useWorkoutSteps";
 
@@ -47,6 +48,12 @@ export function useWorkoutTimer(opts: {
   steps: WorkoutStep[];
   actions: TimerActions;
 }): UseWorkoutTimerReturn {
+  const skipSound = useAudioPlayer(require("@/assets/sounds/skip.mp3"));
+  const completeSound = useAudioPlayer(
+    require("@/assets/sounds/completed.mp3")
+  );
+  const tickSound = useAudioPlayer(require("@/assets/sounds/tick.mp3"));
+
   const { slug, program, sessionIndex, steps, actions } = opts;
   const { recordEvent, completeSession, saveSessionState, loadSessionState } =
     actions;
@@ -206,6 +213,9 @@ export function useWorkoutTimer(opts: {
   const handleSkip = useCallback(() => {
     if (!currentStep) return;
 
+    void skipSound.seekTo(0);
+    void skipSound.play();
+
     // If timed, skip timer
     if (phase === "timed") {
       clearTimer();
@@ -262,6 +272,7 @@ export function useWorkoutTimer(opts: {
       return next;
     });
   }, [
+    skipSound,
     currentStep,
     phase,
     clearTimer,
@@ -275,17 +286,6 @@ export function useWorkoutTimer(opts: {
   const handleComplete = useCallback(() => {
     if (!currentStep) return;
 
-    if (currentStep.type === "warmup") {
-      startTimer(currentStep.seconds);
-      void recordEvent({
-        slug,
-        sessionIndex,
-        type: "warmup_started"
-      });
-      void haptics.buttonTap();
-      return;
-    }
-
     if (currentStep.type === "rest") {
       startTimer(currentStep.seconds);
       void recordEvent({
@@ -293,6 +293,21 @@ export function useWorkoutTimer(opts: {
         sessionIndex,
         type: "break_started",
         data: { label: currentStep.label }
+      });
+      void haptics.buttonTap();
+      return;
+    }
+
+    // placed after rest to avoid duplicate sounds caused by auto-starting for rest timer
+    completeSound.seekTo(0);
+    completeSound.play();
+
+    if (currentStep.type === "warmup") {
+      startTimer(currentStep.seconds);
+      void recordEvent({
+        slug,
+        sessionIndex,
+        type: "warmup_started"
       });
       void haptics.buttonTap();
       return;
@@ -336,6 +351,7 @@ export function useWorkoutTimer(opts: {
       return next;
     });
   }, [
+    completeSound,
     currentStep,
     goDone,
     recordEvent,
@@ -353,6 +369,14 @@ export function useWorkoutTimer(opts: {
     setIsPaused(false);
     setPhase("working");
   }, [currentStep, phase, timer]);
+
+  // Log last 3 seconds
+  useEffect(() => {
+    if (timer > 0 && timer <= 3) {
+      tickSound.seekTo(0);
+      tickSound.play();
+    }
+  }, [timer, tickSound]);
 
   return {
     phase,
