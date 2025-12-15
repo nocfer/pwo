@@ -114,69 +114,60 @@ export default function ProgramSessionView({
           ></AnimatedProgressBar>
           {/* Focus card - action-oriented */}
           {timer.phase === "done" ? (
-            <View style={[styles.focusCard, styles.focusCardComplete]}>
-              <View style={styles.focusIconContainer}>
+            <View style={styles.doneCard}>
+              <Ionicons
+                name="checkmark-circle"
+                size={48}
+                color={theme.colors.success}
+              />
+              <Text style={styles.doneTitle}>All done</Text>
+              <Text style={styles.doneSubtitle}>Back to program</Text>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.doneButton,
+                  pressed && styles.buttonPressed
+                ]}
+                onPress={() => router.back()}
+              >
                 <Ionicons
-                  name="checkmark-circle"
-                  size={32}
-                  color={theme.colors.success}
+                  name="arrow-back"
+                  size={18}
+                  color={theme.colors.primaryTextOn}
+                  style={{ marginRight: theme.spacing.sm }}
                 />
-              </View>
-              <Text style={styles.focusTitle}>Session Complete</Text>
-              <Text style={styles.focusSub}>
-                {"Great work! You've finished all exercises."}
-              </Text>
+                <Text style={styles.doneButtonText}>Back</Text>
+              </Pressable>
             </View>
           ) : timer.phase === "timed" ? (
-            <View
-              style={[
-                styles.focusCard,
-                {
-                  borderColor: phaseAccent,
-                  backgroundColor: phaseBg
-                }
-              ]}
-            >
-              <View style={styles.focusTopRow}>
-                <View
-                  style={[
-                    styles.focusIconSmall,
-                    { backgroundColor: phaseAccent + "20" }
-                  ]}
-                >
-                  <Ionicons
-                    name={
-                      current?.type === "warmup"
-                        ? "flame"
-                        : current?.type === "rest"
-                          ? "pause-circle"
-                          : "time"
-                    }
-                    size={20}
-                    color={phaseAccent}
-                  />
-                </View>
-                <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
-                  {current?.type === "warmup"
-                    ? "Warming up"
-                    : current?.type === "rest"
-                      ? "Resting"
-                      : "Timer running"}
-                </Text>
-              </View>
-              <Text style={[styles.timerHero, { color: phaseAccent }]}>
-                {formatTime(timer.timer)}
-              </Text>
-              <Text style={styles.focusLabel}>
-                {current?.type === "warmup"
+            <FocusCard
+              icon={
+                current?.type === "warmup"
+                  ? "flame"
+                  : current?.type === "rest"
+                    ? "pause-circle"
+                    : "time"
+              }
+              phaseChipText={
+                current?.type === "warmup"
+                  ? "Warming up"
+                  : current?.type === "rest"
+                    ? "Resting"
+                    : "Timer running"
+              }
+              title={formatTime(timer.timer)}
+              subTitle={
+                current?.type === "warmup"
                   ? "Get ready for your workout"
                   : current?.type === "rest"
                     ? `Rest before ${nextLabel ?? "next exercise"}`
                     : current?.type === "exercise"
                       ? `Complete ${currentExerciseName ?? "exercise"}`
-                      : "Continue"}
-              </Text>
-            </View>
+                      : "Continue"
+              }
+              phaseAccent={phaseAccent}
+              phaseBg={phaseBg}
+              timerEnabled={true}
+            />
           ) : current?.type === "exercise" ? (
             <FocusCard
               icon="barbell"
@@ -266,14 +257,15 @@ export default function ProgramSessionView({
             return (
               <StepCard
                 title="Warm-up"
-                stepType={item.type}
+                phaseAccent={phaseAccent}
+                phaseBg={phaseBg}
                 active={isActive}
                 done={isDone}
                 locked={isLocked}
                 right={right}
                 delayMultiplier={idx}
               >
-                <Text style={styles.stepMeta}>{item.seconds}s</Text>
+                <Text style={styles.stepMeta}>{item.seconds} sec</Text>
               </StepCard>
             );
           }
@@ -281,15 +273,16 @@ export default function ProgramSessionView({
           if (item.type === "rest") {
             return (
               <StepCard
-                title={item.label ? `Rest • ${item.label}` : "Rest"}
-                stepType={item.type}
+                title={item.label || "Rest"}
+                phaseAccent={phaseAccent}
+                phaseBg={phaseBg}
                 active={isActive}
                 done={isDone}
                 locked={isLocked}
                 right={right}
                 delayMultiplier={idx}
               >
-                <Text style={styles.stepMeta}>{item.seconds}s</Text>
+                <Text style={styles.stepMeta}>{item.seconds} sec</Text>
               </StepCard>
             );
           }
@@ -298,7 +291,8 @@ export default function ProgramSessionView({
           const exName = exerciseNameById.get(item.exerciseId) ?? "Exercise";
           return (
             <StepCard
-              stepType={item.type}
+              phaseAccent={phaseAccent}
+              phaseBg={phaseBg}
               title={exName}
               active={isActive}
               done={isDone}
@@ -320,34 +314,6 @@ export default function ProgramSessionView({
             </StepCard>
           );
         }}
-        ListFooterComponent={
-          timer.phase === "done" ? (
-            <View style={styles.doneCard}>
-              <Ionicons
-                name="checkmark-circle"
-                size={48}
-                color={theme.colors.success}
-              />
-              <Text style={styles.doneTitle}>All done</Text>
-              <Text style={styles.doneSubtitle}>Back to program</Text>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.doneButton,
-                  pressed && styles.buttonPressed
-                ]}
-                onPress={() => router.back()}
-              >
-                <Ionicons
-                  name="arrow-back"
-                  size={18}
-                  color={theme.colors.primaryTextOn}
-                  style={{ marginRight: theme.spacing.sm }}
-                />
-                <Text style={styles.doneButtonText}>Back</Text>
-              </Pressable>
-            </View>
-          ) : null
-        }
       />
     </SafeAreaView>
   );
