@@ -9,6 +9,7 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useRef } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import FocusCard from "../cards/FocusCard";
 import { AnimatedCard, AnimatedProgressBar } from "../common";
 import { StepCard } from "../session";
 
@@ -177,124 +178,33 @@ export default function ProgramSessionView({
               </Text>
             </View>
           ) : current?.type === "exercise" ? (
-            <View
-              style={[
-                styles.focusCard,
-                {
-                  borderColor: phaseAccent,
-                  backgroundColor: phaseBg
-                }
-              ]}
-            >
-              <View style={styles.focusTopRow}>
-                <View
-                  style={[
-                    styles.focusIconSmall,
-                    { backgroundColor: phaseAccent + "15" }
-                  ]}
-                >
-                  <Ionicons name="barbell" size={20} color={phaseAccent} />
-                </View>
-                <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
-                  Current Exercise
-                </Text>
-              </View>
-              <Text style={styles.focusTitle}>{currentExerciseName}</Text>
-              <View style={styles.focusMetrics}>
-                {current.targetReps != null && (
-                  <View style={styles.focusMetric}>
-                    <Ionicons
-                      name="repeat"
-                      size={16}
-                      color={theme.colors.muted}
-                    />
-                    <Text style={styles.focusMetricText}>
-                      {current.targetReps} reps
-                    </Text>
-                  </View>
-                )}
-                {current.durationSeconds != null && (
-                  <View style={styles.focusMetric}>
-                    <Ionicons
-                      name="time-outline"
-                      size={16}
-                      color={theme.colors.muted}
-                    />
-                    <Text style={styles.focusMetricText}>
-                      {current.durationSeconds}s
-                    </Text>
-                  </View>
-                )}
-              </View>
-              {current.note && (
-                <View style={styles.focusNoteContainer}>
-                  <Ionicons
-                    name="information-circle-outline"
-                    size={16}
-                    color={theme.colors.subtext}
-                  />
-                  <Text style={styles.focusNote}>{current.note}</Text>
-                </View>
-              )}
-            </View>
+            <FocusCard
+              icon="barbell"
+              phaseChipText="Current Exercise"
+              title={currentExerciseName || "Exercise"}
+              subTitle="Let's go!"
+              phaseAccent={phaseAccent}
+              phaseBg={phaseBg}
+              current={current}
+            />
           ) : current?.type === "warmup" ? (
-            <View
-              style={[
-                styles.focusCard,
-                {
-                  borderColor: phaseAccent,
-                  backgroundColor: phaseBg
-                }
-              ]}
-            >
-              <View style={styles.focusTopRow}>
-                <View
-                  style={[
-                    styles.focusIconSmall,
-                    { backgroundColor: phaseAccent + "20" }
-                  ]}
-                >
-                  <Ionicons name="flame" size={20} color={phaseAccent} />
-                </View>
-                <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
-                  Ready to start
-                </Text>
-              </View>
-              <Text style={styles.focusTitle}>Warm-up</Text>
-              <Text style={styles.focusSub}>
-                {current.seconds} seconds • Tap to begin
-              </Text>
-            </View>
+            <FocusCard
+              title="Warm-up"
+              phaseAccent={phaseAccent}
+              phaseBg={phaseBg}
+              subTitle={current.seconds + "seconds • Tap to begin"}
+              phaseChipText="Ready to start"
+              icon="flame"
+            />
           ) : current?.type === "rest" ? (
-            <View
-              style={[
-                styles.focusCard,
-                {
-                  borderColor: phaseAccent,
-                  backgroundColor: phaseBg
-                }
-              ]}
-            >
-              <View style={styles.focusTopRow}>
-                <View
-                  style={[
-                    styles.focusIconSmall,
-                    { backgroundColor: phaseAccent + "20" }
-                  ]}
-                >
-                  <Ionicons name="pause-circle" size={20} color={phaseAccent} />
-                </View>
-                <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
-                  Rest period
-                </Text>
-              </View>
-              <Text style={styles.focusTitle}>
-                {current.label ? current.label : "Rest"}
-              </Text>
-              <Text style={styles.focusSub}>
-                {current.seconds} seconds • Tap to start timer
-              </Text>
-            </View>
+            <FocusCard
+              icon="pause-circle"
+              phaseChipText="Rest period"
+              title={current.label ? current.label : "Rest"}
+              subTitle={current.seconds + " seconds • Tap to start timer"}
+              phaseAccent={phaseAccent}
+              phaseBg={phaseBg}
+            />
           ) : (
             <View
               style={[
