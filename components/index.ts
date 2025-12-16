@@ -32,17 +32,26 @@ export { FocusCard, StepCard } from "./cards";
 // Progress components
 export {
   ChallengeProgressView,
+  CompactEmptyState,
+  ConsistencyHeatmap,
+  ExerciseProgressionChart,
+  LineChart,
+  PersonalRecordsCard,
+  PRItem,
   ProgramProgressView,
   ProgressCalendar,
   ProgressCard,
+  ProgressEmptyState,
   ProgressStats,
   ProgressView,
   ProgressViewBase,
   RepsProgressionChart,
+  RingChart,
   SessionsCompletedChart,
   TargetView,
   WeeklyChart,
-  WeeklyChartCompact
+  WeeklyChartCompact,
+  WeeklySummaryCard
 } from "./progress";
 
 export { ChallengesView, SwipeableChallengeButton } from "./challenge";

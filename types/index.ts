@@ -42,8 +42,13 @@ export type {
 export type {
   ChallengeProgress,
   ExerciseProgress,
+  PersonalRecord,
+  PersonalRecordType,
+  PRHistory,
   ProgramProgress,
   ProgressHistory,
   ProgressHistoryEntry,
-  SessionProgress
+  SessionProgress,
+  SetRecord,
+  WeeklyStats
 } from "./progress";

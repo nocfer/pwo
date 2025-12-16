@@ -1,16 +1,25 @@
+/**
+ * Progress Tab - Redesigned
+ *
+ * Shows key fitness metrics:
+ * 1. Weekly Summary (hero card with ring chart)
+ * 2. Consistency Heatmap (12-week activity grid)
+ * 3. Personal Records (recent PRs with badges)
+ * 4. Exercise Progression (line chart with selector)
+ */
+
 import {
-  ChallengeProgressView,
-  ProgramProgressView,
-  ProgressCalendar,
-  ProgressStats,
-  RepsProgressionChart,
-  SessionsCompletedChart
+  ConsistencyHeatmap,
+  ExerciseProgressionChart,
+  PersonalRecordsCard,
+  WeeklySummaryCard
 } from "@/components";
-import { useAllProgress, usePrograms } from "@/hooks/data";
 import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
-import { useCallback, useMemo, useState } from "react";
+import { router } from "expo-router";
+import { useCallback, useRef, useState } from "react";
 import {
+  Animated,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -19,64 +28,77 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-function formatTime(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  }
-  return `${minutes}m`;
-}
-
 export default function ProgressScreen() {
   const [refreshing, setRefreshing] = useState(false);
-  const { data: aggregated, loading } = useAllProgress();
-  const { data: programs } = usePrograms();
 
-  const challenges = useMemo(() => {
-    if (!programs) return [];
-    return programs.filter((p) => p.challengeConfig);
-  }, [programs]);
+  // Staggered animation refs for sections
+  const section1Anim = useRef(new Animated.Value(0)).current;
+  const section2Anim = useRef(new Animated.Value(0)).current;
+  const section3Anim = useRef(new Animated.Value(0)).current;
+  const section4Anim = useRef(new Animated.Value(0)).current;
 
-  const regularPrograms = useMemo(() => {
-    if (!programs) return [];
-    return programs.filter((p) => !p.challengeConfig);
-  }, [programs]);
+  // Run staggered entrance animation
+  const animateSections = useCallback(() => {
+    Animated.stagger(100, [
+      Animated.timing(section1Anim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+      }),
+      Animated.timing(section2Anim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+      }),
+      Animated.timing(section3Anim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+      }),
+      Animated.timing(section4Anim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+      })
+    ]).start();
+  }, [section1Anim, section2Anim, section3Anim, section4Anim]);
+
+  // Trigger animation on mount
+  useState(() => {
+    animateSections();
+  });
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     void haptics.refresh();
-    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    // Reset animations
+    section1Anim.setValue(0);
+    section2Anim.setValue(0);
+    section3Anim.setValue(0);
+    section4Anim.setValue(0);
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     setRefreshing(false);
+    animateSections();
+  }, [animateSections, section1Anim, section2Anim, section3Anim, section4Anim]);
+
+  const handleStartWorkout = useCallback(() => {
+    router.push("/(tabs)");
   }, []);
 
-  const overviewStats = useMemo(() => {
-    if (!aggregated) return [];
-    return [
-      {
-        label: "Total Workouts",
-        value: aggregated.totalWorkoutsCompleted
-      },
-      {
-        label: "Total Time",
-        value: formatTime(aggregated.totalTimeSpentSeconds)
-      },
-      {
-        label: "Current Streak",
-        value: `${aggregated.currentStreak} days`
-      },
-      {
-        label: "Active Programs",
-        value: aggregated.activePrograms + aggregated.activeChallenges
-      }
-    ];
-  }, [aggregated]);
+  const handleViewAllPRs = useCallback(() => {
+    // Could navigate to a dedicated PRs screen in the future
+    // For now, just scroll or do nothing
+  }, []);
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -86,67 +108,91 @@ export default function ProgressScreen() {
           />
         }
       >
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Progress</Text>
-          <Text style={styles.subtitle}>Track your fitness journey</Text>
+          <Text style={styles.subtitle}>Your fitness journey</Text>
         </View>
 
-        {loading ? (
-          <View style={styles.loading}>
-            <Text style={styles.muted}>Loading progress...</Text>
-          </View>
-        ) : (
-          <>
-            {aggregated && overviewStats.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Overview</Text>
-                <ProgressStats stats={overviewStats} columns={2} />
-              </View>
-            )}
+        {/* Section 1: Weekly Summary */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: section1Anim,
+              transform: [
+                {
+                  translateY: section1Anim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0]
+                  })
+                }
+              ]
+            }
+          ]}
+        >
+          <WeeklySummaryCard onStartWorkout={handleStartWorkout} />
+        </Animated.View>
 
-            {challenges.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Active Challenges</Text>
-                {challenges.slice(0, 3).map((challenge) => (
-                  <View key={challenge.id} style={styles.progressItem}>
-                    <ChallengeProgressView challengeId={challenge.id} />
-                  </View>
-                ))}
-              </View>
-            )}
+        {/* Section 2: Consistency Heatmap */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: section2Anim,
+              transform: [
+                {
+                  translateY: section2Anim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0]
+                  })
+                }
+              ]
+            }
+          ]}
+        >
+          <ConsistencyHeatmap weeks={12} />
+        </Animated.View>
 
-            {regularPrograms.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Active Programs</Text>
-                {regularPrograms.slice(0, 3).map((program) => (
-                  <View key={program.id} style={styles.progressItem}>
-                    <ProgramProgressView programId={program.id} />
-                  </View>
-                ))}
-              </View>
-            )}
+        {/* Section 3: Personal Records */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: section3Anim,
+              transform: [
+                {
+                  translateY: section3Anim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0]
+                  })
+                }
+              ]
+            }
+          ]}
+        >
+          <PersonalRecordsCard limit={3} onViewAll={handleViewAllPRs} />
+        </Animated.View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Activity Calendar</Text>
-              <ProgressCalendar />
-            </View>
-
-            {challenges.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Reps Progression</Text>
-                <RepsProgressionChart
-                  challengeId={challenges[0]?.id}
-                  days={30}
-                />
-              </View>
-            )}
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Sessions Completed</Text>
-              <SessionsCompletedChart days={30} />
-            </View>
-          </>
-        )}
+        {/* Section 4: Exercise Progression */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: section4Anim,
+              transform: [
+                {
+                  translateY: section4Anim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0]
+                  })
+                }
+              ]
+            }
+          ]}
+        >
+          <ExerciseProgressionChart />
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -159,11 +205,10 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl
+    paddingBottom: theme.spacing.xxl * 2
   },
   header: {
-    marginBottom: theme.spacing.sm
+    marginBottom: theme.spacing.lg
   },
   title: {
     ...theme.typography.h1,
@@ -174,23 +219,7 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.muted
   },
-  loading: {
-    padding: theme.spacing.xl,
-    alignItems: "center"
-  },
-  muted: {
-    ...theme.typography.body,
-    color: theme.colors.muted
-  },
   section: {
-    gap: theme.spacing.md
-  },
-  sectionTitle: {
-    ...theme.typography.h2,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs
-  },
-  progressItem: {
-    marginBottom: theme.spacing.md
+    marginBottom: theme.spacing.lg
   }
 });
