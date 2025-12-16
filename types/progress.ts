@@ -4,13 +4,74 @@
  */
 
 /**
- * Exercise-level progress tracking
+ * Individual set record with optional weight tracking
+ */
+export type SetRecord = {
+  reps: number;
+  weight?: number; // kg or lbs (undefined for bodyweight)
+  isBodyweight: boolean;
+  timestamp: string; // ISO date
+};
+
+/**
+ * Exercise-level progress tracking (enhanced with set details)
  */
 export type ExerciseProgress = {
   exerciseId: string;
   repsCompleted: number;
   setsCompleted: number;
+  sets?: SetRecord[]; // Detailed per-set tracking (optional for backward compat)
+  totalVolume?: number; // weight x reps (for weighted exercises)
   lastCompletedAt: string; // ISO date
+};
+
+/**
+ * Personal Record type
+ */
+export type PersonalRecordType =
+  | "max_weight"
+  | "max_reps"
+  | "max_volume"
+  | "estimated_1rm";
+
+/**
+ * Personal Record entry
+ */
+export type PersonalRecord = {
+  id: string; // Unique PR identifier
+  exerciseId: string;
+  type: PersonalRecordType;
+  value: number;
+  achievedAt: string; // ISO date
+  sessionId?: string; // Reference to the session where PR was achieved
+  details?: {
+    weight?: number;
+    reps?: number;
+  };
+};
+
+/**
+ * PR history for an exercise
+ */
+export type PRHistory = {
+  exerciseId: string;
+  records: PersonalRecord[]; // Historical PRs for trends
+};
+
+/**
+ * Weekly stats aggregation
+ */
+export type WeeklyStats = {
+  weekStart: string; // ISO date (Monday)
+  weekEnd: string; // ISO date (Sunday)
+  workoutsCompleted: number;
+  workoutGoal: number; // Target workouts per week (default: 4)
+  totalTimeSeconds: number;
+  totalVolume: number; // Sum of (weight x reps) for weighted exercises
+  totalReps: number; // Sum of all reps (bodyweight + weighted)
+  exercisesPerformed: string[]; // Unique exercise IDs
+  prsAchieved: number;
+  currentStreak: number; // Consecutive days with workouts ending in this week
 };
 
 /**

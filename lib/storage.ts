@@ -9,13 +9,17 @@ import type {
   ChallengeProgress,
   EventRecord,
   Exercise,
+  ExerciseProgress,
   HistoryEntry,
   HistoryFile,
+  PersonalRecord,
+  PRHistory,
   Program,
   ProgramProgress,
   ProgressHistory,
   SessionState,
-  StreakEntry
+  StreakEntry,
+  WeeklyStats
 } from "@/types";
 import * as FileSystem from "expo-file-system/legacy";
 import { Platform } from "react-native";
@@ -43,7 +47,9 @@ const KEYS = {
   PROGRAMS: "pwo.programs",
   PROGRAM_PROGRESS: "pwo.program_progress",
   CHALLENGE_PROGRESS: "pwo.challenge_progress",
-  PROGRESS_HISTORY: "pwo.progress_history"
+  PROGRESS_HISTORY: "pwo.progress_history",
+  PERSONAL_RECORDS: "pwo.personal_records",
+  WEEKLY_STATS: "pwo.weekly_stats"
 } as const;
 
 // ============================================================================
@@ -641,6 +647,577 @@ export const storage = {
       if (!programId && !challengeId) return true;
       return false;
     });
+  },
+
+  // --------------------------------------------------------------------------
+  // Personal Records (PRs)
+  // --------------------------------------------------------------------------
+
+  async loadAllPRs(): Promise<PRHistory[]> {
+    return read<PRHistory[]>(KEYS.PERSONAL_RECORDS, []);
+  },
+
+  async loadPRsForExercise(exerciseId: string): Promise<PersonalRecord[]> {
+    const prHistory = await this.loadAllPRs();
+    const exercisePRs = prHistory.find((h) => h.exerciseId === exerciseId);
+    return exercisePRs?.records ?? [];
+  },
+
+  async getLatestPRs(limit: number = 10): Promise<PersonalRecord[]> {
+    const prHistory = await this.loadAllPRs();
+    const allRecords = prHistory.flatMap((h) => h.records);
+    // Sort by achievedAt descending
+    allRecords.sort(
+      (a, b) =>
+        new Date(b.achievedAt).getTime() - new Date(a.achievedAt).getTime()
+    );
+    return allRecords.slice(0, limit);
+  },
+
+  async savePR(pr: PersonalRecord): Promise<void> {
+    const prHistory = await this.loadAllPRs();
+    const idx = prHistory.findIndex((h) => h.exerciseId === pr.exerciseId);
+
+    if (idx >= 0) {
+      // Add to existing exercise PRs
+      prHistory[idx].records.push(pr);
+      // Keep only last 50 PRs per exercise
+      if (prHistory[idx].records.length > 50) {
+        prHistory[idx].records = prHistory[idx].records.slice(-50);
+      }
+    } else {
+      // New exercise
+      prHistory.push({ exerciseId: pr.exerciseId, records: [pr] });
+    }
+
+    await write(KEYS.PERSONAL_RECORDS, prHistory);
+  },
+
+  /**
+   * Detect and save PRs from exercise progress
+   * Returns the newly achieved PRs
+   */
+  async detectAndSavePRs(
+    exerciseId: string,
+    exerciseProgress: ExerciseProgress,
+    sessionId?: string
+  ): Promise<PersonalRecord[]> {
+    const existingPRs = await this.loadPRsForExercise(exerciseId);
+    const newPRs: PersonalRecord[] = [];
+    const now = new Date().toISOString();
+
+    // Get current max values from existing PRs
+    const currentMaxReps =
+      existingPRs
+        .filter((pr) => pr.type === "max_reps")
+        .reduce((max, pr) => Math.max(max, pr.value), 0) || 0;
+
+    const currentMaxWeight =
+      existingPRs
+        .filter((pr) => pr.type === "max_weight")
+        .reduce((max, pr) => Math.max(max, pr.value), 0) || 0;
+
+    const currentMaxVolume =
+      existingPRs
+        .filter((pr) => pr.type === "max_volume")
+        .reduce((max, pr) => Math.max(max, pr.value), 0) || 0;
+
+    // Check for max reps PR (bodyweight exercises)
+    if (exerciseProgress.repsCompleted > currentMaxReps) {
+      const pr: PersonalRecord = {
+        id: generateId("pr"),
+        exerciseId,
+        type: "max_reps",
+        value: exerciseProgress.repsCompleted,
+        achievedAt: now,
+        sessionId,
+        details: { reps: exerciseProgress.repsCompleted }
+      };
+      newPRs.push(pr);
+    }
+
+    // Check for weight-based PRs from set records
+    if (exerciseProgress.sets && exerciseProgress.sets.length > 0) {
+      const weightedSets = exerciseProgress.sets.filter(
+        (s) => !s.isBodyweight && s.weight && s.weight > 0
+      );
+
+      if (weightedSets.length > 0) {
+        // Max weight PR
+        const maxWeightSet = weightedSets.reduce((max, s) =>
+          (s.weight ?? 0) > (max.weight ?? 0) ? s : max
+        );
+        if ((maxWeightSet.weight ?? 0) > currentMaxWeight) {
+          const pr: PersonalRecord = {
+            id: generateId("pr"),
+            exerciseId,
+            type: "max_weight",
+            value: maxWeightSet.weight!,
+            achievedAt: now,
+            sessionId,
+            details: { weight: maxWeightSet.weight, reps: maxWeightSet.reps }
+          };
+          newPRs.push(pr);
+        }
+
+        // Max volume PR (weight x reps for a single set)
+        const maxVolumeSet = weightedSets.reduce((max, s) => {
+          const vol = (s.weight ?? 0) * s.reps;
+          const maxVol = (max.weight ?? 0) * max.reps;
+          return vol > maxVol ? s : max;
+        });
+        const maxSetVolume = (maxVolumeSet.weight ?? 0) * maxVolumeSet.reps;
+        if (maxSetVolume > currentMaxVolume) {
+          const pr: PersonalRecord = {
+            id: generateId("pr"),
+            exerciseId,
+            type: "max_volume",
+            value: maxSetVolume,
+            achievedAt: now,
+            sessionId,
+            details: { weight: maxVolumeSet.weight, reps: maxVolumeSet.reps }
+          };
+          newPRs.push(pr);
+        }
+
+        // Estimated 1RM (Epley formula: weight * (1 + reps/30))
+        const best1RM = weightedSets.reduce((max, s) => {
+          if (!s.weight || s.reps === 0) return max;
+          const estimated = s.weight * (1 + s.reps / 30);
+          return estimated > max ? estimated : max;
+        }, 0);
+
+        const currentMax1RM =
+          existingPRs
+            .filter((pr) => pr.type === "estimated_1rm")
+            .reduce((max, pr) => Math.max(max, pr.value), 0) || 0;
+
+        if (best1RM > currentMax1RM) {
+          const pr: PersonalRecord = {
+            id: generateId("pr"),
+            exerciseId,
+            type: "estimated_1rm",
+            value: Math.round(best1RM * 10) / 10, // Round to 1 decimal
+            achievedAt: now,
+            sessionId
+          };
+          newPRs.push(pr);
+        }
+      }
+    }
+
+    // Save all new PRs
+    for (const pr of newPRs) {
+      await this.savePR(pr);
+    }
+
+    return newPRs;
+  },
+
+  /**
+   * Get the current best PR for each type for an exercise
+   */
+  async getCurrentPRs(
+    exerciseId: string
+  ): Promise<Map<PersonalRecord["type"], PersonalRecord>> {
+    const prs = await this.loadPRsForExercise(exerciseId);
+    const bestPRs = new Map<PersonalRecord["type"], PersonalRecord>();
+
+    for (const pr of prs) {
+      const existing = bestPRs.get(pr.type);
+      if (!existing || pr.value > existing.value) {
+        bestPRs.set(pr.type, pr);
+      }
+    }
+
+    return bestPRs;
+  },
+
+  // --------------------------------------------------------------------------
+  // Weekly Stats
+  // --------------------------------------------------------------------------
+
+  /**
+   * Get the start of the week (Monday) for a given date
+   */
+  getWeekStart(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  },
+
+  /**
+   * Get the end of the week (Sunday) for a given date
+   */
+  getWeekEnd(date: Date): Date {
+    const start = this.getWeekStart(date);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return end;
+  },
+
+  async loadWeeklyStats(): Promise<WeeklyStats[]> {
+    return read<WeeklyStats[]>(KEYS.WEEKLY_STATS, []);
+  },
+
+  async saveWeeklyStats(stats: WeeklyStats[]): Promise<void> {
+    await write(KEYS.WEEKLY_STATS, stats);
+  },
+
+  /**
+   * Get or create weekly stats for a specific week
+   */
+  async getWeeklyStats(weekStart?: Date): Promise<WeeklyStats> {
+    const targetWeekStart = weekStart
+      ? this.getWeekStart(weekStart)
+      : this.getWeekStart(new Date());
+    const weekStartISO = targetWeekStart.toISOString().slice(0, 10);
+    const weekEndISO = this.getWeekEnd(targetWeekStart)
+      .toISOString()
+      .slice(0, 10);
+
+    const allStats = await this.loadWeeklyStats();
+    const existing = allStats.find((s) => s.weekStart === weekStartISO);
+
+    if (existing) return existing;
+
+    // Create new week stats by aggregating from progress data
+    return this.calculateWeeklyStats(targetWeekStart);
+  },
+
+  /**
+   * Calculate weekly stats from progress history and PRs
+   */
+  async calculateWeeklyStats(weekStart: Date): Promise<WeeklyStats> {
+    const weekStartISO = weekStart.toISOString().slice(0, 10);
+    const weekEnd = this.getWeekEnd(weekStart);
+    const weekEndISO = weekEnd.toISOString().slice(0, 10);
+
+    // Get all program and challenge progress
+    const [programProgress, challengeProgress, prHistory, history] =
+      await Promise.all([
+        this.loadAllProgramProgress(),
+        this.loadAllChallengeProgress(),
+        this.loadAllPRs(),
+        this.getProgressHistory(undefined, undefined, 7)
+      ]);
+
+    let workoutsCompleted = 0;
+    let totalTimeSeconds = 0;
+    let totalVolume = 0;
+    let totalReps = 0;
+    const exercisesSet = new Set<string>();
+
+    // Process program progress
+    for (const prog of programProgress) {
+      for (const run of prog.runs ?? []) {
+        for (const session of run.sessions ?? []) {
+          if (!session.completed || !session.completedAt) continue;
+          const sessionDate = session.completedAt.slice(0, 10);
+          if (sessionDate >= weekStartISO && sessionDate <= weekEndISO) {
+            workoutsCompleted++;
+            totalTimeSeconds += session.timeSpentSeconds ?? 0;
+
+            for (const ex of session.exercises ?? []) {
+              exercisesSet.add(ex.exerciseId);
+              totalReps += ex.repsCompleted ?? 0;
+              totalVolume += ex.totalVolume ?? 0;
+            }
+          }
+        }
+      }
+    }
+
+    // Process challenge progress
+    for (const challenge of challengeProgress) {
+      for (const session of challenge.sessions ?? []) {
+        if (!session.completed || !session.completedAt) continue;
+        const sessionDate = session.completedAt.slice(0, 10);
+        if (sessionDate >= weekStartISO && sessionDate <= weekEndISO) {
+          workoutsCompleted++;
+          totalTimeSeconds += session.timeSpentSeconds ?? 0;
+
+          for (const ex of session.exercises ?? []) {
+            exercisesSet.add(ex.exerciseId);
+            totalReps += ex.repsCompleted ?? 0;
+          }
+        }
+      }
+    }
+
+    // Count PRs achieved this week
+    let prsAchieved = 0;
+    for (const exercisePRs of prHistory) {
+      for (const pr of exercisePRs.records) {
+        const prDate = pr.achievedAt.slice(0, 10);
+        if (prDate >= weekStartISO && prDate <= weekEndISO) {
+          prsAchieved++;
+        }
+      }
+    }
+
+    // Calculate current streak
+    const currentStreak = await this.calculateCurrentStreak();
+
+    return {
+      weekStart: weekStartISO,
+      weekEnd: weekEndISO,
+      workoutsCompleted,
+      workoutGoal: 4, // Default goal
+      totalTimeSeconds,
+      totalVolume,
+      totalReps,
+      exercisesPerformed: Array.from(exercisesSet),
+      prsAchieved,
+      currentStreak
+    };
+  },
+
+  /**
+   * Calculate the current workout streak (consecutive days)
+   */
+  async calculateCurrentStreak(): Promise<number> {
+    const [programProgress, challengeProgress] = await Promise.all([
+      this.loadAllProgramProgress(),
+      this.loadAllChallengeProgress()
+    ]);
+
+    // Collect all workout dates
+    const workoutDates = new Set<string>();
+
+    for (const prog of programProgress) {
+      for (const run of prog.runs ?? []) {
+        for (const session of run.sessions ?? []) {
+          if (session.completed && session.completedAt) {
+            workoutDates.add(session.completedAt.slice(0, 10));
+          }
+        }
+      }
+    }
+
+    for (const challenge of challengeProgress) {
+      for (const session of challenge.sessions ?? []) {
+        if (session.completed && session.completedAt) {
+          workoutDates.add(session.completedAt.slice(0, 10));
+        }
+      }
+    }
+
+    if (workoutDates.size === 0) return 0;
+
+    // Sort dates descending
+    const sortedDates = Array.from(workoutDates).sort().reverse();
+
+    // Check streak from today or yesterday
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayISO = today.toISOString().slice(0, 10);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayISO = yesterday.toISOString().slice(0, 10);
+
+    // Streak must start from today or yesterday
+    if (sortedDates[0] !== todayISO && sortedDates[0] !== yesterdayISO) {
+      return 0;
+    }
+
+    let streak = 0;
+    let checkDate = new Date(sortedDates[0]);
+
+    for (const dateStr of sortedDates) {
+      const date = new Date(dateStr);
+      const diff = Math.floor(
+        (checkDate.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      if (diff === 0) {
+        streak++;
+        checkDate = new Date(date);
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else if (diff > 1) {
+        break;
+      }
+    }
+
+    return streak;
+  },
+
+  /**
+   * Get consistency data for heatmap (last N weeks)
+   * Returns a map of date -> workout count
+   */
+  async getConsistencyData(weeks: number = 12): Promise<Map<string, number>> {
+    const [programProgress, challengeProgress] = await Promise.all([
+      this.loadAllProgramProgress(),
+      this.loadAllChallengeProgress()
+    ]);
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - weeks * 7);
+    const cutoffISO = cutoffDate.toISOString().slice(0, 10);
+
+    const workoutCounts = new Map<string, number>();
+
+    // Count program workouts
+    for (const prog of programProgress) {
+      for (const run of prog.runs ?? []) {
+        for (const session of run.sessions ?? []) {
+          if (session.completed && session.completedAt) {
+            const dateISO = session.completedAt.slice(0, 10);
+            if (dateISO >= cutoffISO) {
+              workoutCounts.set(dateISO, (workoutCounts.get(dateISO) ?? 0) + 1);
+            }
+          }
+        }
+      }
+    }
+
+    // Count challenge workouts
+    for (const challenge of challengeProgress) {
+      for (const session of challenge.sessions ?? []) {
+        if (session.completed && session.completedAt) {
+          const dateISO = session.completedAt.slice(0, 10);
+          if (dateISO >= cutoffISO) {
+            workoutCounts.set(dateISO, (workoutCounts.get(dateISO) ?? 0) + 1);
+          }
+        }
+      }
+    }
+
+    return workoutCounts;
+  },
+
+  /**
+   * Get exercise progression data for charts
+   * Returns data points with date and value (reps or weight)
+   */
+  async getExerciseProgression(
+    exerciseId: string,
+    days: number = 30
+  ): Promise<{ date: string; reps: number; maxWeight?: number; volume?: number }[]> {
+    const [programProgress, challengeProgress] = await Promise.all([
+      this.loadAllProgramProgress(),
+      this.loadAllChallengeProgress()
+    ]);
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    const cutoffISO = cutoffDate.toISOString().slice(0, 10);
+
+    const dataPoints: {
+      date: string;
+      reps: number;
+      maxWeight?: number;
+      volume?: number;
+    }[] = [];
+
+    // Process program sessions
+    for (const prog of programProgress) {
+      for (const run of prog.runs ?? []) {
+        for (const session of run.sessions ?? []) {
+          if (!session.completed || !session.completedAt) continue;
+          const dateISO = session.completedAt.slice(0, 10);
+          if (dateISO < cutoffISO) continue;
+
+          for (const ex of session.exercises ?? []) {
+            if (ex.exerciseId !== exerciseId) continue;
+
+            let maxWeight: number | undefined;
+            let volume: number | undefined;
+
+            if (ex.sets && ex.sets.length > 0) {
+              const weightedSets = ex.sets.filter(
+                (s) => !s.isBodyweight && s.weight
+              );
+              if (weightedSets.length > 0) {
+                maxWeight = Math.max(...weightedSets.map((s) => s.weight ?? 0));
+                volume = weightedSets.reduce(
+                  (sum, s) => sum + (s.weight ?? 0) * s.reps,
+                  0
+                );
+              }
+            }
+
+            dataPoints.push({
+              date: dateISO,
+              reps: ex.repsCompleted,
+              maxWeight,
+              volume
+            });
+          }
+        }
+      }
+    }
+
+    // Process challenge sessions
+    for (const challenge of challengeProgress) {
+      for (const session of challenge.sessions ?? []) {
+        if (!session.completed || !session.completedAt) continue;
+        const dateISO = session.completedAt.slice(0, 10);
+        if (dateISO < cutoffISO) continue;
+
+        for (const ex of session.exercises ?? []) {
+          if (ex.exerciseId !== exerciseId) continue;
+
+          dataPoints.push({
+            date: dateISO,
+            reps: ex.repsCompleted
+          });
+        }
+      }
+    }
+
+    // Sort by date
+    dataPoints.sort((a, b) => a.date.localeCompare(b.date));
+
+    return dataPoints;
+  },
+
+  // --------------------------------------------------------------------------
+  // Data Management
+  // --------------------------------------------------------------------------
+
+  /**
+   * Clear all user data (progress, history, PRs, etc.)
+   * Does NOT clear exercises and programs (library data)
+   */
+  async clearAllProgressData(): Promise<void> {
+    await Promise.all([
+      write(KEYS.SESSIONS, []),
+      write(KEYS.EVENTS, []),
+      write(KEYS.HISTORY, []),
+      write(KEYS.PROGRESS, []),
+      write(KEYS.PROGRAM_PROGRESS, []),
+      write(KEYS.CHALLENGE_PROGRESS, []),
+      write(KEYS.PROGRESS_HISTORY, []),
+      write(KEYS.PERSONAL_RECORDS, []),
+      write(KEYS.WEEKLY_STATS, [])
+    ]);
+  },
+
+  /**
+   * Clear ALL data including library (exercises and programs)
+   * Use with caution - this is a full reset
+   */
+  async clearAllData(): Promise<void> {
+    await Promise.all([
+      write(KEYS.SESSIONS, []),
+      write(KEYS.EVENTS, []),
+      write(KEYS.HISTORY, []),
+      write(KEYS.PROGRESS, []),
+      write(KEYS.EXERCISES, []),
+      write(KEYS.PROGRAMS, []),
+      write(KEYS.PROGRAM_PROGRESS, []),
+      write(KEYS.CHALLENGE_PROGRESS, []),
+      write(KEYS.PROGRESS_HISTORY, []),
+      write(KEYS.PERSONAL_RECORDS, []),
+      write(KEYS.WEEKLY_STATS, [])
+    ]);
   }
 };
 
