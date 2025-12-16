@@ -3,7 +3,7 @@
  */
 
 /**
- * Format seconds into M:SS format
+ * Format seconds into M:SS format (e.g., "5:30")
  */
 export function formatTime(total: number): string {
   const m = Math.floor(total / 60);
@@ -12,8 +12,57 @@ export function formatTime(total: number): string {
 }
 
 /**
+ * Format seconds into human-readable duration.
+ *
+ * @param seconds - Total seconds
+ * @param style - 'short' for "5m" or "1h 30m", 'long' for "5 minutes" or "1 hour 30 minutes"
+ * @returns Formatted duration string
+ */
+export function formatDuration(
+  seconds: number,
+  style: "short" | "long" = "short"
+): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+
+  if (style === "short") {
+    if (hours > 0) {
+      return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+    }
+    return `${minutes}m`;
+  }
+
+  // Long format
+  const hourText = hours === 1 ? "hour" : "hours";
+  const minuteText = minutes === 1 ? "minute" : "minutes";
+
+  if (hours > 0) {
+    return minutes > 0
+      ? `${hours} ${hourText} ${minutes} ${minuteText}`
+      : `${hours} ${hourText}`;
+  }
+  return `${minutes} ${minuteText}`;
+}
+
+/**
  * Format rep count with proper pluralization
  */
 export function formatReps(count: number): string {
   return count === 1 ? "1 rep" : `${count} reps`;
+}
+
+/**
+ * Format a count with pluralization
+ *
+ * @param count - Number to format
+ * @param singular - Singular form (e.g., "session")
+ * @param plural - Optional plural form, defaults to singular + "s"
+ */
+export function formatCount(
+  count: number,
+  singular: string,
+  plural?: string
+): string {
+  const word = count === 1 ? singular : (plural ?? `${singular}s`);
+  return `${count} ${word}`;
 }

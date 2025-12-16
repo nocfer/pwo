@@ -1,4 +1,4 @@
-import { ConfettiCelebration } from "@/components";
+import { ConfettiCelebration, ErrorScreen, LoadingScreen } from "@/components";
 import ProgramFooter from "@/components/program/ProgramFooter";
 import ProgramSessionView from "@/components/program/ProgramSessionView";
 import { useDataActions } from "@/context/DataContext";
@@ -7,10 +7,9 @@ import { useWorkoutSteps } from "@/hooks/session/useWorkoutSteps";
 import { useWorkoutTimer } from "@/hooks/session/useWorkoutTimer";
 import { getPhaseInfo } from "@/lib/utils/colors";
 import { theme } from "@/theme/theme";
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
 
 export default function ProgramSessionRunner() {
   const params = useLocalSearchParams();
@@ -36,36 +35,14 @@ export default function ProgramSessionRunner() {
   });
 
   if (programsLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.muted}>Loading…</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <LoadingScreen />;
   }
 
   if (!program || !session) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.muted}>Session unavailable.</Text>
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => [
-              styles.secondaryBtn,
-              pressed && styles.secondaryBtnPressed
-            ]}
-          >
-            <Text style={styles.secondaryBtnText}>Back</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
+    return <ErrorScreen message="Session unavailable." />;
   }
 
   const current = timer.currentStep;
-
   const { phaseBg } = getPhaseInfo(timer.phase, current?.type);
 
   return (
@@ -84,25 +61,14 @@ export default function ProgramSessionRunner() {
         timer={timer}
       />
 
-      {/* Bottom controls */}
       {timer.phase !== "done" && <ProgramFooter timer={timer} />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
-  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
-  muted: { ...theme.typography.body, color: theme.colors.muted },
-
-  secondaryBtn: {
-    marginTop: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    paddingVertical: theme.spacing.md,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  secondaryBtnPressed: { backgroundColor: theme.colors.card },
-  secondaryBtnText: { ...theme.typography.bodyBold, color: theme.colors.text }
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background
+  }
 });

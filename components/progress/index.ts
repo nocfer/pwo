@@ -9,5 +9,6 @@ export { default as ProgressCard } from "./ProgressCard";
 export { RepsProgressionChart, SessionsCompletedChart } from "./ProgressCharts";
 export { default as ProgressStats } from "./ProgressStats";
 export { default as ProgressView } from "./ProgressView";
+export { ProgressViewBase, type StatItem } from "./ProgressViewBase";
 export { TargetView } from "./TargetView";
 export { WeeklyChart, WeeklyChartCompact } from "./WeeklyChart";

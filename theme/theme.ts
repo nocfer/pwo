@@ -168,6 +168,109 @@ const cards = {
   }
 } as const;
 
+// Reusable style presets to avoid duplication
+const presets = {
+  // Standard card container
+  card: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    ...shadows.sm
+  },
+
+  // Row with space-between
+  rowBetween: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const
+  },
+
+  // Row with items centered
+  rowCenter: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const
+  },
+
+  // Primary button style
+  buttonPrimary: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: colors.primary,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.lg,
+    ...shadows.md
+  },
+  buttonPrimaryPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }]
+  },
+  buttonPrimaryDisabled: {
+    opacity: 0.6
+  },
+  buttonPrimaryText: {
+    ...typography.bodyBold,
+    color: colors.primaryTextOn
+  },
+
+  // Secondary button style
+  buttonSecondary: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface
+  },
+  buttonSecondaryPressed: {
+    backgroundColor: colors.card
+  },
+  buttonSecondaryText: {
+    ...typography.bodyBold,
+    color: colors.text
+  },
+
+  // Muted text
+  textMuted: {
+    ...typography.body,
+    color: colors.muted
+  },
+
+  // Caption muted
+  captionMuted: {
+    ...typography.caption,
+    color: colors.muted
+  },
+
+  // Session row base
+  sessionRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm
+  },
+  sessionRowPressed: {
+    backgroundColor: colors.background,
+    transform: [{ scale: 0.98 }]
+  },
+  sessionRowCompleted: {
+    borderColor: colors.success,
+    backgroundColor: colors.successLight
+  },
+  sessionRowLocked: {
+    opacity: 0.6
+  }
+} as const;
+
 export const theme = {
   colors,
   fonts,
@@ -175,5 +278,6 @@ export const theme = {
   radius,
   shadows,
   typography,
-  cards
+  cards,
+  presets
 } as const;

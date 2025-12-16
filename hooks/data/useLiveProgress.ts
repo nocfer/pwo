@@ -6,8 +6,9 @@
  */
 
 import { useRefreshVersions } from "@/context/DataContext";
+import { useAsyncData } from "@/hooks/useAsyncData";
 import { storage } from "@/lib/storage";
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 
 export type LiveProgress = {
   slug: string;
@@ -15,50 +16,21 @@ export type LiveProgress = {
 };
 
 export function useLiveProgress(slug: string | undefined) {
-  const [data, setData] = useState<LiveProgress | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  // Get version from context to trigger re-fetches
   const { progressVersion } = useRefreshVersions();
 
-  useEffect(() => {
-    let mounted = true;
+  const fetcher = useCallback(async (): Promise<LiveProgress | null> => {
+    if (!slug) return null;
 
-    async function loadProgress() {
-      try {
-        if (!slug) {
-          if (mounted) {
-            setData(null);
-            setLoading(false);
-          }
-          return;
-        }
-
-        setLoading(true);
-        const streak = await storage.loadStreak(slug);
-
-        if (!mounted) return;
-
-        if (streak) {
-          setData({ slug, streak });
-        } else {
-          // No progress data yet - return empty streak
-          setData({ slug, streak: [0, 0, 0, 0, 0, 0, 0] });
-        }
-      } catch (e) {
-        if (mounted) setError(e as Error);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
-    loadProgress();
-
-    return () => {
-      mounted = false;
+    const streak = await storage.loadStreak(slug);
+    return {
+      slug,
+      streak: streak ?? [0, 0, 0, 0, 0, 0, 0]
     };
-  }, [slug, progressVersion]);
+  }, [slug]);
+
+  const { data, loading, error } = useAsyncData(fetcher, [slug, progressVersion], {
+    skip: !slug
+  });
 
   return { data, loading, error } as const;
 }

@@ -6,59 +6,29 @@
  */
 
 import { useRefreshVersions } from "@/context/DataContext";
+import { useAsyncData } from "@/hooks/useAsyncData";
 import { storage } from "@/lib/storage";
 import type { HistoryEntry } from "@/types";
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 
 export type { HistoryEntry };
 
 export function useLiveHistory(slug: string | undefined) {
-  const [data, setData] = useState<HistoryEntry[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  // Get version from context to trigger re-fetches
   const { historyVersion } = useRefreshVersions();
 
-  useEffect(() => {
-    let mounted = true;
+  const fetcher = useCallback(async (): Promise<HistoryEntry[] | null> => {
+    if (!slug) return null;
 
-    async function loadHistory() {
-      try {
-        if (!slug) {
-          if (mounted) {
-            setData(null);
-            setLoading(false);
-          }
-          return;
-        }
+    const history = await storage.loadHistory(slug);
+    // Sort by date descending
+    return history.sort((a, b) =>
+      a.date < b.date ? 1 : a.date > b.date ? -1 : 0
+    );
+  }, [slug]);
 
-        setLoading(true);
-
-        // Load from storage
-        const history = await storage.loadHistory(slug);
-
-        if (!mounted) return;
-
-        // Sort by date descending
-        history.sort((a, b) =>
-          a.date < b.date ? 1 : a.date > b.date ? -1 : 0
-        );
-
-        setData(history);
-      } catch (e) {
-        if (mounted) setError(e as Error);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
-    loadHistory();
-
-    return () => {
-      mounted = false;
-    };
-  }, [slug, historyVersion]);
+  const { data, loading, error } = useAsyncData(fetcher, [slug, historyVersion], {
+    skip: !slug
+  });
 
   return { data, loading, error } as const;
 }

@@ -1,18 +1,11 @@
+import { SearchInput } from "@/components";
 import { useDataActions } from "@/context/DataContext";
 import { useExercises, usePrograms } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View
-} from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Tab = "programs" | "exercises";
@@ -106,31 +99,13 @@ export default function LibraryScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search-outline"
-            size={18}
-            color={theme.colors.muted}
-            style={{ marginRight: theme.spacing.sm }}
-          />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder={
-              tab === "programs" ? "Search programs..." : "Search exercises..."
-            }
-            placeholderTextColor={theme.colors.muted}
-            style={styles.searchInput}
-          />
-          {query.length > 0 && (
-            <Ionicons
-              name="close-circle"
-              size={18}
-              color={theme.colors.muted}
-              onPress={() => setQuery("")}
-            />
-          )}
-        </View>
+        <SearchInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder={
+            tab === "programs" ? "Search programs..." : "Search exercises..."
+          }
+        />
 
         {isLoading ? (
           <View style={styles.card}>
@@ -409,22 +384,6 @@ const styles = StyleSheet.create({
   },
   segmentTextActive: {
     color: theme.colors.primary
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm
-  },
-  searchInput: {
-    flex: 1,
-    ...theme.typography.body,
-    color: theme.colors.text,
-    paddingVertical: theme.spacing.xs
   },
   list: {
     gap: theme.spacing.md
