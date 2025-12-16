@@ -1,6 +1,7 @@
 import { theme } from "@/theme/theme";
 import React, { ReactNode } from "react";
 import { StyleSheet, Text, View, ViewStyle } from "react-native";
+import { AnimatedCard } from "../common";
 
 export type StepCardProps = {
   title: string;
@@ -10,6 +11,9 @@ export type StepCardProps = {
   right?: ReactNode;
   style?: ViewStyle | ViewStyle[];
   children?: ReactNode;
+  delayMultiplier?: number;
+  phaseAccent?: string;
+  phaseBg?: string;
 };
 
 export function StepCard({
@@ -19,15 +23,27 @@ export function StepCard({
   locked,
   right,
   style,
-  children
+  children,
+  phaseAccent,
+  phaseBg,
+  delayMultiplier = 0
 }: StepCardProps) {
   const containerStyles = [
     styles.card,
-    active && styles.cardActive,
+    active && {
+      ...styles.cardActive,
+      backgroundColor: phaseBg,
+      borderColor: phaseAccent
+    },
     done && styles.cardDone,
-    locked && styles.cardLocked,
+    locked && {
+      ...styles.cardLocked,
+      backgroundColor: phaseBg,
+      borderColor: phaseAccent
+    },
     style
   ];
+
   const titleStyles = [
     styles.cardTitle,
     done && styles.cardTitleDone,
@@ -35,13 +51,15 @@ export function StepCard({
   ];
 
   return (
-    <View style={containerStyles}>
-      <View style={styles.rowBetween}>
-        <Text style={titleStyles}>{title}</Text>
-        {right}
+    <AnimatedCard delay={100 * delayMultiplier}>
+      <View style={containerStyles}>
+        <View style={styles.rowBetween}>
+          <Text style={titleStyles}>{title}</Text>
+          {right}
+        </View>
+        {children}
       </View>
-      {children}
-    </View>
+    </AnimatedCard>
   );
 }
 
@@ -56,18 +74,15 @@ const styles = StyleSheet.create({
   },
   cardActive: {
     borderColor: theme.colors.primary,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
     backgroundColor: theme.colors.primaryLight
   },
   cardDone: {
     borderColor: theme.colors.phases.done,
     backgroundColor: theme.colors.phases.doneBg,
-    borderLeftWidth: 3,
-    borderLeftColor: theme.colors.phases.done
+    opacity: 0.4
   },
   cardLocked: {
-    opacity: 0.5,
+    opacity: 0.4,
     ...theme.shadows.sm
   },
   cardTitle: {

@@ -176,13 +176,13 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 4,
     backgroundColor: theme.colors.card,
-    borderRadius: theme.radius.xs,
+    borderRadius: theme.radius.sm,
     overflow: "hidden"
   },
   progressFill: {
     height: "100%",
     backgroundColor: theme.colors.success,
-    borderRadius: theme.radius.xs
+    borderRadius: theme.radius.sm
   },
   progressText: {
     ...theme.typography.caption,

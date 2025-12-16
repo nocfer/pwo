@@ -1,0 +1,180 @@
+import { WorkoutStep } from "@/hooks/session";
+import { theme } from "@/theme/theme";
+import { Ionicons } from "@expo/vector-icons";
+import { StyleSheet, Text, View } from "react-native";
+
+type FocusCardProps = {
+  phaseAccent: string;
+  phaseBg: string;
+  phaseChipText: string;
+  title: string;
+  subTitle: string;
+  icon: string;
+  current?: WorkoutStep;
+  sessionTimer?: number;
+  timerEnabled?: boolean;
+};
+
+export function FocusCard({
+  phaseAccent,
+  phaseBg,
+  subTitle,
+  phaseChipText,
+  title,
+  icon,
+  current,
+  sessionTimer,
+  timerEnabled = false
+}: FocusCardProps) {
+  return (
+    <View
+      style={[
+        theme.cards.focus.container,
+        {
+          borderColor: phaseAccent,
+          backgroundColor: phaseBg
+        }
+      ]}
+    >
+      {/* Header row */}
+      <View style={styles.focusTopRow}>
+        {/* Left group */}
+        <View style={styles.headerGroup}>
+          <View
+            style={[
+              styles.focusIconSmall,
+              { backgroundColor: phaseAccent + "20" }
+            ]}
+          >
+            <Ionicons name={icon as any} size={20} color={phaseAccent} />
+          </View>
+          <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
+            {phaseChipText}
+          </Text>
+        </View>
+      </View>
+
+      <Text style={timerEnabled ? styles.timerHero : styles.focusTitle}>
+        {title}
+      </Text>
+
+      <Text style={styles.focusSub}>{subTitle}</Text>
+
+      {current?.type === "exercise" && (
+        <View style={styles.focusMetrics}>
+          {current.targetReps != null && (
+            <View style={styles.focusMetric}>
+              <Ionicons name="repeat" size={16} color={theme.colors.muted} />
+              <Text style={styles.focusMetricText}>
+                {current.targetReps} reps
+              </Text>
+            </View>
+          )}
+
+          {current.durationSeconds != null && (
+            <View style={styles.focusMetric}>
+              <Ionicons
+                name="time-outline"
+                size={16}
+                color={theme.colors.muted}
+              />
+              <Text style={styles.focusMetricText}>
+                {current.durationSeconds}s
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
+
+      {current?.type === "exercise" && current.note && (
+        <View style={styles.focusNoteContainer}>
+          <Ionicons
+            name="information-circle-outline"
+            size={16}
+            color={theme.colors.subtext}
+          />
+          <Text style={styles.focusNote}>{current.note}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  focusTopRow: {
+    ...theme.cards.focus.topRow,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+
+  headerGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs
+  },
+
+  focusIconSmall: theme.cards.focus.icons.sm,
+
+  phaseChipText: theme.cards.focus.chipText,
+
+  focusTitle: {
+    ...theme.typography.h2,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+    textAlign: "center"
+  },
+
+  focusSub: {
+    ...theme.typography.body,
+    color: theme.colors.muted,
+    textAlign: "center"
+  },
+
+  focusMetrics: {
+    flexDirection: "row",
+    gap: theme.spacing.lg,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+    justifyContent: "center"
+  },
+
+  focusMetric: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs
+  },
+
+  focusMetricText: {
+    ...theme.typography.body,
+    color: theme.colors.text,
+    fontFamily: theme.fonts.semiBold
+  },
+
+  focusNoteContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border
+  },
+
+  focusNote: {
+    ...theme.typography.caption,
+    color: theme.colors.subtext,
+    flex: 1,
+    lineHeight: 18
+  },
+
+  timerHero: {
+    fontSize: 46,
+    fontWeight: "500",
+    fontVariant: ["tabular-nums"],
+    marginBottom: theme.spacing.sm,
+    textAlign: "center"
+  }
+});
+
+export default FocusCard;
