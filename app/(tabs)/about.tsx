@@ -4,66 +4,116 @@ import { storage } from "@/lib/storage";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const isWeb = Platform.OS === "web";
 
 export default function AboutScreen() {
   const [clearing, setClearing] = useState(false);
   const { refreshAll, refreshProgress } = useDataActions();
 
-  const handleClearProgressData = useCallback(() => {
-    Alert.alert(
-      "Clear Progress Data",
-      "This will delete all your workout history, streaks, and personal records. Your exercise and program library will be kept. This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear Progress",
-          style: "destructive",
-          onPress: async () => {
-            setClearing(true);
-            void haptics.skipAction();
-            try {
-              await storage.clearAllProgressData();
-              refreshProgress();
-              Alert.alert("Done", "All progress data has been cleared.");
-            } catch (error) {
-              Alert.alert("Error", "Failed to clear data. Please try again.");
-            } finally {
-              setClearing(false);
-            }
-          }
-        }
-      ]
-    );
+  const doClearProgressData = useCallback(async () => {
+    setClearing(true);
+    void haptics.skipAction();
+    try {
+      await storage.clearAllProgressData();
+      refreshProgress();
+      if (isWeb) {
+        window.alert("All progress data has been cleared.");
+      } else {
+        Alert.alert("Done", "All progress data has been cleared.");
+      }
+    } catch (error) {
+      console.error("Failed to clear progress data:", error);
+      if (isWeb) {
+        window.alert("Failed to clear data. Please try again.");
+      } else {
+        Alert.alert("Error", "Failed to clear data. Please try again.");
+      }
+    } finally {
+      setClearing(false);
+    }
   }, [refreshProgress]);
 
-  const handleClearAllData = useCallback(() => {
-    Alert.alert(
-      "Clear All Data",
-      "This will delete ALL your data including exercises, programs, workout history, and personal records. This is a full reset and cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear Everything",
-          style: "destructive",
-          onPress: async () => {
-            setClearing(true);
-            void haptics.skipAction();
-            try {
-              await storage.clearAllData();
-              refreshAll();
-              Alert.alert("Done", "All data has been cleared.");
-            } catch (error) {
-              Alert.alert("Error", "Failed to clear data. Please try again.");
-            } finally {
-              setClearing(false);
-            }
-          }
-        }
-      ]
-    );
+  const doClearAllData = useCallback(async () => {
+    setClearing(true);
+    void haptics.skipAction();
+    try {
+      await storage.clearAllData();
+      refreshAll();
+      if (isWeb) {
+        window.alert("All data has been cleared.");
+      } else {
+        Alert.alert("Done", "All data has been cleared.");
+      }
+    } catch (error) {
+      console.error("Failed to clear all data:", error);
+      if (isWeb) {
+        window.alert("Failed to clear data. Please try again.");
+      } else {
+        Alert.alert("Error", "Failed to clear data. Please try again.");
+      }
+    } finally {
+      setClearing(false);
+    }
   }, [refreshAll]);
+
+  const handleClearProgressData = useCallback(() => {
+    if (isWeb) {
+      const confirmed = window.confirm(
+        "This will delete all your workout history, streaks, and personal records. Your exercise and program library will be kept. This cannot be undone.\n\nContinue?"
+      );
+      if (confirmed) {
+        void doClearProgressData();
+      }
+    } else {
+      Alert.alert(
+        "Clear Progress Data",
+        "This will delete all your workout history, streaks, and personal records. Your exercise and program library will be kept. This cannot be undone.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Clear Progress",
+            style: "destructive",
+            onPress: () => void doClearProgressData()
+          }
+        ]
+      );
+    }
+  }, [doClearProgressData]);
+
+  const handleClearAllData = useCallback(() => {
+    if (isWeb) {
+      const confirmed = window.confirm(
+        "This will delete ALL your data including exercises, programs, workout history, and personal records. This is a full reset and cannot be undone.\n\nContinue?"
+      );
+      if (confirmed) {
+        void doClearAllData();
+      }
+    } else {
+      Alert.alert(
+        "Clear All Data",
+        "This will delete ALL your data including exercises, programs, workout history, and personal records. This is a full reset and cannot be undone.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Clear Everything",
+            style: "destructive",
+            onPress: () => void doClearAllData()
+          }
+        ]
+      );
+    }
+  }, [doClearAllData]);
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "right", "left"]}>
