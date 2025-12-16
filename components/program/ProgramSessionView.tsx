@@ -103,12 +103,32 @@ export default function ProgramSessionView({
 
           <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>{program.name}</Text>
-            <Text style={styles.headerSubtitle}>
-              {title} • {currentStepIndex + 1}/{steps.length}
-            </Text>
-            <Text style={styles.headerSubtitle}>
-              {formatTime(sessionTimer)} elapsed
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text style={{ ...styles.headerSubtitle, flex: 1 }}>
+                {title} • {currentStepIndex + 1}/{steps.length}
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginEnd: theme.spacing.xxl
+                }}
+              >
+                <Ionicons
+                  name="time-outline"
+                  size={18}
+                  color={theme.colors.muted}
+                  style={{
+                    marginRight: theme.spacing.xs,
+                    marginBottom: 8,
+                    flex: 1
+                  }}
+                />
+                <Text style={styles.headerSubtitle}>
+                  {formatTime(sessionTimer)}
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
 

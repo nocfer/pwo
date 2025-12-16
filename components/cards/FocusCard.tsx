@@ -52,22 +52,6 @@ export function FocusCard({
             {phaseChipText}
           </Text>
         </View>
-
-        {/* Right group (timer) */}
-
-        <View style={styles.headerGroup}>
-          <View
-            style={[
-              styles.focusIconSmall,
-              { backgroundColor: phaseAccent + "20" }
-            ]}
-          >
-            <Ionicons name="time-sharp" size={20} color={phaseAccent} />
-          </View>
-          <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
-            {sessionTimer}
-          </Text>
-        </View>
       </View>
 
       <Text style={timerEnabled ? styles.timerHero : styles.focusTitle}>
