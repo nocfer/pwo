@@ -7,13 +7,29 @@ export default function useProgramSessionTimer({
   phase: WorkoutPhase;
 }) {
   const [sessionTimer, setSessionTimer] = useState(0);
+  const [running, setRunning] = useState(false);
 
   useEffect(() => {
-    if (phase === "done") {
-      return;
+    // Start global timer when warmup begins
+    if (phase === "timed" && !running) {
+      setRunning(true);
     }
-    setTimeout(() => setSessionTimer(sessionTimer + 1), 1000);
-  }, [phase, sessionTimer]);
+
+    // Stop global timer when session is done
+    if (phase === "done") {
+      setRunning(false);
+    }
+  }, [phase, running]);
+
+  useEffect(() => {
+    if (!running) return;
+
+    const interval = setInterval(() => {
+      setSessionTimer((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [running]);
 
   return { sessionTimer };
 }
