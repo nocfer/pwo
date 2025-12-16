@@ -151,7 +151,7 @@ export default function ProgressScreen() {
             }
           ]}
         >
-          <ConsistencyHeatmap weeks={12} />
+          <ConsistencyHeatmap weeks={8} />
         </Animated.View>
 
         {/* Section 3: Personal Records */}

@@ -200,8 +200,8 @@ export function useWorkoutTimer(opts: {
     setShowConfetti(true);
     void haptics.sessionComplete();
     const summary = `${program?.name ?? slug} · Session ${sessionIndex} · ${steps.length} steps`;
-    await completeSession(slug, sessionIndex, summary);
-  }, [completeSession, program?.name, sessionIndex, slug, steps.length]);
+    await completeSession(slug, sessionIndex, summary, sessionElapsedSeconds);
+  }, [completeSession, program?.name, sessionIndex, slug, steps.length, sessionElapsedSeconds]);
 
   const advanceToNextStep = useCallback(() => {
     setCurrentIndex((i) => {

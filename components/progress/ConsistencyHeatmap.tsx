@@ -27,7 +27,7 @@ const levelColors: Record<ConsistencyLevel, string> = {
   3: "#059669" // emerald-600 for high activity
 };
 
-export default function ConsistencyHeatmap({ weeks = 12 }: Props) {
+export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
   const { data, loading } = useConsistencyData(weeks);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -153,6 +153,7 @@ const styles = StyleSheet.create({
   },
   dayLabelsColumn: {
     marginRight: theme.spacing.xs,
+    flexDirection: "column",
     gap: CELL_GAP
   },
   dayLabelCell: {
@@ -171,6 +172,7 @@ const styles = StyleSheet.create({
     gap: CELL_GAP
   },
   weekColumn: {
+    flexDirection: "column",
     gap: CELL_GAP
   },
   cell: {
