@@ -1,5 +1,5 @@
 import { AnimatedCard } from "@/components";
-import ChallengeViewV2 from "@/components/challenge/ChallengeViewV2";
+import ChallengeView from "@/components/challenge/ChallengeView";
 import ProgramView from "@/components/program/ProgramView";
 import {
   useChallengeProgress,
@@ -97,10 +97,10 @@ export default function ProgramDetail() {
         contentContainerStyle={styles.content}
       >
         {isChallenge && (
-          <ChallengeViewV2
+          <ChallengeView
             challengeMetrics={challengeMetrics!}
             program={program}
-          ></ChallengeViewV2>
+          />
         )}
         {programMetrics && (
           <ProgramView

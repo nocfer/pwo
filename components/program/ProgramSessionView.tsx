@@ -1,5 +1,6 @@
 import { useExercises } from "@/hooks";
 import { UseWorkoutTimerReturn, WorkoutStep } from "@/hooks/session";
+import useProgramSessionTimer from "@/hooks/session/useProgramSessionTimer";
 import { formatTime } from "@/lib/utils";
 import { getPhaseInfo } from "@/lib/utils/colors";
 import { theme } from "@/theme/theme";
@@ -9,9 +10,8 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useRef } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FocusCard from "../cards/FocusCard";
+import { FocusCard, StepCard } from "../cards";
 import { AnimatedCard, AnimatedProgressBar } from "../common";
-import { StepCard } from "../session";
 
 type Props = {
   session: ProgramSession;
@@ -55,6 +55,8 @@ export default function ProgramSessionView({
           : null;
 
   const listRef = useRef<FlatList<any> | null>(null);
+
+  const { sessionTimer } = useProgramSessionTimer({ phase: timer.phase });
 
   // Auto-scroll to active step
   useEffect(() => {
@@ -104,8 +106,12 @@ export default function ProgramSessionView({
             <Text style={styles.headerSubtitle}>
               {title} • {currentStepIndex + 1}/{steps.length}
             </Text>
+            <Text style={styles.headerSubtitle}>
+              {formatTime(sessionTimer)} elapsed
+            </Text>
           </View>
         </View>
+
         <AnimatedCard>
           {/* Progress bar */}
           <AnimatedProgressBar
@@ -180,19 +186,20 @@ export default function ProgramSessionView({
             />
           ) : current?.type === "warmup" ? (
             <FocusCard
-              title="Warm-up"
+              title={formatTime(current.seconds)}
               phaseAccent={phaseAccent}
               phaseBg={phaseBg}
-              subTitle={current.seconds + "seconds • Tap to begin"}
-              phaseChipText="Ready to start"
+              subTitle={"Stretch well to prepare for your workout!"}
+              phaseChipText="Warm-up"
               icon="flame"
+              timerEnabled={true}
             />
           ) : current?.type === "rest" ? (
             <FocusCard
               icon="pause-circle"
               phaseChipText="Rest period"
               title={current.label ? current.label : "Rest"}
-              subTitle={current.seconds + " seconds • Tap to start timer"}
+              subTitle={current.seconds + " seconds"}
               phaseAccent={phaseAccent}
               phaseBg={phaseBg}
             />

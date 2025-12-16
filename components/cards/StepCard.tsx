@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   cardDone: {
     borderColor: theme.colors.phases.done,
     backgroundColor: theme.colors.phases.doneBg,
-    opacity: 0.75
+    opacity: 0.4
   },
   cardLocked: {
     opacity: 0.4,
