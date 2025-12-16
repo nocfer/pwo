@@ -10,6 +10,7 @@ export type SessionState = {
   timer: number;
   isPaused: boolean;
   warmupDone: boolean;
+  sessionElapsedSeconds: number; // Total elapsed time for the session
 };
 
 export type EventRecord = {
