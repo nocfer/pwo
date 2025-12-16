@@ -1,30 +1,19 @@
-import { ChallengesView } from "@/components";
+import { ChallengesView, SearchInput } from "@/components";
 import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
-import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View
-} from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ChallengesScreen() {
   const [query, setQuery] = useState("");
-  const [isFocused, setIsFocused] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     void haptics.refresh();
-    // Trigger a re-render of ChallengesView by changing the key
     setRefreshKey((prev) => prev + 1);
-    // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 800));
     setRefreshing(false);
   }, []);
@@ -50,36 +39,11 @@ export default function ChallengesScreen() {
           </Text>
         </View>
 
-        <View
-          style={[
-            styles.searchContainer,
-            isFocused && styles.searchContainerFocused
-          ]}
-        >
-          <Ionicons
-            name="search-outline"
-            size={20}
-            color={isFocused ? theme.colors.primary : theme.colors.muted}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            placeholder="Search challenges..."
-            placeholderTextColor={theme.colors.muted}
-            value={query}
-            onChangeText={setQuery}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            style={styles.searchInput}
-          />
-          {query.length > 0 && (
-            <Ionicons
-              name="close-circle"
-              size={20}
-              color={theme.colors.muted}
-              onPress={() => setQuery("")}
-            />
-          )}
-        </View>
+        <SearchInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search challenges..."
+        />
 
         <ChallengesView key={refreshKey} query={query} />
       </ScrollView>
@@ -107,29 +71,5 @@ const styles = StyleSheet.create({
   subtitle: {
     ...theme.typography.body,
     color: theme.colors.muted
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    ...theme.shadows.sm
-  },
-  searchContainerFocused: {
-    borderColor: theme.colors.primary,
-    ...theme.shadows.md
-  },
-  searchIcon: {
-    marginRight: theme.spacing.sm
-  },
-  searchInput: {
-    flex: 1,
-    ...theme.typography.body,
-    color: theme.colors.text,
-    paddingVertical: theme.spacing.xs
   }
 });

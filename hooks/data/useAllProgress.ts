@@ -5,9 +5,11 @@
  */
 
 import { useRefreshVersions } from "@/context/DataContext";
+import { useAsyncData } from "@/hooks/useAsyncData";
 import { storage } from "@/lib/storage";
+import { getActivityDates } from "@/lib/utils/progress";
 import type { ChallengeProgress, ProgramProgress } from "@/types";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 export type AggregatedProgress = {
   totalWorkoutsCompleted: number;
@@ -24,51 +26,36 @@ export type AggregatedProgress = {
   }[];
 };
 
+type AllProgressData = {
+  programProgress: ProgramProgress[];
+  challengeProgress: ChallengeProgress[];
+};
+
 export function useAllProgress(): {
   data: AggregatedProgress | null;
   loading: boolean;
   error: Error | null;
 } {
-  const [programProgress, setProgramProgress] = useState<ProgramProgress[]>([]);
-  const [challengeProgress, setChallengeProgress] = useState<
-    ChallengeProgress[]
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
   const { progressVersion } = useRefreshVersions();
 
-  useEffect(() => {
-    let mounted = true;
+  const fetcher = useCallback(async (): Promise<AllProgressData> => {
+    const [programProgress, challengeProgress] = await Promise.all([
+      storage.loadAllProgramProgress(),
+      storage.loadAllChallengeProgress()
+    ]);
+    return { programProgress, challengeProgress };
+  }, []);
 
-    async function loadAllProgress() {
-      try {
-        setLoading(true);
-        const [programs, challenges] = await Promise.all([
-          storage.loadAllProgramProgress(),
-          storage.loadAllChallengeProgress()
-        ]);
-
-        if (mounted) {
-          setProgramProgress(programs);
-          setChallengeProgress(challenges);
-        }
-      } catch (e) {
-        if (mounted) setError(e as Error);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
-    loadAllProgress();
-
-    return () => {
-      mounted = false;
-    };
-  }, [progressVersion]);
+  const {
+    data: progressData,
+    loading,
+    error
+  } = useAsyncData(fetcher, [progressVersion]);
 
   const data = useMemo((): AggregatedProgress | null => {
-    if (loading) return null;
+    if (loading || !progressData) return null;
+
+    const { programProgress, challengeProgress } = progressData;
 
     let totalWorkoutsCompleted = 0;
     let totalTimeSpentSeconds = 0;
@@ -119,54 +106,38 @@ export function useAllProgress(): {
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 
-    // Calculate overall streak (longest streak across all programs/challenges)
+    // Calculate overall streak using activity dates
     let currentStreak = 0;
-    const allLastActivity = [
-      ...programProgress.map((p) => p.lastActivityAt).filter(Boolean),
-      ...challengeProgress.map((c) => c.lastActivityAt).filter(Boolean)
-    ];
+    const activityDates = getActivityDates(
+      recentActivity.map((a) => ({ completedAt: a.date }))
+    );
+    const sortedDates = Array.from(activityDates).sort().reverse();
 
-    if (allLastActivity.length > 0) {
-      const mostRecent = new Date(
-        Math.max(...allLastActivity.map((d) => new Date(d).getTime()))
-      );
+    if (sortedDates.length > 0) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      mostRecent.setHours(0, 0, 0, 0);
+      let checkDate = new Date(today);
 
-      const daysDiff = Math.floor(
-        (today.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      for (const dateStr of sortedDates) {
+        const activityDate = new Date(dateStr);
+        activityDate.setHours(0, 0, 0, 0);
 
-      if (daysDiff <= 1) {
-        // Count consecutive days with activity
-        const activityDates = new Set(
-          recentActivity.map((a) => a.date.slice(0, 10))
+        const daysDiff = Math.floor(
+          (checkDate.getTime() - activityDate.getTime()) /
+            (1000 * 60 * 60 * 24)
         );
-        const sortedDates = Array.from(activityDates).sort().reverse();
 
-        let checkDate = new Date(today);
-        for (const dateStr of sortedDates) {
-          const activityDate = new Date(dateStr);
-          activityDate.setHours(0, 0, 0, 0);
-
-          const daysDiff2 = Math.floor(
-            (checkDate.getTime() - activityDate.getTime()) /
-              (1000 * 60 * 60 * 24)
-          );
-
-          if (daysDiff2 === 0 || (currentStreak === 0 && daysDiff2 <= 1)) {
-            currentStreak++;
-            checkDate = new Date(activityDate);
-            checkDate.setDate(checkDate.getDate() - 1);
-          } else {
-            break;
-          }
+        if (daysDiff === 0 || (currentStreak === 0 && daysDiff <= 1)) {
+          currentStreak++;
+          checkDate = new Date(activityDate);
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
         }
       }
     }
 
-    // Count active programs/challenges (those with at least one session completed but not all)
+    // Count active programs/challenges
     const activePrograms = programProgress.filter((p) => {
       const runs = p.runs ?? [];
       const currentRun = runs[runs.length - 1];
@@ -188,9 +159,9 @@ export function useAllProgress(): {
       activeChallenges,
       activePrograms,
       currentStreak,
-      recentActivity: recentActivity.slice(0, 20) // Last 20 activities
+      recentActivity: recentActivity.slice(0, 20)
     };
-  }, [programProgress, challengeProgress, loading]);
+  }, [progressData, loading]);
 
   return { data, loading, error };
 }

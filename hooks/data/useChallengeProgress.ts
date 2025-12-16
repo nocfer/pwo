@@ -6,9 +6,15 @@
  */
 
 import { useRefreshVersions } from "@/context/DataContext";
+import { useAsyncData } from "@/hooks/useAsyncData";
 import { storage } from "@/lib/storage";
+import {
+  calculateCompletionPercentage,
+  calculateStreak,
+  findNextSessionIndex
+} from "@/lib/utils/progress";
 import type { ChallengeProgress, Program } from "@/types";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { generateChallengeSessions } from "./useChallengeSessions";
 
 export type ChallengeProgressMetrics = {
@@ -33,10 +39,6 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
   loading: boolean;
   error: Error | null;
 } {
-  const [progress, setProgress] = useState<ChallengeProgress | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
   const { progressVersion } = useRefreshVersions();
 
   const challengeId = challenge?.id;
@@ -48,38 +50,18 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
     return generateChallengeSessions(challenge.challengeConfig!);
   }, [challenge, isChallenge]);
 
-  useEffect(() => {
-    let mounted = true;
+  const fetcher = useCallback(async (): Promise<ChallengeProgress | null> => {
+    if (!challengeId || !isChallenge) return null;
+    return storage.loadChallengeProgress(challengeId);
+  }, [challengeId, isChallenge]);
 
-    async function loadProgress() {
-      try {
-        if (!challengeId || !isChallenge) {
-          if (mounted) {
-            setProgress(null);
-            setLoading(false);
-          }
-          return;
-        }
-
-        setLoading(true);
-        const loaded = await storage.loadChallengeProgress(challengeId);
-
-        if (mounted) {
-          setProgress(loaded);
-        }
-      } catch (e) {
-        if (mounted) setError(e as Error);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
-    loadProgress();
-
-    return () => {
-      mounted = false;
-    };
-  }, [challengeId, isChallenge, progressVersion]);
+  const {
+    data: progress,
+    loading,
+    error
+  } = useAsyncData(fetcher, [challengeId, isChallenge, progressVersion], {
+    skip: !challengeId || !isChallenge
+  });
 
   const metrics = useMemo((): ChallengeProgressMetrics | null => {
     if (!challenge || !isChallenge || !challenge.challengeConfig) {
@@ -110,8 +92,10 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
 
     const completedSessions = progress.sessions.filter((s) => s.completed);
     const sessionsCompleted = completedSessions.length;
-    const completionPercentage =
-      totalSessions > 0 ? (sessionsCompleted / totalSessions) * 100 : 0;
+    const completionPercentage = calculateCompletionPercentage(
+      sessionsCompleted,
+      totalSessions
+    );
 
     const totalRepsCompleted = progress.totalRepsCompleted;
     const repsProgressPercentage =
@@ -119,48 +103,14 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
         ? Math.min(100, (totalRepsCompleted / targetReps) * 100)
         : 0;
 
-    // Calculate current streak (consecutive days with activity)
-    let currentStreak = 0;
-    if (completedSessions.length > 0) {
-      const sortedByDate = [...completedSessions].sort(
-        (a, b) =>
-          new Date(b.completedAt || "").getTime() -
-          new Date(a.completedAt || "").getTime()
-      );
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      let checkDate = new Date(today);
+    // Use shared utility for streak calculation
+    const currentStreak = calculateStreak(completedSessions);
 
-      for (const session of sortedByDate) {
-        if (!session.completedAt) continue;
-        const sessionDate = new Date(session.completedAt);
-        sessionDate.setHours(0, 0, 0, 0);
-
-        const daysDiff = Math.floor(
-          (checkDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
-
-        if (daysDiff === 0 || (currentStreak === 0 && daysDiff <= 1)) {
-          currentStreak++;
-          checkDate = new Date(sessionDate);
-          checkDate.setDate(checkDate.getDate() - 1);
-        } else {
-          break;
-        }
-      }
-    }
-
-    // Find next session to complete
+    // Use shared utility for finding next session
     const completedIndices = new Set(
       completedSessions.map((s) => s.sessionIndex)
     );
-    let nextSessionIndex: number | null = null;
-    for (let i = 1; i <= totalSessions; i++) {
-      if (!completedIndices.has(i)) {
-        nextSessionIndex = i;
-        break;
-      }
-    }
+    const nextSessionIndex = findNextSessionIndex(completedIndices, totalSessions);
 
     const isCompleted =
       sessionsCompleted === totalSessions && totalRepsCompleted >= targetReps;
