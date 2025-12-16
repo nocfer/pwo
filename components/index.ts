@@ -22,22 +22,7 @@ export {
 } from "./common";
 
 // Session components
-export {
-  FocusCard,
-  SessionComplete,
-  SessionFooter,
-  SessionHeader,
-  SessionProgressBar,
-  StepCard
-} from "./session";
-
-// Challenge components
-export {
-  ChallengeButton,
-  ChallengesView,
-  SessionsView,
-  SwipeableChallengeButton
-} from "./challenge";
+export { FocusCard, StepCard } from "./cards";
 
 // Progress components
 export {
@@ -53,6 +38,8 @@ export {
   WeeklyChart,
   WeeklyChartCompact
 } from "./progress";
+
+export { ChallengesView, SwipeableChallengeButton } from "./challenge";
 
 // Individual components (not moved)
 export { ConfettiCelebration } from "./ConfettiCelebration";

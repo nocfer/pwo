@@ -27,8 +27,11 @@ export default function LibraryScreen() {
   const filteredPrograms = useMemo(() => {
     if (!programs) return [];
     const q = query.trim().toLowerCase();
-    if (!q) return programs;
-    return programs.filter((p) => p.name.toLowerCase().includes(q));
+    if (!q) return programs.filter((p) => !p.challengeConfig);
+
+    return programs.filter(
+      (p) => p.name.toLowerCase().includes(q) && !p.challengeConfig
+    );
   }, [programs, query]);
 
   const filteredExercises = useMemo(() => {

@@ -1,10 +1,11 @@
-import { ProgressCard } from "@/components";
+import { AnimatedCard } from "@/components";
+import ChallengeView from "@/components/challenge/ChallengeView";
+import ProgramView from "@/components/program/ProgramView";
 import {
   useChallengeProgress,
   useChallengeSessions,
   useProgramProgress,
-  usePrograms,
-  useSessionCompletion
+  usePrograms
 } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -32,7 +33,6 @@ export default function ProgramDetail() {
   const { metrics: programMetrics } = useProgramProgress(
     !isChallenge ? program : undefined
   );
-  const { completed } = useSessionCompletion(id);
 
   if (loading) {
     return (
@@ -47,23 +47,23 @@ export default function ProgramDetail() {
   if (!program) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={[styles.card, { margin: theme.spacing.lg }]}>
-          <Text style={styles.muted}>Program not found.</Text>
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => [
-              styles.secondaryBtn,
-              pressed && styles.secondaryBtnPressed
-            ]}
-          >
-            <Text style={styles.secondaryBtnText}>Back</Text>
-          </Pressable>
-        </View>
+        <AnimatedCard>
+          <View style={[styles.card, { margin: theme.spacing.lg }]}>
+            <Text style={styles.muted}>Program not found.</Text>
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => [
+                styles.secondaryBtn,
+                pressed && styles.secondaryBtnPressed
+              ]}
+            >
+              <Text style={styles.secondaryBtnText}>Back</Text>
+            </Pressable>
+          </View>
+        </AnimatedCard>
       </SafeAreaView>
     );
   }
-
-  const firstSession = sessions[0];
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
@@ -92,123 +92,22 @@ export default function ProgramDetail() {
         </View>
       </View>
       <ScrollView
+        showsVerticalScrollIndicator={false}
         style={styles.container}
         contentContainerStyle={styles.content}
       >
-        {/* Progress Section */}
-        {isChallenge && challengeMetrics && (
-          <View style={styles.card}>
-            <ProgressCard
-              title={program.name}
-              completionPercentage={challengeMetrics.completionPercentage}
-              sessionsCompleted={challengeMetrics.sessionsCompleted}
-              totalSessions={challengeMetrics.totalSessions}
-              variant="challenge"
-            />
-            <View style={styles.progressStats}>
-              <View style={styles.progressStat}>
-                <Text style={styles.progressStatValue}>
-                  {challengeMetrics.totalRepsCompleted}
-                </Text>
-                <Text style={styles.progressStatLabel}>Reps Completed</Text>
-              </View>
-              <View style={styles.progressStat}>
-                <Text style={styles.progressStatValue}>
-                  {challengeMetrics.targetReps}
-                </Text>
-                <Text style={styles.progressStatLabel}>Target Reps</Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {!isChallenge && programMetrics && (
-          <View style={styles.card}>
-            <ProgressCard
-              title={program.name}
-              completionPercentage={programMetrics.completionPercentage}
-              sessionsCompleted={programMetrics.sessionsCompleted}
-              totalSessions={programMetrics.totalSessions}
-              variant="program"
-            />
-          </View>
-        )}
-
-        <View style={styles.card}>
-          <View style={styles.rowBetween}>
-            <Text style={styles.sectionTitle}>Sessions</Text>
-            <Text style={styles.muted}>{sessions.length}</Text>
-          </View>
-          <View style={{ height: theme.spacing.md }} />
-          {sessions.map((s) => {
-            const isCompleted = completed.has(s.index);
-            return (
-              <Pressable
-                key={s.index}
-                onPress={() =>
-                  router.navigate({
-                    pathname: "/programs/[id]/session/[index]",
-                    params: { id: program.id, index: String(s.index) }
-                  })
-                }
-                style={({ pressed }) => [
-                  styles.sessionRow,
-                  isCompleted && styles.sessionRowCompleted,
-                  pressed && styles.sessionRowPressed
-                ]}
-              >
-                <View style={{ flex: 1 }}>
-                  <View style={styles.sessionTitleRow}>
-                    <Text style={styles.sessionTitle}>
-                      {s.name ? s.name : `Session ${s.index}`}
-                    </Text>
-                    {isCompleted && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={20}
-                        color={theme.colors.success}
-                      />
-                    )}
-                  </View>
-                  <Text style={styles.sessionSubtitle}>
-                    {s.blocks.length} block{s.blocks.length === 1 ? "" : "s"}
-                  </Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={theme.colors.muted}
-                />
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Pressable
-          disabled={!firstSession}
-          onPress={() =>
-            router.navigate({
-              pathname: "/programs/[id]/session/[index]",
-              params: {
-                id: program.id,
-                index: String(firstSession?.index ?? 1)
-              }
-            })
-          }
-          style={({ pressed }) => [
-            styles.primaryBtn,
-            pressed && styles.primaryBtnPressed,
-            !firstSession && styles.primaryBtnDisabled
-          ]}
-        >
-          <Ionicons
-            name="play"
-            size={20}
-            color={theme.colors.primaryTextOn}
-            style={{ marginRight: theme.spacing.sm }}
+        {isChallenge && (
+          <ChallengeView
+            challengeMetrics={challengeMetrics!}
+            program={program}
           />
-          <Text style={styles.primaryBtnText}>Start</Text>
-        </Pressable>
+        )}
+        {programMetrics && (
+          <ProgramView
+            program={program}
+            programMetrics={programMetrics!}
+          ></ProgramView>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
