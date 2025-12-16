@@ -11,10 +11,11 @@ type FocusCardProps = {
   subTitle: string;
   icon: string;
   current?: WorkoutStep;
+  sessionTimer?: number;
   timerEnabled?: boolean;
 };
 
-export default function FocusCard({
+export function FocusCard({
   phaseAccent,
   phaseBg,
   subTitle,
@@ -22,6 +23,7 @@ export default function FocusCard({
   title,
   icon,
   current,
+  sessionTimer,
   timerEnabled = false
 }: FocusCardProps) {
   return (
@@ -34,26 +36,46 @@ export default function FocusCard({
         }
       ]}
     >
+      {/* Header row */}
       <View style={styles.focusTopRow}>
-        <View
-          style={[
-            styles.focusIconSmall,
-            { backgroundColor: phaseAccent + "20" }
-          ]}
-        >
-          <Ionicons name={icon as any} size={20} color={phaseAccent} />
+        {/* Left group */}
+        <View style={styles.headerGroup}>
+          <View
+            style={[
+              styles.focusIconSmall,
+              { backgroundColor: phaseAccent + "20" }
+            ]}
+          >
+            <Ionicons name={icon as any} size={20} color={phaseAccent} />
+          </View>
+          <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
+            {phaseChipText}
+          </Text>
         </View>
-        <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
-          {phaseChipText}
-        </Text>
-        <Text style={[styles.phaseChipTextRight, { color: phaseAccent }]}>
-          {phaseChipText}
-        </Text>
+
+        {/* Right group (timer) */}
+
+        <View style={styles.headerGroup}>
+          <View
+            style={[
+              styles.focusIconSmall,
+              { backgroundColor: phaseAccent + "20" }
+            ]}
+          >
+            <Ionicons name="time-sharp" size={20} color={phaseAccent} />
+          </View>
+          <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
+            {sessionTimer}
+          </Text>
+        </View>
       </View>
+
       <Text style={timerEnabled ? styles.timerHero : styles.focusTitle}>
         {title}
       </Text>
+
       <Text style={styles.focusSub}>{subTitle}</Text>
+
       {current?.type === "exercise" && (
         <View style={styles.focusMetrics}>
           {current.targetReps != null && (
@@ -64,6 +86,7 @@ export default function FocusCard({
               </Text>
             </View>
           )}
+
           {current.durationSeconds != null && (
             <View style={styles.focusMetric}>
               <Ionicons
@@ -78,6 +101,7 @@ export default function FocusCard({
           )}
         </View>
       )}
+
       {current?.type === "exercise" && current.note && (
         <View style={styles.focusNoteContainer}>
           <Ionicons
@@ -93,27 +117,36 @@ export default function FocusCard({
 }
 
 const styles = StyleSheet.create({
-  focusCard: theme.cards.focus.container,
-  focusTopRow: theme.cards.focus.topRow,
-  focusIconSmall: theme.cards.focus.icons.sm,
-  phaseChipText: theme.cards.focus.chipText,
-  phaseChipTextRight: {
-    ...theme.cards.focus.chipText,
-
-    position: "absolute",
-    right: theme.spacing.xs
+  focusTopRow: {
+    ...theme.cards.focus.topRow,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
   },
+
+  headerGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs
+  },
+
+  focusIconSmall: theme.cards.focus.icons.sm,
+
+  phaseChipText: theme.cards.focus.chipText,
+
   focusTitle: {
     ...theme.typography.h2,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
     textAlign: "center"
   },
+
   focusSub: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textAlign: "center"
   },
+
   focusMetrics: {
     flexDirection: "row",
     gap: theme.spacing.lg,
@@ -121,16 +154,19 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     justifyContent: "center"
   },
+
   focusMetric: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.xs
   },
+
   focusMetricText: {
     ...theme.typography.body,
     color: theme.colors.text,
     fontFamily: theme.fonts.semiBold
   },
+
   focusNoteContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -140,17 +176,21 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.colors.border
   },
+
   focusNote: {
     ...theme.typography.caption,
     color: theme.colors.subtext,
     flex: 1,
     lineHeight: 18
   },
+
   timerHero: {
-    fontSize: 54,
-    fontWeight: "700",
+    fontSize: 46,
+    fontWeight: "500",
     fontVariant: ["tabular-nums"],
     marginBottom: theme.spacing.sm,
     textAlign: "center"
   }
 });
+
+export default FocusCard;
