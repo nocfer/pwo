@@ -39,6 +39,8 @@ export {
   WeeklyChartCompact
 } from "./progress";
 
+export { ChallengesView, SwipeableChallengeButton } from "./challenge";
+
 // Individual components (not moved)
 export { ConfettiCelebration } from "./ConfettiCelebration";
 export { default as ImageViewer } from "./ImageViewer";
