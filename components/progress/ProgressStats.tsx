@@ -1,4 +1,5 @@
 import { theme } from "@/theme/theme";
+import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
 
 type StatItem = {
@@ -23,8 +24,19 @@ export default function ProgressStats({ stats, columns = 2 }: Props) {
             columns === 3 && styles.statItemThreeColumns
           ]}
         >
+          {stat.icon && (
+            <View style={styles.iconRow}>
+              <Ionicons
+                name={stat.icon as any}
+                size={18}
+                color={theme.colors.primary}
+                style={{ marginRight: theme.spacing.xs }}
+              />
+              <Text style={styles.label}>{stat.label}</Text>
+            </View>
+          )}
+          {!stat.icon && <Text style={styles.label}>{stat.label}</Text>}
           <Text style={styles.value}>{stat.value}</Text>
-          <Text style={styles.label}>{stat.label}</Text>
         </View>
       ))}
     </View>
@@ -50,6 +62,11 @@ const styles = StyleSheet.create({
   },
   statItemThreeColumns: {
     minWidth: "30%"
+  },
+  iconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: theme.spacing.xs
   },
   value: {
     ...theme.typography.h2,

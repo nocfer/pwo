@@ -37,7 +37,7 @@ export default function ProgramProgressView({ programId }: Props) {
   const stats = [
     {
       label: "Total Time",
-      value: formatTime(metrics.totalTimeSpentSeconds)
+      value: formatTime(metrics.lifetimeTimeSpentSeconds)
     },
     {
       label: "Avg. Session",
@@ -49,7 +49,7 @@ export default function ProgramProgressView({ programId }: Props) {
     },
     {
       label: "Sessions Done",
-      value: `${metrics.sessionsCompleted}/${metrics.totalSessions}`
+      value: `${metrics.currentRunSessionsCompleted}/${metrics.totalSessions}`
     }
   ];
 
@@ -57,8 +57,8 @@ export default function ProgramProgressView({ programId }: Props) {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <ProgressCard
         title={program?.name || "Program"}
-        completionPercentage={metrics.completionPercentage}
-        sessionsCompleted={metrics.sessionsCompleted}
+        completionPercentage={metrics.currentRunCompletionPercentage}
+        sessionsCompleted={metrics.currentRunSessionsCompleted}
         totalSessions={metrics.totalSessions}
         variant="program"
       />

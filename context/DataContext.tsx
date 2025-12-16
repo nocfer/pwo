@@ -519,62 +519,104 @@ export function DataProvider({ children }: { children: ReactNode }) {
             totalReps: totalRepsCompleted
           });
         } else {
-          // Update program progress
+          // Update program progress (open-ended runs model)
           const existing = await storage.loadProgramProgress(slug);
 
+          const sessionProgress: SessionProgress = {
+            sessionIndex,
+            completed: true,
+            completedAt: dateISO,
+            timeSpentSeconds,
+            exercises: exerciseProgress
+          };
+
           if (existing) {
-            // Update existing progress
-            const sessionProgressIndex = existing.sessions.findIndex(
+            const runs = existing.runs ?? [];
+            const nowISO = dateISO;
+
+            // Use the latest run as the current run, or create one if none exist
+            const currentRunIndex = runs.length > 0 ? runs.length - 1 : 0;
+            if (!runs[currentRunIndex]) {
+              runs[currentRunIndex] = {
+                runId: `run_${currentRunIndex + 1}`,
+                startedAt: nowISO,
+                sessions: [],
+                totalTimeSpentSeconds: 0,
+                lastActivityAt: null,
+                updatedAt: nowISO
+              } as any;
+            }
+
+            const currentRun = runs[currentRunIndex];
+
+            // Upsert session within current run
+            const sessionIdx = currentRun.sessions.findIndex(
               (s) => s.sessionIndex === sessionIndex
             );
-            const sessionProgress: SessionProgress = {
-              sessionIndex,
-              completed: true,
-              completedAt: dateISO,
-              timeSpentSeconds,
-              exercises: exerciseProgress
-            };
-
-            if (sessionProgressIndex >= 0) {
-              existing.sessions[sessionProgressIndex] = sessionProgress;
+            if (sessionIdx >= 0) {
+              currentRun.sessions[sessionIdx] = sessionProgress;
             } else {
-              existing.sessions.push(sessionProgress);
+              currentRun.sessions.push(sessionProgress);
             }
 
-            // Recalculate total time
-            existing.totalTimeSpentSeconds = existing.sessions
-              .filter((s) => s.completed)
-              .reduce((sum, s) => sum + (s.timeSpentSeconds || 0), 0);
-
-            existing.lastActivityAt = dateISO;
-            existing.updatedAt = dateISO;
-
-            // Check if program is completed
-            const completedSessions = existing.sessions.filter(
+            // Recalculate run time and activity
+            const completedSessions = currentRun.sessions.filter(
               (s) => s.completed
             );
-            if (completedSessions.length === program.sessions.length) {
-              existing.completedAt = dateISO;
+            currentRun.totalTimeSpentSeconds = completedSessions.reduce(
+              (sum, s) => sum + (s.timeSpentSeconds || 0),
+              0
+            );
+            currentRun.lastActivityAt = dateISO;
+            currentRun.updatedAt = dateISO;
+
+            // If this run has all sessions completed, mark it completedAt
+            if (
+              completedSessions.length === program.sessions.length &&
+              program.sessions.length > 0
+            ) {
+              currentRun.completedAt = dateISO;
             }
+
+            // Update lifetime aggregates on ProgramProgress
+            const allRuns = runs;
+            const allCompletedSessions = allRuns.flatMap((r) =>
+              r.sessions.filter((s) => s.completed)
+            );
+            existing.lifetimeSessionsCompleted = allCompletedSessions.length;
+            existing.lifetimeTimeSpentSeconds = allRuns.reduce(
+              (sum, r) => sum + (r.totalTimeSpentSeconds || 0),
+              0
+            );
+            existing.lastActivityAt = dateISO;
+            existing.updatedAt = dateISO;
+            existing.runs = allRuns;
 
             await storage.saveProgramProgress(existing);
           } else {
-            // Create new program progress
+            // Create new program progress with a first run
             const newProgress: ProgramProgress = {
               programId: slug,
-              startedAt: dateISO,
-              sessions: [
+              runs: [
                 {
-                  sessionIndex,
-                  completed: true,
-                  completedAt: dateISO,
-                  timeSpentSeconds,
-                  exercises: exerciseProgress
+                  runId: "run_1",
+                  startedAt: dateISO,
+                  completedAt: undefined,
+                  sessions: [sessionProgress],
+                  totalTimeSpentSeconds: timeSpentSeconds,
+                  lastActivityAt: dateISO,
+                  updatedAt: dateISO
                 }
               ],
-              totalTimeSpentSeconds: timeSpentSeconds,
+              lifetimeSessionsCompleted: 1,
+              lifetimeTimeSpentSeconds: timeSpentSeconds,
               lastActivityAt: dateISO,
-              updatedAt: dateISO
+              updatedAt: dateISO,
+              // Legacy fields (single-run) for back-compat
+              startedAt: dateISO,
+              completedAt: undefined,
+              sessions: [sessionProgress],
+              totalTimeSpentSeconds: timeSpentSeconds
             };
             await storage.saveProgramProgress(newProgress);
           }
