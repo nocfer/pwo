@@ -51,7 +51,14 @@ export function useConsistencyData(weeks: number = 12): {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayISO = today.toISOString().slice(0, 10);
+    // Format date in local timezone to avoid UTC conversion issues
+    const formatLocalDate = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+    const todayISO = formatLocalDate(today);
 
     // Get the start of the current week (Monday)
     const currentWeekStart = storage.getWeekStart(today);
@@ -67,17 +74,22 @@ export function useConsistencyData(weeks: number = 12): {
       weekStart.setDate(weekStart.getDate() - w * 7);
 
       const days: DayData[] = [];
+      let hasPastData = false;
 
       for (let d = 0; d < 7; d++) {
         const dayDate = new Date(weekStart);
         dayDate.setDate(dayDate.getDate() + d);
-        const dateISO = dayDate.toISOString().slice(0, 10);
+        const dateISO = formatLocalDate(dayDate);
 
         const workoutCount = workoutCounts.get(dateISO) ?? 0;
         const isToday = dateISO === todayISO;
         const isFuture = dayDate > today;
 
-        if (workoutCount > 0) {
+        if (!isFuture) {
+          hasPastData = true;
+        }
+
+        if (workoutCount > 0 && !isFuture) {
           totalWorkouts += workoutCount;
           activeDays++;
           maxWorkoutsPerDay = Math.max(maxWorkoutsPerDay, workoutCount);
@@ -92,10 +104,14 @@ export function useConsistencyData(weeks: number = 12): {
         });
       }
 
-      weeksData.push({
-        weekNumber: weeks - w,
-        days
-      });
+      // Only include weeks that have at least one day in the past
+      // This prevents showing too many future-only weeks
+      if (hasPastData) {
+        weeksData.push({
+          weekNumber: weeks - w,
+          days
+        });
+      }
     }
 
     return {
@@ -106,7 +122,7 @@ export function useConsistencyData(weeks: number = 12): {
     };
   }, [weeks]);
 
-  const { data, loading, error } = useAsyncData(fetcher, [progressVersion]);
+  const { data, loading, error } = useAsyncData(fetcher, [progressVersion, weeks]);
 
   return { data, loading, error };
 }

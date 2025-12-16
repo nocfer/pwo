@@ -49,7 +49,7 @@ export function usePRs(limit: number = 10): {
     return { latestPRs, prsByExercise, bestPRs };
   }, [limit]);
 
-  const { data, loading, error } = useAsyncData(fetcher, [progressVersion]);
+  const { data, loading, error } = useAsyncData(fetcher, [progressVersion, limit]);
 
   return { data, loading, error };
 }

@@ -42,7 +42,8 @@ type DataContextValue = {
     completeSession: (
       slug: string,
       sessionIndex: number,
-      summary: string
+      summary: string,
+      timeSpentSeconds?: number
     ) => Promise<void>;
 
     // Record an event
@@ -366,7 +367,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Actions
   const completeSession = useCallback(
-    async (slug: string, sessionIndex: number, summary: string) => {
+    async (
+      slug: string,
+      sessionIndex: number,
+      summary: string,
+      providedTimeSpentSeconds?: number
+    ) => {
       const dateISO = new Date().toISOString();
       const date = dateISO.slice(0, 10);
 
@@ -394,26 +400,42 @@ export function DataProvider({ children }: { children: ReactNode }) {
           (e) => e.sessionIndex === sessionIndex
         );
 
-        // Calculate time spent from events
-        let timeSpentSeconds = 0;
+        // Use provided time if available, otherwise calculate from events
+        let timeSpentSeconds: number;
         const exerciseProgressMap = new Map<string, ExerciseProgress>();
 
-        for (const event of sessionEvents) {
-          if (
-            event.type === "warmup_started" ||
-            event.type === "break_started"
-          ) {
-            const data = event.data as Record<string, unknown>;
-            const durationSeconds = data?.["durationSeconds"];
-            if (typeof durationSeconds === "number") {
-              timeSpentSeconds += durationSeconds;
+        // If time was provided, use it; otherwise calculate from events
+        if (providedTimeSpentSeconds !== undefined) {
+          timeSpentSeconds = providedTimeSpentSeconds;
+        } else {
+          timeSpentSeconds = 0;
+          for (const event of sessionEvents) {
+            if (
+              event.type === "warmup_started" ||
+              event.type === "break_started"
+            ) {
+              const data = event.data as Record<string, unknown>;
+              const durationSeconds = data?.["durationSeconds"];
+              if (typeof durationSeconds === "number") {
+                timeSpentSeconds += durationSeconds;
+              }
+            }
+            if (event.type === "set_completed") {
+              const data = event.data as Record<string, unknown>;
+              const durationSeconds = data?.["durationSeconds"];
+              if (typeof durationSeconds === "number") {
+                timeSpentSeconds += durationSeconds;
+              }
             }
           }
+        }
+
+        // Always process exercise progress from events
+        for (const event of sessionEvents) {
           if (event.type === "set_completed") {
             const data = event.data as Record<string, unknown>;
             const exerciseId = data?.["exerciseId"];
             const reps = data?.["reps"];
-            const durationSeconds = data?.["durationSeconds"];
 
             if (typeof exerciseId === "string" && typeof reps === "number") {
               const existing = exerciseProgressMap.get(exerciseId) || {
@@ -426,13 +448,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
               existing.setsCompleted += 1;
               exerciseProgressMap.set(exerciseId, existing);
             }
-            if (typeof durationSeconds === "number") {
-              timeSpentSeconds += durationSeconds;
-            }
           }
         }
 
         const exerciseProgress = Array.from(exerciseProgressMap.values());
+
+        // Detect and save personal records for each exercise
+        const sessionId = `${slug}_session_${sessionIndex}`;
+        for (const exProgress of exerciseProgress) {
+          try {
+            await storage.detectAndSavePRs(exProgress.exerciseId, exProgress, sessionId);
+          } catch (error) {
+            // Log error but don't fail session completion
+            console.error(`Failed to detect PRs for exercise ${exProgress.exerciseId}:`, error);
+          }
+        }
 
         if (isChallenge && program.challengeConfig) {
           // Update challenge progress

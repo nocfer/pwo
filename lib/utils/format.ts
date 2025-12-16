@@ -15,7 +15,7 @@ export function formatTime(total: number): string {
  * Format seconds into human-readable duration.
  *
  * @param seconds - Total seconds
- * @param style - 'short' for "5m" or "1h 30m", 'long' for "5 minutes" or "1 hour 30 minutes"
+ * @param style - 'short' for hh:mm format, 'long' for "5 minutes" or "1 hour 30 minutes"
  * @returns Formatted duration string
  */
 export function formatDuration(
@@ -26,10 +26,8 @@ export function formatDuration(
   const minutes = Math.floor((seconds % 3600) / 60);
 
   if (style === "short") {
-    if (hours > 0) {
-      return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-    }
-    return `${minutes}m`;
+    // hh:mm format
+    return `${hours}:${minutes.toString().padStart(2, "0")}`;
   }
 
   // Long format
