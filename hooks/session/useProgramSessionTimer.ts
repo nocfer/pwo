@@ -1,25 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { WorkoutPhase } from "./useWorkoutTimer";
 
 export default function useProgramSessionTimer({
-  phase
+  phase,
+  initialElapsedSeconds = 0
 }: {
   phase: WorkoutPhase;
+  initialElapsedSeconds?: number;
 }) {
-  const [sessionTimer, setSessionTimer] = useState(0);
-  const [running, setRunning] = useState(false);
+  const [sessionTimer, setSessionTimer] = useState(initialElapsedSeconds);
+  const initializedRef = useRef(false);
 
+  // Update timer when initial value changes (e.g., state restored from storage)
   useEffect(() => {
-    // Start global timer when warmup begins
-    if (phase === "timed" && !running) {
-      setRunning(true);
+    if (!initializedRef.current && initialElapsedSeconds > 0) {
+      setSessionTimer(initialElapsedSeconds);
+      initializedRef.current = true;
     }
+  }, [initialElapsedSeconds]);
 
-    // Stop global timer when session is done
-    if (phase === "done") {
-      setRunning(false);
-    }
-  }, [phase, running]);
+  // Timer runs for full session duration, stops only when done
+  const running = phase !== "done";
 
   useEffect(() => {
     if (!running) return;

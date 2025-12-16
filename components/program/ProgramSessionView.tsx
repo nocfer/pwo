@@ -1,6 +1,5 @@
 import { useExercises } from "@/hooks";
 import { UseWorkoutTimerReturn, WorkoutStep } from "@/hooks/session";
-import useProgramSessionTimer from "@/hooks/session/useProgramSessionTimer";
 import { formatTime } from "@/lib/utils";
 import { getPhaseInfo } from "@/lib/utils/colors";
 import { theme } from "@/theme/theme";
@@ -55,8 +54,6 @@ export default function ProgramSessionView({
           : null;
 
   const listRef = useRef<FlatList<any> | null>(null);
-
-  const { sessionTimer } = useProgramSessionTimer({ phase: timer.phase });
 
   // Auto-scroll to active step
   useEffect(() => {
@@ -121,11 +118,10 @@ export default function ProgramSessionView({
                   style={{
                     marginRight: theme.spacing.xs,
                     marginBottom: 8,
-                    flex: 1
                   }}
                 />
                 <Text style={styles.headerSubtitle}>
-                  {formatTime(sessionTimer)}
+                  {formatTime(timer.sessionElapsedSeconds)}
                 </Text>
               </View>
             </View>
