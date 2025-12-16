@@ -6,38 +6,54 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AnimatedCard } from "../common";
 import { ProgressCard } from "../progress";
+import ProgramOverview from "./ProgramOverview";
 
 type Props = { program: Program; programMetrics: ProgramProgressMetrics };
 
 export default function ProgramView({ program, programMetrics }: Props) {
+  const hasSessions = programMetrics.totalSessions > 0;
+  const nextSessionIndex = programMetrics.nextSessionIndex ?? 1;
+  const ctaLabel =
+    (programMetrics.currentRunSessionsCompleted ?? 0) > 0
+      ? "Continue"
+      : "Start";
+
   return (
     <>
       <AnimatedCard>
         <View style={styles.card}>
           <ProgressCard
             title={program.name}
-            completionPercentage={programMetrics.completionPercentage}
-            sessionsCompleted={programMetrics.sessionsCompleted}
+            completionPercentage={
+              programMetrics.currentRunCompletionPercentage
+            }
+            sessionsCompleted={programMetrics.currentRunSessionsCompleted}
             totalSessions={programMetrics.totalSessions}
             variant="program"
           />
         </View>
       </AnimatedCard>
 
+      <ProgramOverview
+        program={program}
+        totalSessions={programMetrics.totalSessions}
+      />
+
       <Pressable
+        disabled={!hasSessions}
         onPress={() =>
           router.navigate({
             pathname: "/programs/[id]/session/[index]",
             params: {
               id: program.id,
-              index: String(1)
+              index: String(nextSessionIndex)
             }
           })
         }
         style={({ pressed }) => [
           styles.primaryBtn,
           pressed && styles.primaryBtnPressed,
-          styles.primaryBtnDisabled
+          !hasSessions && styles.primaryBtnDisabled
         ]}
       >
         <Ionicons
@@ -46,7 +62,7 @@ export default function ProgramView({ program, programMetrics }: Props) {
           color={theme.colors.primaryTextOn}
           style={{ marginRight: theme.spacing.sm }}
         />
-        <Text style={styles.primaryBtnText}>Start</Text>
+        <Text style={styles.primaryBtnText}>{ctaLabel}</Text>
       </Pressable>
     </>
   );

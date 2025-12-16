@@ -135,6 +135,176 @@ function generateId(prefix: string): string {
 }
 
 // ============================================================================
+// Program progress migration helpers
+// ============================================================================
+
+function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
+  if (!raw || typeof raw !== "object") return null;
+
+  const programId = String(raw.programId ?? "");
+  if (!programId) return null;
+
+  const nowISO = new Date().toISOString();
+
+  // If already in new shape (has runs array), normalize lifetime aggregates.
+  if (Array.isArray((raw as any).runs)) {
+    const runs = (raw as any).runs.map((run: any, idx: number) => {
+      const runId =
+        typeof run?.runId === "string" && run.runId.length > 0
+          ? run.runId
+          : `run_${idx + 1}`;
+      const startedAt = String(run?.startedAt ?? nowISO);
+      const sessions = Array.isArray(run?.sessions) ? run.sessions : [];
+      const completedSessions = sessions.filter(
+        (s: any) => s && typeof s === "object" && s.completed
+      );
+      const totalTimeSpentSeconds =
+        typeof run?.totalTimeSpentSeconds === "number"
+          ? run.totalTimeSpentSeconds
+          : completedSessions.reduce(
+              (sum: number, s: any) =>
+                sum +
+                (typeof s.timeSpentSeconds === "number" ? s.timeSpentSeconds : 0),
+              0
+            );
+      const lastActivityAt =
+        typeof run?.lastActivityAt === "string" && run.lastActivityAt
+          ? run.lastActivityAt
+          : completedSessions.reduce<string | null>((latest, s: any) => {
+              const ts = typeof s.completedAt === "string" ? s.completedAt : null;
+              if (!ts) return latest;
+              if (!latest) return ts;
+              return new Date(ts) > new Date(latest) ? ts : latest;
+            }, null);
+      const updatedAt = String(run?.updatedAt ?? lastActivityAt ?? startedAt);
+
+      return {
+        runId,
+        startedAt,
+        completedAt:
+          typeof run?.completedAt === "string" ? run.completedAt : undefined,
+        sessions,
+        totalTimeSpentSeconds,
+        lastActivityAt,
+        updatedAt
+      };
+    });
+
+    const allCompletedSessions = runs.flatMap((r) =>
+      r.sessions.filter((s) => s.completed)
+    );
+    const lifetimeSessionsCompleted = allCompletedSessions.length;
+    const lifetimeTimeSpentSeconds = runs.reduce(
+      (sum, r) =>
+        sum +
+        (typeof r.totalTimeSpentSeconds === "number"
+          ? r.totalTimeSpentSeconds
+          : 0),
+      0
+    );
+    const lastActivityAt = runs.reduce<string | null>((latest, r) => {
+      if (!r.lastActivityAt) return latest;
+      if (!latest) return r.lastActivityAt;
+      return new Date(r.lastActivityAt) > new Date(latest)
+        ? r.lastActivityAt
+        : latest;
+    }, null);
+    const updatedAt =
+      typeof (raw as any).updatedAt === "string"
+        ? (raw as any).updatedAt
+        : lastActivityAt ?? runs[0]?.startedAt ?? nowISO;
+
+    return {
+      programId,
+      runs,
+      lifetimeSessionsCompleted,
+      lifetimeTimeSpentSeconds,
+      lastActivityAt,
+      updatedAt,
+      // Legacy fields (best-effort for backwards compatibility)
+      startedAt:
+        typeof (raw as any).startedAt === "string"
+          ? (raw as any).startedAt
+          : runs[0]?.startedAt,
+      completedAt:
+        typeof (raw as any).completedAt === "string"
+          ? (raw as any).completedAt
+          : runs[0]?.completedAt,
+      sessions: Array.isArray((raw as any).sessions)
+        ? (raw as any).sessions
+        : runs[0]?.sessions,
+      totalTimeSpentSeconds:
+        typeof (raw as any).totalTimeSpentSeconds === "number"
+          ? (raw as any).totalTimeSpentSeconds
+          : lifetimeTimeSpentSeconds
+    };
+  }
+
+  // Legacy single-run shape → wrap into first run + lifetime aggregates
+  const sessions = Array.isArray((raw as any).sessions)
+    ? (raw as any).sessions
+    : [];
+  const completedSessions = sessions.filter(
+    (s: any) => s && typeof s === "object" && s.completed
+  );
+  const totalTimeSpentSeconds =
+    typeof (raw as any).totalTimeSpentSeconds === "number"
+      ? (raw as any).totalTimeSpentSeconds
+      : completedSessions.reduce(
+          (sum: number, s: any) =>
+            sum +
+            (typeof s.timeSpentSeconds === "number" ? s.timeSpentSeconds : 0),
+          0
+        );
+  const lastActivityAt =
+    typeof (raw as any).lastActivityAt === "string" &&
+    (raw as any).lastActivityAt
+      ? (raw as any).lastActivityAt
+      : completedSessions.reduce<string | null>((latest, s: any) => {
+          const ts = typeof s.completedAt === "string" ? s.completedAt : null;
+          if (!ts) return latest;
+          if (!latest) return ts;
+          return new Date(ts) > new Date(latest) ? ts : latest;
+        }, null);
+  const startedAt =
+    typeof (raw as any).startedAt === "string" && (raw as any).startedAt
+      ? (raw as any).startedAt
+      : nowISO;
+  const updatedAt =
+    typeof (raw as any).updatedAt === "string" && (raw as any).updatedAt
+      ? (raw as any).updatedAt
+      : lastActivityAt ?? startedAt;
+
+  const run = {
+    runId: "run_1",
+    startedAt,
+    completedAt:
+      typeof (raw as any).completedAt === "string" &&
+      (raw as any).completedAt
+        ? (raw as any).completedAt
+        : undefined,
+    sessions,
+    totalTimeSpentSeconds,
+    lastActivityAt,
+    updatedAt
+  };
+
+  return {
+    programId,
+    runs: [run],
+    lifetimeSessionsCompleted: completedSessions.length,
+    lifetimeTimeSpentSeconds: totalTimeSpentSeconds,
+    lastActivityAt,
+    updatedAt,
+    // Legacy fields preserved
+    startedAt,
+    completedAt: run.completedAt,
+    sessions,
+    totalTimeSpentSeconds
+  };
+}
+
+// ============================================================================
 // Storage API
 // ============================================================================
 
@@ -388,8 +558,12 @@ export const storage = {
   async loadProgramProgress(
     programId: string
   ): Promise<ProgramProgress | null> {
-    const arr = await read<ProgramProgress[]>(KEYS.PROGRAM_PROGRESS, []);
-    return arr.find((p) => p.programId === programId) ?? null;
+    const arr = await read<unknown[]>(KEYS.PROGRAM_PROGRESS, []);
+    const migrated = arr
+      .map((raw) => migrateProgramProgressRecord(raw))
+      .filter((p): p is ProgramProgress => p !== null);
+    const match = migrated.find((p) => p.programId === programId) ?? null;
+    return match;
   },
 
   async saveProgramProgress(progress: ProgramProgress): Promise<void> {
@@ -404,7 +578,11 @@ export const storage = {
   },
 
   async loadAllProgramProgress(): Promise<ProgramProgress[]> {
-    return read<ProgramProgress[]>(KEYS.PROGRAM_PROGRESS, []);
+    const arr = await read<unknown[]>(KEYS.PROGRAM_PROGRESS, []);
+    const migrated = arr
+      .map((raw) => migrateProgramProgressRecord(raw))
+      .filter((p): p is ProgramProgress => p !== null);
+    return migrated;
   },
 
   // --------------------------------------------------------------------------

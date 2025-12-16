@@ -376,16 +376,19 @@ describe("storage", () => {
     it("saveProgramProgress and loadProgramProgress work together", async () => {
       const progress = {
         programId: "test",
-        startedAt: "2025-01-01T00:00:00.000Z",
-        sessions: [],
-        totalTimeSpentSeconds: 0,
-        lastActivityAt: "2025-01-01T00:00:00.000Z",
+        runs: [],
+        lifetimeSessionsCompleted: 0,
+        lifetimeTimeSpentSeconds: 0,
+        lastActivityAt: null,
         updatedAt: "2025-01-01T00:00:00.000Z"
       };
 
       await storage.saveProgramProgress(progress);
       const loaded = await storage.loadProgramProgress("test");
-      expect(loaded).toEqual(progress);
+      expect(loaded).not.toBeNull();
+      expect(loaded?.programId).toBe("test");
+      expect(loaded?.lifetimeSessionsCompleted).toBe(0);
+      expect(loaded?.lifetimeTimeSpentSeconds).toBe(0);
     });
   });
 });

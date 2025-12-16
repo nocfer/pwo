@@ -14,15 +14,19 @@ export type ProgramProgressMetrics = {
   programId: string;
   progress: ProgramProgress | null;
   totalSessions: number;
-  sessionsCompleted: number;
-  completionPercentage: number;
-  totalTimeSpentSeconds: number;
+  // Current run metrics
+  currentRunIndex: number | null;
+  currentRunSessionsCompleted: number;
+  currentRunCompletionPercentage: number;
+  currentRunStartedAt: string | null;
+  currentRunCompletedAt: string | null;
+  // Lifetime aggregates
+  lifetimeSessionsCompleted: number;
+  lifetimeTimeSpentSeconds: number;
   averageTimePerSessionSeconds: number;
   currentStreak: number;
   nextSessionIndex: number | null;
-  isCompleted: boolean;
-  startedAt: string | null;
-  completedAt: string | null;
+  isCurrentRunCompleted: boolean;
   lastActivityAt: string | null;
   exerciseCompletion: Map<string, { completed: number; total: number }>;
 };
@@ -82,40 +86,50 @@ export function useProgramProgress(program: Program | null | undefined): {
 
     const totalSessions = program.sessions.length;
 
+    // Default values when there is no progress yet
     if (!progress) {
       return {
         programId: program.id,
         progress: null,
         totalSessions,
-        sessionsCompleted: 0,
-        completionPercentage: 0,
-        totalTimeSpentSeconds: 0,
+        currentRunIndex: null,
+        currentRunSessionsCompleted: 0,
+        currentRunCompletionPercentage: 0,
+        currentRunStartedAt: null,
+        currentRunCompletedAt: null,
+        lifetimeSessionsCompleted: 0,
+        lifetimeTimeSpentSeconds: 0,
         averageTimePerSessionSeconds: 0,
         currentStreak: 0,
         nextSessionIndex: totalSessions > 0 ? 1 : null,
-        isCompleted: false,
-        startedAt: null,
-        completedAt: null,
+        isCurrentRunCompleted: false,
         lastActivityAt: null,
         exerciseCompletion: new Map()
       };
     }
 
-    const completedSessions = progress.sessions.filter((s) => s.completed);
-    const sessionsCompleted = completedSessions.length;
-    const completionPercentage =
-      totalSessions > 0 ? (sessionsCompleted / totalSessions) * 100 : 0;
+    const runs = progress.runs ?? [];
+    const currentRun =
+      runs.length > 0 ? runs[runs.length - 1] : undefined;
+    const currentRunSessions =
+      currentRun?.sessions?.filter((s) => s.completed) ?? [];
+    const currentRunSessionsCompleted = currentRunSessions.length;
+    const currentRunCompletionPercentage =
+      totalSessions > 0
+        ? (currentRunSessionsCompleted / totalSessions) * 100
+        : 0;
 
-    const totalTimeSpentSeconds = progress.totalTimeSpentSeconds;
+    const lifetimeSessionsCompleted = progress.lifetimeSessionsCompleted ?? 0;
+    const lifetimeTimeSpentSeconds = progress.lifetimeTimeSpentSeconds ?? 0;
     const averageTimePerSessionSeconds =
-      sessionsCompleted > 0
-        ? Math.round(totalTimeSpentSeconds / sessionsCompleted)
+      lifetimeSessionsCompleted > 0
+        ? Math.round(lifetimeTimeSpentSeconds / lifetimeSessionsCompleted)
         : 0;
 
     // Calculate current streak (consecutive days with activity)
     let currentStreak = 0;
-    if (completedSessions.length > 0) {
-      const sortedByDate = [...completedSessions].sort(
+    if (currentRunSessions.length > 0) {
+      const sortedByDate = [...currentRunSessions].sort(
         (a, b) =>
           new Date(b.completedAt || "").getTime() -
           new Date(a.completedAt || "").getTime()
@@ -145,7 +159,7 @@ export function useProgramProgress(program: Program | null | undefined): {
 
     // Find next session to complete
     const completedIndices = new Set(
-      completedSessions.map((s) => s.sessionIndex)
+      currentRunSessions.map((s) => s.sessionIndex)
     );
     let nextSessionIndex: number | null = null;
     for (let i = 1; i <= totalSessions; i++) {
@@ -175,32 +189,38 @@ export function useProgramProgress(program: Program | null | undefined): {
       });
     });
 
-    // Count completed occurrences from progress
-    completedSessions.forEach((sessionProgress) => {
+    // Count completed occurrences from all runs for exercise completion
+    runs.forEach((run) => {
+      const completed = run.sessions.filter((s) => s.completed);
+      completed.forEach((sessionProgress) => {
       sessionProgress.exercises.forEach((exerciseProgress) => {
         const current = exerciseCompletion.get(exerciseProgress.exerciseId);
         if (current) {
           current.completed++;
         }
       });
+      });
     });
 
-    const isCompleted = sessionsCompleted === totalSessions;
+    const isCurrentRunCompleted =
+      totalSessions > 0 && currentRunSessionsCompleted === totalSessions;
 
     return {
       programId: program.id,
       progress,
       totalSessions,
-      sessionsCompleted,
-      completionPercentage,
-      totalTimeSpentSeconds,
+      currentRunIndex: currentRun ? runs.length : null,
+      currentRunSessionsCompleted,
+      currentRunCompletionPercentage,
+      currentRunStartedAt: currentRun?.startedAt ?? null,
+      currentRunCompletedAt: currentRun?.completedAt ?? null,
+      lifetimeSessionsCompleted,
+      lifetimeTimeSpentSeconds,
       averageTimePerSessionSeconds,
       currentStreak,
       nextSessionIndex,
-      isCompleted,
-      startedAt: progress.startedAt,
-      completedAt: progress.completedAt || null,
-      lastActivityAt: progress.lastActivityAt,
+      isCurrentRunCompleted,
+      lastActivityAt: progress.lastActivityAt ?? null,
       exerciseCompletion
     };
   }, [program, isChallenge, progress]);
