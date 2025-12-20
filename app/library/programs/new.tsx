@@ -1,7 +1,7 @@
 import { useDataActions } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
 import { theme } from "@/theme/theme";
-import type { ProgramBlock } from "@/types";
+import type { ChallengeConfig, ProgramBlock } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
@@ -35,10 +35,23 @@ export default function NewProgramScreen() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
+  const [isChallenge, setIsChallenge] = useState(false);
 
   const [sessionBlocks, setSessionBlocks] = useState<BlockDraft[]>([
     { type: "warmup", seconds: "180" }
   ]);
+
+  // Challenge config state
+  const [challengeExerciseId, setChallengeExerciseId] = useState("");
+  const [challengeSets, setChallengeSets] = useState("5");
+  const [challengeTargetReps, setChallengeTargetReps] = useState("100");
+  const [challengeWarmUpSeconds, setChallengeWarmUpSeconds] = useState("180");
+  const [challengeBreakSeconds, setChallengeBreakSeconds] = useState("90");
+  const [challengeWeeklyIncreasePercent, setChallengeWeeklyIncreasePercent] =
+    useState("10");
+
+  const [challengeExercisePickerOpen, setChallengeExercisePickerOpen] =
+    useState(false);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerTargetIndex, setPickerTargetIndex] = useState<number | null>(
@@ -138,12 +151,70 @@ export default function NewProgramScreen() {
       };
     });
 
-    if (!blocks.some((b) => b.type === "exercise")) {
-      Alert.alert(
-        "Add an exercise",
-        "Programs need at least one exercise block."
-      );
-      return;
+    // Validate challenge config if it's a challenge
+    let challengeConfig: ChallengeConfig | undefined;
+    if (isChallenge) {
+      if (!challengeExerciseId) {
+        Alert.alert("Exercise required", "Please select an exercise.");
+        return;
+      }
+
+      const sets = Number(challengeSets);
+      const targetReps = Number(challengeTargetReps);
+      const warmUpSeconds = Number(challengeWarmUpSeconds);
+      const breakSeconds = Number(challengeBreakSeconds);
+      const weeklyIncreasePercent = Number(challengeWeeklyIncreasePercent);
+
+      if (!Number.isFinite(sets) || sets < 1) {
+        Alert.alert("Invalid sets", "Sets must be at least 1.");
+        return;
+      }
+      if (!Number.isFinite(targetReps) || targetReps < 1) {
+        Alert.alert("Invalid target reps", "Target reps must be at least 1.");
+        return;
+      }
+      if (!Number.isFinite(warmUpSeconds) || warmUpSeconds < 0) {
+        Alert.alert(
+          "Invalid warm-up seconds",
+          "Warm-up seconds must be 0 or greater."
+        );
+        return;
+      }
+      if (!Number.isFinite(breakSeconds) || breakSeconds < 0) {
+        Alert.alert(
+          "Invalid break seconds",
+          "Break seconds must be 0 or greater."
+        );
+        return;
+      }
+      if (
+        !Number.isFinite(weeklyIncreasePercent) ||
+        weeklyIncreasePercent <= 0 ||
+        weeklyIncreasePercent > 100
+      ) {
+        Alert.alert(
+          "Invalid weekly increase",
+          "Weekly increase percent must be between 0 and 100."
+        );
+        return;
+      }
+
+      challengeConfig = {
+        exerciseId: challengeExerciseId,
+        sets,
+        targetReps,
+        warmUpSeconds,
+        breakSeconds,
+        weeklyIncreasePercent
+      };
+    } else {
+      if (!blocks.some((b) => b.type === "exercise")) {
+        Alert.alert(
+          "Add an exercise",
+          "Programs need at least one exercise block."
+        );
+        return;
+      }
     }
 
     setSaving(true);
@@ -152,11 +223,14 @@ export default function NewProgramScreen() {
         id: "",
         name: trimmed,
         description: description.trim() || undefined,
-        sessions: [{ index: 1, name: "Session 1", blocks }]
+        sessions: isChallenge
+          ? []
+          : [{ index: 1, name: "Session 1", blocks }],
+        challengeConfig
       });
       router.back();
     } catch (e) {
-      Alert.alert("Couldn’t save", e instanceof Error ? e.message : String(e));
+      Alert.alert("Couldn't save", e instanceof Error ? e.message : String(e));
     } finally {
       setSaving(false);
     }
@@ -210,9 +284,113 @@ export default function NewProgramScreen() {
             style={[styles.input, { minHeight: 72 }]}
             multiline
           />
+
+          <View style={{ height: theme.spacing.lg }} />
+
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Create as Challenge</Text>
+            <Pressable
+              onPress={() => setIsChallenge(!isChallenge)}
+              style={({ pressed }) => [
+                styles.toggleBtn,
+                isChallenge && styles.toggleBtnActive,
+                pressed && styles.toggleBtnPressed
+              ]}
+            >
+              <Text
+                style={[
+                  styles.toggleBtnText,
+                  isChallenge && styles.toggleBtnTextActive
+                ]}
+              >
+                {isChallenge ? "Yes" : "No"}
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
-        <View style={styles.card}>
+        {isChallenge && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Challenge Configuration</Text>
+
+            <View style={{ height: theme.spacing.md }} />
+
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Exercise</Text>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.pickerBtn,
+                  pressed && styles.pickerBtnPressed
+                ]}
+                onPress={() => setChallengeExercisePickerOpen(true)}
+              >
+                <Text style={styles.pickerBtnText}>
+                  {exerciseNameById.get(challengeExerciseId) ??
+                    "Pick exercise"}
+                </Text>
+                <Ionicons
+                  name="chevron-down"
+                  size={16}
+                  color={theme.colors.muted}
+                />
+              </Pressable>
+            </View>
+
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Sets</Text>
+              <TextInput
+                value={challengeSets}
+                onChangeText={setChallengeSets}
+                keyboardType="number-pad"
+                style={styles.fieldInput}
+              />
+            </View>
+
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Target Reps</Text>
+              <TextInput
+                value={challengeTargetReps}
+                onChangeText={setChallengeTargetReps}
+                keyboardType="number-pad"
+                style={styles.fieldInput}
+              />
+            </View>
+
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Warm-up (seconds)</Text>
+              <TextInput
+                value={challengeWarmUpSeconds}
+                onChangeText={setChallengeWarmUpSeconds}
+                keyboardType="number-pad"
+                style={styles.fieldInput}
+              />
+            </View>
+
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Break (seconds)</Text>
+              <TextInput
+                value={challengeBreakSeconds}
+                onChangeText={setChallengeBreakSeconds}
+                keyboardType="number-pad"
+                style={styles.fieldInput}
+              />
+            </View>
+
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Weekly Increase (%)</Text>
+              <TextInput
+                value={challengeWeeklyIncreasePercent}
+                onChangeText={setChallengeWeeklyIncreasePercent}
+                keyboardType="number-pad"
+                style={styles.fieldInput}
+                placeholder="10"
+              />
+            </View>
+          </View>
+        )}
+
+        {!isChallenge && (
+          <View style={styles.card}>
           <View style={styles.rowBetween}>
             <Text style={styles.sectionTitle}>Session 1</Text>
             <View style={styles.blockButtonsRow}>
@@ -416,6 +594,7 @@ export default function NewProgramScreen() {
             ))}
           </View>
         </View>
+        )}
 
         <Pressable
           onPress={handleSave}
@@ -473,6 +652,50 @@ export default function NewProgramScreen() {
                     );
                     setPickerOpen(false);
                     setPickerTargetIndex(null);
+                  }}
+                  style={({ pressed }) => [
+                    styles.modalRow,
+                    pressed && styles.modalRowPressed
+                  ]}
+                >
+                  <Text style={styles.modalRowText}>{ex.name}</Text>
+                  {ex.source === "builtin" && (
+                    <Text style={styles.modalRowHint}>Built-in</Text>
+                  )}
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={challengeExercisePickerOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setChallengeExercisePickerOpen(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.rowBetween}>
+              <Text style={styles.modalTitle}>Pick an exercise</Text>
+              <Pressable
+                onPress={() => setChallengeExercisePickerOpen(false)}
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  pressed && styles.iconBtnPressed
+                ]}
+              >
+                <Ionicons name="close" size={18} color={theme.colors.text} />
+              </Pressable>
+            </View>
+            <ScrollView style={{ maxHeight: 420 }}>
+              {(exercises ?? []).map((ex) => (
+                <Pressable
+                  key={ex.id}
+                  onPress={() => {
+                    setChallengeExerciseId(ex.id);
+                    setChallengeExercisePickerOpen(false);
                   }}
                   style={({ pressed }) => [
                     styles.modalRow,
@@ -682,5 +905,27 @@ const styles = StyleSheet.create({
   },
   modalRowPressed: { backgroundColor: theme.colors.card },
   modalRowText: { ...theme.typography.body, color: theme.colors.text },
-  modalRowHint: { ...theme.typography.caption, color: theme.colors.muted }
+  modalRowHint: { ...theme.typography.caption, color: theme.colors.muted },
+  toggleBtn: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    minWidth: 80
+  },
+  toggleBtnActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary
+  },
+  toggleBtnPressed: { opacity: 0.8 },
+  toggleBtnText: {
+    ...theme.typography.body,
+    color: theme.colors.text,
+    textAlign: "center"
+  },
+  toggleBtnTextActive: {
+    color: theme.colors.primaryTextOn
+  }
 });

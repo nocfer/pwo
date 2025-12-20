@@ -50,6 +50,11 @@ export type ChallengeConfig = {
   targetReps: number;
   warmUpSeconds: number;
   breakSeconds: number;
+  /**
+   * Weekly increase percentage for rep progression (default: 10%).
+   * Each session increases total reps by this percentage.
+   */
+  weeklyIncreasePercent?: number;
 };
 
 export type Program = {
@@ -62,7 +67,8 @@ export type Program = {
   source: ProgramSource;
   /**
    * If present, this program is a challenge that generates sessions dynamically.
-   * Sessions will be generated from 20 reps to targetReps, +12% per session.
+   * Sessions will be generated from 20 reps to targetReps, with configurable
+   * percentage increase per session (default: 10%).
    */
   challengeConfig?: ChallengeConfig;
 };
