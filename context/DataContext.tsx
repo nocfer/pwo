@@ -76,7 +76,10 @@ type DataContextValue = {
 
     // Programs CRUD
     upsertProgram: (
-      input: Pick<Program, "id" | "name" | "description" | "sessions"> & {
+      input: Pick<
+        Program,
+        "id" | "name" | "description" | "sessions" | "challengeConfig"
+      > & {
         id?: string;
       }
     ) => Promise<Program>;
@@ -782,7 +785,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const upsertProgram = useCallback(
     async (
-      input: Pick<Program, "id" | "name" | "description" | "sessions"> & {
+      input: Pick<
+        Program,
+        "id" | "name" | "description" | "sessions" | "challengeConfig"
+      > & {
         id?: string;
       }
     ) => {
@@ -799,6 +805,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         name: input.name,
         description: input.description,
         sessions: input.sessions,
+        challengeConfig: input.challengeConfig,
         source: "user"
       });
 

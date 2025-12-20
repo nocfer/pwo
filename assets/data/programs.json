@@ -60,7 +60,8 @@
       "sets": 5,
       "targetReps": 100,
       "warmUpSeconds": 180,
-      "breakSeconds": 90
+      "breakSeconds": 90,
+      "weeklyIncreasePercent": 10
     }
   },
   {
@@ -76,7 +77,25 @@
       "sets": 5,
       "targetReps": 100,
       "warmUpSeconds": 300,
-      "breakSeconds": 120
+      "breakSeconds": 120,
+      "weeklyIncreasePercent": 10
+    }
+  },
+  {
+    "id": "challenge_bycicle-crunch",
+    "name": "Bycicle Crunch",
+    "description": "Build core strength and stability with a bycicle crunch challenge",
+    "sessions": [],
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-01-01T00:00:00.000Z",
+    "source": "builtin",
+    "challengeConfig": {
+      "exerciseId": "ex_bycicle-crunch",
+      "sets": 5,
+      "targetReps": 100,
+      "warmUpSeconds": 300,
+      "breakSeconds": 120,
+      "weeklyIncreasePercent": 10
     }
   }
 ]

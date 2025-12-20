@@ -382,6 +382,7 @@ export const storage = {
       name: input.name,
       description: input.description,
       sessions: input.sessions,
+      challengeConfig: input.challengeConfig,
       source: input.source,
       createdAt,
       updatedAt: input.updatedAt ?? now

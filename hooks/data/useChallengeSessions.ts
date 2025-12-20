@@ -13,12 +13,21 @@ function distributeIntoSets(total: number, sets: number): number[] {
 
 /**
  * Generates progressive ProgramSession[] from challenge config.
- * Sessions progress from 20 reps to targetReps, +12% per session.
+ * Sessions progress from 20 reps to targetReps, with configurable
+ * percentage increase per session (default: 10%).
  */
 export function generateChallengeSessions(
   config: ChallengeConfig
 ): ProgramSession[] {
-  const { exerciseId, sets, targetReps, warmUpSeconds, breakSeconds } = config;
+  const {
+    exerciseId,
+    sets,
+    targetReps,
+    warmUpSeconds,
+    breakSeconds,
+    weeklyIncreasePercent
+  } = config;
+  const increasePercent = weeklyIncreasePercent ?? 10;
   const result: ProgramSession[] = [];
   let total = 20;
   let i = 1;
@@ -59,7 +68,7 @@ export function generateChallengeSessions(
     });
 
     i += 1;
-    total += (total * 12) / 100;
+    total += (total * increasePercent) / 100;
   }
 
   // Ensure last session is exactly targetReps if we overshot slightly
