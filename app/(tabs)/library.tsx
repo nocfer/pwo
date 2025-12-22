@@ -50,21 +50,40 @@ export default function LibraryScreen() {
               Create programs and manage exercises
             </Text>
           </View>
-          <Pressable
-            style={({ pressed }) => [
-              styles.addButton,
-              pressed && styles.addButtonPressed
-            ]}
-            onPress={() => {
-              if (tab === "programs") router.navigate("/library/programs/new");
-              else router.navigate("/library/exercises/new");
-            }}
-          >
-            <Ionicons name="add" size={22} color={theme.colors.primaryTextOn} />
-            <Text style={styles.addButtonText}>
-              New {tab === "programs" ? "Program" : "Exercise"}
-            </Text>
-          </Pressable>
+          <View style={styles.headerActions}>
+            {tab === "programs" && (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.scanButton,
+                  pressed && styles.scanButtonPressed
+                ]}
+                onPress={() => {
+                  router.navigate("/library/scan");
+                }}
+              >
+                <Ionicons
+                  name="qr-code-outline"
+                  size={22}
+                  color={theme.colors.primary}
+                />
+              </Pressable>
+            )}
+            <Pressable
+              style={({ pressed }) => [
+                styles.addButton,
+                pressed && styles.addButtonPressed
+              ]}
+              onPress={() => {
+                if (tab === "programs") router.navigate("/library/programs/new");
+                else router.navigate("/library/exercises/new");
+              }}
+            >
+              <Ionicons name="add" size={22} color={theme.colors.primaryTextOn} />
+              <Text style={styles.addButtonText}>
+                New {tab === "programs" ? "Program" : "Exercise"}
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.segmented}>
@@ -334,6 +353,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: theme.spacing.md,
     alignItems: "center"
+  },
+  headerActions: {
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+    alignItems: "center"
+  },
+  scanButton: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    ...theme.shadows.sm
+  },
+  scanButtonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.95 }]
   },
   title: {
     ...theme.typography.h2,

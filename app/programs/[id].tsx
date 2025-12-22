@@ -1,6 +1,7 @@
 import { ErrorScreen, LoadingScreen, ScreenHeader } from "@/components";
 import ChallengeView from "@/components/challenge/ChallengeView";
 import ProgramView from "@/components/program/ProgramView";
+import QRCodeShareModal from "@/components/program/QRCodeShareModal";
 import {
   useChallengeProgress,
   useChallengeSessions,
@@ -8,15 +9,17 @@ import {
   usePrograms
 } from "@/hooks/data";
 import { theme } from "@/theme/theme";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
-import { useMemo } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { useMemo, useState } from "react";
+import { Pressable, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProgramDetail() {
   const params = useLocalSearchParams();
   const id = params.id as string;
   const { data: programs, loading } = usePrograms();
+  const [showQRModal, setShowQRModal] = useState(false);
 
   const program = useMemo(
     () => programs?.find((p) => p.id === id) ?? null,
@@ -45,9 +48,29 @@ export default function ProgramDetail() {
     ? program.description
     : `${sessions.length} session${sessions.length === 1 ? "" : "s"}`;
 
+  const shareButton = (
+    <Pressable
+      onPress={() => setShowQRModal(true)}
+      style={({ pressed }) => [
+        styles.shareButton,
+        pressed && styles.shareButtonPressed
+      ]}
+    >
+      <Ionicons
+        name="qr-code-outline"
+        size={22}
+        color={theme.colors.primary}
+      />
+    </Pressable>
+  );
+
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
-      <ScreenHeader title={program.name} subtitle={subtitle} />
+      <ScreenHeader
+        title={program.name}
+        subtitle={subtitle}
+        rightElement={shareButton}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={styles.container}
@@ -63,6 +86,11 @@ export default function ProgramDetail() {
           <ProgramView program={program} programMetrics={programMetrics!} />
         )}
       </ScrollView>
+      <QRCodeShareModal
+        program={program}
+        visible={showQRModal}
+        onClose={() => setShowQRModal(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -77,5 +105,12 @@ const styles = StyleSheet.create({
     gap: theme.spacing.lg,
     paddingTop: 0,
     paddingBottom: theme.spacing.xxl
+  },
+  shareButton: {
+    padding: theme.spacing.xs,
+    margin: -theme.spacing.xs
+  },
+  shareButtonPressed: {
+    opacity: 0.6
   }
 });
