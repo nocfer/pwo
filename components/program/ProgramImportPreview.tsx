@@ -7,7 +7,7 @@ import { useExercises } from "@/hooks/data";
 import { formatReps } from "@/lib/utils/format";
 import { ShareableProgramData } from "@/lib/utils/programShare";
 import { theme } from "@/theme/theme";
-import { ProgramBlock, ProgramSession } from "@/types";
+import { ChallengeConfig, ProgramBlock, ProgramSession } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -54,8 +54,11 @@ export default function ProgramImportPreview({
   }, [exercises, exerciseIds]);
 
   const hasMissingExercises = missingExercises.length > 0;
-  const sessionCount = programData.sessions.length;
   const isChallenge = Boolean(programData.challengeConfig);
+  
+  // For challenges, sessions are generated dynamically, so we don't count them
+  // For regular programs, count the sessions
+  const sessionCount = isChallenge ? 0 : programData.sessions.length;
 
   // Count exercises in program
   const exerciseCount = exerciseIds.length;
@@ -102,16 +105,30 @@ export default function ProgramImportPreview({
                 {isChallenge ? "Challenge" : "Program"}
               </Text>
             </View>
-            <View style={styles.stat}>
-              <Ionicons
-                name="list-outline"
-                size={20}
-                color={theme.colors.primary}
-              />
-              <Text style={styles.statLabel}>
-                {sessionCount} session{sessionCount === 1 ? "" : "s"}
-              </Text>
-            </View>
+            {!isChallenge && (
+              <View style={styles.stat}>
+                <Ionicons
+                  name="list-outline"
+                  size={20}
+                  color={theme.colors.primary}
+                />
+                <Text style={styles.statLabel}>
+                  {sessionCount} session{sessionCount === 1 ? "" : "s"}
+                </Text>
+              </View>
+            )}
+            {isChallenge && programData.challengeConfig && (
+              <View style={styles.stat}>
+                <Ionicons
+                  name="trending-up-outline"
+                  size={20}
+                  color={theme.colors.primary}
+                />
+                <Text style={styles.statLabel}>
+                  Target: {programData.challengeConfig.targetReps} reps
+                </Text>
+              </View>
+            )}
             <View style={styles.stat}>
               <Ionicons
                 name="fitness-outline"
@@ -161,11 +178,20 @@ export default function ProgramImportPreview({
         </AnimatedCard>
       )}
 
-      <ProgramSessionsPreview
-        sessions={programData.sessions}
-        exercises={exercises ?? []}
-        missingExerciseIds={missingExercises}
-      />
+      {!isChallenge && (
+        <ProgramSessionsPreview
+          sessions={programData.sessions}
+          exercises={exercises ?? []}
+          missingExerciseIds={missingExercises}
+        />
+      )}
+      {isChallenge && programData.challengeConfig && (
+        <ChallengeConfigPreview
+          challengeConfig={programData.challengeConfig}
+          exercises={exercises ?? []}
+          missingExerciseIds={missingExercises}
+        />
+      )}
 
       <View style={styles.actions}>
         <Button
@@ -378,6 +404,30 @@ const styles = StyleSheet.create({
     color: theme.colors.warning,
     marginTop: theme.spacing.xs
   },
+  challengeConfig: {
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.md
+  },
+  challengeRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: theme.spacing.md,
+    paddingVertical: theme.spacing.sm
+  },
+  challengeLabel: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    marginBottom: theme.spacing.xs
+  },
+  challengeValue: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text
+  },
+  challengeValueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm
+  },
   actions: {
     gap: theme.spacing.md,
     marginTop: theme.spacing.md
@@ -561,6 +611,145 @@ function BlockPreview({
         </Text>
       )}
     </StepCard>
+  );
+}
+
+// Component to display challenge configuration
+type ChallengeConfigPreviewProps = {
+  challengeConfig: ChallengeConfig;
+  exercises: Array<{ id: string; name: string }>;
+  missingExerciseIds: string[];
+};
+
+function ChallengeConfigPreview({
+  challengeConfig,
+  exercises,
+  missingExerciseIds
+}: ChallengeConfigPreviewProps) {
+  const exerciseMap = useMemo(() => {
+    return new Map(exercises.map((e) => [e.id, e.name] as const));
+  }, [exercises]);
+
+  const exerciseName =
+    exerciseMap.get(challengeConfig.exerciseId) || challengeConfig.exerciseId;
+  const isMissing = missingExerciseIds.includes(challengeConfig.exerciseId);
+
+  return (
+    <AnimatedCard>
+      <View style={styles.card}>
+        <View style={styles.sessionsHeader}>
+          <Ionicons
+            name="trophy-outline"
+            size={20}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.sessionsTitle}>Challenge Configuration</Text>
+        </View>
+        <Text style={styles.sessionsSubtitle}>
+          Sessions are generated dynamically
+        </Text>
+
+        <View style={styles.challengeConfig}>
+          <View style={styles.challengeRow}>
+            <Ionicons
+              name="fitness-outline"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.challengeLabel}>Exercise</Text>
+              <View style={styles.challengeValueRow}>
+                <Text style={styles.challengeValue}>{exerciseName}</Text>
+                {isMissing && (
+                  <Ionicons
+                    name="warning-outline"
+                    size={16}
+                    color={theme.colors.warning}
+                  />
+                )}
+              </View>
+              {isMissing && (
+                <Text style={styles.missingExerciseLabel}>
+                  Exercise not in your library
+                </Text>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.challengeRow}>
+            <Ionicons
+              name="trending-up-outline"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.challengeLabel}>Target Reps</Text>
+              <Text style={styles.challengeValue}>
+                {challengeConfig.targetReps} reps
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.challengeRow}>
+            <Ionicons
+              name="repeat-outline"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.challengeLabel}>Sets per Session</Text>
+              <Text style={styles.challengeValue}>
+                {challengeConfig.sets} set{challengeConfig.sets === 1 ? "" : "s"}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.challengeRow}>
+            <Ionicons
+              name="timer-outline"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.challengeLabel}>Warm-up</Text>
+              <Text style={styles.challengeValue}>
+                {challengeConfig.warmUpSeconds} seconds
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.challengeRow}>
+            <Ionicons
+              name="time-outline"
+              size={18}
+              color={theme.colors.primary}
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.challengeLabel}>Rest Between Sets</Text>
+              <Text style={styles.challengeValue}>
+                {challengeConfig.breakSeconds} seconds
+              </Text>
+            </View>
+          </View>
+
+          {challengeConfig.weeklyIncreasePercent && (
+            <View style={styles.challengeRow}>
+              <Ionicons
+                name="stats-chart-outline"
+                size={18}
+                color={theme.colors.primary}
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.challengeLabel}>Weekly Increase</Text>
+                <Text style={styles.challengeValue}>
+                  {challengeConfig.weeklyIncreasePercent}%
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+      </View>
+    </AnimatedCard>
   );
 }
 

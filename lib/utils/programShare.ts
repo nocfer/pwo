@@ -73,6 +73,13 @@ export function validateProgramData(data: unknown): data is ShareableProgramData
     return false;
   }
 
+  // For challenges, sessions can be empty (sessions are generated from challengeConfig)
+  // For regular programs, sessions must not be empty
+  const isChallenge = obj.challengeConfig !== undefined;
+  if (!isChallenge && obj.sessions.length === 0) {
+    return false;
+  }
+
   // Validate each session
   for (const session of obj.sessions) {
     if (!session || typeof session !== "object") {
