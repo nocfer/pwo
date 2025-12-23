@@ -71,12 +71,28 @@ export default function ImportPreviewScreen() {
   };
 
   const handleCancel = () => {
-    router.back();
+    // Navigate back to scanner screen
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      // Fallback: navigate to scanner if we can't go back
+      router.replace("/library/scan");
+    }
+  };
+
+  const handleBack = () => {
+    // Navigate back to scanner screen
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      // Fallback: navigate to scanner if we can't go back
+      router.replace("/library/scan");
+    }
   };
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
-      <ScreenHeader title="Import Program" />
+      <ScreenHeader title="Import Program" onBack={handleBack} />
       <ProgramImportPreview
         programData={programData}
         onConfirm={handleConfirm}
