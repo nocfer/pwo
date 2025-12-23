@@ -193,8 +193,8 @@ export default function NewProgramScreen() {
         weeklyIncreasePercent > 100
       ) {
         Alert.alert(
-          "Invalid weekly increase",
-          "Weekly increase percent must be between 0 and 100."
+          "Invalid session increase",
+          "Session increase percent must be between 0 and 100."
         );
         return;
       }
@@ -205,7 +205,7 @@ export default function NewProgramScreen() {
         targetReps,
         warmUpSeconds,
         breakSeconds,
-        weeklyIncreasePercent
+        sessionIncreasePercent: weeklyIncreasePercent
       };
     } else {
       if (!blocks.some((b) => b.type === "exercise")) {
@@ -377,7 +377,7 @@ export default function NewProgramScreen() {
             </View>
 
             <View style={styles.fieldRow}>
-              <Text style={styles.fieldLabel}>Weekly Increase (%)</Text>
+              <Text style={styles.fieldLabel}>Session Increase (%)</Text>
               <TextInput
                 value={challengeWeeklyIncreasePercent}
                 onChangeText={setChallengeWeeklyIncreasePercent}

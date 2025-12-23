@@ -8,6 +8,7 @@ export {
   type ChallengeProgressMetrics
 } from "./useChallengeProgress";
 export {
+  calculateChallengeSessionCount,
   generateChallengeSessions,
   useChallengeSessions
 } from "./useChallengeSessions";

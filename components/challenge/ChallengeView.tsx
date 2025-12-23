@@ -3,6 +3,7 @@ import {
     useChallengeSessions,
     useSessionCompletion
 } from "@/hooks/data";
+import { formatCount } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
 import { Program } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -167,7 +168,7 @@ export default function ChallengeViewV2({ challengeMetrics, program }: Props) {
                     )}
                   </View>
                   <Text style={styles.sessionSubtitle}>
-                    {setsCount} set{setsCount === 1 ? "" : "s"} • {totalReps}{" "}
+                    {formatCount(setsCount, "set")} • {totalReps}{" "}
                     target reps
                   </Text>
                 </View>

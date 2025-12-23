@@ -3,13 +3,16 @@
  * Shows program details and validates exercise dependencies
  */
 
-import { useExercises } from "@/hooks/data";
-import { formatReps } from "@/lib/utils/format";
+import {
+  calculateChallengeSessionCount,
+  useExercises
+} from "@/hooks/data";
+import { formatCount, formatReps } from "@/lib/utils/format";
 import { ShareableProgramData } from "@/lib/utils/programShare";
 import { theme } from "@/theme/theme";
 import { ChallengeConfig, ProgramBlock, ProgramSession } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { StepCard } from "../cards";
 import { AnimatedCard } from "../common";
@@ -56,9 +59,14 @@ export default function ProgramImportPreview({
   const hasMissingExercises = missingExercises.length > 0;
   const isChallenge = Boolean(programData.challengeConfig);
   
-  // For challenges, sessions are generated dynamically, so we don't count them
+  // For challenges, calculate session count from config
   // For regular programs, count the sessions
-  const sessionCount = isChallenge ? 0 : programData.sessions.length;
+  const sessionCount = useMemo(() => {
+    if (isChallenge && programData.challengeConfig) {
+      return calculateChallengeSessionCount(programData.challengeConfig);
+    }
+    return programData.sessions.length;
+  }, [isChallenge, programData.challengeConfig, programData.sessions.length]);
 
   // Count exercises in program
   const exerciseCount = exerciseIds.length;
@@ -113,7 +121,7 @@ export default function ProgramImportPreview({
                   color={theme.colors.primary}
                 />
                 <Text style={styles.statLabel}>
-                  {sessionCount} session{sessionCount === 1 ? "" : "s"}
+                  {formatCount(sessionCount, "session")}
                 </Text>
               </View>
             )}
@@ -136,7 +144,7 @@ export default function ProgramImportPreview({
                 color={theme.colors.primary}
               />
               <Text style={styles.statLabel}>
-                {exerciseCount} exercise{exerciseCount === 1 ? "" : "s"}
+                {formatCount(exerciseCount, "exercise")}
               </Text>
             </View>
           </View>
@@ -155,8 +163,7 @@ export default function ProgramImportPreview({
               <Text style={styles.warningTitle}>Missing Exercises</Text>
             </View>
             <Text style={styles.warningText}>
-              This program references {missingExercises.length} exercise
-              {missingExercises.length === 1 ? "" : "s"} that you don't have
+              This program references {formatCount(missingExercises.length, "exercise")} that you don't have
               in your library:
             </Text>
             <View style={styles.missingList}>
@@ -470,7 +477,7 @@ function ProgramSessionsPreview({
           <Text style={styles.sessionsTitle}>Program Sessions</Text>
         </View>
         <Text style={styles.sessionsSubtitle}>
-          {sessions.length} session{sessions.length === 1 ? "" : "s"} total
+          {formatCount(sessions.length, "session")} total
         </Text>
 
         <View style={styles.sessionsList}>
@@ -512,7 +519,7 @@ function SessionPreview({
           <View style={{ flex: 1 }}>
             <Text style={styles.sessionName}>{sessionName}</Text>
             <Text style={styles.sessionBlockCount}>
-              {blockCount} step{blockCount === 1 ? "" : "s"}
+              {formatCount(blockCount, "step")}
             </Text>
           </View>
         </View>
@@ -614,6 +621,36 @@ function BlockPreview({
   );
 }
 
+// Component to display challenge configuration row
+type ChallengeConfigRowProps = {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: React.ReactNode;
+  warning?: React.ReactNode;
+};
+
+function ChallengeConfigRow({
+  icon,
+  label,
+  value,
+  warning
+}: ChallengeConfigRowProps) {
+  return (
+    <View style={styles.challengeRow}>
+      <Ionicons name={icon} size={18} color={theme.colors.primary} />
+      <View style={{ flex: 1 }}>
+        <Text style={styles.challengeLabel}>{label}</Text>
+        {typeof value === "string" ? (
+          <Text style={styles.challengeValue}>{value}</Text>
+        ) : (
+          value
+        )}
+        {warning}
+      </View>
+    </View>
+  );
+}
+
 // Component to display challenge configuration
 type ChallengeConfigPreviewProps = {
   challengeConfig: ChallengeConfig;
@@ -650,14 +687,10 @@ function ChallengeConfigPreview({
         </Text>
 
         <View style={styles.challengeConfig}>
-          <View style={styles.challengeRow}>
-            <Ionicons
-              name="fitness-outline"
-              size={18}
-              color={theme.colors.primary}
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.challengeLabel}>Exercise</Text>
+          <ChallengeConfigRow
+            icon="fitness-outline"
+            label="Exercise"
+            value={
               <View style={styles.challengeValueRow}>
                 <Text style={styles.challengeValue}>{exerciseName}</Text>
                 {isMissing && (
@@ -668,84 +701,50 @@ function ChallengeConfigPreview({
                   />
                 )}
               </View>
-              {isMissing && (
+            }
+            warning={
+              isMissing ? (
                 <Text style={styles.missingExerciseLabel}>
                   Exercise not in your library
                 </Text>
-              )}
-            </View>
-          </View>
+              ) : undefined
+            }
+          />
 
-          <View style={styles.challengeRow}>
-            <Ionicons
-              name="trending-up-outline"
-              size={18}
-              color={theme.colors.primary}
+          <ChallengeConfigRow
+            icon="trending-up-outline"
+            label="Target Reps"
+            value={`${challengeConfig.targetReps} reps`}
+          />
+
+          <ChallengeConfigRow
+            icon="repeat-outline"
+            label="Sets per Session"
+            value={formatCount(challengeConfig.sets, "set")}
+          />
+
+          <ChallengeConfigRow
+            icon="timer-outline"
+            label="Warm-up"
+            value={`${challengeConfig.warmUpSeconds} seconds`}
+          />
+
+          <ChallengeConfigRow
+            icon="time-outline"
+            label="Rest Between Sets"
+            value={`${challengeConfig.breakSeconds} seconds`}
+          />
+
+          {(challengeConfig.sessionIncreasePercent ??
+            challengeConfig.weeklyIncreasePercent) && (
+            <ChallengeConfigRow
+              icon="stats-chart-outline"
+              label="Session Increase"
+              value={`${
+                challengeConfig.sessionIncreasePercent ??
+                challengeConfig.weeklyIncreasePercent
+              }%`}
             />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.challengeLabel}>Target Reps</Text>
-              <Text style={styles.challengeValue}>
-                {challengeConfig.targetReps} reps
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.challengeRow}>
-            <Ionicons
-              name="repeat-outline"
-              size={18}
-              color={theme.colors.primary}
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.challengeLabel}>Sets per Session</Text>
-              <Text style={styles.challengeValue}>
-                {challengeConfig.sets} set{challengeConfig.sets === 1 ? "" : "s"}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.challengeRow}>
-            <Ionicons
-              name="timer-outline"
-              size={18}
-              color={theme.colors.primary}
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.challengeLabel}>Warm-up</Text>
-              <Text style={styles.challengeValue}>
-                {challengeConfig.warmUpSeconds} seconds
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.challengeRow}>
-            <Ionicons
-              name="time-outline"
-              size={18}
-              color={theme.colors.primary}
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.challengeLabel}>Rest Between Sets</Text>
-              <Text style={styles.challengeValue}>
-                {challengeConfig.breakSeconds} seconds
-              </Text>
-            </View>
-          </View>
-
-          {challengeConfig.weeklyIncreasePercent && (
-            <View style={styles.challengeRow}>
-              <Ionicons
-                name="stats-chart-outline"
-                size={18}
-                color={theme.colors.primary}
-              />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.challengeLabel}>Weekly Increase</Text>
-                <Text style={styles.challengeValue}>
-                  {challengeConfig.weeklyIncreasePercent}%
-                </Text>
-              </View>
-            </View>
           )}
         </View>
       </View>

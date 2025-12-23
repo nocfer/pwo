@@ -10,6 +10,7 @@ export {
   EmptyState,
   ErrorScreen,
   FadeIn,
+  IconButton,
   LoadingScreen,
   NoChallengesEmpty,
   NoHistoryEmpty,

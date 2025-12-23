@@ -90,7 +90,13 @@ export default function EditProgramScreen() {
     String(program?.challengeConfig?.breakSeconds ?? 90)
   );
   const [challengeWeeklyIncreasePercent, setChallengeWeeklyIncreasePercent] =
-    useState(String(program?.challengeConfig?.weeklyIncreasePercent ?? 10));
+    useState(
+      String(
+        program?.challengeConfig?.sessionIncreasePercent ??
+          program?.challengeConfig?.weeklyIncreasePercent ??
+          10
+      )
+    );
 
   const [challengeExercisePickerOpen, setChallengeExercisePickerOpen] =
     useState(false);
@@ -113,7 +119,11 @@ export default function EditProgramScreen() {
         String(program.challengeConfig.breakSeconds ?? 90)
       );
       setChallengeWeeklyIncreasePercent(
-        String(program.challengeConfig.weeklyIncreasePercent ?? 10)
+        String(
+          program.challengeConfig.sessionIncreasePercent ??
+            program.challengeConfig.weeklyIncreasePercent ??
+            10
+        )
       );
     }
   }, [program]);
@@ -255,8 +265,8 @@ export default function EditProgramScreen() {
           weeklyIncreasePercent > 100
         ) {
           Alert.alert(
-            "Invalid weekly increase",
-            "Weekly increase percent must be between 0 and 100."
+            "Invalid session increase",
+            "Session increase percent must be between 0 and 100."
           );
           return;
         }
@@ -267,7 +277,7 @@ export default function EditProgramScreen() {
           targetReps,
           warmUpSeconds,
           breakSeconds,
-          weeklyIncreasePercent
+          sessionIncreasePercent: weeklyIncreasePercent
         };
       }
 
@@ -430,7 +440,7 @@ export default function EditProgramScreen() {
 
             <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>
-                Weekly Increase (%)
+                Session Increase (%)
               </Text>
               <TextInput
                 value={challengeWeeklyIncreasePercent}

@@ -9,6 +9,7 @@ export {
   PulseAnimation
 } from "./AnimatedCard";
 export { default as Button } from "./Button";
+export { default as IconButton } from "./IconButton";
 export {
   EmptyState,
   NoChallengesEmpty,
