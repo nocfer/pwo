@@ -1,11 +1,13 @@
-import { SearchInput } from "@/components";
+import { IconButton, SearchInput } from "@/components";
 import { useDataActions } from "@/context/DataContext";
+import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
 import { useExercises, usePrograms } from "@/hooks/data";
+import { formatCount } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Tab = "programs" | "exercises";
@@ -16,6 +18,14 @@ export default function LibraryScreen() {
   const { data: programs, loading: programsLoading } = usePrograms();
   const { data: exercises, loading: exercisesLoading } = useExercises();
   const actions = useDataActions();
+  const handleDeleteProgram = useDeleteConfirmation(
+    "program",
+    actions.deleteProgram
+  );
+  const handleDeleteExercise = useDeleteConfirmation(
+    "exercise",
+    actions.deleteExercise
+  );
 
   const filteredPrograms = useMemo(() => {
     if (!programs) return [];
@@ -169,66 +179,29 @@ export default function LibraryScreen() {
                       <Text style={styles.rowSubtitle}>{p.description}</Text>
                     ) : (
                       <Text style={styles.rowSubtitleMuted}>
-                        {p.sessions.length} session
-                        {p.sessions.length === 1 ? "" : "s"}
+                        {formatCount(p.sessions.length, "session")}
                       </Text>
                     )}
                   </View>
 
                   <View style={styles.rowActions}>
                     {p.source !== "builtin" && (
-                      <Pressable
+                      <IconButton
+                        icon="create-outline"
                         onPress={() =>
                           router.navigate({
                             pathname: "/library/programs/[id]/edit",
                             params: { id: p.id }
                           })
                         }
-                        style={({ pressed }) => [
-                          styles.iconBtn,
-                          pressed && styles.iconBtnPressed
-                        ]}
-                      >
-                        <Ionicons
-                          name="create-outline"
-                          size={18}
-                          color={theme.colors.text}
-                        />
-                      </Pressable>
+                      />
                     )}
                     {p.source !== "builtin" && (
-                      <Pressable
-                        onPress={() => {
-                          Alert.alert(
-                            "Delete program?",
-                            `Delete “${p.name}”? This can’t be undone.`,
-                            [
-                              { text: "Cancel", style: "cancel" },
-                              {
-                                text: "Delete",
-                                style: "destructive",
-                                onPress: async () => {
-                                  try {
-                                    await actions.deleteProgram(p.id);
-                                  } catch (e) {
-                                    Alert.alert("Couldn’t delete", String(e));
-                                  }
-                                }
-                              }
-                            ]
-                          );
-                        }}
-                        style={({ pressed }) => [
-                          styles.iconBtn,
-                          pressed && styles.iconBtnPressed
-                        ]}
-                      >
-                        <Ionicons
-                          name="trash-outline"
-                          size={18}
-                          color={theme.colors.danger ?? theme.colors.text}
-                        />
-                      </Pressable>
+                      <IconButton
+                        icon="trash-outline"
+                        variant="danger"
+                        onPress={() => handleDeleteProgram(p.id, p.name)}
+                      />
                     )}
                     <Ionicons
                       name="chevron-forward"
@@ -270,63 +243,22 @@ export default function LibraryScreen() {
 
                   <View style={styles.rowActions}>
                     {e.source !== "builtin" && (
-                      <Pressable
+                      <IconButton
+                        icon="create-outline"
                         onPress={() =>
                           router.navigate({
                             pathname: "/library/exercises/[id]/edit",
                             params: { id: e.id }
                           })
                         }
-                        style={({ pressed }) => [
-                          styles.iconBtn,
-                          pressed && styles.iconBtnPressed
-                        ]}
-                      >
-                        <Ionicons
-                          name="create-outline"
-                          size={18}
-                          color={theme.colors.text}
-                        />
-                      </Pressable>
+                      />
                     )}
                     {e.source !== "builtin" && (
-                      <Pressable
-                        onPress={() => {
-                          Alert.alert(
-                            "Delete exercise?",
-                            `Delete “${e.name}”? This can’t be undone.`,
-                            [
-                              { text: "Cancel", style: "cancel" },
-                              {
-                                text: "Delete",
-                                style: "destructive",
-                                onPress: async () => {
-                                  try {
-                                    await actions.deleteExercise(e.id);
-                                  } catch (err) {
-                                    Alert.alert(
-                                      "Couldn’t delete",
-                                      err instanceof Error
-                                        ? err.message
-                                        : String(err)
-                                    );
-                                  }
-                                }
-                              }
-                            ]
-                          );
-                        }}
-                        style={({ pressed }) => [
-                          styles.iconBtn,
-                          pressed && styles.iconBtnPressed
-                        ]}
-                      >
-                        <Ionicons
-                          name="trash-outline"
-                          size={18}
-                          color={theme.colors.danger ?? theme.colors.text}
-                        />
-                      </Pressable>
+                      <IconButton
+                        icon="trash-outline"
+                        variant="danger"
+                        onPress={() => handleDeleteExercise(e.id, e.name)}
+                      />
                     )}
                   </View>
                 </View>

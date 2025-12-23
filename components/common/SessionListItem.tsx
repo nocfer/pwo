@@ -4,6 +4,7 @@
  * Consolidates the duplicate session row pattern from ChallengeView.tsx and others
  */
 
+import { formatCount } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
 import type { ProgramSession } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -35,7 +36,7 @@ export function SessionListItem({
       0
     );
     const setsCount = exerciseBlocks.length;
-    return `${setsCount} set${setsCount === 1 ? "" : "s"} • ${totalReps} target reps`;
+    return `${formatCount(setsCount, "set")} • ${totalReps} target reps`;
   })();
 
   const displaySubtitle = subtitle ?? defaultSubtitle;

@@ -4,6 +4,7 @@ import {
     useExercises,
     useLiveHistory
 } from "@/hooks/data";
+import { formatCount } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
 import { Program } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,9 +26,7 @@ export default function ProgramOverview({
     totalSessions ?? (isChallenge ? challengeSessions.length : program.sessions.length);
   const typeLabel = isChallenge ? "Challenge" : "Program";
   const sourceLabel = program.source === "builtin" ? "Built-in" : "Custom";
-  const descriptionFallback = `This ${typeLabel.toLowerCase()} has ${sessionCount} session${
-    sessionCount === 1 ? "" : "s"
-  }.`;
+  const descriptionFallback = `This ${typeLabel.toLowerCase()} has ${formatCount(sessionCount, "session")}.`;
 
   const stats: { label: string; value: string | number; icon: string }[] = [
     { label: "Sessions", value: sessionCount, icon: "calendar-outline" },
@@ -37,9 +36,7 @@ export default function ProgramOverview({
 
   const challengeDetail =
     isChallenge && program.challengeConfig
-      ? `Target ${program.challengeConfig.targetReps} reps • ${program.challengeConfig.sets} set${
-          program.challengeConfig.sets === 1 ? "" : "s"
-        } per session`
+      ? `Target ${program.challengeConfig.targetReps} reps • ${formatCount(program.challengeConfig.sets, "set")} per session`
       : null;
 
   return (

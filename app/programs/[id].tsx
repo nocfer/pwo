@@ -8,6 +8,7 @@ import {
   useProgramProgress,
   usePrograms
 } from "@/hooks/data";
+import { formatCount } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
@@ -46,7 +47,7 @@ export default function ProgramDetail() {
 
   const subtitle = program.description
     ? program.description
-    : `${sessions.length} session${sessions.length === 1 ? "" : "s"}`;
+    : formatCount(sessions.length, "session");
 
   const shareButton = (
     <Pressable

@@ -25,9 +25,10 @@ export function generateChallengeSessions(
     targetReps,
     warmUpSeconds,
     breakSeconds,
-    weeklyIncreasePercent
+    sessionIncreasePercent,
+    weeklyIncreasePercent // Backward compatibility
   } = config;
-  const increasePercent = weeklyIncreasePercent ?? 10;
+  const increasePercent = sessionIncreasePercent ?? weeklyIncreasePercent ?? 10;
   const result: ProgramSession[] = [];
   let total = 20;
   let i = 1;
@@ -61,9 +62,13 @@ export function generateChallengeSessions(
       }
     }
 
+    // Generate descriptive name showing total reps
+    const totalReps = dist.reduce((sum, r) => sum + r, 0);
+    const sessionName = `${totalReps} Reps`;
+
     result.push({
       index: i,
-      name: `Session ${i}`,
+      name: sessionName,
       blocks
     });
 
@@ -101,15 +106,43 @@ export function generateChallengeSessions(
         }
       }
 
-      result.push({
-        index: i,
-        name: `Session ${i}`,
+      // Last session should show target reps
+      result[result.length - 1] = {
+        ...last,
+        name: `${targetReps} Reps`,
         blocks
-      });
+      };
+    } else {
+      // Update name to show target reps even if we didn't overshoot
+      result[result.length - 1] = {
+        ...last,
+        name: `${targetReps} Reps`
+      };
     }
   }
 
   return result;
+}
+
+/**
+ * Calculate the total number of challenge sessions without generating them all.
+ * This is useful for displaying session counts before generation.
+ */
+export function calculateChallengeSessionCount(
+  config: ChallengeConfig
+): number {
+  const increasePercent =
+    config.sessionIncreasePercent ?? config.weeklyIncreasePercent ?? 10;
+  let total = 20;
+  let count = 0;
+
+  while (total <= config.targetReps) {
+    count += 1;
+    total += (total * increasePercent) / 100;
+  }
+
+  // Add one more for the final session that reaches exactly targetReps
+  return count + 1;
 }
 
 /**
