@@ -888,9 +888,6 @@ export const storage = {
       ? this.getWeekStart(weekStart)
       : this.getWeekStart(new Date());
     const weekStartISO = targetWeekStart.toISOString().slice(0, 10);
-    const weekEndISO = this.getWeekEnd(targetWeekStart)
-      .toISOString()
-      .slice(0, 10);
 
     const allStats = await this.loadWeeklyStats();
     const existing = allStats.find((s) => s.weekStart === weekStartISO);
@@ -910,12 +907,11 @@ export const storage = {
     const weekEndISO = weekEnd.toISOString().slice(0, 10);
 
     // Get all program and challenge progress
-    const [programProgress, challengeProgress, prHistory, history] =
+    const [programProgress, challengeProgress, prHistory] =
       await Promise.all([
         this.loadAllProgramProgress(),
         this.loadAllChallengeProgress(),
-        this.loadAllPRs(),
-        this.getProgressHistory(undefined, undefined, 7)
+        this.loadAllPRs()
       ]);
 
     let workoutsCompleted = 0;
