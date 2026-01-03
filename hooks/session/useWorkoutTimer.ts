@@ -16,7 +16,8 @@ type TimerActions = {
   completeSession: (
     slug: string,
     sessionIndex: number,
-    summary: string
+    summary: string,
+    providedTimeSpentSeconds?: number
   ) => Promise<void>;
   saveSessionState: (state: SessionState) => Promise<void>;
   loadSessionState: (

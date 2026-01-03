@@ -57,7 +57,7 @@ export function EmptyState({
   return (
     <View style={[styles.container, style]}>
       <LinearGradient
-        colors={config.gradientColors as unknown as string[]}
+        colors={[...config.gradientColors] as [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.iconContainer}
