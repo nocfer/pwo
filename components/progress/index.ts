@@ -16,6 +16,7 @@ export { WeeklyChart, WeeklyChartCompact } from "./WeeklyChart";
 
 // New progress components
 export { default as ConsistencyHeatmap } from "./ConsistencyHeatmap";
+export { EnhancedExerciseProgressionChart } from "./EnhancedExerciseProgressionChart";
 export { default as ExerciseProgressionChart } from "./ExerciseProgressionChart";
 export { default as LineChart, type DataPoint } from "./LineChart";
 export { default as PersonalRecordsCard } from "./PersonalRecordsCard";

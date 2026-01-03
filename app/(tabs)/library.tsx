@@ -1,75 +1,51 @@
-import { IconButton, SearchInput } from "@/components";
-import { useDataActions } from "@/context/DataContext";
-import { useDeleteConfirmation } from "@/hooks/useDeleteConfirmation";
-import { useExercises, usePrograms } from "@/hooks/data";
-import { formatCount } from "@/lib/utils/format";
+import { UnifiedDataManager } from "@/components/data";
+import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type Tab = "programs" | "exercises";
-
 export default function LibraryScreen() {
-  const [tab, setTab] = useState<Tab>("programs");
-  const [query, setQuery] = useState("");
-  const { data: programs, loading: programsLoading } = usePrograms();
-  const { data: exercises, loading: exercisesLoading } = useExercises();
-  const actions = useDataActions();
-  const handleDeleteProgram = useDeleteConfirmation(
-    "program",
-    actions.deleteProgram
-  );
-  const handleDeleteExercise = useDeleteConfirmation(
-    "exercise",
-    actions.deleteExercise
-  );
+  const handleCreateNew = (type: "exercise" | "program" | "challenge") => {
+    haptics.buttonTap();
+    switch (type) {
+      case "exercise":
+        router.navigate("/library/exercises/new");
+        break;
+      case "program":
+        router.navigate("/library/programs/new");
+        break;
+      case "challenge":
+        // TODO: Add challenge creation route when implemented
+        break;
+    }
+  };
 
-  const filteredPrograms = useMemo(() => {
-    if (!programs) return [];
-    const q = query.trim().toLowerCase();
-    if (!q) return programs.filter((p) => !p.challengeConfig);
-
-    return programs.filter(
-      (p) => p.name.toLowerCase().includes(q) && !p.challengeConfig
-    );
-  }, [programs, query]);
-
-  const filteredExercises = useMemo(() => {
-    if (!exercises) return [];
-    const q = query.trim().toLowerCase();
-    if (!q) return exercises;
-    return exercises.filter((e) => e.name.toLowerCase().includes(q));
-  }, [exercises, query]);
-
-  const isLoading = tab === "programs" ? programsLoading : exercisesLoading;
+  const handleScanQR = () => {
+    haptics.buttonTap();
+    router.navigate("/library/scan");
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.headerRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Library</Text>
-            <Text style={styles.subtitle}>
-              Create programs and manage exercises
-            </Text>
-          </View>
-          <View style={styles.headerActions}>
-            {tab === "programs" && (
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.title}>Data Management</Text>
+              <Text style={styles.subtitle}>
+                Manage exercises, programs, and challenges
+              </Text>
+            </View>
+            <View style={styles.headerActions}>
               <Pressable
                 style={({ pressed }) => [
                   styles.scanButton,
                   pressed && styles.scanButtonPressed
                 ]}
-                onPress={() => {
-                  router.navigate("/library/scan");
-                }}
+                onPress={handleScanQR}
               >
                 <Ionicons
                   name="qr-code-outline"
@@ -77,201 +53,27 @@ export default function LibraryScreen() {
                   color={theme.colors.primary}
                 />
               </Pressable>
-            )}
-            <Pressable
-              style={({ pressed }) => [
-                styles.addButton,
-                pressed && styles.addButtonPressed
-              ]}
-              onPress={() => {
-                if (tab === "programs")
-                  router.navigate("/library/programs/new");
-                else router.navigate("/library/exercises/new");
-              }}
-            >
-              <Ionicons
-                name="add"
-                size={22}
-                color={theme.colors.primaryTextOn}
-              />
-              <Text style={styles.addButtonText}>
-                New {tab === "programs" ? "Program" : "Exercise"}
-              </Text>
-            </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.addButton,
+                  pressed && styles.addButtonPressed
+                ]}
+                onPress={() => handleCreateNew("exercise")}
+              >
+                <Ionicons
+                  name="add"
+                  size={22}
+                  color={theme.colors.primaryTextOn}
+                />
+                <Text style={styles.addButtonText}>New</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
 
-        <View style={styles.segmented}>
-          <Pressable
-            style={[styles.segment, tab === "programs" && styles.segmentActive]}
-            onPress={() => setTab("programs")}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                tab === "programs" && styles.segmentTextActive
-              ]}
-            >
-              Programs
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.segment,
-              tab === "exercises" && styles.segmentActive
-            ]}
-            onPress={() => setTab("exercises")}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                tab === "exercises" && styles.segmentTextActive
-              ]}
-            >
-              Exercises
-            </Text>
-          </Pressable>
-        </View>
-
-        <SearchInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder={
-            tab === "programs" ? "Search programs..." : "Search exercises..."
-          }
-        />
-
-        {isLoading ? (
-          <View style={styles.card}>
-            <Text style={styles.muted}>Loading…</Text>
-          </View>
-        ) : tab === "programs" ? (
-          <View style={styles.list}>
-            {filteredPrograms.length === 0 ? (
-              <View style={styles.card}>
-                <Text style={styles.muted}>No programs yet.</Text>
-              </View>
-            ) : (
-              filteredPrograms.map((p) => (
-                <Pressable
-                  key={p.id}
-                  style={({ pressed }) => [
-                    styles.rowCard,
-                    pressed && styles.rowCardPressed
-                  ]}
-                  onPress={() =>
-                    router.navigate({
-                      pathname: "/programs/[id]",
-                      params: { id: p.id }
-                    })
-                  }
-                >
-                  <View style={{ flex: 1 }}>
-                    <View style={styles.rowTitle}>
-                      <Text style={styles.rowTitleText}>{p.name}</Text>
-                      {p.source === "builtin" && (
-                        <View style={styles.lockPill}>
-                          <Ionicons
-                            name="lock-closed"
-                            size={12}
-                            color={theme.colors.muted}
-                          />
-                          <Text style={styles.lockPillText}>Built-in</Text>
-                        </View>
-                      )}
-                    </View>
-                    {p.description ? (
-                      <Text style={styles.rowSubtitle}>{p.description}</Text>
-                    ) : (
-                      <Text style={styles.rowSubtitleMuted}>
-                        {formatCount(p.sessions.length, "session")}
-                      </Text>
-                    )}
-                  </View>
-
-                  <View style={styles.rowActions}>
-                    {p.source !== "builtin" && (
-                      <IconButton
-                        icon="create-outline"
-                        onPress={() =>
-                          router.navigate({
-                            pathname: "/library/programs/[id]/edit",
-                            params: { id: p.id }
-                          })
-                        }
-                      />
-                    )}
-                    {p.source !== "builtin" && (
-                      <IconButton
-                        icon="trash-outline"
-                        variant="danger"
-                        onPress={() => handleDeleteProgram(p.id, p.name)}
-                      />
-                    )}
-                    <Ionicons
-                      name="chevron-forward"
-                      size={18}
-                      color={theme.colors.muted}
-                    />
-                  </View>
-                </Pressable>
-              ))
-            )}
-          </View>
-        ) : (
-          <View style={styles.list}>
-            {filteredExercises.length === 0 ? (
-              <View style={styles.card}>
-                <Text style={styles.muted}>No exercises yet.</Text>
-              </View>
-            ) : (
-              filteredExercises.map((e) => (
-                <View key={e.id} style={styles.rowCard}>
-                  <View style={{ flex: 1 }}>
-                    <View style={styles.rowTitle}>
-                      <Text style={styles.rowTitleText}>{e.name}</Text>
-                      {e.source === "builtin" && (
-                        <View style={styles.lockPill}>
-                          <Ionicons
-                            name="lock-closed"
-                            size={12}
-                            color={theme.colors.muted}
-                          />
-                          <Text style={styles.lockPillText}>Built-in</Text>
-                        </View>
-                      )}
-                    </View>
-                    <Text style={styles.rowSubtitleMuted}>
-                      {e.category ?? "exercise"}
-                    </Text>
-                  </View>
-
-                  <View style={styles.rowActions}>
-                    {e.source !== "builtin" && (
-                      <IconButton
-                        icon="create-outline"
-                        onPress={() =>
-                          router.navigate({
-                            pathname: "/library/exercises/[id]/edit",
-                            params: { id: e.id }
-                          })
-                        }
-                      />
-                    )}
-                    {e.source !== "builtin" && (
-                      <IconButton
-                        icon="trash-outline"
-                        variant="danger"
-                        onPress={() => handleDeleteExercise(e.id, e.name)}
-                      />
-                    )}
-                  </View>
-                </View>
-              ))
-            )}
-          </View>
-        )}
-      </ScrollView>
+        {/* Unified Data Manager */}
+        <UnifiedDataManager style={styles.dataManager} />
+      </View>
     </SafeAreaView>
   );
 }
@@ -281,15 +83,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   },
-  content: {
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl
+  header: {
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    ...theme.shadows.sm
   },
-  headerRow: {
+  headerContent: {
     flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.md,
-    alignItems: "center"
+    padding: theme.spacing.lg
+  },
+  title: {
+    ...theme.typography.h2,
+    color: theme.colors.text
+  },
+  subtitle: {
+    ...theme.typography.body,
+    color: theme.colors.muted,
+    marginTop: theme.spacing.xs
   },
   headerActions: {
     flexDirection: "row",
@@ -311,15 +124,6 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     transform: [{ scale: 0.95 }]
   },
-  title: {
-    ...theme.typography.h2,
-    color: theme.colors.text
-  },
-  subtitle: {
-    ...theme.typography.body,
-    color: theme.colors.muted,
-    marginTop: theme.spacing.xs
-  },
   addButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -338,112 +142,7 @@ const styles = StyleSheet.create({
     ...theme.typography.bodyBold,
     color: theme.colors.primaryTextOn
   },
-  segmented: {
-    flexDirection: "row",
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    overflow: "hidden"
-  },
-  segment: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    alignItems: "center"
-  },
-  segmentActive: {
-    backgroundColor: theme.colors.primaryLight
-  },
-  segmentText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.muted
-  },
-  segmentTextActive: {
-    color: theme.colors.primary
-  },
-  list: {
-    gap: theme.spacing.md
-  },
-  card: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderWidth: 1,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    ...theme.shadows.sm
-  },
-  muted: {
-    ...theme.typography.body,
-    color: theme.colors.muted
-  },
-  rowCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.md,
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderWidth: 1,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    ...theme.shadows.sm
-  },
-  rowCardPressed: {
-    backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }]
-  },
-  rowTitle: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm,
-    flexWrap: "wrap"
-  },
-  rowTitleText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.text
-  },
-  rowSubtitle: {
-    ...theme.typography.caption,
-    color: theme.colors.subtext,
-    marginTop: theme.spacing.xs
-  },
-  rowSubtitleMuted: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    marginTop: theme.spacing.xs,
-    textTransform: "capitalize"
-  },
-  rowActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm
-  },
-  iconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.surface
-  },
-  iconBtnPressed: {
-    backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }]
-  },
-  lockPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    borderRadius: 999,
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  lockPillText: {
-    ...theme.typography.caption,
-    color: theme.colors.muted
+  dataManager: {
+    flex: 1
   }
 });

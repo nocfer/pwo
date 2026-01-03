@@ -5,18 +5,19 @@
  */
 
 import { generateChallengeSessions } from "@/hooks/data/useChallengeSessions";
+import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useMemo, useState } from "react";
 import {
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View
+    Alert,
+    Modal,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View
 } from "react-native";
 
 export type ChallengeFormData = {
@@ -81,6 +82,9 @@ export function ChallengeForm({
       field: K,
       value: ChallengeFormData[K]
     ) => {
+      if (field === "difficulty") {
+        haptics.buttonTap();
+      }
       setFormData((prev) => ({ ...prev, [field]: value }));
     },
     []
@@ -91,6 +95,9 @@ export function ChallengeForm({
       field: K,
       value: ChallengeFormData["challengeConfig"][K]
     ) => {
+      if (field === "progressionType") {
+        haptics.buttonTap();
+      }
       setFormData((prev) => ({
         ...prev,
         challengeConfig: { ...prev.challengeConfig, [field]: value }
@@ -103,6 +110,7 @@ export function ChallengeForm({
     if (!newTag.trim()) return;
     const currentTags = formData.tags || [];
     if (!currentTags.includes(newTag.trim())) {
+      haptics.buttonTap();
       updateField("tags", [...currentTags, newTag.trim()]);
     }
     setNewTag("");
@@ -110,6 +118,7 @@ export function ChallengeForm({
 
   const removeTag = useCallback(
     (index: number) => {
+      haptics.buttonTap();
       const currentTags = formData.tags || [];
       updateField(
         "tags",
@@ -171,11 +180,13 @@ export function ChallengeForm({
   const handleSave = useCallback(async () => {
     const trimmed = formData.name.trim();
     if (!trimmed) {
+      haptics.formValidationError();
       Alert.alert("Name required", "Please enter a challenge name.");
       return;
     }
 
     if (!formData.challengeConfig.exerciseId) {
+      haptics.formValidationError();
       Alert.alert(
         "Exercise required",
         "Please select an exercise for the challenge."
@@ -184,6 +195,7 @@ export function ChallengeForm({
     }
 
     if (exercises.length === 0) {
+      haptics.formValidationError();
       Alert.alert(
         "Add an exercise first",
         "Create at least one exercise before creating a challenge."
@@ -194,18 +206,22 @@ export function ChallengeForm({
     // Validate challenge parameters
     const config = formData.challengeConfig;
     if (config.sets <= 0) {
+      haptics.formValidationError();
       Alert.alert("Invalid sets", "Sets must be at least 1.");
       return;
     }
     if (config.targetReps <= 0) {
+      haptics.formValidationError();
       Alert.alert("Invalid target reps", "Target reps must be at least 1.");
       return;
     }
     if (config.warmUpSeconds < 0) {
+      haptics.formValidationError();
       Alert.alert("Invalid warm-up", "Warm-up seconds must be 0 or greater.");
       return;
     }
     if (config.breakSeconds < 0) {
+      haptics.formValidationError();
       Alert.alert("Invalid break", "Break seconds must be 0 or greater.");
       return;
     }
@@ -213,6 +229,7 @@ export function ChallengeForm({
       config.sessionIncreasePercent <= 0 ||
       config.sessionIncreasePercent > 100
     ) {
+      haptics.formValidationError();
       Alert.alert(
         "Invalid progression",
         "Session increase percent must be between 0 and 100."
@@ -226,7 +243,9 @@ export function ChallengeForm({
         name: trimmed,
         description: formData.description?.trim() || undefined
       });
+      haptics.formSave();
     } catch (error) {
+      haptics.formValidationError();
       Alert.alert(
         "Couldn't save",
         error instanceof Error ? error.message : String(error)
@@ -243,7 +262,10 @@ export function ChallengeForm({
       {/* Header */}
       <View style={styles.headerSection}>
         <Pressable
-          onPress={onCancel}
+          onPress={() => {
+            haptics.formCancel();
+            onCancel();
+          }}
           accessibilityRole="button"
           accessibilityLabel="Cancel"
           style={({ pressed }) => [
@@ -329,7 +351,10 @@ export function ChallengeForm({
               styles.pickerBtn,
               pressed && styles.pickerBtnPressed
             ]}
-            onPress={() => setExercisePickerOpen(true)}
+            onPress={() => {
+              haptics.buttonTap();
+              setExercisePickerOpen(true);
+            }}
           >
             <Text style={styles.pickerBtnText}>
               {exerciseNameById.get(formData.challengeConfig.exerciseId) ||
@@ -473,7 +498,10 @@ export function ChallengeForm({
         <View style={styles.rowBetween}>
           <Text style={styles.sectionTitle}>Challenge Preview</Text>
           <Pressable
-            onPress={() => setPreviewOpen(true)}
+            onPress={() => {
+              haptics.buttonTap();
+              setPreviewOpen(true);
+            }}
             style={({ pressed }) => [
               styles.smallBtn,
               pressed && styles.smallBtnPressed
@@ -598,6 +626,7 @@ export function ChallengeForm({
                 <Pressable
                   key={exercise.id}
                   onPress={() => {
+                    haptics.buttonTap();
                     updateChallengeConfig("exerciseId", exercise.id);
                     setExercisePickerOpen(false);
                   }}

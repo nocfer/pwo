@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 
+import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Platform } from "react-native";
@@ -72,6 +73,11 @@ export default function TabLayout() {
             />
           )
         }}
+        listeners={{
+          tabPress: () => {
+            haptics.tabSwitch();
+          }
+        }}
       />
       <Tabs.Screen
         name="challenges"
@@ -85,6 +91,11 @@ export default function TabLayout() {
               size={26}
             />
           )
+        }}
+        listeners={{
+          tabPress: () => {
+            haptics.tabSwitch();
+          }
         }}
       />
       <Tabs.Screen
@@ -100,19 +111,48 @@ export default function TabLayout() {
             />
           )
         }}
+        listeners={{
+          tabPress: () => {
+            haptics.tabSwitch();
+          }
+        }}
+      />
+      <Tabs.Screen
+        name="analytics"
+        options={{
+          headerShown: false,
+          title: "Analytics",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "analytics" : "analytics-outline"}
+              color={color}
+              size={26}
+            />
+          )
+        }}
+        listeners={{
+          tabPress: () => {
+            haptics.tabSwitch();
+          }
+        }}
       />
       <Tabs.Screen
         name="library"
         options={{
           headerShown: false,
-          title: "Library",
+          title: "Data",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "book" : "book-outline"}
+              name={focused ? "library" : "library-outline"}
               color={color}
               size={26}
             />
           )
+        }}
+        listeners={{
+          tabPress: () => {
+            haptics.tabSwitch();
+          }
         }}
       />
       <Tabs.Screen
@@ -129,6 +169,11 @@ export default function TabLayout() {
               size={26}
             />
           )
+        }}
+        listeners={{
+          tabPress: () => {
+            haptics.tabSwitch();
+          }
         }}
       />
     </Tabs>
