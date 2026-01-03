@@ -4,23 +4,24 @@
  * muscle groups, difficulty, equipment, and tags
  */
 
+import haptics from "@/lib/haptics";
 import {
-  VALID_EXERCISE_CATEGORIES,
-  VALID_EXERCISE_ICONS
+    VALID_EXERCISE_CATEGORIES,
+    VALID_EXERCISE_ICONS
 } from "@/lib/validation";
 import { theme } from "@/theme/theme";
 import type { ExerciseCategory } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
 import {
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View
+    Alert,
+    Modal,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View
 } from "react-native";
 
 export type ExerciseFormData = {
@@ -72,6 +73,9 @@ export function ExerciseForm({
       field: K,
       value: ExerciseFormData[K]
     ) => {
+      if (field === "category" || field === "difficulty") {
+        haptics.buttonTap();
+      }
       setFormData((prev) => ({ ...prev, [field]: value }));
     },
     []
@@ -82,6 +86,7 @@ export function ExerciseForm({
       if (!value.trim()) return;
       const currentArray = formData[field] || [];
       if (!currentArray.includes(value.trim())) {
+        haptics.buttonTap();
         updateField(field, [...currentArray, value.trim()]);
       }
     },
@@ -90,6 +95,7 @@ export function ExerciseForm({
 
   const removeArrayItem = useCallback(
     (field: "muscleGroups" | "equipment" | "tags", index: number) => {
+      haptics.buttonTap();
       const currentArray = formData[field] || [];
       updateField(
         field,
@@ -102,6 +108,7 @@ export function ExerciseForm({
   const handleSave = useCallback(async () => {
     const trimmed = formData.name.trim();
     if (!trimmed) {
+      haptics.formValidationError();
       Alert.alert("Name required", "Please enter an exercise name.");
       return;
     }
@@ -113,7 +120,9 @@ export function ExerciseForm({
         description: formData.description?.trim() || undefined,
         instructions: formData.instructions?.trim() || undefined
       });
+      haptics.formSave();
     } catch (error) {
+      haptics.formValidationError();
       Alert.alert(
         "Couldn't save",
         error instanceof Error ? error.message : String(error)
@@ -130,7 +139,10 @@ export function ExerciseForm({
       {/* Header */}
       <View style={styles.headerSection}>
         <Pressable
-          onPress={onCancel}
+          onPress={() => {
+            haptics.formCancel();
+            onCancel();
+          }}
           accessibilityRole="button"
           accessibilityLabel="Cancel"
           style={({ pressed }) => [
@@ -194,7 +206,10 @@ export function ExerciseForm({
 
         <Text style={styles.label}>Icon</Text>
         <Pressable
-          onPress={() => setIconPickerOpen(true)}
+          onPress={() => {
+            haptics.buttonTap();
+            setIconPickerOpen(true);
+          }}
           style={({ pressed }) => [
             styles.iconSelector,
             pressed && styles.iconSelectorPressed
@@ -452,6 +467,7 @@ export function ExerciseForm({
                   <Pressable
                     key={iconName}
                     onPress={() => {
+                      haptics.buttonTap();
                       updateField("icon", iconName);
                       setIconPickerOpen(false);
                     }}

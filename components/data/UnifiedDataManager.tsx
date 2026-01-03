@@ -6,6 +6,7 @@
  */
 
 import { useDataContext } from "@/context/DataContext";
+import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import type { DataType, SearchState } from "@/types/enhanced";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -87,16 +88,21 @@ export function UnifiedDataManager({
   };
 
   const handleTabChange = (tab: DataType) => {
+    haptics.dataTabSwitch();
     setActiveTab(tab);
     setSelectedItems([]); // Clear selection when switching tabs
     setShowFilters(false); // Hide filters when switching tabs
   };
 
   const handleSearchChange = (query: string) => {
+    if (query !== searchState.query) {
+      haptics.searchFilter();
+    }
     setSearchState((prev) => ({ ...prev, query }));
   };
 
   const handleFilterChange = (filters: SearchState["filters"]) => {
+    haptics.searchFilter();
     setSearchState((prev) => ({ ...prev, filters }));
   };
 
@@ -104,11 +110,33 @@ export function UnifiedDataManager({
     sortBy: SearchState["sortBy"],
     sortOrder: SearchState["sortOrder"]
   ) => {
+    haptics.sortChange();
     setSearchState((prev) => ({ ...prev, sortBy, sortOrder }));
   };
 
   const handleSelectionChange = (itemIds: string[]) => {
+    if (itemIds.length > selectedItems.length) {
+      // Items were added to selection
+      if (itemIds.length > 1 && selectedItems.length === 0) {
+        haptics.bulkSelection(); // First bulk selection
+      } else {
+        haptics.itemSelection(); // Single item selection
+      }
+    } else if (itemIds.length < selectedItems.length) {
+      // Items were removed from selection
+      haptics.itemSelection();
+    }
     setSelectedItems(itemIds);
+  };
+
+  const handleClearSelection = () => {
+    haptics.clearSelection();
+    setSelectedItems([]);
+  };
+
+  const handleToggleFilters = () => {
+    haptics.buttonTap();
+    setShowFilters(!showFilters);
   };
 
   const currentData = getCurrentData();
@@ -169,7 +197,7 @@ export function UnifiedDataManager({
               showFilters && styles.filterButtonActive,
               pressed && styles.filterButtonPressed
             ]}
-            onPress={() => setShowFilters(!showFilters)}
+            onPress={handleToggleFilters}
           >
             <Ionicons
               name={showFilters ? "options" : "options-outline"}
@@ -202,7 +230,7 @@ export function UnifiedDataManager({
           </Text>
           <Pressable
             style={styles.clearSelectionButton}
-            onPress={() => setSelectedItems([])}
+            onPress={handleClearSelection}
           >
             <Text style={styles.clearSelectionText}>Clear</Text>
           </Pressable>

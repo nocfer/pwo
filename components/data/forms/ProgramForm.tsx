@@ -4,19 +4,20 @@
  * tags, and advanced session building with drag-and-drop support
  */
 
+import haptics from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import type { ProgramBlock, ProgramSession } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
 import {
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View
+    Alert,
+    Modal,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View
 } from "react-native";
 
 type BlockDraft =
@@ -136,6 +137,9 @@ export function ProgramForm({
 
   const updateField = useCallback(
     <K extends keyof ProgramFormData>(field: K, value: ProgramFormData[K]) => {
+      if (field === "difficulty") {
+        haptics.buttonTap();
+      }
       setFormData((prev) => ({ ...prev, [field]: value }));
     },
     []
@@ -145,6 +149,7 @@ export function ProgramForm({
     if (!newTag.trim()) return;
     const currentTags = formData.tags || [];
     if (!currentTags.includes(newTag.trim())) {
+      haptics.buttonTap();
       updateField("tags", [...currentTags, newTag.trim()]);
     }
     setNewTag("");
@@ -152,6 +157,7 @@ export function ProgramForm({
 
   const removeTag = useCallback(
     (index: number) => {
+      haptics.buttonTap();
       const currentTags = formData.tags || [];
       updateField(
         "tags",
@@ -162,6 +168,7 @@ export function ProgramForm({
   );
 
   const addSession = useCallback(() => {
+    haptics.buttonTap();
     const newSession: ProgramSession = {
       index: formData.sessions.length + 1,
       name: `Session ${formData.sessions.length + 1}`,
@@ -173,12 +180,14 @@ export function ProgramForm({
   const removeSession = useCallback(
     (sessionIndex: number) => {
       if (formData.sessions.length <= 1) {
+        haptics.formValidationError();
         Alert.alert(
           "Cannot remove",
           "Programs must have at least one session."
         );
         return;
       }
+      haptics.deleteItem();
       const updatedSessions = formData.sessions
         .filter((_, i) => i !== sessionIndex)
         .map((session, i) => ({
@@ -203,6 +212,7 @@ export function ProgramForm({
 
   const switchSession = useCallback(
     (sessionIndex: number) => {
+      haptics.dataTabSwitch();
       // Save current session blocks
       const updatedSessions = [...formData.sessions];
       updatedSessions[activeSessionIndex] = {
@@ -222,6 +232,7 @@ export function ProgramForm({
 
   const addBlock = useCallback(
     (type: BlockDraft["type"]) => {
+      haptics.buttonTap();
       if (type === "warmup") {
         setSessionBlocks((prev) => [...prev, { type, seconds: "120" }]);
       } else if (type === "rest") {
@@ -247,10 +258,12 @@ export function ProgramForm({
   );
 
   const removeBlock = useCallback((index: number) => {
+    haptics.deleteItem();
     setSessionBlocks((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const moveBlock = useCallback((fromIndex: number, toIndex: number) => {
+    haptics.buttonTap();
     setSessionBlocks((prev) => {
       const newBlocks = [...prev];
       const [movedBlock] = newBlocks.splice(fromIndex, 1);
@@ -267,11 +280,13 @@ export function ProgramForm({
   const handleSave = useCallback(async () => {
     const trimmed = formData.name.trim();
     if (!trimmed) {
+      haptics.formValidationError();
       Alert.alert("Name required", "Please enter a program name.");
       return;
     }
 
     if (exercises.length === 0) {
+      haptics.formValidationError();
       Alert.alert(
         "Add an exercise first",
         "Create at least one exercise before creating a program."
@@ -293,6 +308,7 @@ export function ProgramForm({
       );
 
       if (!hasExerciseBlocks) {
+        haptics.formValidationError();
         Alert.alert(
           "Add an exercise",
           "Programs need at least one exercise block."
@@ -306,7 +322,9 @@ export function ProgramForm({
         description: formData.description?.trim() || undefined,
         sessions: updatedSessions
       });
+      haptics.formSave();
     } catch (error) {
+      haptics.formValidationError();
       Alert.alert(
         "Couldn't save",
         error instanceof Error ? error.message : String(error)
@@ -323,7 +341,10 @@ export function ProgramForm({
       {/* Header */}
       <View style={styles.headerSection}>
         <Pressable
-          onPress={onCancel}
+          onPress={() => {
+            haptics.formCancel();
+            onCancel();
+          }}
           accessibilityRole="button"
           accessibilityLabel="Cancel"
           style={({ pressed }) => [
@@ -680,6 +701,7 @@ export function ProgramForm({
                         pressed && styles.pickerBtnPressed
                       ]}
                       onPress={() => {
+                        haptics.buttonTap();
                         setPickerTargetIndex(index);
                         setExercisePickerOpen(true);
                       }}
@@ -803,6 +825,7 @@ export function ProgramForm({
                   key={exercise.id}
                   onPress={() => {
                     if (pickerTargetIndex === null) return;
+                    haptics.buttonTap();
                     setSessionBlocks((prev) =>
                       prev.map((b, i) =>
                         i === pickerTargetIndex && b.type === "exercise"

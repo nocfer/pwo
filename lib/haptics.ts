@@ -77,6 +77,33 @@ export const haptics = {
   pauseTimer: tapLight,
   resumeTimer: tapMedium,
 
+  // Data Management CRUD operations
+  createItem: notifySuccess,
+  updateItem: tapMedium,
+  deleteItem: tapHeavy,
+  bulkDelete: tapHeavy,
+  duplicateItem: tapMedium,
+
+  // Data Management Navigation & Selection
+  dataTabSwitch: selectionChanged,
+  itemSelection: tapLight,
+  bulkSelection: tapMedium,
+  clearSelection: tapLight,
+
+  // Data Management Search & Filter
+  searchFilter: tapLight,
+  sortChange: tapLight,
+
+  // Form interactions
+  formSave: notifySuccess,
+  formCancel: tapLight,
+  formValidationError: notifyError,
+
+  // Import/Export operations
+  exportData: tapMedium,
+  importData: notifySuccess,
+  shareData: tapMedium,
+
   // General
   refresh: tapLight,
   swipeAction: tapMedium,
