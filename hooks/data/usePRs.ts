@@ -49,7 +49,10 @@ export function usePRs(limit: number = 10): {
     return { latestPRs, prsByExercise, bestPRs };
   }, [limit]);
 
-  const { data, loading, error } = useAsyncData(fetcher, [progressVersion, limit]);
+  const { data, loading, error } = useAsyncData(fetcher, [
+    progressVersion,
+    limit
+  ]);
 
   return { data, loading, error };
 }
@@ -92,4 +95,3 @@ export function isPRRecent(pr: PersonalRecord, days: number = 7): boolean {
   cutoff.setDate(cutoff.getDate() - days);
   return new Date(pr.achievedAt) >= cutoff;
 }
-

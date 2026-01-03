@@ -202,7 +202,14 @@ export function useWorkoutTimer(opts: {
     void haptics.sessionComplete();
     const summary = `${program?.name ?? slug} · Session ${sessionIndex} · ${steps.length} steps`;
     await completeSession(slug, sessionIndex, summary, sessionElapsedSeconds);
-  }, [completeSession, program?.name, sessionIndex, slug, steps.length, sessionElapsedSeconds]);
+  }, [
+    completeSession,
+    program?.name,
+    sessionIndex,
+    slug,
+    steps.length,
+    sessionElapsedSeconds
+  ]);
 
   const advanceToNextStep = useCallback(() => {
     setCurrentIndex((i) => {
@@ -244,7 +251,14 @@ export function useWorkoutTimer(opts: {
     return () => {
       active = false;
     };
-  }, [program, steps.length, slug, sessionIndex, loadSessionState, startStepTimer]);
+  }, [
+    program,
+    steps.length,
+    slug,
+    sessionIndex,
+    loadSessionState,
+    startStepTimer
+  ]);
 
   // Persist state on changes
   useEffect(() => {
@@ -339,7 +353,8 @@ export function useWorkoutTimer(opts: {
     void haptics.skipAction();
 
     // Determine which step to record as skipped
-    const stepToRecord = phase === "timed" ? (timedStepRef.current ?? currentStep) : currentStep;
+    const stepToRecord =
+      phase === "timed" ? (timedStepRef.current ?? currentStep) : currentStep;
     recordStepSkipped(stepToRecord, eventCtx);
 
     // Reset timer state if currently timed

@@ -122,7 +122,10 @@ export function useConsistencyData(weeks: number = 12): {
     };
   }, [weeks]);
 
-  const { data, loading, error } = useAsyncData(fetcher, [progressVersion, weeks]);
+  const { data, loading, error } = useAsyncData(fetcher, [
+    progressVersion,
+    weeks
+  ]);
 
   return { data, loading, error };
 }
@@ -151,4 +154,3 @@ export function useConsistencyPercentage(weeks: number = 12): {
 
   return { percentage, loading };
 }
-

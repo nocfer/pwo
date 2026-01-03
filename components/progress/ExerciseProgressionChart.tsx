@@ -81,7 +81,8 @@ export default function ExerciseProgressionChart() {
     if (!progressionData?.dataPoints) return [];
     return progressionData.dataPoints.map((dp) => ({
       date: dp.date,
-      value: progressionData.hasWeightData && dp.maxWeight ? dp.maxWeight : dp.reps,
+      value:
+        progressionData.hasWeightData && dp.maxWeight ? dp.maxWeight : dp.reps,
       label: new Date(dp.date).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric"
@@ -200,8 +201,8 @@ export default function ExerciseProgressionChart() {
               <Ionicons name={trendIcon as any} size={18} color={trendColor} />
               <Text style={[styles.trendText, { color: trendColor }]}>
                 {trend.direction === "up" ? "+" : ""}
-                {trend.delta}{" "}
-                {progressionData?.hasWeightData ? "kg" : "reps"} vs earlier
+                {trend.delta} {progressionData?.hasWeightData ? "kg" : "reps"}{" "}
+                vs earlier
               </Text>
             </View>
           )}
@@ -304,4 +305,3 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md
   }
 });
-

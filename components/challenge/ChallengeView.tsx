@@ -1,7 +1,7 @@
 import {
-    ChallengeProgressMetrics,
-    useChallengeSessions,
-    useSessionCompletion
+  ChallengeProgressMetrics,
+  useChallengeSessions,
+  useSessionCompletion
 } from "@/hooks/data";
 import { formatCount } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
@@ -168,16 +168,13 @@ export default function ChallengeViewV2({ challengeMetrics, program }: Props) {
                     )}
                   </View>
                   <Text style={styles.sessionSubtitle}>
-                    {formatCount(setsCount, "set")} • {totalReps}{" "}
-                    target reps
+                    {formatCount(setsCount, "set")} • {totalReps} target reps
                   </Text>
                 </View>
                 <Ionicons
                   name={isLocked ? "lock-closed" : "chevron-forward"}
                   size={18}
-                  color={
-                    isLocked ? theme.colors.muted : theme.colors.subtext
-                  }
+                  color={isLocked ? theme.colors.muted : theme.colors.subtext}
                 />
               </Pressable>
             </AnimatedCard>

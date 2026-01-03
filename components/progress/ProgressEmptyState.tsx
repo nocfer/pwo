@@ -36,7 +36,8 @@ const emptyStates: Record<
   "no-exercise-data": {
     icon: "bar-chart-outline",
     title: "No data yet",
-    description: "Complete a session with this exercise to see your progression."
+    description:
+      "Complete a session with this exercise to see your progression."
   },
   "no-consistency": {
     icon: "calendar-outline",
@@ -157,4 +158,3 @@ const styles = StyleSheet.create({
     color: theme.colors.muted
   }
 });
-

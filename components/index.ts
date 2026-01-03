@@ -37,8 +37,8 @@ export {
   ConsistencyHeatmap,
   ExerciseProgressionChart,
   LineChart,
-  PersonalRecordsCard,
   PRItem,
+  PersonalRecordsCard,
   ProgramProgressView,
   ProgressCalendar,
   ProgressCard,
@@ -56,6 +56,16 @@ export {
 } from "./progress";
 
 export { ChallengesView, SwipeableChallengeButton } from "./challenge";
+
+// Data management components
+export {
+  DataList,
+  FilterControls,
+  LoadingStateList,
+  SearchableList,
+  SortControls,
+  UnifiedDataManager
+} from "./data";
 
 // Individual components (not moved)
 export { ConfettiCelebration } from "./ConfettiCelebration";

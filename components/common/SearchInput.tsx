@@ -26,11 +26,7 @@ export function SearchInput({
 
   return (
     <View
-      style={[
-        styles.container,
-        isFocused && styles.containerFocused,
-        style
-      ]}
+      style={[styles.container, isFocused && styles.containerFocused, style]}
     >
       <Ionicons
         name="search-outline"
@@ -87,4 +83,3 @@ const styles = StyleSheet.create({
 });
 
 export default SearchInput;
-
