@@ -106,9 +106,8 @@ type ExercisesPreviewProps = {
 
 function ExercisesPreview({ program, isChallenge }: ExercisesPreviewProps) {
   const { data: exercises } = useExercises();
-  const allSessions = isChallenge
-    ? useChallengeSessions(program)
-    : program.sessions;
+  const challengeSessions = useChallengeSessions(program);
+  const allSessions = isChallenge ? challengeSessions : program.sessions;
 
   const exerciseIds = new Set<string>();
   allSessions.forEach((session) => {

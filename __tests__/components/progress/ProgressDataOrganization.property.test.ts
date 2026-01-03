@@ -225,10 +225,11 @@ describe("Progress Data Organization Properties", () => {
             organized.exercises.forEach((exercise) => {
               expect(exercise.category).toBeDefined();
               expect(exercise.category).not.toBeNull();
-              const category = exercise.category as "strength" | "cardio" | "flexibility";
-              expect(filters.exerciseType!.includes(category)).toBe(
-                true
-              );
+              const category = exercise.category as
+                | "strength"
+                | "cardio"
+                | "flexibility";
+              expect(filters.exerciseType!.includes(category)).toBe(true);
             });
           }
 
@@ -237,10 +238,11 @@ describe("Progress Data Organization Properties", () => {
             organized.programs.forEach((program) => {
               expect(program.category).toBeDefined();
               expect(program.category).not.toBeNull();
-              const category = program.category as "beginner" | "intermediate" | "advanced";
-              expect(filters.programCategory!.includes(category)).toBe(
-                true
-              );
+              const category = program.category as
+                | "beginner"
+                | "intermediate"
+                | "advanced";
+              expect(filters.programCategory!.includes(category)).toBe(true);
             });
           }
         }

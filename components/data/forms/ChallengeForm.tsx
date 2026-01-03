@@ -10,14 +10,14 @@ import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useMemo, useState } from "react";
 import {
-    Alert,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
 } from "react-native";
 
 export type ChallengeFormData = {

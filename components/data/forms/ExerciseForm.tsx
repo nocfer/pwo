@@ -6,22 +6,22 @@
 
 import haptics from "@/lib/haptics";
 import {
-    VALID_EXERCISE_CATEGORIES,
-    VALID_EXERCISE_ICONS
+  VALID_EXERCISE_CATEGORIES,
+  VALID_EXERCISE_ICONS
 } from "@/lib/validation";
 import { theme } from "@/theme/theme";
 import type { ExerciseCategory } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
 import {
-    Alert,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
 } from "react-native";
 
 export type ExerciseFormData = {

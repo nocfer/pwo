@@ -5,7 +5,7 @@
 import { useRefreshVersions } from "@/context/DataContext";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { storage } from "@/lib/storage";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 
 export type ProgressionDataPoint = {
   date: string;
