@@ -12,7 +12,6 @@ export {
   FadeIn,
   IconButton,
   LoadingScreen,
-  NoChallengesEmpty,
   NoHistoryEmpty,
   NoProgressEmpty,
   NoSearchResultsEmpty,

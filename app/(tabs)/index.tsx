@@ -156,7 +156,7 @@ export default function Index() {
                 styles.actionButton,
                 pressed && styles.actionPressed
               ]}
-              onPress={() => router.navigate("/(tabs)/challenges")}
+              onPress={() => router.navigate("/(tabs)/library")}
             >
               <View style={styles.actionIconContainer}>
                 <Ionicons
