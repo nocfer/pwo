@@ -23,7 +23,8 @@ export function encodeProgramForShare(program: Program): string {
     name: program.name,
     description: program.description,
     sessions: program.sessions,
-    challengeConfig: program.challengeConfig
+    challengeConfig: program.challengeConfig,
+    source: program.source
   };
 
   return JSON.stringify(shareable);

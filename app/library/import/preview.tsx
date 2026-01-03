@@ -6,8 +6,8 @@ import { ErrorScreen, ScreenHeader } from "@/components";
 import ProgramImportPreview from "@/components/program/ProgramImportPreview";
 import { useDataActions } from "@/context/DataContext";
 import {
-  decodeProgramFromShare,
-  ShareableProgramData
+    decodeProgramFromShare,
+    ShareableProgramData
 } from "@/lib/utils/programShare";
 import { theme } from "@/theme/theme";
 import { router, useLocalSearchParams } from "expo-router";
@@ -60,8 +60,7 @@ export default function ImportPreviewScreen() {
         name: programData.name,
         description: programData.description,
         sessions: programData.sessions,
-        challengeConfig: programData.challengeConfig,
-        source: "user" // Always set imported programs as user-created
+        challengeConfig: programData.challengeConfig
       });
 
       // Navigate back to library

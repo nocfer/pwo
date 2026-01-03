@@ -3,12 +3,16 @@ import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LibraryScreen() {
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
+
   const handleCreateNew = (type: "exercise" | "program" | "challenge") => {
     haptics.buttonTap();
+    setShowCreateMenu(false);
     switch (type) {
       case "exercise":
         router.navigate("/library/exercises/new");
@@ -17,7 +21,7 @@ export default function LibraryScreen() {
         router.navigate("/library/programs/new");
         break;
       case "challenge":
-        // TODO: Add challenge creation route when implemented
+        router.navigate("/library/challenges/new");
         break;
     }
   };
@@ -25,6 +29,15 @@ export default function LibraryScreen() {
   const handleScanQR = () => {
     haptics.buttonTap();
     router.navigate("/library/scan");
+  };
+
+  const handleShowCreateMenu = () => {
+    haptics.buttonTap();
+    setShowCreateMenu(true);
+  };
+
+  const handleCloseCreateMenu = () => {
+    setShowCreateMenu(false);
   };
 
   return (
@@ -58,7 +71,7 @@ export default function LibraryScreen() {
                   styles.addButton,
                   pressed && styles.addButtonPressed
                 ]}
-                onPress={() => handleCreateNew("exercise")}
+                onPress={handleShowCreateMenu}
               >
                 <Ionicons
                   name="add"
@@ -73,6 +86,80 @@ export default function LibraryScreen() {
 
         {/* Unified Data Manager */}
         <UnifiedDataManager style={styles.dataManager} />
+
+        {/* Create Menu Modal */}
+        <Modal
+          visible={showCreateMenu}
+          transparent
+          animationType="fade"
+          onRequestClose={handleCloseCreateMenu}
+        >
+          <Pressable style={styles.modalOverlay} onPress={handleCloseCreateMenu}>
+            <View style={styles.createMenu}>
+              <Text style={styles.createMenuTitle}>Create New</Text>
+              
+              <Pressable
+                style={({ pressed }) => [
+                  styles.createMenuItem,
+                  pressed && styles.createMenuItemPressed
+                ]}
+                onPress={() => handleCreateNew("exercise")}
+              >
+                <Ionicons
+                  name="fitness-outline"
+                  size={24}
+                  color={theme.colors.primary}
+                />
+                <View style={styles.createMenuItemText}>
+                  <Text style={styles.createMenuItemTitle}>Exercise</Text>
+                  <Text style={styles.createMenuItemSubtitle}>
+                    Add a new exercise to your library
+                  </Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.createMenuItem,
+                  pressed && styles.createMenuItemPressed
+                ]}
+                onPress={() => handleCreateNew("program")}
+              >
+                <Ionicons
+                  name="list-outline"
+                  size={24}
+                  color={theme.colors.primary}
+                />
+                <View style={styles.createMenuItemText}>
+                  <Text style={styles.createMenuItemTitle}>Program</Text>
+                  <Text style={styles.createMenuItemSubtitle}>
+                    Create a structured workout program
+                  </Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.createMenuItem,
+                  pressed && styles.createMenuItemPressed
+                ]}
+                onPress={() => handleCreateNew("challenge")}
+              >
+                <Ionicons
+                  name="trophy-outline"
+                  size={24}
+                  color={theme.colors.primary}
+                />
+                <View style={styles.createMenuItemText}>
+                  <Text style={styles.createMenuItemTitle}>Challenge</Text>
+                  <Text style={styles.createMenuItemSubtitle}>
+                    Set up a progressive fitness challenge
+                  </Text>
+                </View>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -144,5 +231,49 @@ const styles = StyleSheet.create({
   },
   dataManager: {
     flex: 1
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: theme.spacing.lg
+  },
+  createMenu: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.xl,
+    padding: theme.spacing.lg,
+    width: "100%",
+    maxWidth: 320,
+    ...theme.shadows.lg
+  },
+  createMenuTitle: {
+    ...theme.typography.h3,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.lg,
+    textAlign: "center"
+  },
+  createMenuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    marginBottom: theme.spacing.sm
+  },
+  createMenuItemPressed: {
+    backgroundColor: theme.colors.card
+  },
+  createMenuItemText: {
+    marginLeft: theme.spacing.md,
+    flex: 1
+  },
+  createMenuItemTitle: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text
+  },
+  createMenuItemSubtitle: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    marginTop: theme.spacing.xs
   }
 });
