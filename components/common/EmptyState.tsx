@@ -85,18 +85,6 @@ export function EmptyState({
 }
 
 // Pre-built empty states
-export function NoChallengesEmpty({ onAction }: { onAction?: () => void }) {
-  return (
-    <EmptyState
-      variant="default"
-      title="No challenges yet"
-      description="Create your first challenge to get started on your fitness journey"
-      actionLabel={onAction ? "Create Challenge" : undefined}
-      onAction={onAction}
-    />
-  );
-}
-
 export function NoSearchResultsEmpty({ query }: { query: string }) {
   return (
     <EmptyState
