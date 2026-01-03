@@ -142,6 +142,22 @@ export function UnifiedDataManager({
 
   const handleItemPress = (item: any) => {
     haptics.itemSelection();
+    // Navigate based on data type - programs go to detail screen, exercises go to edit
+    switch (activeTab) {
+      case "exercises":
+        router.push(`/library/exercises/${item.id}/edit` as any);
+        break;
+      case "programs":
+        router.push(`/programs/${item.id}` as any);
+        break;
+      case "challenges":
+        router.push(`/programs/${item.id}` as any);
+        break;
+    }
+  };
+
+  const handleItemEdit = (item: any) => {
+    haptics.itemSelection();
     // Navigate to edit form based on data type
     switch (activeTab) {
       case "exercises":
@@ -262,6 +278,10 @@ export function UnifiedDataManager({
         selectedItems={selectedItems}
         onSelectionChange={handleSelectionChange}
         onItemPress={handleItemPress}
+        onItemEdit={handleItemEdit}
+        showInlineActions={
+          activeTab === "programs" || activeTab === "challenges"
+        }
         isLoading={isLoading}
         style={styles.dataList}
       />

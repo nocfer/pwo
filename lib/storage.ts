@@ -907,12 +907,11 @@ export const storage = {
     const weekEndISO = weekEnd.toISOString().slice(0, 10);
 
     // Get all program and challenge progress
-    const [programProgress, challengeProgress, prHistory] =
-      await Promise.all([
-        this.loadAllProgramProgress(),
-        this.loadAllChallengeProgress(),
-        this.loadAllPRs()
-      ]);
+    const [programProgress, challengeProgress, prHistory] = await Promise.all([
+      this.loadAllProgramProgress(),
+      this.loadAllChallengeProgress(),
+      this.loadAllPRs()
+    ]);
 
     let workoutsCompleted = 0;
     let totalTimeSeconds = 0;

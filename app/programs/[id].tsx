@@ -11,9 +11,9 @@ import {
 import { formatCount } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProgramDetail() {
@@ -49,16 +49,43 @@ export default function ProgramDetail() {
     ? program.description
     : formatCount(sessions.length, "session");
 
+  const handleEditPress = () => {
+    if (isChallenge) {
+      router.push(`/library/challenges/${id}/edit`);
+    } else {
+      router.push(`/library/programs/${id}/edit`);
+    }
+  };
+
+  const editButton = (
+    <Pressable
+      onPress={handleEditPress}
+      style={({ pressed }) => [
+        styles.headerButton,
+        pressed && styles.headerButtonPressed
+      ]}
+    >
+      <Ionicons name="create-outline" size={22} color={theme.colors.primary} />
+    </Pressable>
+  );
+
   const shareButton = (
     <Pressable
       onPress={() => setShowQRModal(true)}
       style={({ pressed }) => [
-        styles.shareButton,
-        pressed && styles.shareButtonPressed
+        styles.headerButton,
+        pressed && styles.headerButtonPressed
       ]}
     >
       <Ionicons name="qr-code-outline" size={22} color={theme.colors.primary} />
     </Pressable>
+  );
+
+  const headerRightElement = (
+    <View style={styles.headerButtonsContainer}>
+      {editButton}
+      {shareButton}
+    </View>
   );
 
   return (
@@ -66,7 +93,7 @@ export default function ProgramDetail() {
       <ScreenHeader
         title={program.name}
         subtitle={subtitle}
-        rightElement={shareButton}
+        rightElement={headerRightElement}
       />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -103,11 +130,16 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     paddingBottom: theme.spacing.xxl
   },
-  shareButton: {
+  headerButtonsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm
+  },
+  headerButton: {
     padding: theme.spacing.xs,
     margin: -theme.spacing.xs
   },
-  shareButtonPressed: {
+  headerButtonPressed: {
     opacity: 0.6
   }
 });

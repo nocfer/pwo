@@ -6,6 +6,7 @@
  */
 
 import { theme } from "@/theme/theme";
+import type { Program } from "@/types";
 import type { DataType } from "@/types/enhanced";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMemo, useState } from "react";
@@ -19,6 +20,7 @@ import {
 } from "react-native";
 import { EmptyState, LoadingScreen } from "../common";
 import { SearchInput } from "../common/SearchInput";
+import { ProgramListItem } from "./ProgramListItem";
 
 type ListItem = {
   id: string;
@@ -37,11 +39,13 @@ type Props = {
   dataType: DataType;
   searchPlaceholder?: string;
   onItemPress?: (item: ListItem) => void;
+  onItemEdit?: (item: ListItem) => void;
   onItemLongPress?: (item: ListItem) => void;
   selectedItems?: string[];
   onSelectionChange?: (itemIds: string[]) => void;
   showSearch?: boolean;
   showMetadata?: boolean;
+  showInlineActions?: boolean;
   isLoading?: boolean;
   error?: string;
   emptyTitle?: string;
@@ -54,11 +58,13 @@ export function SearchableList({
   dataType,
   searchPlaceholder = "Search...",
   onItemPress,
+  onItemEdit,
   onItemLongPress,
   selectedItems = [],
   onSelectionChange,
   showSearch = true,
   showMetadata = true,
+  showInlineActions = false,
   isLoading = false,
   error,
   emptyTitle,
@@ -119,6 +125,44 @@ export function SearchableList({
   const renderItem = ({ item }: { item: ListItem }) => {
     const isSelected = selectedItems.includes(item.id);
     const isChallenge = "challengeConfig" in item && item.challengeConfig;
+
+    // Use ProgramListItem for programs when inline actions are enabled
+    if (
+      showInlineActions &&
+      (dataType === "programs" || dataType === "challenges")
+    ) {
+      // Convert ListItem back to Program type for ProgramListItem
+      const program: Program = {
+        id: item.id,
+        name: item.name,
+        description: item.description || "",
+        source: item.source,
+        createdAt: item.createdAt || new Date().toISOString(),
+        updatedAt: item.updatedAt || new Date().toISOString(),
+        sessions: item.sessions || [],
+        challengeConfig: item.challengeConfig || undefined
+      };
+
+      return (
+        <ProgramListItem
+          program={program}
+          onStart={() => onItemPress?.(item)}
+          onEdit={() => onItemEdit?.(item)}
+          selected={isSelected}
+          onSelectionChange={
+            selectionMode
+              ? (selected: boolean) => {
+                  const newSelection = selected
+                    ? [...selectedItems, item.id]
+                    : selectedItems.filter((id) => id !== item.id);
+                  onSelectionChange?.(newSelection);
+                }
+              : undefined
+          }
+          showMetadata={showMetadata}
+        />
+      );
+    }
 
     return (
       <Pressable

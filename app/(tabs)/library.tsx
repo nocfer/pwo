@@ -47,9 +47,9 @@ export default function LibraryScreen() {
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.title}>Data Management</Text>
+              <Text style={styles.title}>Library</Text>
               <Text style={styles.subtitle}>
-                Manage exercises, programs, and challenges
+                Manage your exercises, programs, and challenges
               </Text>
             </View>
             <View style={styles.headerActions}>
