@@ -94,10 +94,13 @@ export default function LibraryScreen() {
           animationType="fade"
           onRequestClose={handleCloseCreateMenu}
         >
-          <Pressable style={styles.modalOverlay} onPress={handleCloseCreateMenu}>
+          <Pressable
+            style={styles.modalOverlay}
+            onPress={handleCloseCreateMenu}
+          >
             <View style={styles.createMenu}>
               <Text style={styles.createMenuTitle}>Create New</Text>
-              
+
               <Pressable
                 style={({ pressed }) => [
                   styles.createMenuItem,

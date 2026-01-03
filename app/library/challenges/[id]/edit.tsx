@@ -1,6 +1,7 @@
+import { ErrorScreen, LoadingScreen } from "@/components/common";
 import {
-    ChallengeForm,
-    type ChallengeFormData
+  ChallengeForm,
+  type ChallengeFormData
 } from "@/components/data/forms/ChallengeForm";
 import { useDataActions, useDataContext } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
@@ -22,7 +23,7 @@ export default function EditChallengeScreen() {
 
   const initialData: ChallengeFormData | undefined = useMemo(() => {
     if (!challenge?.challengeConfig) return undefined;
-    
+
     return {
       name: challenge.name,
       description: challenge.description || "",
@@ -30,7 +31,8 @@ export default function EditChallengeScreen() {
         exerciseId: challenge.challengeConfig.exerciseId,
         sets: challenge.challengeConfig.sets,
         targetReps: challenge.challengeConfig.targetReps,
-        sessionIncreasePercent: challenge.challengeConfig.sessionIncreasePercent || 10,
+        sessionIncreasePercent:
+          challenge.challengeConfig.sessionIncreasePercent || 10,
         warmUpSeconds: challenge.challengeConfig.warmUpSeconds,
         breakSeconds: challenge.challengeConfig.breakSeconds
       }
@@ -39,7 +41,7 @@ export default function EditChallengeScreen() {
 
   async function handleSave(formData: ChallengeFormData) {
     if (!challenge) return;
-    
+
     setSaving(true);
     try {
       await actions.upsertProgram({
@@ -60,8 +62,17 @@ export default function EditChallengeScreen() {
     router.back();
   }
 
-  if (!challenge || !initialData) {
-    return null; // Or show error state
+  if (!challenge) {
+    return <LoadingScreen message="Loading challenge..." />;
+  }
+
+  if (!initialData) {
+    return (
+      <ErrorScreen
+        title="Challenge not found"
+        message="The challenge you're trying to edit could not be found."
+      />
+    );
   }
 
   return (

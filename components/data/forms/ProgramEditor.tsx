@@ -3,7 +3,7 @@
  * Integrates ProgramForm with data context and provides template support
  */
 
-import { useDataActions } from "@/context/DataContext";
+import { useDataActions, useDataContext } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import type { Program, ProgramSession } from "@/types";
@@ -190,6 +190,7 @@ export function ProgramEditor({
   onCancel
 }: ProgramEditorProps) {
   const actions = useDataActions();
+  const { state } = useDataContext();
   const { data: exercises } = useExercises();
 
   const [saving, setSaving] = useState(false);
@@ -201,12 +202,21 @@ export function ProgramEditor({
   // Find existing program for edit mode
   const existingProgram = useMemo(() => {
     if (mode === "edit" && programId) {
-      // In a real implementation, you'd get this from the data context
-      // For now, we'll return undefined and let the form handle it
-      return undefined;
+      const program = state.programs.find(
+        (p: Program) => p.id === programId && !p.challengeConfig
+      );
+      if (program) {
+        return {
+          name: program.name,
+          description: program.description || "",
+          difficulty: "intermediate" as const, // Default since not stored in Program type
+          tags: [], // Default since not stored in Program type
+          sessions: program.sessions
+        };
+      }
     }
     return undefined;
-  }, [mode, programId]);
+  }, [mode, programId, state.programs]);
 
   const exerciseOptions = useMemo(() => {
     return (exercises || []).map((exercise) => ({
