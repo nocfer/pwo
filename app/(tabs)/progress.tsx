@@ -9,10 +9,10 @@
  */
 
 import {
-    ConsistencyHeatmap,
-    ExerciseProgressionChart,
-    PersonalRecordsCard,
-    WeeklySummaryCard
+  ConsistencyHeatmap,
+  ExerciseProgressionChart,
+  PersonalRecordsCard,
+  WeeklySummaryCard
 } from "@/components";
 import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
@@ -20,13 +20,13 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
-    Animated,
-    Pressable,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View
+  Animated,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 

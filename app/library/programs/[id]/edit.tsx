@@ -1,3 +1,4 @@
+import { ErrorScreen, LoadingScreen } from "@/components/common";
 import { useDataActions } from "@/context/DataContext";
 import { useExercises, usePrograms } from "@/hooks/data";
 import { theme } from "@/theme/theme";
@@ -311,22 +312,13 @@ export default function EditProgramScreen() {
     }
   }
 
+  if (!programs) {
+    return <LoadingScreen message="Loading program..." />;
+  }
+
   if (!program) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={[styles.card, { margin: theme.spacing.lg }]}>
-          <Text style={styles.muted}>Program not found.</Text>
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => [
-              styles.secondaryBtn,
-              pressed && styles.secondaryBtnPressed
-            ]}
-          >
-            <Text style={styles.secondaryBtnText}>Back</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+      <ErrorScreen message="The program you're trying to edit could not be found." />
     );
   }
 

@@ -113,6 +113,7 @@ export function ChallengeEditor({
   onCancel
 }: ChallengeEditorProps) {
   const actions = useDataActions();
+  const { state } = useDataContext();
   const { data: exercises } = useExercises();
 
   const [saving, setSaving] = useState(false);
@@ -124,12 +125,32 @@ export function ChallengeEditor({
   // Find existing challenge for edit mode
   const existingChallenge = useMemo(() => {
     if (mode === "edit" && challengeId) {
-      // In a real implementation, you'd get this from the data context
-      // For now, we'll return undefined and let the form handle it
-      return undefined;
+      const challenge = state.programs.find(
+        (p) => p.id === challengeId && p.challengeConfig
+      );
+      if (challenge?.challengeConfig) {
+        return {
+          name: challenge.name,
+          description: challenge.description || "",
+          difficulty: "intermediate" as const, // Default since not stored in Program type
+          tags: [], // Default since not stored in Program type
+          challengeConfig: {
+            exerciseId: challenge.challengeConfig.exerciseId,
+            sets: challenge.challengeConfig.sets,
+            targetReps: challenge.challengeConfig.targetReps,
+            warmUpSeconds: challenge.challengeConfig.warmUpSeconds,
+            breakSeconds: challenge.challengeConfig.breakSeconds,
+            sessionIncreasePercent:
+              challenge.challengeConfig.sessionIncreasePercent || 10,
+            duration: challenge.challengeConfig.duration || 30,
+            progressionType:
+              challenge.challengeConfig.progressionType || "percentage"
+          }
+        };
+      }
     }
     return undefined;
-  }, [mode, challengeId]);
+  }, [mode, challengeId, state.programs]);
 
   const exerciseOptions = useMemo(() => {
     return (exercises || []).map((exercise) => ({

@@ -23,8 +23,10 @@ import { theme } from "@/theme/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useState } from "react";
 import {
+  Alert,
   RefreshControl,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -41,6 +43,73 @@ interface FilterState {
   sortBy: "name" | "recent" | "performance";
 }
 
+// Helper function to generate CSV content from progress data
+function generateProgressCSV(progressData: any): string {
+  const headers = [
+    "Date",
+    "Type",
+    "Activity",
+    "Workouts Completed",
+    "Total Reps",
+    "Time Spent (minutes)",
+    "Current Streak"
+  ];
+
+  const rows = [
+    headers.join(","),
+    [
+      new Date().toISOString().split("T")[0],
+      "Summary",
+      "Overall Progress",
+      progressData.totalWorkoutsCompleted || 0,
+      progressData.totalRepsCompleted || 0,
+      Math.round((progressData.totalTimeSpentSeconds || 0) / 60),
+      progressData.currentStreak || 0
+    ].join(",")
+  ];
+
+  // Add recent activity
+  if (progressData.recentActivity) {
+    progressData.recentActivity.forEach((activity: any) => {
+      rows.push(
+        [
+          activity.date.split("T")[0],
+          activity.type,
+          `Session ${activity.sessionIndex}`,
+          1,
+          "",
+          "",
+          ""
+        ].join(",")
+      );
+    });
+  }
+
+  return rows.join("\n");
+}
+
+// Helper function to generate progress report
+function generateProgressReport(progressData: any): string {
+  const totalMinutes = Math.round(
+    (progressData.totalTimeSpentSeconds || 0) / 60
+  );
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `🏋️ Fitness Progress Report
+
+📊 Overall Stats:
+• Workouts Completed: ${progressData.totalWorkoutsCompleted || 0}
+• Total Reps: ${progressData.totalRepsCompleted || 0}
+• Time Spent: ${hours}h ${minutes}m
+• Current Streak: ${progressData.currentStreak || 0} days
+
+🎯 Active Programs: ${progressData.activePrograms || 0}
+🏆 Active Challenges: ${progressData.activeChallenges || 0}
+
+Generated on ${new Date().toLocaleDateString()}`;
+}
+
 export default function AnalyticsScreen() {
   const [activeTab, setActiveTab] = useState<DataType>("programs");
   const [refreshing, setRefreshing] = useState(false);
@@ -51,6 +120,51 @@ export default function AnalyticsScreen() {
   });
 
   const { data: allProgress, loading } = useAllProgress();
+
+  // CSV Export functionality
+  const handleExportCSV = useCallback(async () => {
+    try {
+      await haptics.exportData();
+
+      if (!allProgress) {
+        Alert.alert("No Data", "No progress data available to export.");
+        return;
+      }
+
+      // Generate CSV content
+      const csvContent = generateProgressCSV(allProgress);
+
+      // Share the CSV content
+      await Share.share({
+        message: csvContent,
+        title: "Progress Data Export"
+      });
+    } catch (error) {
+      Alert.alert("Export Failed", "Could not export progress data.");
+    }
+  }, [allProgress]);
+
+  // Report Sharing functionality
+  const handleShareReport = useCallback(async () => {
+    try {
+      await haptics.shareData();
+
+      if (!allProgress) {
+        Alert.alert("No Data", "No progress data available to share.");
+        return;
+      }
+
+      // Generate report summary
+      const report = generateProgressReport(allProgress);
+
+      await Share.share({
+        message: report,
+        title: "Progress Report"
+      });
+    } catch (error) {
+      Alert.alert("Share Failed", "Could not share progress report.");
+    }
+  }, [allProgress]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -283,18 +397,12 @@ export default function AnalyticsScreen() {
             <Button
               label="Export CSV"
               variant="secondary"
-              onPress={() => {
-                // TODO: Implement CSV export
-                void haptics.exportData();
-              }}
+              onPress={handleExportCSV}
             />
             <Button
               label="Share Report"
               variant="secondary"
-              onPress={() => {
-                // TODO: Implement report sharing
-                void haptics.shareData();
-              }}
+              onPress={handleShareReport}
             />
           </View>
         </View>

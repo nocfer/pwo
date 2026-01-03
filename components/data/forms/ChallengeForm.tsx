@@ -6,6 +6,7 @@
 
 import { generateChallengeSessions } from "@/hooks/data/useChallengeSessions";
 import { haptics } from "@/lib/haptics";
+import { validateChallenge } from "@/lib/validation";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useMemo, useState } from "react";
@@ -179,21 +180,26 @@ export function ChallengeForm({
 
   const handleSave = useCallback(async () => {
     const trimmed = formData.name.trim();
-    if (!trimmed) {
+
+    // Create challenge object for validation
+    const challengeData = {
+      name: trimmed,
+      description: formData.description?.trim() || undefined,
+      sessions: [], // Challenges generate sessions dynamically
+      challengeConfig: formData.challengeConfig
+    };
+
+    // Validate using centralized validation
+    const validationResult = validateChallenge(challengeData as any);
+
+    if (!validationResult.isValid) {
       haptics.formValidationError();
-      Alert.alert("Name required", "Please enter a challenge name.");
+      const firstError = validationResult.errors[0];
+      Alert.alert("Validation Error", firstError.message);
       return;
     }
 
-    if (!formData.challengeConfig.exerciseId) {
-      haptics.formValidationError();
-      Alert.alert(
-        "Exercise required",
-        "Please select an exercise for the challenge."
-      );
-      return;
-    }
-
+    // Additional business logic validation
     if (exercises.length === 0) {
       haptics.formValidationError();
       Alert.alert(
@@ -203,36 +209,15 @@ export function ChallengeForm({
       return;
     }
 
-    // Validate challenge parameters
-    const config = formData.challengeConfig;
-    if (config.sets <= 0) {
-      haptics.formValidationError();
-      Alert.alert("Invalid sets", "Sets must be at least 1.");
-      return;
-    }
-    if (config.targetReps <= 0) {
-      haptics.formValidationError();
-      Alert.alert("Invalid target reps", "Target reps must be at least 1.");
-      return;
-    }
-    if (config.warmUpSeconds < 0) {
-      haptics.formValidationError();
-      Alert.alert("Invalid warm-up", "Warm-up seconds must be 0 or greater.");
-      return;
-    }
-    if (config.breakSeconds < 0) {
-      haptics.formValidationError();
-      Alert.alert("Invalid break", "Break seconds must be 0 or greater.");
-      return;
-    }
-    if (
-      config.sessionIncreasePercent <= 0 ||
-      config.sessionIncreasePercent > 100
-    ) {
+    // Validate exercise exists
+    const exerciseExists = exercises.some(
+      (ex) => ex.id === formData.challengeConfig.exerciseId
+    );
+    if (!exerciseExists) {
       haptics.formValidationError();
       Alert.alert(
-        "Invalid progression",
-        "Session increase percent must be between 0 and 100."
+        "Invalid exercise",
+        "The selected exercise no longer exists. Please select a different exercise."
       );
       return;
     }
@@ -251,7 +236,7 @@ export function ChallengeForm({
         error instanceof Error ? error.message : String(error)
       );
     }
-  }, [formData, exercises.length, onSave]);
+  }, [formData, exercises, onSave]);
 
   return (
     <ScrollView

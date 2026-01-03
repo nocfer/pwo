@@ -1,96 +1,74 @@
 # Project Structure
 
-## Root Organization
+## Root Directory Organization
 
 ```
 progressive-workout/
-├── app/                    # Expo Router pages (file-based routing)
+├── app/                    # Expo Router pages and navigation
 ├── components/             # Reusable UI components
 ├── context/               # React Context providers
 ├── hooks/                 # Custom React hooks
-├── lib/                   # Utility libraries and helpers
+├── lib/                   # Utility libraries and services
 ├── types/                 # TypeScript type definitions
+├── assets/                # Static assets (images, sounds, data)
 ├── theme/                 # Design system and styling
-├── assets/                # Static assets (images, fonts, data)
-└── __tests__/             # Test files
+├── __tests__/             # Test files mirroring source structure
+└── .kiro/                 # Kiro AI assistant configuration
 ```
 
 ## App Directory (Expo Router)
-
-- `app/(tabs)/` - Tab-based navigation screens
-- `app/library/` - Exercise and program management
-- `app/programs/` - Program execution and sessions
+- `app/(tabs)/` - Tab-based navigation screens (index, challenges, progress, etc.)
+- `app/library/` - CRUD screens for exercises, programs, and challenges
+- `app/programs/` - Program execution and session screens
 - `app/onboarding/` - User onboarding flow
-- File-based routing with typed routes enabled
 
-## Components Architecture
+## Components Organization
+- `components/common/` - Shared UI components (Button, LoadingScreen, etc.)
+- `components/data/` - Data management components (forms, lists, search)
+- `components/progress/` - Progress tracking and visualization
+- `components/program/` - Program-specific components
+- `components/challenge/` - Challenge-specific components
 
-```
-components/
-├── common/                # Shared UI components (Button, LoadingScreen, etc.)
-├── cards/                 # Card-based components (FocusCard, StepCard)
-├── challenge/             # Challenge-specific components
-├── program/               # Program-related components
-├── progress/              # Progress tracking and analytics
-├── session/               # Workout session components
-└── index.ts               # Barrel exports
-```
+## Hooks Structure
+- `hooks/data/` - Data fetching and state management hooks
+- `hooks/session/` - Workout session management hooks
+- Root level hooks for general utilities
 
-## Data Layer
+## Library Organization
+- `lib/storage.ts` - Data persistence abstraction
+- `lib/events.ts` - Event system for cross-component communication
+- `lib/validation.ts` - Data validation and business rules
+- `lib/utils/` - Utility functions (date, format, colors, etc.)
 
-```
-context/
-└── DataContext.tsx        # Global state management with reducer pattern
+## Types Structure
+- Centralized in `types/index.ts` with re-exports
+- Domain-specific files: `exercise.ts`, `program.ts`, `progress.ts`, etc.
+- Enhanced types for advanced features in `enhanced.ts`
 
-hooks/
-├── data/                  # Data fetching and management hooks
-├── session/               # Session-specific hooks (timers, steps)
-└── useAsyncData.ts        # Generic async data hook
-```
+## Testing Structure
+- `__tests__/` mirrors the source directory structure
+- Property-based tests use `.property.test.ts` suffix
+- Integration tests in `__tests__/integration/`
 
-## Type System
+## Key Conventions
 
-```
-types/
-├── index.ts               # Centralized type exports
-├── exercise.ts            # Exercise-related types
-├── program.ts             # Program and session types
-├── progress.ts            # Progress tracking types
-├── challenge.ts           # Challenge-specific types
-├── storage.ts             # Storage and persistence types
-└── events.ts              # Event system types
-```
+### File Naming
+- React components use PascalCase: `ExerciseForm.tsx`
+- Utilities and hooks use camelCase: `useExercises.ts`
+- Types use camelCase with descriptive names: `exercise.ts`
 
-## Utilities & Libraries
+### Import Patterns
+- Use `@/` path alias for all internal imports
+- Group imports: external libraries, then internal modules
+- Export components from index files for clean imports
 
-```
-lib/
-├── storage.ts             # Data persistence layer
-├── events.ts              # Event system for reactive updates
-├── haptics.ts             # Tactile feedback utilities
-└── utils/                 # Helper functions (date, format, colors, etc.)
-```
+### Component Structure
+- Functional components with TypeScript interfaces
+- Custom hooks for business logic separation
+- Context for global state, local state for component-specific data
 
-## Assets Organization
-
-```
-assets/
-├── data/                  # JSON seed data (exercises, programs)
-├── fonts/                 # Custom font files (DM Sans variants)
-├── images/                # App icons and graphics
-└── sounds/                # Audio feedback files
-```
-
-## Naming Conventions
-
-- **Files**: PascalCase for components, camelCase for utilities
-- **Components**: PascalCase with descriptive names
-- **Hooks**: Prefix with `use` (usePrograms, useSessionTimer)
-- **Types**: PascalCase interfaces and types
-- **Constants**: UPPER_SNAKE_CASE for static values
-
-## Import Patterns
-
-- Use `@/` path alias for absolute imports from root
-- Barrel exports in index.ts files for clean imports
-- Group imports: React, third-party, local components, types
+### Data Flow
+- Global state via DataContext with reducer pattern
+- Event-driven updates for cross-component communication
+- Storage abstraction for all data persistence
+- Validation layer before any data mutations

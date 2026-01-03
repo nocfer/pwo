@@ -7,7 +7,8 @@
 import haptics from "@/lib/haptics";
 import {
   VALID_EXERCISE_CATEGORIES,
-  VALID_EXERCISE_ICONS
+  VALID_EXERCISE_ICONS,
+  validateExercise
 } from "@/lib/validation";
 import { theme } from "@/theme/theme";
 import type { ExerciseCategory } from "@/types";
@@ -107,9 +108,27 @@ export function ExerciseForm({
 
   const handleSave = useCallback(async () => {
     const trimmed = formData.name.trim();
-    if (!trimmed) {
+
+    // Create exercise object for validation
+    const exerciseData = {
+      name: trimmed,
+      category: formData.category,
+      icon: formData.icon,
+      description: formData.description?.trim() || undefined,
+      instructions: formData.instructions?.trim() || undefined,
+      muscleGroups: formData.muscleGroups,
+      equipment: formData.equipment,
+      difficulty: formData.difficulty,
+      tags: formData.tags
+    };
+
+    // Validate using centralized validation
+    const validationResult = validateExercise(exerciseData as any);
+
+    if (!validationResult.isValid) {
       haptics.formValidationError();
-      Alert.alert("Name required", "Please enter an exercise name.");
+      const firstError = validationResult.errors[0];
+      Alert.alert("Validation Error", firstError.message);
       return;
     }
 

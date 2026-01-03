@@ -4,12 +4,7 @@ import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-    Pressable,
-    StyleSheet,
-    Text,
-    View
-} from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ChallengesScreen() {
@@ -59,8 +54,8 @@ export default function ChallengesScreen() {
         </View>
 
         {/* Unified Data Manager - Challenges Tab */}
-        <UnifiedDataManager 
-          initialTab="challenges" 
+        <UnifiedDataManager
+          initialTab="challenges"
           style={styles.dataManager}
           key={refreshKey}
         />

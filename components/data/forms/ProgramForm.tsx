@@ -5,6 +5,7 @@
  */
 
 import haptics from "@/lib/haptics";
+import { validateProgram } from "@/lib/validation";
 import { theme } from "@/theme/theme";
 import type { ProgramBlock, ProgramSession } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -279,12 +280,32 @@ export function ProgramForm({
 
   const handleSave = useCallback(async () => {
     const trimmed = formData.name.trim();
-    if (!trimmed) {
+
+    // Save current session blocks before validation
+    const updatedSessions = [...formData.sessions];
+    updatedSessions[activeSessionIndex] = {
+      ...updatedSessions[activeSessionIndex],
+      blocks: convertDraftToSessionBlocks(sessionBlocks)
+    };
+
+    // Create program object for validation
+    const programData = {
+      name: trimmed,
+      description: formData.description?.trim() || undefined,
+      sessions: updatedSessions
+    };
+
+    // Validate using centralized validation
+    const validationResult = validateProgram(programData as any);
+
+    if (!validationResult.isValid) {
       haptics.formValidationError();
-      Alert.alert("Name required", "Please enter a program name.");
+      const firstError = validationResult.errors[0];
+      Alert.alert("Validation Error", firstError.message);
       return;
     }
 
+    // Additional business logic validation
     if (exercises.length === 0) {
       haptics.formValidationError();
       Alert.alert(
@@ -294,28 +315,22 @@ export function ProgramForm({
       return;
     }
 
-    try {
-      // Save current session blocks before submitting
-      const updatedSessions = [...formData.sessions];
-      updatedSessions[activeSessionIndex] = {
-        ...updatedSessions[activeSessionIndex],
-        blocks: convertDraftToSessionBlocks(sessionBlocks)
-      };
-
-      // Validate that at least one session has exercise blocks
-      const hasExerciseBlocks = updatedSessions.some((session) =>
-        session.blocks.some((block) => block.type === "exercise")
-      );
-
-      if (!hasExerciseBlocks) {
-        haptics.formValidationError();
-        Alert.alert(
-          "Add an exercise",
-          "Programs need at least one exercise block."
-        );
-        return;
+    // Validate exercise references exist
+    const exerciseIds = new Set(exercises.map((ex) => ex.id));
+    for (const session of updatedSessions) {
+      for (const block of session.blocks) {
+        if (block.type === "exercise" && !exerciseIds.has(block.exerciseId)) {
+          haptics.formValidationError();
+          Alert.alert(
+            "Invalid exercise reference",
+            "One or more exercises no longer exist. Please update the program."
+          );
+          return;
+        }
       }
+    }
 
+    try {
       await onSave({
         ...formData,
         name: trimmed,
@@ -330,7 +345,7 @@ export function ProgramForm({
         error instanceof Error ? error.message : String(error)
       );
     }
-  }, [formData, activeSessionIndex, sessionBlocks, exercises.length, onSave]);
+  }, [formData, activeSessionIndex, sessionBlocks, exercises, onSave]);
 
   return (
     <ScrollView
