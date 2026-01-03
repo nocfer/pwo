@@ -23,7 +23,6 @@ export function encodeProgramForShare(program: Program): string {
     name: program.name,
     description: program.description,
     sessions: program.sessions,
-    source: "user", // Always set to user for imported programs
     challengeConfig: program.challengeConfig
   };
 

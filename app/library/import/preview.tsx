@@ -60,7 +60,8 @@ export default function ImportPreviewScreen() {
         name: programData.name,
         description: programData.description,
         sessions: programData.sessions,
-        challengeConfig: programData.challengeConfig
+        challengeConfig: programData.challengeConfig,
+        source: "user" // Always set imported programs as user-created
       });
 
       // Navigate back to library
