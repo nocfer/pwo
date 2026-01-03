@@ -80,13 +80,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="challenges"
+        name="library"
         options={{
           headerShown: false,
-          title: "Challenges",
+          title: "Library",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "barbell" : "barbell-outline"}
+              name={focused ? "library" : "library-outline"}
               color={color}
               size={26}
             />
@@ -137,25 +137,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="library"
-        options={{
-          headerShown: false,
-          title: "Data",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "library" : "library-outline"}
-              color={color}
-              size={26}
-            />
-          )
-        }}
-        listeners={{
-          tabPress: () => {
-            haptics.tabSwitch();
-          }
-        }}
-      />
-      <Tabs.Screen
         name="about"
         options={{
           headerShown: false,
@@ -174,6 +155,13 @@ export default function TabLayout() {
           tabPress: () => {
             haptics.tabSwitch();
           }
+        }}
+      />
+      {/* Hide challenges tab - functionality moved to library */}
+      <Tabs.Screen
+        name="challenges"
+        options={{
+          href: null // This hides the tab
         }}
       />
     </Tabs>

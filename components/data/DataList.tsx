@@ -34,7 +34,9 @@ type Props = {
   selectedItems: string[];
   onSelectionChange: (itemIds: string[]) => void;
   onItemPress?: (item: DataItem) => void;
+  onItemEdit?: (item: DataItem) => void;
   onItemLongPress?: (item: DataItem) => void;
+  showInlineActions?: boolean;
   isLoading?: boolean;
   error?: string;
   style?: ViewStyle;
@@ -47,7 +49,9 @@ export function DataList({
   selectedItems,
   onSelectionChange,
   onItemPress,
+  onItemEdit,
   onItemLongPress,
+  showInlineActions = false,
   isLoading = false,
   error,
   style
@@ -74,6 +78,9 @@ export function DataList({
         if ("description" in item) {
           baseItem.description = item.description;
         }
+        // Add program-specific fields for ProgramListItem
+        baseItem.sessions = (item as Program).sessions;
+        baseItem.challengeConfig = (item as Program).challengeConfig;
       }
 
       return baseItem;
@@ -160,6 +167,14 @@ export function DataList({
     }
   };
 
+  const handleItemEdit = (item: ListItem) => {
+    // Find the original DataItem by ID
+    const originalItem = data.find((d) => d.id === item.id);
+    if (originalItem) {
+      onItemEdit?.(originalItem);
+    }
+  };
+
   const handleItemLongPress = (item: ListItem) => {
     // Find the original DataItem by ID
     const originalItem = data.find((d) => d.id === item.id);
@@ -190,6 +205,33 @@ export function DataList({
   const emptySubtitle = searchState.query
     ? "Try adjusting your search or filters"
     : `Create your first ${dataType.slice(0, -1)}`;
+
+  // For programs with inline actions, use a different rendering approach
+  if (
+    showInlineActions &&
+    (dataType === "programs" || dataType === "challenges")
+  ) {
+    return (
+      <SearchableList
+        data={processedData}
+        dataType={dataType}
+        searchPlaceholder={`Search ${dataType.toLowerCase()}...`}
+        onItemPress={handleItemPress}
+        onItemEdit={handleItemEdit}
+        onItemLongPress={handleItemLongPress}
+        selectedItems={selectedItems}
+        onSelectionChange={onSelectionChange}
+        showSearch={false} // Search is handled by parent component
+        showMetadata={true}
+        showInlineActions={true}
+        isLoading={false} // Loading is handled above
+        error={undefined} // Error is handled above
+        emptyTitle={emptyTitle}
+        emptySubtitle={emptySubtitle}
+        style={style}
+      />
+    );
+  }
 
   return (
     <SearchableList

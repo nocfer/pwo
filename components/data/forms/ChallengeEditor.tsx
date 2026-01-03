@@ -3,7 +3,7 @@
  * Integrates ChallengeForm with data context and provides session preview
  */
 
-import { useDataActions } from "@/context/DataContext";
+import { useDataActions, useDataContext } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import type { Program } from "@/types";
@@ -126,7 +126,7 @@ export function ChallengeEditor({
   const existingChallenge = useMemo(() => {
     if (mode === "edit" && challengeId) {
       const challenge = state.programs.find(
-        (p) => p.id === challengeId && p.challengeConfig
+        (p: Program) => p.id === challengeId && p.challengeConfig
       );
       if (challenge?.challengeConfig) {
         return {
@@ -141,10 +141,7 @@ export function ChallengeEditor({
             warmUpSeconds: challenge.challengeConfig.warmUpSeconds,
             breakSeconds: challenge.challengeConfig.breakSeconds,
             sessionIncreasePercent:
-              challenge.challengeConfig.sessionIncreasePercent || 10,
-            duration: challenge.challengeConfig.duration || 30,
-            progressionType:
-              challenge.challengeConfig.progressionType || "percentage"
+              challenge.challengeConfig.sessionIncreasePercent || 10
           }
         };
       }

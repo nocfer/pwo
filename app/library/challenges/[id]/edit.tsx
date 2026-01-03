@@ -68,10 +68,7 @@ export default function EditChallengeScreen() {
 
   if (!initialData) {
     return (
-      <ErrorScreen
-        title="Challenge not found"
-        message="The challenge you're trying to edit could not be found."
-      />
+      <ErrorScreen message="The challenge you're trying to edit could not be found." />
     );
   }
 
