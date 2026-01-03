@@ -9,14 +9,14 @@ import type { ProgramBlock, ProgramSession } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
 import {
-    Alert,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
 } from "react-native";
 
 type BlockDraft =
@@ -45,7 +45,7 @@ export type ProgramFormProps = {
   onSave: (data: ProgramFormData) => Promise<void>;
   onCancel: () => void;
   saving?: boolean;
-  exercises: Array<{ id: string; name: string; source: "builtin" | "user" }>;
+  exercises: { id: string; name: string; source: "builtin" | "user" }[];
 };
 
 export function ProgramForm({
@@ -63,7 +63,11 @@ export function ProgramForm({
     estimatedDuration: initialData?.estimatedDuration || undefined,
     tags: initialData?.tags || [],
     sessions: initialData?.sessions || [
-      { index: 1, name: "Session 1", blocks: [{ type: "warmup", seconds: 180 }] }
+      {
+        index: 1,
+        name: "Session 1",
+        blocks: [{ type: "warmup", seconds: 180 }]
+      }
     ]
   });
 
@@ -73,7 +77,9 @@ export function ProgramForm({
   );
 
   const [exercisePickerOpen, setExercisePickerOpen] = useState(false);
-  const [pickerTargetIndex, setPickerTargetIndex] = useState<number | null>(null);
+  const [pickerTargetIndex, setPickerTargetIndex] = useState<number | null>(
+    null
+  );
   const [newTag, setNewTag] = useState("");
 
   // Convert ProgramBlock[] to BlockDraft[] for editing
@@ -94,7 +100,9 @@ export function ProgramForm({
         type: "exercise",
         exerciseId: block.exerciseId,
         targetReps: block.targetReps ? String(block.targetReps) : "",
-        durationSeconds: block.durationSeconds ? String(block.durationSeconds) : "",
+        durationSeconds: block.durationSeconds
+          ? String(block.durationSeconds)
+          : "",
         note: block.note || ""
       };
     });
@@ -118,7 +126,9 @@ export function ProgramForm({
         type: "exercise",
         exerciseId: draft.exerciseId,
         targetReps: draft.targetReps ? Number(draft.targetReps) : undefined,
-        durationSeconds: draft.durationSeconds ? Number(draft.durationSeconds) : undefined,
+        durationSeconds: draft.durationSeconds
+          ? Number(draft.durationSeconds)
+          : undefined,
         note: draft.note?.trim() || undefined
       };
     });
@@ -143,7 +153,10 @@ export function ProgramForm({
   const removeTag = useCallback(
     (index: number) => {
       const currentTags = formData.tags || [];
-      updateField("tags", currentTags.filter((_, i) => i !== index));
+      updateField(
+        "tags",
+        currentTags.filter((_, i) => i !== index)
+      );
     },
     [formData.tags, updateField]
   );
@@ -160,18 +173,27 @@ export function ProgramForm({
   const removeSession = useCallback(
     (sessionIndex: number) => {
       if (formData.sessions.length <= 1) {
-        Alert.alert("Cannot remove", "Programs must have at least one session.");
+        Alert.alert(
+          "Cannot remove",
+          "Programs must have at least one session."
+        );
         return;
       }
       const updatedSessions = formData.sessions
         .filter((_, i) => i !== sessionIndex)
-        .map((session, i) => ({ ...session, index: i + 1, name: `Session ${i + 1}` }));
+        .map((session, i) => ({
+          ...session,
+          index: i + 1,
+          name: `Session ${i + 1}`
+        }));
       updateField("sessions", updatedSessions);
-      
+
       // Switch to first session if we removed the active one
       if (sessionIndex === activeSessionIndex) {
         setActiveSessionIndex(0);
-        setSessionBlocks(convertSessionBlocksToDraft(updatedSessions[0]?.blocks || []));
+        setSessionBlocks(
+          convertSessionBlocksToDraft(updatedSessions[0]?.blocks || [])
+        );
       } else if (sessionIndex < activeSessionIndex) {
         setActiveSessionIndex(activeSessionIndex - 1);
       }
@@ -191,30 +213,38 @@ export function ProgramForm({
 
       // Switch to new session
       setActiveSessionIndex(sessionIndex);
-      setSessionBlocks(convertSessionBlocksToDraft(updatedSessions[sessionIndex]?.blocks || []));
+      setSessionBlocks(
+        convertSessionBlocksToDraft(updatedSessions[sessionIndex]?.blocks || [])
+      );
     },
     [formData.sessions, activeSessionIndex, sessionBlocks, updateField]
   );
 
-  const addBlock = useCallback((type: BlockDraft["type"]) => {
-    if (type === "warmup") {
-      setSessionBlocks((prev) => [...prev, { type, seconds: "120" }]);
-    } else if (type === "rest") {
-      setSessionBlocks((prev) => [...prev, { type, seconds: "90", label: "Rest" }]);
-    } else if (type === "exercise") {
-      const firstExercise = exercises[0]?.id || "";
-      setSessionBlocks((prev) => [
-        ...prev,
-        {
-          type,
-          exerciseId: firstExercise,
-          targetReps: "",
-          durationSeconds: "",
-          note: ""
-        }
-      ]);
-    }
-  }, [exercises]);
+  const addBlock = useCallback(
+    (type: BlockDraft["type"]) => {
+      if (type === "warmup") {
+        setSessionBlocks((prev) => [...prev, { type, seconds: "120" }]);
+      } else if (type === "rest") {
+        setSessionBlocks((prev) => [
+          ...prev,
+          { type, seconds: "90", label: "Rest" }
+        ]);
+      } else if (type === "exercise") {
+        const firstExercise = exercises[0]?.id || "";
+        setSessionBlocks((prev) => [
+          ...prev,
+          {
+            type,
+            exerciseId: firstExercise,
+            targetReps: "",
+            durationSeconds: "",
+            note: ""
+          }
+        ]);
+      }
+    },
+    [exercises]
+  );
 
   const removeBlock = useCallback((index: number) => {
     setSessionBlocks((prev) => prev.filter((_, i) => i !== index));
@@ -371,10 +401,15 @@ export function ProgramForm({
 
         <Text style={styles.label}>Estimated Duration (minutes)</Text>
         <TextInput
-          value={formData.estimatedDuration ? String(formData.estimatedDuration) : ""}
+          value={
+            formData.estimatedDuration ? String(formData.estimatedDuration) : ""
+          }
           onChangeText={(value) => {
             const num = Number(value);
-            updateField("estimatedDuration", Number.isFinite(num) && num > 0 ? num : undefined);
+            updateField(
+              "estimatedDuration",
+              Number.isFinite(num) && num > 0 ? num : undefined
+            );
           }}
           placeholder="e.g. 45"
           placeholderTextColor={theme.colors.muted}
@@ -386,7 +421,7 @@ export function ProgramForm({
       {/* Tags */}
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Tags</Text>
-        
+
         <View style={styles.arrayInputContainer}>
           <TextInput
             value={newTag}
@@ -516,7 +551,11 @@ export function ProgramForm({
               <View style={styles.rowBetween}>
                 <View style={styles.blockTitleRow}>
                   <View style={styles.dragHandle}>
-                    <Ionicons name="reorder-two" size={16} color={theme.colors.muted} />
+                    <Ionicons
+                      name="reorder-two"
+                      size={16}
+                      color={theme.colors.muted}
+                    />
                   </View>
                   <Ionicons
                     name={
@@ -540,7 +579,11 @@ export function ProgramForm({
                         pressed && styles.iconBtnPressed
                       ]}
                     >
-                      <Ionicons name="chevron-up" size={16} color={theme.colors.muted} />
+                      <Ionicons
+                        name="chevron-up"
+                        size={16}
+                        color={theme.colors.muted}
+                      />
                     </Pressable>
                   )}
                   {index < sessionBlocks.length - 1 && (
@@ -551,7 +594,11 @@ export function ProgramForm({
                         pressed && styles.iconBtnPressed
                       ]}
                     >
-                      <Ionicons name="chevron-down" size={16} color={theme.colors.muted} />
+                      <Ionicons
+                        name="chevron-down"
+                        size={16}
+                        color={theme.colors.muted}
+                      />
                     </Pressable>
                   )}
                   <Pressable
@@ -561,7 +608,11 @@ export function ProgramForm({
                       pressed && styles.iconBtnPressed
                     ]}
                   >
-                    <Ionicons name="trash-outline" size={16} color={theme.colors.muted} />
+                    <Ionicons
+                      name="trash-outline"
+                      size={16}
+                      color={theme.colors.muted}
+                    />
                   </Pressable>
                 </View>
               </View>
@@ -634,7 +685,8 @@ export function ProgramForm({
                       }}
                     >
                       <Text style={styles.pickerBtnText}>
-                        {exerciseNameById.get(block.exerciseId) || "Pick exercise"}
+                        {exerciseNameById.get(block.exerciseId) ||
+                          "Pick exercise"}
                       </Text>
                       <Ionicons
                         name="chevron-down"
@@ -689,7 +741,10 @@ export function ProgramForm({
                           )
                         )
                       }
-                      style={[styles.fieldInput, { width: 200, textAlign: "left" }]}
+                      style={[
+                        styles.fieldInput,
+                        { width: 200, textAlign: "left" }
+                      ]}
                       placeholder="Optional"
                     />
                   </View>

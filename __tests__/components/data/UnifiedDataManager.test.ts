@@ -33,7 +33,8 @@ const mockPrograms = [
     ],
     source: "builtin" as const,
     createdAt: "2025-01-01T00:00:00.000Z",
-    updatedAt: "2025-01-01T00:00:00.000Z"
+    updatedAt: "2025-01-01T00:00:00.000Z",
+    challengeConfig: undefined
   }
 ];
 
@@ -69,9 +70,10 @@ function getCurrentData(dataType: DataType) {
     case "programs":
       return mockPrograms.filter((p) => !p.challengeConfig);
     case "challenges":
-      return mockPrograms
-        .filter((p) => Boolean(p.challengeConfig))
-        .concat(mockChallenges);
+      return [
+        ...mockPrograms.filter((p) => Boolean(p.challengeConfig)),
+        ...mockChallenges
+      ];
     default:
       return [];
   }
@@ -210,7 +212,8 @@ describe("UnifiedDataManager Property Tests", () => {
             const filteredData = data.filter(
               (item) =>
                 item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (item.description &&
+                ("description" in item &&
+                  item.description &&
                   item.description
                     .toLowerCase()
                     .includes(searchQuery.toLowerCase()))

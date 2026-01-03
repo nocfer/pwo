@@ -17,4 +17,3 @@ export type { ChallengeFormData, ChallengeFormProps } from "./ChallengeForm";
 
 export { ChallengeEditor } from "./ChallengeEditor";
 export type { ChallengeEditorProps } from "./ChallengeEditor";
-

@@ -10,28 +10,29 @@ import type { Program, ProgramSession } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useMemo, useState } from "react";
 import {
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
 } from "react-native";
 import { ProgramForm, type ProgramFormData } from "./ProgramForm";
 
 // Program templates for common workout types
-const PROGRAM_TEMPLATES: Array<{
+const PROGRAM_TEMPLATES: {
   id: string;
   name: string;
   description: string;
   difficulty: "beginner" | "intermediate" | "advanced";
   sessions: ProgramSession[];
   tags: string[];
-}> = [
+}[] = [
   {
     id: "upper-body-strength",
     name: "Upper Body Strength",
-    description: "Focus on building upper body strength with compound movements",
+    description:
+      "Focus on building upper body strength with compound movements",
     difficulty: "intermediate",
     tags: ["strength", "upper-body", "compound"],
     sessions: [
@@ -40,11 +41,26 @@ const PROGRAM_TEMPLATES: Array<{
         name: "Push Day",
         blocks: [
           { type: "warmup", seconds: 300 },
-          { type: "exercise", exerciseId: "", targetReps: 8, note: "Bench Press or Push-ups" },
+          {
+            type: "exercise",
+            exerciseId: "",
+            targetReps: 8,
+            note: "Bench Press or Push-ups"
+          },
           { type: "rest", seconds: 120, label: "Rest between exercises" },
-          { type: "exercise", exerciseId: "", targetReps: 10, note: "Overhead Press" },
+          {
+            type: "exercise",
+            exerciseId: "",
+            targetReps: 10,
+            note: "Overhead Press"
+          },
           { type: "rest", seconds: 90, label: "Rest" },
-          { type: "exercise", exerciseId: "", targetReps: 12, note: "Tricep Dips" }
+          {
+            type: "exercise",
+            exerciseId: "",
+            targetReps: 12,
+            note: "Tricep Dips"
+          }
         ]
       },
       {
@@ -52,11 +68,26 @@ const PROGRAM_TEMPLATES: Array<{
         name: "Pull Day",
         blocks: [
           { type: "warmup", seconds: 300 },
-          { type: "exercise", exerciseId: "", targetReps: 8, note: "Pull-ups or Rows" },
+          {
+            type: "exercise",
+            exerciseId: "",
+            targetReps: 8,
+            note: "Pull-ups or Rows"
+          },
           { type: "rest", seconds: 120, label: "Rest between exercises" },
-          { type: "exercise", exerciseId: "", targetReps: 10, note: "Lat Pulldowns" },
+          {
+            type: "exercise",
+            exerciseId: "",
+            targetReps: 10,
+            note: "Lat Pulldowns"
+          },
           { type: "rest", seconds: 90, label: "Rest" },
-          { type: "exercise", exerciseId: "", targetReps: 12, note: "Bicep Curls" }
+          {
+            type: "exercise",
+            exerciseId: "",
+            targetReps: 12,
+            note: "Bicep Curls"
+          }
         ]
       }
     ]
@@ -73,11 +104,27 @@ const PROGRAM_TEMPLATES: Array<{
         name: "Full Body Workout",
         blocks: [
           { type: "warmup", seconds: 600 },
-          { type: "exercise", exerciseId: "", targetReps: 10, note: "Squats or modified squats" },
+          {
+            type: "exercise",
+            exerciseId: "",
+            targetReps: 10,
+            note: "Squats or modified squats"
+          },
           { type: "rest", seconds: 90, label: "Rest" },
-          { type: "exercise", exerciseId: "", targetReps: 8, note: "Push-ups or wall push-ups" },
+          {
+            type: "exercise",
+            exerciseId: "",
+            targetReps: 8,
+            note: "Push-ups or wall push-ups"
+          },
           { type: "rest", seconds: 90, label: "Rest" },
-          { type: "exercise", exerciseId: "", targetReps: 30, durationSeconds: 30, note: "Plank hold" },
+          {
+            type: "exercise",
+            exerciseId: "",
+            targetReps: 30,
+            durationSeconds: 30,
+            note: "Plank hold"
+          },
           { type: "rest", seconds: 60, label: "Cool down" }
         ]
       }
@@ -95,13 +142,33 @@ const PROGRAM_TEMPLATES: Array<{
         name: "HIIT Session",
         blocks: [
           { type: "warmup", seconds: 300 },
-          { type: "exercise", exerciseId: "", durationSeconds: 30, note: "High knees" },
+          {
+            type: "exercise",
+            exerciseId: "",
+            durationSeconds: 30,
+            note: "High knees"
+          },
           { type: "rest", seconds: 30, label: "Active rest" },
-          { type: "exercise", exerciseId: "", durationSeconds: 30, note: "Burpees" },
+          {
+            type: "exercise",
+            exerciseId: "",
+            durationSeconds: 30,
+            note: "Burpees"
+          },
           { type: "rest", seconds: 30, label: "Active rest" },
-          { type: "exercise", exerciseId: "", durationSeconds: 30, note: "Mountain climbers" },
+          {
+            type: "exercise",
+            exerciseId: "",
+            durationSeconds: 30,
+            note: "Mountain climbers"
+          },
           { type: "rest", seconds: 30, label: "Active rest" },
-          { type: "exercise", exerciseId: "", durationSeconds: 30, note: "Jump squats" },
+          {
+            type: "exercise",
+            exerciseId: "",
+            durationSeconds: 30,
+            note: "Jump squats"
+          },
           { type: "rest", seconds: 180, label: "Cool down" }
         ]
       }
@@ -124,10 +191,12 @@ export function ProgramEditor({
 }: ProgramEditorProps) {
   const actions = useDataActions();
   const { data: exercises } = useExercises();
-  
+
   const [saving, setSaving] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
-  const [initialData, setInitialData] = useState<Partial<ProgramFormData> | undefined>();
+  const [initialData, setInitialData] = useState<
+    Partial<ProgramFormData> | undefined
+  >();
 
   // Find existing program for edit mode
   const existingProgram = useMemo(() => {
@@ -140,35 +209,38 @@ export function ProgramEditor({
   }, [mode, programId]);
 
   const exerciseOptions = useMemo(() => {
-    return (exercises || []).map(exercise => ({
+    return (exercises || []).map((exercise) => ({
       id: exercise.id,
       name: exercise.name,
       source: exercise.source
     }));
   }, [exercises]);
 
-  const handleSave = useCallback(async (formData: ProgramFormData) => {
-    setSaving(true);
-    try {
-      const programData = {
-        id: programId || "",
-        name: formData.name,
-        description: formData.description,
-        sessions: formData.sessions,
-        challengeConfig: undefined // Regular program, not a challenge
-      };
+  const handleSave = useCallback(
+    async (formData: ProgramFormData) => {
+      setSaving(true);
+      try {
+        const programData = {
+          id: programId || "",
+          name: formData.name,
+          description: formData.description,
+          sessions: formData.sessions,
+          challengeConfig: undefined // Regular program, not a challenge
+        };
 
-      const savedProgram = await actions.upsertProgram(programData);
-      
-      if (onSave) {
-        onSave(savedProgram);
+        const savedProgram = await actions.upsertProgram(programData);
+
+        if (onSave) {
+          onSave(savedProgram);
+        }
+      } catch (error) {
+        throw error; // Let ProgramForm handle the error display
+      } finally {
+        setSaving(false);
       }
-    } catch (error) {
-      throw error; // Let ProgramForm handle the error display
-    } finally {
-      setSaving(false);
-    }
-  }, [actions, programId, onSave]);
+    },
+    [actions, programId, onSave]
+  );
 
   const handleCancel = useCallback(() => {
     if (onCancel) {
@@ -176,34 +248,37 @@ export function ProgramEditor({
     }
   }, [onCancel]);
 
-  const applyTemplate = useCallback((template: typeof PROGRAM_TEMPLATES[0]) => {
-    const templateData: Partial<ProgramFormData> = {
-      name: template.name,
-      description: template.description,
-      difficulty: template.difficulty,
-      tags: [...template.tags],
-      sessions: template.sessions.map(session => ({
-        ...session,
-        blocks: session.blocks.map(block => {
-          // For exercise blocks, we'll need to map to actual exercise IDs
-          if (block.type === "exercise" && exerciseOptions.length > 0) {
-            // Try to find a matching exercise by name in the note, otherwise use first available
-            const matchingExercise = exerciseOptions.find(ex => 
-              block.note?.toLowerCase().includes(ex.name.toLowerCase())
-            );
-            return {
-              ...block,
-              exerciseId: matchingExercise?.id || exerciseOptions[0].id
-            };
-          }
-          return block;
-        })
-      }))
-    };
+  const applyTemplate = useCallback(
+    (template: (typeof PROGRAM_TEMPLATES)[0]) => {
+      const templateData: Partial<ProgramFormData> = {
+        name: template.name,
+        description: template.description,
+        difficulty: template.difficulty,
+        tags: [...template.tags],
+        sessions: template.sessions.map((session) => ({
+          ...session,
+          blocks: session.blocks.map((block) => {
+            // For exercise blocks, we'll need to map to actual exercise IDs
+            if (block.type === "exercise" && exerciseOptions.length > 0) {
+              // Try to find a matching exercise by name in the note, otherwise use first available
+              const matchingExercise = exerciseOptions.find((ex) =>
+                block.note?.toLowerCase().includes(ex.name.toLowerCase())
+              );
+              return {
+                ...block,
+                exerciseId: matchingExercise?.id || exerciseOptions[0].id
+              };
+            }
+            return block;
+          })
+        }))
+      };
 
-    setInitialData(templateData);
-    setTemplatePickerOpen(false);
-  }, [exerciseOptions]);
+      setInitialData(templateData);
+      setTemplatePickerOpen(false);
+    },
+    [exerciseOptions]
+  );
 
   const showTemplateButton = mode === "create" && !initialData;
 
@@ -219,9 +294,17 @@ export function ProgramEditor({
               pressed && styles.templateButtonPressed
             ]}
           >
-            <Ionicons name="library-outline" size={20} color={theme.colors.primary} />
+            <Ionicons
+              name="library-outline"
+              size={20}
+              color={theme.colors.primary}
+            />
             <Text style={styles.templateButtonText}>Start from Template</Text>
-            <Ionicons name="chevron-forward" size={16} color={theme.colors.muted} />
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color={theme.colors.muted}
+            />
           </Pressable>
         </View>
       )}
@@ -257,7 +340,7 @@ export function ProgramEditor({
                 <Ionicons name="close" size={18} color={theme.colors.text} />
               </Pressable>
             </View>
-            
+
             <ScrollView style={styles.templateList}>
               {PROGRAM_TEMPLATES.map((template) => (
                 <Pressable
@@ -270,15 +353,28 @@ export function ProgramEditor({
                 >
                   <View style={styles.templateInfo}>
                     <Text style={styles.templateName}>{template.name}</Text>
-                    <Text style={styles.templateDescription}>{template.description}</Text>
+                    <Text style={styles.templateDescription}>
+                      {template.description}
+                    </Text>
                     <View style={styles.templateMeta}>
-                      <View style={[styles.difficultyBadge, styles[`difficulty${template.difficulty}`]]}>
-                        <Text style={[styles.difficultyText, styles[`difficultyText${template.difficulty}`]]}>
+                      <View
+                        style={[
+                          styles.difficultyBadge,
+                          styles[`difficulty${template.difficulty}`]
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.difficultyText,
+                            styles[`difficultyText${template.difficulty}`]
+                          ]}
+                        >
                           {template.difficulty}
                         </Text>
                       </View>
                       <Text style={styles.sessionCount}>
-                        {template.sessions.length} session{template.sessions.length !== 1 ? 's' : ''}
+                        {template.sessions.length} session
+                        {template.sessions.length !== 1 ? "s" : ""}
                       </Text>
                     </View>
                     <View style={styles.templateTags}>
@@ -289,10 +385,14 @@ export function ProgramEditor({
                       ))}
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.colors.muted} />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.colors.muted}
+                  />
                 </Pressable>
               ))}
-              
+
               {/* Custom/Blank Template */}
               <Pressable
                 onPress={() => {
@@ -319,9 +419,15 @@ export function ProgramEditor({
               >
                 <View style={styles.templateInfo}>
                   <Text style={styles.templateName}>Blank Program</Text>
-                  <Text style={styles.templateDescription}>Start with an empty program</Text>
+                  <Text style={styles.templateDescription}>
+                    Start with an empty program
+                  </Text>
                 </View>
-                <Ionicons name="add-circle-outline" size={20} color={theme.colors.primary} />
+                <Ionicons
+                  name="add-circle-outline"
+                  size={20}
+                  color={theme.colors.primary}
+                />
               </Pressable>
             </ScrollView>
           </View>

@@ -160,9 +160,9 @@ export default function ProgramImportPreview({
               <Text style={styles.warningTitle}>Missing Exercises</Text>
             </View>
             <Text style={styles.warningText}>
-              This program references{" "}
-              {formatCount(missingExercises.length, "exercise")} that you don't
-              have in your library:
+              {` This program references${" "}
+              ${formatCount(missingExercises.length, "exercise")} that you don't
+              have in your library:`}
             </Text>
             <View style={styles.missingList}>
               {missingExercises.map((id) => (
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
 // Component to display all sessions with their blocks
 type ProgramSessionsPreviewProps = {
   sessions: ProgramSession[];
-  exercises: Array<{ id: string; name: string }>;
+  exercises: { id: string; name: string }[];
   missingExerciseIds: string[];
 };
 
@@ -648,7 +648,7 @@ function ChallengeConfigRow({
 // Component to display challenge configuration
 type ChallengeConfigPreviewProps = {
   challengeConfig: ChallengeConfig;
-  exercises: Array<{ id: string; name: string }>;
+  exercises: { id: string; name: string }[];
   missingExerciseIds: string[];
 };
 

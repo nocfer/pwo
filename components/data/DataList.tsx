@@ -71,7 +71,9 @@ export function DataList({
         baseItem.icon = item.icon;
       } else {
         // Program
-        baseItem.description = item.description;
+        if ("description" in item) {
+          baseItem.description = item.description;
+        }
       }
 
       return baseItem;

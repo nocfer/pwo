@@ -9,14 +9,14 @@ import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useMemo, useState } from "react";
 import {
-    Alert,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
 } from "react-native";
 
 export type ChallengeFormData = {
@@ -42,7 +42,7 @@ export type ChallengeFormProps = {
   onSave: (data: ChallengeFormData) => Promise<void>;
   onCancel: () => void;
   saving?: boolean;
-  exercises: Array<{ id: string; name: string; source: "builtin" | "user" }>;
+  exercises: { id: string; name: string; source: "builtin" | "user" }[];
 };
 
 export function ChallengeForm({
@@ -64,9 +64,11 @@ export function ChallengeForm({
       targetReps: initialData?.challengeConfig?.targetReps || 100,
       warmUpSeconds: initialData?.challengeConfig?.warmUpSeconds || 180,
       breakSeconds: initialData?.challengeConfig?.breakSeconds || 90,
-      sessionIncreasePercent: initialData?.challengeConfig?.sessionIncreasePercent || 10,
+      sessionIncreasePercent:
+        initialData?.challengeConfig?.sessionIncreasePercent || 10,
       duration: initialData?.challengeConfig?.duration || 30,
-      progressionType: initialData?.challengeConfig?.progressionType || "percentage"
+      progressionType:
+        initialData?.challengeConfig?.progressionType || "percentage"
     }
   });
 
@@ -75,7 +77,10 @@ export function ChallengeForm({
   const [newTag, setNewTag] = useState("");
 
   const updateField = useCallback(
-    <K extends keyof ChallengeFormData>(field: K, value: ChallengeFormData[K]) => {
+    <K extends keyof ChallengeFormData>(
+      field: K,
+      value: ChallengeFormData[K]
+    ) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
     },
     []
@@ -106,7 +111,10 @@ export function ChallengeForm({
   const removeTag = useCallback(
     (index: number) => {
       const currentTags = formData.tags || [];
-      updateField("tags", currentTags.filter((_, i) => i !== index));
+      updateField(
+        "tags",
+        currentTags.filter((_, i) => i !== index)
+      );
     },
     [formData.tags, updateField]
   );
@@ -119,7 +127,7 @@ export function ChallengeForm({
   // Generate preview sessions
   const previewSessions = useMemo(() => {
     if (!formData.challengeConfig.exerciseId) return [];
-    
+
     try {
       return generateChallengeSessions(formData.challengeConfig);
     } catch {
@@ -131,11 +139,23 @@ export function ChallengeForm({
   const challengeStats = useMemo(() => {
     const sessions = previewSessions;
     const totalSessions = sessions.length;
-    const totalReps = sessions.reduce((sum, session) => sum + session.targetReps, 0);
+    const totalReps = sessions.reduce((sum, session) => {
+      // Calculate total reps for this session from exercise blocks
+      const sessionReps = session.blocks
+        .filter((block) => block.type === "exercise")
+        .reduce((blockSum, block) => blockSum + (block.targetReps || 0), 0);
+      return sum + sessionReps;
+    }, 0);
     const estimatedDuration = sessions.reduce((sum, session) => {
       const warmupTime = formData.challengeConfig.warmUpSeconds;
-      const exerciseTime = session.targetReps * 2; // Estimate 2 seconds per rep
-      const breakTime = formData.challengeConfig.breakSeconds * (formData.challengeConfig.sets - 1);
+      // Calculate total reps for this session from exercise blocks
+      const sessionReps = session.blocks
+        .filter((block) => block.type === "exercise")
+        .reduce((blockSum, block) => blockSum + (block.targetReps || 0), 0);
+      const exerciseTime = sessionReps * 2; // Estimate 2 seconds per rep
+      const breakTime =
+        formData.challengeConfig.breakSeconds *
+        (formData.challengeConfig.sets - 1);
       return sum + warmupTime + exerciseTime + breakTime;
     }, 0);
 
@@ -143,7 +163,8 @@ export function ChallengeForm({
       totalSessions,
       totalReps,
       estimatedDurationMinutes: Math.round(estimatedDuration / 60),
-      averageRepsPerSession: totalSessions > 0 ? Math.round(totalReps / totalSessions) : 0
+      averageRepsPerSession:
+        totalSessions > 0 ? Math.round(totalReps / totalSessions) : 0
     };
   }, [previewSessions, formData.challengeConfig]);
 
@@ -155,7 +176,10 @@ export function ChallengeForm({
     }
 
     if (!formData.challengeConfig.exerciseId) {
-      Alert.alert("Exercise required", "Please select an exercise for the challenge.");
+      Alert.alert(
+        "Exercise required",
+        "Please select an exercise for the challenge."
+      );
       return;
     }
 
@@ -185,7 +209,10 @@ export function ChallengeForm({
       Alert.alert("Invalid break", "Break seconds must be 0 or greater.");
       return;
     }
-    if (config.sessionIncreasePercent <= 0 || config.sessionIncreasePercent > 100) {
+    if (
+      config.sessionIncreasePercent <= 0 ||
+      config.sessionIncreasePercent > 100
+    ) {
       Alert.alert(
         "Invalid progression",
         "Session increase percent must be between 0 and 100."
@@ -305,7 +332,8 @@ export function ChallengeForm({
             onPress={() => setExercisePickerOpen(true)}
           >
             <Text style={styles.pickerBtnText}>
-              {exerciseNameById.get(formData.challengeConfig.exerciseId) || "Select exercise"}
+              {exerciseNameById.get(formData.challengeConfig.exerciseId) ||
+                "Select exercise"}
             </Text>
             <Ionicons
               name="chevron-down"
@@ -394,10 +422,17 @@ export function ChallengeForm({
         <View style={styles.fieldRow}>
           <Text style={styles.fieldLabel}>Duration (days)</Text>
           <TextInput
-            value={formData.challengeConfig.duration ? String(formData.challengeConfig.duration) : ""}
+            value={
+              formData.challengeConfig.duration
+                ? String(formData.challengeConfig.duration)
+                : ""
+            }
             onChangeText={(value) => {
               const num = Number(value);
-              updateChallengeConfig("duration", Number.isFinite(num) && num > 0 ? num : undefined);
+              updateChallengeConfig(
+                "duration",
+                Number.isFinite(num) && num > 0 ? num : undefined
+              );
             }}
             keyboardType="number-pad"
             style={styles.fieldInput}
@@ -414,7 +449,8 @@ export function ChallengeForm({
                 onPress={() => updateChallengeConfig("progressionType", type)}
                 style={[
                   styles.segment,
-                  formData.challengeConfig.progressionType === type && styles.segmentActive
+                  formData.challengeConfig.progressionType === type &&
+                    styles.segmentActive
                 ]}
               >
                 <Text
@@ -443,7 +479,11 @@ export function ChallengeForm({
               pressed && styles.smallBtnPressed
             ]}
           >
-            <Ionicons name="eye-outline" size={16} color={theme.colors.primary} />
+            <Ionicons
+              name="eye-outline"
+              size={16}
+              color={theme.colors.primary}
+            />
             <Text style={styles.smallBtnText}>View Sessions</Text>
           </Pressable>
         </View>
@@ -458,11 +498,15 @@ export function ChallengeForm({
             <Text style={styles.statLabel}>Total Reps</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{challengeStats.averageRepsPerSession}</Text>
+            <Text style={styles.statValue}>
+              {challengeStats.averageRepsPerSession}
+            </Text>
             <Text style={styles.statLabel}>Avg/Session</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{challengeStats.estimatedDurationMinutes}m</Text>
+            <Text style={styles.statValue}>
+              {challengeStats.estimatedDurationMinutes}m
+            </Text>
             <Text style={styles.statLabel}>Est. Duration</Text>
           </View>
         </View>
@@ -471,7 +515,7 @@ export function ChallengeForm({
       {/* Tags */}
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Tags</Text>
-        
+
         <View style={styles.arrayInputContainer}>
           <TextInput
             value={newTag}
@@ -598,10 +642,16 @@ export function ChallengeForm({
               {previewSessions.map((session, index) => (
                 <View key={index} style={styles.previewSession}>
                   <Text style={styles.previewSessionTitle}>
-                    Session {session.sessionIndex}
+                    Session {session.index}
                   </Text>
                   <Text style={styles.previewSessionReps}>
-                    {session.targetReps} reps ({formData.challengeConfig.sets} sets)
+                    {session.blocks
+                      .filter((block) => block.type === "exercise")
+                      .reduce(
+                        (sum, block) => sum + (block.targetReps || 0),
+                        0
+                      )}{" "}
+                    reps ({formData.challengeConfig.sets} sets)
                   </Text>
                 </View>
               ))}

@@ -76,13 +76,13 @@ describe("SearchableList Metadata Display Property Tests", () => {
           createdAt: fc.option(
             fc
               .date({ min: new Date(2020, 0, 1), max: new Date() })
-              .filter(d => !isNaN(d.getTime()))
+              .filter((d) => !isNaN(d.getTime()))
               .map((d) => d.toISOString())
           ),
           updatedAt: fc.option(
             fc
               .date({ min: new Date(2020, 0, 1), max: new Date() })
-              .filter(d => !isNaN(d.getTime()))
+              .filter((d) => !isNaN(d.getTime()))
               .map((d) => d.toISOString())
           ),
           category: fc.option(
@@ -159,7 +159,9 @@ describe("SearchableList Metadata Display Property Tests", () => {
   it("Property 2a: Date formatting is consistent", () => {
     fc.assert(
       fc.property(
-        fc.date({ min: new Date(2020, 0, 1), max: new Date() }).filter(date => !isNaN(date.getTime())),
+        fc
+          .date({ min: new Date(2020, 0, 1), max: new Date() })
+          .filter((date) => !isNaN(date.getTime())),
         (date: Date) => {
           const dateString = date.toISOString();
           const formatted = formatDate(dateString);
