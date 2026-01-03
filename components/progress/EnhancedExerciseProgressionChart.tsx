@@ -9,9 +9,9 @@
  */
 
 import {
-    useExerciseProgression,
-    useExercisePRs,
-    useExercisesWithProgression
+  useExerciseProgression,
+  useExercisePRs,
+  useExercisesWithProgression
 } from "@/hooks/data";
 import { useExercises } from "@/hooks/data/useExercises";
 import { haptics } from "@/lib/haptics";
@@ -20,12 +20,12 @@ import { Exercise, PersonalRecord } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useState } from "react";
 import {
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 
 type MetricType = "reps" | "weight" | "volume";
@@ -179,7 +179,7 @@ export function EnhancedExerciseProgressionChart({
       );
     }
 
-    const { dataPoints, trend, hasWeightData } = progressionData;
+    const { dataPoints, trend } = progressionData;
     const maxValue = Math.max(
       ...dataPoints.map((dp) => {
         switch (selectedMetric) {

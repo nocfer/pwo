@@ -10,14 +10,14 @@ import type { ProgramBlock, ProgramSession } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
 import {
-    Alert,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
 } from "react-native";
 
 type BlockDraft =

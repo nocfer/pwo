@@ -9,8 +9,14 @@
  */
 
 import { Button } from "@/components/common";
-import { EnhancedExerciseProgressionChart, PersonalRecordsCard } from "@/components/progress";
-import { RepsProgressionChart, SessionsCompletedChart } from "@/components/progress/ProgressCharts";
+import {
+  EnhancedExerciseProgressionChart,
+  PersonalRecordsCard
+} from "@/components/progress";
+import {
+  RepsProgressionChart,
+  SessionsCompletedChart
+} from "@/components/progress/ProgressCharts";
 import { useAllProgress } from "@/hooks/data";
 import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
@@ -58,29 +64,35 @@ export default function AnalyticsScreen() {
     void haptics.tabSwitch();
   }, []);
 
-  const handleFilterChange = useCallback((key: keyof FilterState, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    void haptics.tabSwitch();
-  }, []);
+  const handleFilterChange = useCallback(
+    (key: keyof FilterState, value: any) => {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+      void haptics.tabSwitch();
+    },
+    []
+  );
 
   const getDaysFromTimeRange = (range: TimeRange): number => {
     switch (range) {
-      case "7d": return 7;
-      case "30d": return 30;
-      case "90d": return 90;
-      case "1y": return 365;
-      case "all": return 1000;
-      default: return 30;
+      case "7d":
+        return 7;
+      case "30d":
+        return 30;
+      case "90d":
+        return 90;
+      case "1y":
+        return 365;
+      case "all":
+        return 1000;
+      default:
+        return 30;
     }
   };
 
   const renderTabButton = (tab: DataType, label: string, icon: string) => (
     <TouchableOpacity
       key={tab}
-      style={[
-        styles.tabButton,
-        activeTab === tab && styles.tabButtonActive
-      ]}
+      style={[styles.tabButton, activeTab === tab && styles.tabButtonActive]}
       onPress={() => handleTabChange(tab)}
     >
       <Ionicons
@@ -130,17 +142,21 @@ export default function AnalyticsScreen() {
     <View style={styles.analyticsContent}>
       <View style={styles.metricsGrid}>
         <View style={styles.metricCard}>
-          <Text style={styles.metricValue}>{allProgress?.activePrograms || 0}</Text>
+          <Text style={styles.metricValue}>
+            {allProgress?.activePrograms || 0}
+          </Text>
           <Text style={styles.metricLabel}>Active Programs</Text>
         </View>
         <View style={styles.metricCard}>
-          <Text style={styles.metricValue}>{allProgress?.totalWorkoutsCompleted || 0}</Text>
+          <Text style={styles.metricValue}>
+            {allProgress?.totalWorkoutsCompleted || 0}
+          </Text>
           <Text style={styles.metricLabel}>Sessions Completed</Text>
         </View>
       </View>
-      
+
       <SessionsCompletedChart days={getDaysFromTimeRange(filters.timeRange)} />
-      
+
       <PersonalRecordsCard limit={5} />
     </View>
   );
@@ -149,20 +165,26 @@ export default function AnalyticsScreen() {
     <View style={styles.analyticsContent}>
       <View style={styles.metricsGrid}>
         <View style={styles.metricCard}>
-          <Text style={styles.metricValue}>{allProgress?.activeChallenges || 0}</Text>
+          <Text style={styles.metricValue}>
+            {allProgress?.activeChallenges || 0}
+          </Text>
           <Text style={styles.metricLabel}>Active Challenges</Text>
         </View>
         <View style={styles.metricCard}>
-          <Text style={styles.metricValue}>{allProgress?.totalRepsCompleted || 0}</Text>
+          <Text style={styles.metricValue}>
+            {allProgress?.totalRepsCompleted || 0}
+          </Text>
           <Text style={styles.metricLabel}>Total Reps</Text>
         </View>
       </View>
-      
+
       <RepsProgressionChart days={getDaysFromTimeRange(filters.timeRange)} />
-      
+
       <View style={styles.streakCard}>
         <Ionicons name="flame" size={24} color={theme.colors.warning} />
-        <Text style={styles.streakValue}>{allProgress?.currentStreak || 0}</Text>
+        <Text style={styles.streakValue}>
+          {allProgress?.currentStreak || 0}
+        </Text>
         <Text style={styles.streakLabel}>Day Streak</Text>
       </View>
     </View>
@@ -219,7 +241,7 @@ export default function AnalyticsScreen() {
         {/* Filters */}
         <View style={styles.filtersContainer}>
           {renderTimeRangeFilter()}
-          
+
           <View style={styles.filterSection}>
             <Text style={styles.filterLabel}>Options</Text>
             <View style={styles.filterRow}>
@@ -228,7 +250,9 @@ export default function AnalyticsScreen() {
                   styles.filterToggle,
                   filters.showOnlyActive && styles.filterToggleActive
                 ]}
-                onPress={() => handleFilterChange("showOnlyActive", !filters.showOnlyActive)}
+                onPress={() =>
+                  handleFilterChange("showOnlyActive", !filters.showOnlyActive)
+                }
               >
                 <Text
                   style={[

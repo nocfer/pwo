@@ -381,7 +381,7 @@ describe("Program Session Manipulation Property Tests", () => {
 
           // While the validation might not catch duplicate indices directly,
           // the program structure should still be valid in terms of individual sessions
-          const result = validateProgram(program);
+          validateProgram(program);
 
           // Each individual session should be structurally valid
           duplicateIndexSessions.forEach((session) => {
