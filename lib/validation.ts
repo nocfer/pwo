@@ -4,20 +4,20 @@
  */
 
 import type {
-  ChallengeConfig,
-  Exercise,
-  ExerciseCategory,
-  Program
+    ChallengeConfig,
+    Exercise,
+    ExerciseCategory,
+    Program
 } from "@/types";
 import type {
-  DependencyResult,
-  EnhancedChallenge,
-  EnhancedExercise,
-  EnhancedProgram,
-  FieldValidation,
-  ValidationError,
-  ValidationResult,
-  ValidationSchema
+    DependencyResult,
+    EnhancedChallenge,
+    EnhancedExercise,
+    EnhancedProgram,
+    FieldValidation,
+    ValidationError,
+    ValidationResult,
+    ValidationSchema
 } from "@/types/enhanced";
 import { ValidationErrorCode } from "@/types/enhanced";
 
@@ -101,10 +101,11 @@ export function validateField<T>(
     return errors; // Don't continue validation if required field is missing
   }
 
-  // Skip further validation if field is optional and empty
+  // Skip further validation if field is optional and empty (but not for custom validators that need to handle empty values)
   if (
     !validation.required &&
-    (value === undefined || value === null || value === "")
+    (value === undefined || value === null) ||
+    (!validation.customValidator && value === "")
   ) {
     return errors;
   }
@@ -206,17 +207,48 @@ export const exerciseValidationSchema: ValidationSchema<EnhancedExercise> = {
     {
       field: "category",
       customValidator: (value) => {
-        if (value && !VALID_EXERCISE_CATEGORIES.includes(value)) {
-          return {
-            isValid: false,
-            errors: [
-              createValidationError(
-                "category",
-                `Category must be one of: ${VALID_EXERCISE_CATEGORIES.join(", ")}`,
-                ValidationErrorCode.INVALID_CATEGORY
-              )
-            ]
-          };
+        if (value !== undefined && value !== null) {
+          // Check for empty string specifically
+          if (value === "") {
+            return {
+              isValid: false,
+              errors: [
+                createValidationError(
+                  "category",
+                  "Category cannot be empty",
+                  ValidationErrorCode.INVALID_CATEGORY
+                )
+              ]
+            };
+          }
+          
+          // Check for whitespace-only strings
+          if (typeof value === "string" && value.trim() === "") {
+            return {
+              isValid: false,
+              errors: [
+                createValidationError(
+                  "category",
+                  "Category cannot be empty",
+                  ValidationErrorCode.INVALID_CATEGORY
+                )
+              ]
+            };
+          }
+          
+          // Check if value is in valid categories
+          if (!VALID_EXERCISE_CATEGORIES.includes(value)) {
+            return {
+              isValid: false,
+              errors: [
+                createValidationError(
+                  "category",
+                  `Category must be one of: ${VALID_EXERCISE_CATEGORIES.join(", ")}`,
+                  ValidationErrorCode.INVALID_CATEGORY
+                )
+              ]
+            };
+          }
         }
         return { isValid: true, errors: [] };
       }
@@ -613,7 +645,10 @@ export function validateChallengeConfig(
 ): ValidationResult {
   const errors: ValidationError[] = [];
 
-  if (!config.exerciseId || typeof config.exerciseId !== "string") {
+  // Validate exerciseId - must be non-empty string with non-whitespace content
+  if (!config.exerciseId || 
+      typeof config.exerciseId !== "string" || 
+      config.exerciseId.trim().length === 0) {
     errors.push(
       createValidationError(
         "exerciseId",
@@ -623,27 +658,27 @@ export function validateChallengeConfig(
     );
   }
 
-  if (typeof config.sets !== "number" || config.sets <= 0) {
+  if (config.sets === null || typeof config.sets !== "number" || config.sets <= 0 || !Number.isInteger(config.sets)) {
     errors.push(
       createValidationError(
         "sets",
-        "Sets must be a positive number",
+        "Sets must be a positive integer",
         ValidationErrorCode.INVALID_RANGE
       )
     );
   }
 
-  if (typeof config.targetReps !== "number" || config.targetReps <= 0) {
+  if (config.targetReps === null || typeof config.targetReps !== "number" || config.targetReps <= 0 || !Number.isInteger(config.targetReps)) {
     errors.push(
       createValidationError(
         "targetReps",
-        "Target reps must be a positive number",
+        "Target reps must be a positive integer",
         ValidationErrorCode.INVALID_RANGE
       )
     );
   }
 
-  if (typeof config.warmUpSeconds !== "number" || config.warmUpSeconds < 0) {
+  if (config.warmUpSeconds === null || typeof config.warmUpSeconds !== "number" || config.warmUpSeconds < 0) {
     errors.push(
       createValidationError(
         "warmUpSeconds",
@@ -653,7 +688,7 @@ export function validateChallengeConfig(
     );
   }
 
-  if (typeof config.breakSeconds !== "number" || config.breakSeconds < 0) {
+  if (config.breakSeconds === null || typeof config.breakSeconds !== "number" || config.breakSeconds < 0) {
     errors.push(
       createValidationError(
         "breakSeconds",
@@ -668,14 +703,27 @@ export function validateChallengeConfig(
     config.sessionIncreasePercent ?? config.weeklyIncreasePercent;
   if (
     sessionIncreasePercent !== undefined &&
+    sessionIncreasePercent !== null &&
     (typeof sessionIncreasePercent !== "number" ||
       sessionIncreasePercent <= 0 ||
-      sessionIncreasePercent > 100)
+      sessionIncreasePercent > 100 ||
+      !Number.isInteger(sessionIncreasePercent))
   ) {
     errors.push(
       createValidationError(
         "sessionIncreasePercent",
-        "Session increase percent must be between 0 and 100",
+        "Session increase percent must be between 1 and 100",
+        ValidationErrorCode.INVALID_RANGE
+      )
+    );
+  }
+
+  // Handle explicit null values for sessionIncreasePercent
+  if (config.sessionIncreasePercent === null) {
+    errors.push(
+      createValidationError(
+        "sessionIncreasePercent",
+        "Session increase percent must be between 1 and 100",
         ValidationErrorCode.INVALID_RANGE
       )
     );
