@@ -57,11 +57,7 @@ export default function ProgramDetail() {
         pressed && styles.shareButtonPressed
       ]}
     >
-      <Ionicons
-        name="qr-code-outline"
-        size={22}
-        color={theme.colors.primary}
-      />
+      <Ionicons name="qr-code-outline" size={22} color={theme.colors.primary} />
     </Pressable>
   );
 

@@ -4,10 +4,10 @@
  */
 
 import type {
-    ChallengeConfig,
-    Exercise,
-    ExerciseCategory,
-    Program
+  ChallengeConfig,
+  Exercise,
+  ExerciseCategory,
+  Program
 } from "./index";
 
 // ============================================================================
@@ -18,7 +18,7 @@ export interface EnhancedExercise extends Exercise {
   description?: string;
   instructions?: string;
   muscleGroups?: string[];
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty?: "beginner" | "intermediate" | "advanced";
   equipment?: string[];
   tags?: string[];
   usageCount?: number;
@@ -30,7 +30,7 @@ export interface EnhancedExercise extends Exercise {
 // ============================================================================
 
 export interface EnhancedProgram extends Program {
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty?: "beginner" | "intermediate" | "advanced";
   estimatedDuration?: number; // minutes
   tags?: string[];
   thumbnail?: string;
@@ -44,9 +44,9 @@ export interface EnhancedProgram extends Program {
 // ============================================================================
 
 export interface EnhancedChallengeConfig extends ChallengeConfig {
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty?: "beginner" | "intermediate" | "advanced";
   duration?: number; // days
-  progressionType?: 'linear' | 'percentage';
+  progressionType?: "linear" | "percentage";
   tags?: string[];
 }
 
@@ -70,7 +70,7 @@ export type ValidationError = {
   field: string;
   message: string;
   code: ValidationErrorCode;
-  severity: 'error' | 'warning' | 'info';
+  severity: "error" | "warning" | "info";
 };
 
 export type ValidationWarning = {
@@ -80,21 +80,21 @@ export type ValidationWarning = {
 };
 
 export enum ValidationErrorCode {
-  REQUIRED_FIELD = 'REQUIRED_FIELD',
-  INVALID_FORMAT = 'INVALID_FORMAT',
-  DUPLICATE_NAME = 'DUPLICATE_NAME',
-  INVALID_REFERENCE = 'INVALID_REFERENCE',
-  DEPENDENCY_EXISTS = 'DEPENDENCY_EXISTS',
-  INSUFFICIENT_PERMISSIONS = 'INSUFFICIENT_PERMISSIONS',
-  INVALID_RANGE = 'INVALID_RANGE',
-  INVALID_CATEGORY = 'INVALID_CATEGORY',
-  INVALID_ICON = 'INVALID_ICON'
+  REQUIRED_FIELD = "REQUIRED_FIELD",
+  INVALID_FORMAT = "INVALID_FORMAT",
+  DUPLICATE_NAME = "DUPLICATE_NAME",
+  INVALID_REFERENCE = "INVALID_REFERENCE",
+  DEPENDENCY_EXISTS = "DEPENDENCY_EXISTS",
+  INSUFFICIENT_PERMISSIONS = "INSUFFICIENT_PERMISSIONS",
+  INVALID_RANGE = "INVALID_RANGE",
+  INVALID_CATEGORY = "INVALID_CATEGORY",
+  INVALID_ICON = "INVALID_ICON"
 }
 
 export enum ValidationWarningCode {
-  MISSING_OPTIONAL = 'MISSING_OPTIONAL',
-  PERFORMANCE_CONCERN = 'PERFORMANCE_CONCERN',
-  DEPRECATED_FIELD = 'DEPRECATED_FIELD'
+  MISSING_OPTIONAL = "MISSING_OPTIONAL",
+  PERFORMANCE_CONCERN = "PERFORMANCE_CONCERN",
+  DEPRECATED_FIELD = "DEPRECATED_FIELD"
 }
 
 export type CustomValidator<T> = (value: T) => ValidationResult;
@@ -152,32 +152,32 @@ export type AuditLogEntry = {
 };
 
 export enum AuditAction {
-  CREATE = 'CREATE',
-  UPDATE = 'UPDATE',
-  DELETE = 'DELETE',
-  BULK_DELETE = 'BULK_DELETE',
-  DUPLICATE = 'DUPLICATE',
-  IMPORT = 'IMPORT',
-  EXPORT = 'EXPORT'
+  CREATE = "CREATE",
+  UPDATE = "UPDATE",
+  DELETE = "DELETE",
+  BULK_DELETE = "BULK_DELETE",
+  DUPLICATE = "DUPLICATE",
+  IMPORT = "IMPORT",
+  EXPORT = "EXPORT"
 }
 
 // ============================================================================
 // Search and Filter Types
 // ============================================================================
 
-export type DataType = 'exercises' | 'programs' | 'challenges';
+export type DataType = "exercises" | "programs" | "challenges";
 
 export type SearchState = {
   query: string;
   filters: {
     category?: ExerciseCategory[];
-    source?: ('builtin' | 'user')[];
+    source?: ("builtin" | "user")[];
     difficulty?: string[];
     tags?: string[];
     dateRange?: DateRange;
   };
-  sortBy: 'name' | 'created' | 'updated' | 'usage';
-  sortOrder: 'asc' | 'desc';
+  sortBy: "name" | "created" | "updated" | "usage";
+  sortOrder: "asc" | "desc";
 };
 
 export type DateRange = {
@@ -202,9 +202,9 @@ export type SearchFacets = {
 export type SearchQuery = {
   query: string;
   type?: DataType;
-  filters?: SearchState['filters'];
-  sortBy?: SearchState['sortBy'];
-  sortOrder?: SearchState['sortOrder'];
+  filters?: SearchState["filters"];
+  sortBy?: SearchState["sortBy"];
+  sortOrder?: SearchState["sortOrder"];
   limit?: number;
   offset?: number;
 };
@@ -240,7 +240,7 @@ export type ImportedItem = {
   id: string;
   name: string;
   type: DataType;
-  action: 'created' | 'updated';
+  action: "created" | "updated";
 };
 
 export type SkippedItem = {
@@ -257,18 +257,18 @@ export type ImportError = {
 };
 
 export enum ImportErrorCode {
-  INVALID_FORMAT = 'INVALID_FORMAT',
-  MISSING_DEPENDENCIES = 'MISSING_DEPENDENCIES',
-  VALIDATION_FAILED = 'VALIDATION_FAILED',
-  DUPLICATE_ID = 'DUPLICATE_ID',
-  PERMISSION_DENIED = 'PERMISSION_DENIED'
+  INVALID_FORMAT = "INVALID_FORMAT",
+  MISSING_DEPENDENCIES = "MISSING_DEPENDENCIES",
+  VALIDATION_FAILED = "VALIDATION_FAILED",
+  DUPLICATE_ID = "DUPLICATE_ID",
+  PERMISSION_DENIED = "PERMISSION_DENIED"
 }
 
 export type ConflictResolution = {
   itemId: string;
   itemName: string;
-  conflictType: 'name_conflict' | 'id_conflict' | 'data_conflict';
-  resolution: 'merge' | 'replace' | 'skip';
+  conflictType: "name_conflict" | "id_conflict" | "data_conflict";
+  resolution: "merge" | "replace" | "skip";
   details?: Record<string, any>;
 };
 
@@ -297,7 +297,7 @@ export type UsageTrend = {
 // ============================================================================
 
 export type OperationStatus = {
-  type: 'idle' | 'loading' | 'success' | 'error';
+  type: "idle" | "loading" | "success" | "error";
   message?: string;
   progress?: number; // 0-100
   details?: Record<string, any>;
@@ -312,22 +312,27 @@ export type EnhancedDataActions = {
   bulkDeleteExercises: (ids: string[]) => Promise<void>;
   bulkDeletePrograms: (ids: string[]) => Promise<void>;
   duplicateProgram: (id: string, newName: string) => Promise<Program>;
-  
+
   // Advanced search
-  searchData: <T>(query: SearchQuery) => Promise<SearchResult<T>>;
-  
+  searchData: (query: SearchQuery) => Promise<SearchResult<any>>;
+
   // Import/Export
   exportData: (type: DataType, ids?: string[]) => Promise<ExportData>;
   importData: (data: ImportData) => Promise<ImportResult>;
-  
+
   // Validation
-  validateDependencies: (type: DataType, id: string) => Promise<DependencyCheck>;
-  
+  validateDependencies: (
+    type: DataType,
+    id: string
+  ) => Promise<DependencyCheck>;
+
   // Analytics
   getUsageStats: (type: DataType, id: string) => Promise<UsageStats>;
-  
+
   // Audit logging
-  logAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => Promise<void>;
+  logAuditEntry: (
+    entry: Omit<AuditLogEntry, "id" | "timestamp">
+  ) => Promise<void>;
 };
 
 export type EnhancedDataState = {

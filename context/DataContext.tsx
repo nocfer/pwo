@@ -6,23 +6,40 @@
  */
 
 import { generateChallengeSessions } from "@/hooks/data/useChallengeSessions";
+import { canSafelyDelete } from "@/lib/dependencyChecker";
 import { dataEvents } from "@/lib/events";
 import { storage } from "@/lib/storage";
+import {
+  validateExercise,
+  validateModificationPermissions,
+  validateUniqueName
+} from "@/lib/validation";
 import type {
+  AuditLogEntry,
   ChallengeProgress,
   DataAction,
   DataEvent,
   DataState,
+  DataType,
+  DependencyCheck,
+  EnhancedDataActions,
+  EnhancedDataState,
   EventRecord,
   Exercise,
   ExerciseProgress,
+  ExportData,
   HistoryEntry,
+  ImportData,
+  ImportResult,
   LegacyProgram,
   Program,
   ProgramBlock,
   ProgramProgress,
+  SearchFacets,
+  SearchQuery,
   SessionProgress,
-  SessionState
+  SessionState,
+  UsageStats
 } from "@/types";
 import React, {
   createContext,
@@ -34,7 +51,7 @@ import React, {
 } from "react";
 
 type DataContextValue = {
-  state: DataState;
+  state: DataState & EnhancedDataState;
 
   // Actions
   actions: {
@@ -84,14 +101,14 @@ type DataContextValue = {
       }
     ) => Promise<Program>;
     deleteProgram: (id: string) => Promise<void>;
-  };
+  } & EnhancedDataActions;
 };
 
 // ============================================================================
 // Initial State & Reducer
 // ============================================================================
 
-export const initialState: DataState = {
+export const initialState: DataState & EnhancedDataState = {
   exercises: [],
   exercisesLoading: true,
   programs: [],
@@ -99,10 +116,18 @@ export const initialState: DataState = {
   lastCompletedSlug: null,
   progressVersion: 0,
   historyVersion: 0,
-  completedVersion: 0
+  completedVersion: 0,
+  // Enhanced state
+  searchCache: new Map(),
+  validationErrors: [],
+  operationStatus: { type: "idle" },
+  auditLog: []
 };
 
-export function dataReducer(state: DataState, action: DataAction): DataState {
+export function dataReducer(
+  state: DataState & EnhancedDataState,
+  action: DataAction
+): DataState & EnhancedDataState {
   switch (action.type) {
     case "SET_EXERCISES":
       return { ...state, exercises: action.exercises, exercisesLoading: false };
@@ -460,10 +485,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const sessionId = `${slug}_session_${sessionIndex}`;
         for (const exProgress of exerciseProgress) {
           try {
-            await storage.detectAndSavePRs(exProgress.exerciseId, exProgress, sessionId);
+            await storage.detectAndSavePRs(
+              exProgress.exerciseId,
+              exProgress,
+              sessionId
+            );
           } catch (error) {
             // Log error but don't fail session completion
-            console.error(`Failed to detect PRs for exercise ${exProgress.exerciseId}:`, error);
+            console.error(
+              `Failed to detect PRs for exercise ${exProgress.exerciseId}:`,
+              error
+            );
           }
         }
 
@@ -721,11 +753,38 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
     ) => {
       const id = input.id;
+
+      // Check modification permissions for existing exercises
       if (id) {
         const existing = state.exercises.find((e) => e.id === id);
-        if (existing?.source === "builtin") {
-          throw new Error("Built-in exercises cannot be edited.");
+        if (existing) {
+          const permissionResult = validateModificationPermissions(
+            existing.source,
+            "edit"
+          );
+          if (!permissionResult.isValid) {
+            throw new Error(permissionResult.errors[0].message);
+          }
         }
+      }
+
+      // Validate exercise data
+      const validationResult = validateExercise(input);
+      if (!validationResult.isValid) {
+        const errorMessages = validationResult.errors
+          .map((e) => e.message)
+          .join("; ");
+        throw new Error(`Validation failed: ${errorMessages}`);
+      }
+
+      // Check for name uniqueness
+      const nameValidation = validateUniqueName(
+        input.name,
+        id,
+        state.exercises
+      );
+      if (!nameValidation.isValid) {
+        throw new Error(nameValidation.errors[0].message);
       }
 
       const saved = await storage.upsertExercise({
@@ -756,19 +815,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
     async (id: string) => {
       const existing = state.exercises.find((e) => e.id === id);
       if (!existing) return;
-      if (existing.source === "builtin") {
-        throw new Error("Built-in exercises cannot be deleted.");
+      // Check modification permissions
+      const permissionResult = validateModificationPermissions(
+        existing.source,
+        "delete"
+      );
+      if (!permissionResult.isValid) {
+        throw new Error(permissionResult.errors[0].message);
       }
 
-      const referencedBy = state.programs.find((p) =>
-        p.sessions.some((s) =>
-          s.blocks.some((b) => b.type === "exercise" && b.exerciseId === id)
-        )
+      // Check dependencies using the dependency checker
+      const dependencyCheck = canSafelyDelete(
+        "exercises",
+        id,
+        state.exercises,
+        state.programs
       );
-      if (referencedBy) {
-        throw new Error(
-          `This exercise is used by the program “${referencedBy.name}”. Remove it from the program first.`
-        );
+      if (!dependencyCheck.canDelete) {
+        const warnings = dependencyCheck.warnings.join("; ");
+        throw new Error(`Cannot delete exercise: ${warnings}`);
       }
 
       await storage.deleteExercise(id);
@@ -840,6 +905,532 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [state.programs]
   );
 
+  // Enhanced Actions Implementation
+  const bulkDeleteExercises = useCallback(
+    async (ids: string[]) => {
+      const errors: string[] = [];
+
+      for (const id of ids) {
+        try {
+          const existing = state.exercises.find((e) => e.id === id);
+          if (!existing) continue;
+
+          if (existing.source === "builtin") {
+            errors.push(
+              `Built-in exercise "${existing.name}" cannot be deleted.`
+            );
+            continue;
+          }
+
+          // Check dependencies
+          const referencedBy = state.programs.find((p) =>
+            p.sessions.some((s) =>
+              s.blocks.some((b) => b.type === "exercise" && b.exerciseId === id)
+            )
+          );
+
+          if (referencedBy) {
+            errors.push(
+              `Exercise "${existing.name}" is used by program "${referencedBy.name}".`
+            );
+            continue;
+          }
+
+          await storage.deleteExercise(id);
+        } catch (error) {
+          errors.push(
+            `Failed to delete exercise ${id}: ${error instanceof Error ? error.message : "Unknown error"}`
+          );
+        }
+      }
+
+      if (errors.length > 0) {
+        throw new Error(
+          `Bulk delete completed with errors:\n${errors.join("\n")}`
+        );
+      }
+
+      // Refresh exercises list
+      const userExercises = await storage.loadExercises();
+      const merged = [
+        ...state.exercises.filter((e) => e.source === "builtin"),
+        ...userExercises
+      ].sort((a, b) => a.name.localeCompare(b.name));
+      dispatch({ type: "SET_EXERCISES", exercises: merged });
+    },
+    [state.exercises, state.programs]
+  );
+
+  const bulkDeletePrograms = useCallback(
+    async (ids: string[]) => {
+      const errors: string[] = [];
+
+      for (const id of ids) {
+        try {
+          const existing = state.programs.find((p) => p.id === id);
+          if (!existing) continue;
+
+          if (existing.source === "builtin") {
+            errors.push(
+              `Built-in program "${existing.name}" cannot be deleted.`
+            );
+            continue;
+          }
+
+          await storage.deleteProgram(id);
+        } catch (error) {
+          errors.push(
+            `Failed to delete program ${id}: ${error instanceof Error ? error.message : "Unknown error"}`
+          );
+        }
+      }
+
+      if (errors.length > 0) {
+        throw new Error(
+          `Bulk delete completed with errors:\n${errors.join("\n")}`
+        );
+      }
+
+      // Refresh programs list
+      const userPrograms = await storage.loadPrograms();
+      const merged = [
+        ...state.programs.filter((p) => p.source === "builtin"),
+        ...userPrograms
+      ].sort((a, b) => a.name.localeCompare(b.name));
+      dispatch({ type: "SET_PROGRAMS", programs: merged });
+    },
+    [state.programs]
+  );
+
+  const duplicateProgram = useCallback(
+    async (id: string, newName: string): Promise<Program> => {
+      const existing = state.programs.find((p) => p.id === id);
+      if (!existing) {
+        throw new Error("Program not found");
+      }
+
+      // Check for name conflicts
+      const nameExists = state.programs.some((p) => p.name === newName);
+      if (nameExists) {
+        throw new Error(`A program with the name "${newName}" already exists`);
+      }
+
+      const duplicated: Program = {
+        ...existing,
+        id: "", // Will be generated by storage
+        name: newName,
+        source: "user",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      const saved = await storage.upsertProgram(duplicated);
+
+      // Refresh programs list
+      const userPrograms = await storage.loadPrograms();
+      const merged = [
+        ...state.programs.filter((p) => p.source === "builtin"),
+        ...userPrograms
+      ].sort((a, b) => a.name.localeCompare(b.name));
+      dispatch({ type: "SET_PROGRAMS", programs: merged });
+
+      return saved;
+    },
+    [state.programs]
+  );
+
+  const searchData = useCallback(
+    async (query: SearchQuery) => {
+      // Create cache key
+      const cacheKey = JSON.stringify(query);
+
+      // Check cache first
+      const cached = state.searchCache.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
+      let items: any[] = [];
+
+      // Determine which data to search
+      switch (query.type) {
+        case "exercises":
+          items = state.exercises;
+          break;
+        case "programs":
+          items = state.programs.filter((p: Program) => !p.challengeConfig);
+          break;
+        case "challenges":
+          items = state.programs.filter((p: Program) =>
+            Boolean(p.challengeConfig)
+          );
+          break;
+        default:
+          items = [...state.exercises, ...state.programs];
+      }
+
+      // Apply text search
+      if (query.query) {
+        const searchTerm = query.query.toLowerCase();
+        items = items.filter(
+          (item) =>
+            item.name?.toLowerCase().includes(searchTerm) ||
+            item.description?.toLowerCase().includes(searchTerm)
+        );
+      }
+
+      // Apply filters
+      if (query.filters) {
+        if (query.filters.category && query.filters.category.length > 0) {
+          items = items.filter(
+            (item) =>
+              item.category && query.filters!.category!.includes(item.category)
+          );
+        }
+
+        if (query.filters.source && query.filters.source.length > 0) {
+          items = items.filter(
+            (item) =>
+              item.source && query.filters!.source!.includes(item.source)
+          );
+        }
+
+        if (query.filters.dateRange) {
+          const { start, end } = query.filters.dateRange;
+          items = items.filter((item) => {
+            const itemDate = item.createdAt || item.updatedAt;
+            return itemDate >= start && itemDate <= end;
+          });
+        }
+      }
+
+      // Apply sorting
+      const sortBy = query.sortBy || "name";
+      const sortOrder = query.sortOrder || "asc";
+
+      items.sort((a, b) => {
+        let aVal: any, bVal: any;
+
+        switch (sortBy) {
+          case "name":
+            aVal = a.name || "";
+            bVal = b.name || "";
+            break;
+          case "created":
+            aVal = a.createdAt || "";
+            bVal = b.createdAt || "";
+            break;
+          case "updated":
+            aVal = a.updatedAt || "";
+            bVal = b.updatedAt || "";
+            break;
+          case "usage":
+            aVal = a.usageCount || 0;
+            bVal = b.usageCount || 0;
+            break;
+          default:
+            aVal = a.name || "";
+            bVal = b.name || "";
+        }
+
+        const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+        return sortOrder === "asc" ? comparison : -comparison;
+      });
+
+      // Apply pagination
+      const offset = query.offset || 0;
+      const limit = query.limit || 50;
+      const totalCount = items.length;
+      const paginatedItems = items.slice(offset, offset + limit);
+
+      // Generate facets
+      const facets: SearchFacets = {
+        categories: {},
+        sources: {},
+        difficulties: {},
+        tags: {}
+      };
+
+      items.forEach((item) => {
+        if (item.category) {
+          facets.categories[item.category] =
+            (facets.categories[item.category] || 0) + 1;
+        }
+        if (item.source) {
+          facets.sources[item.source] = (facets.sources[item.source] || 0) + 1;
+        }
+        if (item.difficulty) {
+          facets.difficulties[item.difficulty] =
+            (facets.difficulties[item.difficulty] || 0) + 1;
+        }
+        if (item.tags) {
+          item.tags.forEach((tag: string) => {
+            facets.tags[tag] = (facets.tags[tag] || 0) + 1;
+          });
+        }
+      });
+
+      const result = {
+        items: paginatedItems,
+        totalCount,
+        hasMore: offset + limit < totalCount,
+        facets
+      };
+
+      // Cache the result
+      state.searchCache.set(cacheKey, result);
+
+      return result;
+    },
+    [state.exercises, state.programs, state.searchCache]
+  );
+
+  const exportData = useCallback(
+    async (type: DataType, ids?: string[]): Promise<ExportData> => {
+      let data: any[] = [];
+
+      switch (type) {
+        case "exercises":
+          data = ids
+            ? state.exercises.filter((e) => ids.includes(e.id))
+            : state.exercises.filter((e) => e.source === "user");
+          break;
+        case "programs":
+          data = ids
+            ? state.programs.filter(
+                (p) => ids.includes(p.id) && !p.challengeConfig
+              )
+            : state.programs.filter(
+                (p) => p.source === "user" && !p.challengeConfig
+              );
+          break;
+        case "challenges":
+          data = ids
+            ? state.programs.filter(
+                (p) => ids.includes(p.id) && p.challengeConfig
+              )
+            : state.programs.filter(
+                (p) => p.source === "user" && p.challengeConfig
+              );
+          break;
+      }
+
+      return {
+        type,
+        version: "1.0.0",
+        timestamp: new Date().toISOString(),
+        data,
+        metadata: {
+          exportedBy: "Progressive Workout App",
+          itemCount: data.length
+        }
+      };
+    },
+    [state.exercises, state.programs]
+  );
+
+  const importData = useCallback(
+    async (importData: ImportData): Promise<ImportResult> => {
+      const result: ImportResult = {
+        success: true,
+        imported: [],
+        skipped: [],
+        errors: [],
+        conflicts: []
+      };
+
+      for (const item of importData.data) {
+        try {
+          switch (importData.type) {
+            case "exercises":
+              // Check for conflicts
+              const existingExercise = state.exercises.find(
+                (e) => e.id === item.id || e.name === item.name
+              );
+              if (existingExercise) {
+                result.conflicts.push({
+                  itemId: item.id,
+                  itemName: item.name,
+                  conflictType:
+                    existingExercise.id === item.id
+                      ? "id_conflict"
+                      : "name_conflict",
+                  resolution: "skip"
+                });
+                result.skipped.push({
+                  name: item.name,
+                  type: "exercises",
+                  reason: "Name or ID conflict"
+                });
+                continue;
+              }
+
+              const savedExercise = await storage.upsertExercise({
+                ...item,
+                id: "", // Generate new ID
+                source: "user",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              });
+
+              result.imported.push({
+                id: savedExercise.id,
+                name: savedExercise.name,
+                type: "exercises",
+                action: "created"
+              });
+              break;
+
+            case "programs":
+            case "challenges":
+              // Check for conflicts
+              const existingProgram = state.programs.find(
+                (p) => p.id === item.id || p.name === item.name
+              );
+              if (existingProgram) {
+                result.conflicts.push({
+                  itemId: item.id,
+                  itemName: item.name,
+                  conflictType:
+                    existingProgram.id === item.id
+                      ? "id_conflict"
+                      : "name_conflict",
+                  resolution: "skip"
+                });
+                result.skipped.push({
+                  name: item.name,
+                  type: importData.type,
+                  reason: "Name or ID conflict"
+                });
+                continue;
+              }
+
+              const savedProgram = await storage.upsertProgram({
+                ...item,
+                id: "", // Generate new ID
+                source: "user",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              });
+
+              result.imported.push({
+                id: savedProgram.id,
+                name: savedProgram.name,
+                type: importData.type,
+                action: "created"
+              });
+              break;
+          }
+        } catch (error) {
+          result.errors.push({
+            item,
+            reason: error instanceof Error ? error.message : "Unknown error",
+            code: "VALIDATION_FAILED" as any,
+            recoverable: false
+          });
+          result.success = false;
+        }
+      }
+
+      // Refresh data after import
+      if (result.imported.length > 0) {
+        if (importData.type === "exercises") {
+          const userExercises = await storage.loadExercises();
+          const merged = [
+            ...state.exercises.filter((e) => e.source === "builtin"),
+            ...userExercises
+          ].sort((a, b) => a.name.localeCompare(b.name));
+          dispatch({ type: "SET_EXERCISES", exercises: merged });
+        } else {
+          const userPrograms = await storage.loadPrograms();
+          const merged = [
+            ...state.programs.filter((p) => p.source === "builtin"),
+            ...userPrograms
+          ].sort((a, b) => a.name.localeCompare(b.name));
+          dispatch({ type: "SET_PROGRAMS", programs: merged });
+        }
+      }
+
+      return result;
+    },
+    [state.exercises, state.programs]
+  );
+
+  const validateDependencies = useCallback(
+    async (type: DataType, id: string): Promise<DependencyCheck> => {
+      const dependencies: DependencyCheck["dependencies"] = {};
+      const warnings: string[] = [];
+      let canDelete = true;
+
+      if (type === "exercises") {
+        const referencingPrograms = state.programs.filter((p) =>
+          p.sessions.some((s) =>
+            s.blocks.some((b) => b.type === "exercise" && b.exerciseId === id)
+          )
+        );
+
+        if (referencingPrograms.length > 0) {
+          dependencies.programs = referencingPrograms;
+          canDelete = false;
+          warnings.push(
+            `Exercise is referenced by ${referencingPrograms.length} program(s)`
+          );
+        }
+
+        const referencingChallenges = state.programs.filter(
+          (p) => p.challengeConfig?.exerciseId === id
+        );
+
+        if (referencingChallenges.length > 0) {
+          dependencies.challenges = referencingChallenges;
+          canDelete = false;
+          warnings.push(
+            `Exercise is used by ${referencingChallenges.length} challenge(s)`
+          );
+        }
+      }
+
+      return {
+        canDelete,
+        dependencies,
+        warnings
+      };
+    },
+    [state.programs]
+  );
+
+  const getUsageStats = useCallback(
+    async (type: DataType, id: string): Promise<UsageStats> => {
+      // This is a placeholder implementation
+      // In a real app, you'd query actual usage data from storage
+      return {
+        entityId: id,
+        entityType: type,
+        totalUses: 0,
+        lastUsed: undefined,
+        averageSessionDuration: 0,
+        popularityScore: 0,
+        trends: []
+      };
+    },
+    []
+  );
+
+  const logAuditEntry = useCallback(
+    async (entry: Omit<AuditLogEntry, "id" | "timestamp">): Promise<void> => {
+      const auditEntry: AuditLogEntry = {
+        ...entry,
+        id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date().toISOString()
+      };
+
+      // In a real implementation, you'd persist this to storage
+      // For now, we'll just add it to the in-memory audit log
+      state.auditLog.push(auditEntry);
+    },
+    [state.auditLog]
+  );
+
   const contextValue: DataContextValue = {
     state,
     actions: {
@@ -854,7 +1445,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
       upsertExercise,
       deleteExercise,
       upsertProgram,
-      deleteProgram
+      deleteProgram,
+      // Enhanced actions
+      bulkDeleteExercises,
+      bulkDeletePrograms,
+      duplicateProgram,
+      searchData,
+      exportData,
+      importData,
+      validateDependencies,
+      getUsageStats,
+      logAuditEntry
     }
   };
 

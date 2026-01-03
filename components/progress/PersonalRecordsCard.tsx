@@ -164,4 +164,3 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md
   }
 });
-

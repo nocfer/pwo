@@ -84,11 +84,16 @@ export default function LibraryScreen() {
                 pressed && styles.addButtonPressed
               ]}
               onPress={() => {
-                if (tab === "programs") router.navigate("/library/programs/new");
+                if (tab === "programs")
+                  router.navigate("/library/programs/new");
                 else router.navigate("/library/exercises/new");
               }}
             >
-              <Ionicons name="add" size={22} color={theme.colors.primaryTextOn} />
+              <Ionicons
+                name="add"
+                size={22}
+                color={theme.colors.primaryTextOn}
+              />
               <Text style={styles.addButtonText}>
                 New {tab === "programs" ? "Program" : "Exercise"}
               </Text>

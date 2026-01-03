@@ -5,15 +5,13 @@
 
 import type { Exercise, Program } from "@/types";
 import type {
-    DataType,
-    DependencyCheck,
-    DependencyResult,
-    ValidationError,
-    ValidationResult
+  DataType,
+  DependencyCheck,
+  DependencyResult,
+  ValidationError,
+  ValidationResult
 } from "@/types/enhanced";
-import {
-    ValidationErrorCode
-} from "@/types/enhanced";
+import { ValidationErrorCode } from "@/types/enhanced";
 import { createValidationError } from "./validation";
 
 // ============================================================================
@@ -52,7 +50,7 @@ export class DependencyChecker {
       // Check session blocks
       for (const session of program.sessions) {
         for (const block of session.blocks) {
-          if (block.type === 'exercise' && block.exerciseId === exerciseId) {
+          if (block.type === "exercise" && block.exerciseId === exerciseId) {
             hasReference = true;
             break;
           }
@@ -72,13 +70,21 @@ export class DependencyChecker {
     }
 
     if (dependentPrograms.length > 0) {
-      const programNames = dependentPrograms.map(p => `"${p.name}"`).join(', ');
-      warnings.push(`This exercise is used by ${dependentPrograms.length} program(s): ${programNames}`);
+      const programNames = dependentPrograms
+        .map((p) => `"${p.name}"`)
+        .join(", ");
+      warnings.push(
+        `This exercise is used by ${dependentPrograms.length} program(s): ${programNames}`
+      );
     }
 
     if (dependentChallenges.length > 0) {
-      const challengeNames = dependentChallenges.map(p => `"${p.name}"`).join(', ');
-      warnings.push(`This exercise is the target of ${dependentChallenges.length} challenge(s): ${challengeNames}`);
+      const challengeNames = dependentChallenges
+        .map((p) => `"${p.name}"`)
+        .join(", ");
+      warnings.push(
+        `This exercise is the target of ${dependentChallenges.length} challenge(s): ${challengeNames}`
+      );
     }
 
     return {
@@ -95,13 +101,13 @@ export class DependencyChecker {
    */
   checkProgramDependencies(programId: string): DependencyResult {
     const warnings: string[] = [];
-    
+
     // Programs don't typically have dependencies on other programs
     // But we could check for active sessions, progress data, etc.
-    
+
     // For now, programs can generally be deleted unless they have active sessions
     // This would require session progress data to implement fully
-    
+
     return {
       canDelete: true,
       dependentPrograms: [],
@@ -116,28 +122,32 @@ export class DependencyChecker {
    */
   validateProgramExerciseReferences(program: Program): ValidationResult {
     const errors: ValidationError[] = [];
-    const exerciseIds = new Set(this.exercises.map(e => e.id));
+    const exerciseIds = new Set(this.exercises.map((e) => e.id));
 
     // Check challenge config exercise reference
     if (program.challengeConfig?.exerciseId) {
       if (!exerciseIds.has(program.challengeConfig.exerciseId)) {
-        errors.push(createValidationError(
-          'challengeConfig.exerciseId',
-          `Challenge references non-existent exercise: ${program.challengeConfig.exerciseId}`,
-          ValidationErrorCode.INVALID_REFERENCE
-        ));
+        errors.push(
+          createValidationError(
+            "challengeConfig.exerciseId",
+            `Challenge references non-existent exercise: ${program.challengeConfig.exerciseId}`,
+            ValidationErrorCode.INVALID_REFERENCE
+          )
+        );
       }
     }
 
     // Check session block exercise references
     program.sessions.forEach((session, sessionIndex) => {
       session.blocks.forEach((block, blockIndex) => {
-        if (block.type === 'exercise' && !exerciseIds.has(block.exerciseId)) {
-          errors.push(createValidationError(
-            `sessions[${sessionIndex}].blocks[${blockIndex}].exerciseId`,
-            `Session ${sessionIndex + 1}, block ${blockIndex + 1} references non-existent exercise: ${block.exerciseId}`,
-            ValidationErrorCode.INVALID_REFERENCE
-          ));
+        if (block.type === "exercise" && !exerciseIds.has(block.exerciseId)) {
+          errors.push(
+            createValidationError(
+              `sessions[${sessionIndex}].blocks[${blockIndex}].exerciseId`,
+              `Session ${sessionIndex + 1}, block ${blockIndex + 1} references non-existent exercise: ${block.exerciseId}`,
+              ValidationErrorCode.INVALID_REFERENCE
+            )
+          );
         }
       });
     });
@@ -158,7 +168,7 @@ export class DependencyChecker {
       const result = this.validateProgramExerciseReferences(program);
       if (!result.isValid) {
         // Prefix errors with program name for context
-        const programErrors = result.errors.map(error => ({
+        const programErrors = result.errors.map((error) => ({
           ...error,
           field: `program[${program.name}].${error.field}`,
           message: `In program "${program.name}": ${error.message}`
@@ -189,7 +199,7 @@ export class DependencyChecker {
       // Check session blocks
       for (const session of program.sessions) {
         for (const block of session.blocks) {
-          if (block.type === 'exercise') {
+          if (block.type === "exercise") {
             usedExerciseIds.add(block.exerciseId);
           }
         }
@@ -197,8 +207,9 @@ export class DependencyChecker {
     }
 
     // Return exercises that are not used anywhere
-    return this.exercises.filter(exercise => 
-      exercise.source === 'user' && !usedExerciseIds.has(exercise.id)
+    return this.exercises.filter(
+      (exercise) =>
+        exercise.source === "user" && !usedExerciseIds.has(exercise.id)
     );
   }
 
@@ -243,7 +254,7 @@ export class DependencyChecker {
       // Check session blocks
       for (const session of program.sessions) {
         for (const block of session.blocks) {
-          if (block.type === 'exercise' && block.exerciseId === exerciseId) {
+          if (block.type === "exercise" && block.exerciseId === exerciseId) {
             blockCount++;
           }
         }
@@ -281,25 +292,28 @@ export class DependencyChecker {
     const brokenPrograms = this.findProgramsWithBrokenReferences();
     const validationResult = this.validateAllExerciseReferences();
 
-    const isHealthy = orphanedExercises.length === 0 && 
-                     brokenPrograms.length === 0 && 
-                     validationResult.isValid;
+    const isHealthy =
+      orphanedExercises.length === 0 &&
+      brokenPrograms.length === 0 &&
+      validationResult.isValid;
 
-    let summary = '';
+    let summary = "";
     if (isHealthy) {
-      summary = 'All dependencies are healthy. No issues found.';
+      summary = "All dependencies are healthy. No issues found.";
     } else {
       const issues: string[] = [];
       if (orphanedExercises.length > 0) {
         issues.push(`${orphanedExercises.length} orphaned exercise(s)`);
       }
       if (brokenPrograms.length > 0) {
-        issues.push(`${brokenPrograms.length} program(s) with broken references`);
+        issues.push(
+          `${brokenPrograms.length} program(s) with broken references`
+        );
       }
       if (!validationResult.isValid) {
         issues.push(`${validationResult.errors.length} validation error(s)`);
       }
-      summary = `Issues found: ${issues.join(', ')}`;
+      summary = `Issues found: ${issues.join(", ")}`;
     }
 
     return {
@@ -320,7 +334,7 @@ export class DependencyChecker {
  * Creates a dependency checker instance
  */
 export function createDependencyChecker(
-  exercises: Exercise[], 
+  exercises: Exercise[],
   programs: Program[]
 ): DependencyChecker {
   return new DependencyChecker(exercises, programs);
@@ -338,7 +352,17 @@ export function canSafelyDelete(
   const checker = new DependencyChecker(exercises, programs);
 
   switch (type) {
-    case 'exercises': {
+    case "exercises": {
+      // First check if it's a built-in exercise
+      const exercise = exercises.find((e) => e.id === id);
+      if (exercise?.source === "builtin") {
+        return {
+          canDelete: false,
+          dependencies: {},
+          warnings: ["Built-in exercises cannot be deleted"]
+        };
+      }
+
       const result = checker.checkExerciseDependencies(id);
       return {
         canDelete: result.canDelete,
@@ -351,8 +375,18 @@ export function canSafelyDelete(
       };
     }
 
-    case 'programs':
-    case 'challenges': {
+    case "programs":
+    case "challenges": {
+      // First check if it's a built-in program
+      const program = programs.find((p) => p.id === id);
+      if (program?.source === "builtin") {
+        return {
+          canDelete: false,
+          dependencies: {},
+          warnings: ["Built-in programs cannot be deleted"]
+        };
+      }
+
       const result = checker.checkProgramDependencies(id);
       return {
         canDelete: result.canDelete,
@@ -383,4 +417,74 @@ export function validateReferentialIntegrity(
 ): ValidationResult {
   const checker = new DependencyChecker(exercises, programs);
   return checker.validateAllExerciseReferences();
+}
+
+/**
+ * Checks if an item can be safely modified (not built-in)
+ */
+export function canSafelyModify(
+  type: DataType,
+  id: string,
+  exercises: Exercise[],
+  programs: Program[]
+): DependencyCheck {
+  switch (type) {
+    case "exercises": {
+      const exercise = exercises.find((e) => e.id === id);
+      if (!exercise) {
+        return {
+          canDelete: false,
+          dependencies: {},
+          warnings: ["Exercise not found"]
+        };
+      }
+
+      if (exercise.source === "builtin") {
+        return {
+          canDelete: false,
+          dependencies: {},
+          warnings: ["Built-in exercises cannot be modified"]
+        };
+      }
+
+      return {
+        canDelete: true,
+        dependencies: {},
+        warnings: []
+      };
+    }
+
+    case "programs":
+    case "challenges": {
+      const program = programs.find((p) => p.id === id);
+      if (!program) {
+        return {
+          canDelete: false,
+          dependencies: {},
+          warnings: ["Program not found"]
+        };
+      }
+
+      if (program.source === "builtin") {
+        return {
+          canDelete: false,
+          dependencies: {},
+          warnings: ["Built-in programs cannot be modified"]
+        };
+      }
+
+      return {
+        canDelete: true,
+        dependencies: {},
+        warnings: []
+      };
+    }
+
+    default:
+      return {
+        canDelete: false,
+        dependencies: {},
+        warnings: [`Unknown data type: ${type}`]
+      };
+  }
 }

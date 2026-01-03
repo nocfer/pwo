@@ -2,7 +2,13 @@ import { ChallengesView, SearchInput } from "@/components";
 import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import { useCallback, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ChallengesScreen() {

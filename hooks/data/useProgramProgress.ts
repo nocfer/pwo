@@ -113,7 +113,10 @@ export function useProgramProgress(program: Program | null | undefined): {
     const completedIndices = new Set(
       currentRunSessions.map((s) => s.sessionIndex)
     );
-    const nextSessionIndex = findNextSessionIndex(completedIndices, totalSessions);
+    const nextSessionIndex = findNextSessionIndex(
+      completedIndices,
+      totalSessions
+    );
 
     // Calculate exercise completion
     const exerciseCompletion = new Map<

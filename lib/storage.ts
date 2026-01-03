@@ -6,20 +6,20 @@
  */
 
 import type {
-    ChallengeProgress,
-    EventRecord,
-    Exercise,
-    ExerciseProgress,
-    HistoryEntry,
-    HistoryFile,
-    PersonalRecord,
-    PRHistory,
-    Program,
-    ProgramProgress,
-    ProgressHistory,
-    SessionState,
-    StreakEntry,
-    WeeklyStats
+  ChallengeProgress,
+  EventRecord,
+  Exercise,
+  ExerciseProgress,
+  HistoryEntry,
+  HistoryFile,
+  PersonalRecord,
+  PRHistory,
+  Program,
+  ProgramProgress,
+  ProgressHistory,
+  SessionState,
+  StreakEntry,
+  WeeklyStats
 } from "@/types";
 import * as FileSystem from "expo-file-system/legacy";
 import { Platform } from "react-native";
@@ -27,11 +27,11 @@ import { getMondayBasedDayIndex, normalizeStreak } from "./utils/date";
 
 // Re-export types for backwards compatibility
 export type {
-    EventRecord,
-    HistoryEntry,
-    HistoryFile,
-    SessionState,
-    StreakEntry
+  EventRecord,
+  HistoryEntry,
+  HistoryFile,
+  SessionState,
+  StreakEntry
 } from "@/types";
 
 // ============================================================================
@@ -170,18 +170,24 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
           : completedSessions.reduce(
               (sum: number, s: any) =>
                 sum +
-                (typeof s.timeSpentSeconds === "number" ? s.timeSpentSeconds : 0),
+                (typeof s.timeSpentSeconds === "number"
+                  ? s.timeSpentSeconds
+                  : 0),
               0
             );
       const lastActivityAt =
         typeof run?.lastActivityAt === "string" && run.lastActivityAt
           ? run.lastActivityAt
-          : (completedSessions as any[]).reduce<string | null>((latest: string | null, s: any) => {
-              const ts = typeof s.completedAt === "string" ? s.completedAt : null;
-              if (!ts) return latest;
-              if (!latest) return ts;
-              return new Date(ts) > new Date(latest) ? ts : latest;
-            }, null);
+          : (completedSessions as any[]).reduce<string | null>(
+              (latest: string | null, s: any) => {
+                const ts =
+                  typeof s.completedAt === "string" ? s.completedAt : null;
+                if (!ts) return latest;
+                if (!latest) return ts;
+                return new Date(ts) > new Date(latest) ? ts : latest;
+              },
+              null
+            );
       const updatedAt = String(run?.updatedAt ?? lastActivityAt ?? startedAt);
 
       return {
@@ -208,17 +214,20 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
           : 0),
       0
     );
-    const lastActivityAt = (runs as any[]).reduce<string | null>((latest: string | null, r: any) => {
-      if (!r.lastActivityAt) return latest;
-      if (!latest) return r.lastActivityAt;
-      return new Date(r.lastActivityAt) > new Date(latest)
-        ? r.lastActivityAt
-        : latest;
-    }, null);
+    const lastActivityAt = (runs as any[]).reduce<string | null>(
+      (latest: string | null, r: any) => {
+        if (!r.lastActivityAt) return latest;
+        if (!latest) return r.lastActivityAt;
+        return new Date(r.lastActivityAt) > new Date(latest)
+          ? r.lastActivityAt
+          : latest;
+      },
+      null
+    );
     const updatedAt =
       typeof (raw as any).updatedAt === "string"
         ? (raw as any).updatedAt
-        : lastActivityAt ?? runs[0]?.startedAt ?? nowISO;
+        : (lastActivityAt ?? runs[0]?.startedAt ?? nowISO);
 
     return {
       programId,
@@ -266,12 +275,15 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
     typeof (raw as any).lastActivityAt === "string" &&
     (raw as any).lastActivityAt
       ? (raw as any).lastActivityAt
-      : (completedSessions as any[]).reduce<string | null>((latest: string | null, s: any) => {
-          const ts = typeof s.completedAt === "string" ? s.completedAt : null;
-          if (!ts) return latest;
-          if (!latest) return ts;
-          return new Date(ts) > new Date(latest) ? ts : latest;
-        }, null);
+      : (completedSessions as any[]).reduce<string | null>(
+          (latest: string | null, s: any) => {
+            const ts = typeof s.completedAt === "string" ? s.completedAt : null;
+            if (!ts) return latest;
+            if (!latest) return ts;
+            return new Date(ts) > new Date(latest) ? ts : latest;
+          },
+          null
+        );
   const startedAt =
     typeof (raw as any).startedAt === "string" && (raw as any).startedAt
       ? (raw as any).startedAt
@@ -279,14 +291,13 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
   const updatedAt =
     typeof (raw as any).updatedAt === "string" && (raw as any).updatedAt
       ? (raw as any).updatedAt
-      : lastActivityAt ?? startedAt;
+      : (lastActivityAt ?? startedAt);
 
   const run = {
     runId: "run_1",
     startedAt,
     completedAt:
-      typeof (raw as any).completedAt === "string" &&
-      (raw as any).completedAt
+      typeof (raw as any).completedAt === "string" && (raw as any).completedAt
         ? (raw as any).completedAt
         : undefined,
     sessions,
@@ -1100,7 +1111,9 @@ export const storage = {
   async getExerciseProgression(
     exerciseId: string,
     days: number = 30
-  ): Promise<{ date: string; reps: number; maxWeight?: number; volume?: number }[]> {
+  ): Promise<
+    { date: string; reps: number; maxWeight?: number; volume?: number }[]
+  > {
     const [programProgress, challengeProgress] = await Promise.all([
       this.loadAllProgramProgress(),
       this.loadAllChallengeProgress()

@@ -26,24 +26,21 @@ export default function ScanScreen() {
   const handleScan = (data: string) => {
     // Prevent scanning while already navigating
     if (isNavigating) return;
-    
+
     const now = Date.now();
     const timeSinceLastScan = now - lastScanTimeRef.current;
-    
+
     // Prevent re-scanning the same QR code within 2 seconds
     // This prevents the loop when returning from preview
-    if (
-      lastScannedDataRef.current === data &&
-      timeSinceLastScan < 2000
-    ) {
+    if (lastScannedDataRef.current === data && timeSinceLastScan < 2000) {
       return;
     }
-    
+
     try {
       setIsNavigating(true);
       lastScannedDataRef.current = data;
       lastScanTimeRef.current = now;
-      
+
       // Decode and validate the program data
       const programData = decodeProgramFromShare(data);
 
@@ -89,4 +86,3 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   }
 });
-

@@ -252,11 +252,17 @@ export default function EditProgramScreen() {
           return;
         }
         if (!Number.isFinite(warmUpSeconds) || warmUpSeconds < 0) {
-          Alert.alert("Invalid warm-up seconds", "Warm-up seconds must be 0 or greater.");
+          Alert.alert(
+            "Invalid warm-up seconds",
+            "Warm-up seconds must be 0 or greater."
+          );
           return;
         }
         if (!Number.isFinite(breakSeconds) || breakSeconds < 0) {
-          Alert.alert("Invalid break seconds", "Break seconds must be 0 or greater.");
+          Alert.alert(
+            "Invalid break seconds",
+            "Break seconds must be 0 or greater."
+          );
           return;
         }
         if (
@@ -387,8 +393,7 @@ export default function EditProgramScreen() {
                 onPress={() => setChallengeExercisePickerOpen(true)}
               >
                 <Text style={styles.pickerBtnText}>
-                  {exerciseNameById.get(challengeExerciseId) ??
-                    "Pick exercise"}
+                  {exerciseNameById.get(challengeExerciseId) ?? "Pick exercise"}
                 </Text>
                 <Ionicons
                   name="chevron-down"
@@ -439,9 +444,7 @@ export default function EditProgramScreen() {
             </View>
 
             <View style={styles.fieldRow}>
-              <Text style={styles.fieldLabel}>
-                Session Increase (%)
-              </Text>
+              <Text style={styles.fieldLabel}>Session Increase (%)</Text>
               <TextInput
                 value={challengeWeeklyIncreasePercent}
                 onChangeText={setChallengeWeeklyIncreasePercent}
@@ -455,106 +458,73 @@ export default function EditProgramScreen() {
 
         {!isChallenge && (
           <View style={styles.card}>
-          <View style={styles.rowBetween}>
-            <Text style={styles.sectionTitle}>Session 1</Text>
-            <View style={styles.blockButtonsRow}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.smallBtn,
-                  pressed && styles.smallBtnPressed
-                ]}
-                onPress={() => addBlock("warmup")}
-              >
-                <Text style={styles.smallBtnText}>+ Warm-up</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.smallBtn,
-                  pressed && styles.smallBtnPressed
-                ]}
-                onPress={() => addBlock("exercise")}
-              >
-                <Text style={styles.smallBtnText}>+ Exercise</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.smallBtn,
-                  pressed && styles.smallBtnPressed
-                ]}
-                onPress={() => addBlock("rest")}
-              >
-                <Text style={styles.smallBtnText}>+ Rest</Text>
-              </Pressable>
+            <View style={styles.rowBetween}>
+              <Text style={styles.sectionTitle}>Session 1</Text>
+              <View style={styles.blockButtonsRow}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.smallBtn,
+                    pressed && styles.smallBtnPressed
+                  ]}
+                  onPress={() => addBlock("warmup")}
+                >
+                  <Text style={styles.smallBtnText}>+ Warm-up</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.smallBtn,
+                    pressed && styles.smallBtnPressed
+                  ]}
+                  onPress={() => addBlock("exercise")}
+                >
+                  <Text style={styles.smallBtnText}>+ Exercise</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.smallBtn,
+                    pressed && styles.smallBtnPressed
+                  ]}
+                  onPress={() => addBlock("rest")}
+                >
+                  <Text style={styles.smallBtnText}>+ Rest</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
 
-          <View style={styles.blocksList}>
-            {sessionBlocks.map((b, idx) => (
-              <View key={idx} style={styles.blockCard}>
-                <View style={styles.rowBetween}>
-                  <View style={styles.blockTitleRow}>
-                    <Ionicons
-                      name={
-                        b.type === "warmup"
-                          ? "timer-outline"
-                          : b.type === "rest"
-                            ? "time-outline"
-                            : "barbell-outline"
-                      }
-                      size={18}
-                      color={theme.colors.primary}
-                    />
-                    <Text style={styles.blockTitle}>{b.type}</Text>
-                  </View>
-                  <Pressable
-                    onPress={() => removeBlock(idx)}
-                    style={({ pressed }) => [
-                      styles.iconBtn,
-                      pressed && styles.iconBtnPressed
-                    ]}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={18}
-                      color={theme.colors.muted}
-                    />
-                  </Pressable>
-                </View>
-
-                {b.type === "warmup" && (
-                  <View style={styles.fieldRow}>
-                    <Text style={styles.fieldLabel}>Seconds</Text>
-                    <TextInput
-                      value={b.seconds}
-                      onChangeText={(v) =>
-                        setSessionBlocks((prev) =>
-                          prev.map((x, i) =>
-                            i === idx ? { ...x, seconds: v } : x
-                          )
-                        )
-                      }
-                      keyboardType="number-pad"
-                      style={styles.fieldInput}
-                    />
-                  </View>
-                )}
-
-                {b.type === "rest" && (
-                  <>
-                    <View style={styles.fieldRow}>
-                      <Text style={styles.fieldLabel}>Label</Text>
-                      <TextInput
-                        value={b.label ?? ""}
-                        onChangeText={(v) =>
-                          setSessionBlocks((prev) =>
-                            prev.map((x, i) =>
-                              i === idx ? { ...x, label: v } : x
-                            )
-                          )
+            <View style={styles.blocksList}>
+              {sessionBlocks.map((b, idx) => (
+                <View key={idx} style={styles.blockCard}>
+                  <View style={styles.rowBetween}>
+                    <View style={styles.blockTitleRow}>
+                      <Ionicons
+                        name={
+                          b.type === "warmup"
+                            ? "timer-outline"
+                            : b.type === "rest"
+                              ? "time-outline"
+                              : "barbell-outline"
                         }
-                        style={styles.fieldInput}
+                        size={18}
+                        color={theme.colors.primary}
                       />
+                      <Text style={styles.blockTitle}>{b.type}</Text>
                     </View>
+                    <Pressable
+                      onPress={() => removeBlock(idx)}
+                      style={({ pressed }) => [
+                        styles.iconBtn,
+                        pressed && styles.iconBtnPressed
+                      ]}
+                    >
+                      <Ionicons
+                        name="trash-outline"
+                        size={18}
+                        color={theme.colors.muted}
+                      />
+                    </Pressable>
+                  </View>
+
+                  {b.type === "warmup" && (
                     <View style={styles.fieldRow}>
                       <Text style={styles.fieldLabel}>Seconds</Text>
                       <TextInput
@@ -570,94 +540,127 @@ export default function EditProgramScreen() {
                         style={styles.fieldInput}
                       />
                     </View>
-                  </>
-                )}
+                  )}
 
-                {b.type === "exercise" && (
-                  <>
-                    <View style={styles.fieldRow}>
-                      <Text style={styles.fieldLabel}>Exercise</Text>
-                      <Pressable
-                        style={({ pressed }) => [
-                          styles.pickerBtn,
-                          pressed && styles.pickerBtnPressed
-                        ]}
-                        onPress={() => {
-                          setPickerTargetIndex(idx);
-                          setPickerOpen(true);
-                        }}
-                      >
-                        <Text style={styles.pickerBtnText}>
-                          {exerciseNameById.get(b.exerciseId) ??
-                            "Pick exercise"}
-                        </Text>
-                        <Ionicons
-                          name="chevron-down"
-                          size={16}
-                          color={theme.colors.muted}
+                  {b.type === "rest" && (
+                    <>
+                      <View style={styles.fieldRow}>
+                        <Text style={styles.fieldLabel}>Label</Text>
+                        <TextInput
+                          value={b.label ?? ""}
+                          onChangeText={(v) =>
+                            setSessionBlocks((prev) =>
+                              prev.map((x, i) =>
+                                i === idx ? { ...x, label: v } : x
+                              )
+                            )
+                          }
+                          style={styles.fieldInput}
                         />
-                      </Pressable>
-                    </View>
-
-                    <View style={styles.fieldRow}>
-                      <Text style={styles.fieldLabel}>
-                        Target reps (optional)
-                      </Text>
-                      <TextInput
-                        value={b.targetReps ?? ""}
-                        onChangeText={(v) =>
-                          setSessionBlocks((prev) =>
-                            prev.map((x, i) =>
-                              i === idx ? { ...x, targetReps: v } : x
+                      </View>
+                      <View style={styles.fieldRow}>
+                        <Text style={styles.fieldLabel}>Seconds</Text>
+                        <TextInput
+                          value={b.seconds}
+                          onChangeText={(v) =>
+                            setSessionBlocks((prev) =>
+                              prev.map((x, i) =>
+                                i === idx ? { ...x, seconds: v } : x
+                              )
                             )
-                          )
-                        }
-                        keyboardType="number-pad"
-                        style={styles.fieldInput}
-                      />
-                    </View>
+                          }
+                          keyboardType="number-pad"
+                          style={styles.fieldInput}
+                        />
+                      </View>
+                    </>
+                  )}
 
-                    <View style={styles.fieldRow}>
-                      <Text style={styles.fieldLabel}>
-                        Duration (seconds, optional)
-                      </Text>
-                      <TextInput
-                        value={b.durationSeconds ?? ""}
-                        onChangeText={(v) =>
-                          setSessionBlocks((prev) =>
-                            prev.map((x, i) =>
-                              i === idx ? { ...x, durationSeconds: v } : x
-                            )
-                          )
-                        }
-                        keyboardType="number-pad"
-                        style={styles.fieldInput}
-                      />
-                    </View>
+                  {b.type === "exercise" && (
+                    <>
+                      <View style={styles.fieldRow}>
+                        <Text style={styles.fieldLabel}>Exercise</Text>
+                        <Pressable
+                          style={({ pressed }) => [
+                            styles.pickerBtn,
+                            pressed && styles.pickerBtnPressed
+                          ]}
+                          onPress={() => {
+                            setPickerTargetIndex(idx);
+                            setPickerOpen(true);
+                          }}
+                        >
+                          <Text style={styles.pickerBtnText}>
+                            {exerciseNameById.get(b.exerciseId) ??
+                              "Pick exercise"}
+                          </Text>
+                          <Ionicons
+                            name="chevron-down"
+                            size={16}
+                            color={theme.colors.muted}
+                          />
+                        </Pressable>
+                      </View>
 
-                    <View style={styles.fieldRow}>
-                      <Text style={styles.fieldLabel}>Note (optional)</Text>
-                      <TextInput
-                        value={b.note ?? ""}
-                        onChangeText={(v) =>
-                          setSessionBlocks((prev) =>
-                            prev.map((x, i) =>
-                              i === idx ? { ...x, note: v } : x
+                      <View style={styles.fieldRow}>
+                        <Text style={styles.fieldLabel}>
+                          Target reps (optional)
+                        </Text>
+                        <TextInput
+                          value={b.targetReps ?? ""}
+                          onChangeText={(v) =>
+                            setSessionBlocks((prev) =>
+                              prev.map((x, i) =>
+                                i === idx ? { ...x, targetReps: v } : x
+                              )
                             )
-                          )
-                        }
-                        style={[
-                          styles.fieldInput,
-                          { width: 200, textAlign: "left" }
-                        ]}
-                      />
-                    </View>
-                  </>
-                )}
-              </View>
-            ))}
+                          }
+                          keyboardType="number-pad"
+                          style={styles.fieldInput}
+                        />
+                      </View>
+
+                      <View style={styles.fieldRow}>
+                        <Text style={styles.fieldLabel}>
+                          Duration (seconds, optional)
+                        </Text>
+                        <TextInput
+                          value={b.durationSeconds ?? ""}
+                          onChangeText={(v) =>
+                            setSessionBlocks((prev) =>
+                              prev.map((x, i) =>
+                                i === idx ? { ...x, durationSeconds: v } : x
+                              )
+                            )
+                          }
+                          keyboardType="number-pad"
+                          style={styles.fieldInput}
+                        />
+                      </View>
+
+                      <View style={styles.fieldRow}>
+                        <Text style={styles.fieldLabel}>Note (optional)</Text>
+                        <TextInput
+                          value={b.note ?? ""}
+                          onChangeText={(v) =>
+                            setSessionBlocks((prev) =>
+                              prev.map((x, i) =>
+                                i === idx ? { ...x, note: v } : x
+                              )
+                            )
+                          }
+                          style={[
+                            styles.fieldInput,
+                            { width: 200, textAlign: "left" }
+                          ]}
+                        />
+                      </View>
+                    </>
+                  )}
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
         )}
 
         <Pressable

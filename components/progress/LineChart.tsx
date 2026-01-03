@@ -201,4 +201,3 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xl
   }
 });
-

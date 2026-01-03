@@ -56,7 +56,10 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
           <Text style={styles.title}>Consistency</Text>
           <Text style={styles.subtitle}>Last {weeks} weeks</Text>
         </View>
-        <CompactEmptyState message="No workout history yet" icon="calendar-outline" />
+        <CompactEmptyState
+          message="No workout history yet"
+          icon="calendar-outline"
+        />
       </View>
     );
   }
@@ -67,9 +70,7 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
     <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Consistency</Text>
-        <Text style={styles.subtitle}>
-          {data.activeDays} active days
-        </Text>
+        <Text style={styles.subtitle}>{data.activeDays} active days</Text>
       </View>
 
       <View style={styles.gridContainer}>
@@ -215,4 +216,3 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md
   }
 });
-

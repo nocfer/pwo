@@ -117,7 +117,7 @@ export default function ProgramSessionView({
                   color={theme.colors.muted}
                   style={{
                     marginRight: theme.spacing.xs,
-                    marginBottom: 8,
+                    marginBottom: 8
                   }}
                 />
                 <Text style={styles.headerSubtitle}>

@@ -123,8 +123,7 @@ export function useAllProgress(): {
         activityDate.setHours(0, 0, 0, 0);
 
         const daysDiff = Math.floor(
-          (checkDate.getTime() - activityDate.getTime()) /
-            (1000 * 60 * 60 * 24)
+          (checkDate.getTime() - activityDate.getTime()) / (1000 * 60 * 60 * 24)
         );
 
         if (daysDiff === 0 || (currentStreak === 0 && daysDiff <= 1)) {

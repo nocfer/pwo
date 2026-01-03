@@ -1,6 +1,7 @@
 # Project Structure
 
 ## Root Organization
+
 ```
 progressive-workout/
 ├── app/                    # Expo Router pages (file-based routing)
@@ -15,6 +16,7 @@ progressive-workout/
 ```
 
 ## App Directory (Expo Router)
+
 - `app/(tabs)/` - Tab-based navigation screens
 - `app/library/` - Exercise and program management
 - `app/programs/` - Program execution and sessions
@@ -22,6 +24,7 @@ progressive-workout/
 - File-based routing with typed routes enabled
 
 ## Components Architecture
+
 ```
 components/
 ├── common/                # Shared UI components (Button, LoadingScreen, etc.)
@@ -34,6 +37,7 @@ components/
 ```
 
 ## Data Layer
+
 ```
 context/
 └── DataContext.tsx        # Global state management with reducer pattern
@@ -45,6 +49,7 @@ hooks/
 ```
 
 ## Type System
+
 ```
 types/
 ├── index.ts               # Centralized type exports
@@ -57,6 +62,7 @@ types/
 ```
 
 ## Utilities & Libraries
+
 ```
 lib/
 ├── storage.ts             # Data persistence layer
@@ -66,6 +72,7 @@ lib/
 ```
 
 ## Assets Organization
+
 ```
 assets/
 ├── data/                  # JSON seed data (exercises, programs)
@@ -75,6 +82,7 @@ assets/
 ```
 
 ## Naming Conventions
+
 - **Files**: PascalCase for components, camelCase for utilities
 - **Components**: PascalCase with descriptive names
 - **Hooks**: Prefix with `use` (usePrograms, useSessionTimer)
@@ -82,6 +90,7 @@ assets/
 - **Constants**: UPPER_SNAKE_CASE for static values
 
 ## Import Patterns
+
 - Use `@/` path alias for absolute imports from root
 - Barrel exports in index.ts files for clean imports
 - Group imports: React, third-party, local components, types

@@ -6,12 +6,7 @@ import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Camera, CameraView } from "expo-camera";
 import { useEffect, useState } from "react";
-import {
-    Pressable,
-    StyleSheet,
-    Text,
-    View
-} from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type Props = {
   onScan: (data: string) => void;
@@ -111,9 +106,7 @@ export default function QRCodeScanner({ onScan, onClose }: Props) {
           <Text style={styles.instruction}>
             Position the QR code within the frame
           </Text>
-          {scanned && (
-            <Text style={styles.scannedText}>QR code scanned!</Text>
-          )}
+          {scanned && <Text style={styles.scannedText}>QR code scanned!</Text>}
         </View>
       </View>
     </View>
@@ -208,4 +201,3 @@ const styles = StyleSheet.create({
     textAlign: "center"
   }
 });
-

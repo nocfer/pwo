@@ -1,8 +1,8 @@
 import { AnimatedCard } from "@/components/common";
 import {
-    useChallengeSessions,
-    useExercises,
-    useLiveHistory
+  useChallengeSessions,
+  useExercises,
+  useLiveHistory
 } from "@/hooks/data";
 import { formatCount } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
@@ -23,7 +23,8 @@ export default function ProgramOverview({
 }: Props) {
   const challengeSessions = useChallengeSessions(program);
   const sessionCount =
-    totalSessions ?? (isChallenge ? challengeSessions.length : program.sessions.length);
+    totalSessions ??
+    (isChallenge ? challengeSessions.length : program.sessions.length);
   const typeLabel = isChallenge ? "Challenge" : "Program";
   const sourceLabel = program.source === "builtin" ? "Built-in" : "Custom";
   const descriptionFallback = `This ${typeLabel.toLowerCase()} has ${formatCount(sessionCount, "session")}.`;
@@ -126,9 +127,7 @@ function ExercisesPreview({ program, isChallenge }: ExercisesPreviewProps) {
     (exercises ?? []).map((e) => [e.id, e.name] as const)
   );
 
-  const names = Array.from(exerciseIds).map(
-    (id) => exerciseMap.get(id) ?? id
-  );
+  const names = Array.from(exerciseIds).map((id) => exerciseMap.get(id) ?? id);
   const preview = names.slice(0, 3);
   const remaining = names.length - preview.length;
 
@@ -304,4 +303,3 @@ const styles = StyleSheet.create({
     color: theme.colors.text
   }
 });
-

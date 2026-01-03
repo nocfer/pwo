@@ -36,27 +36,28 @@ export function useExerciseProgression(
 } {
   const { progressVersion } = useRefreshVersions();
 
-  const fetcher = useCallback(async (): Promise<ExerciseProgressionData | null> => {
-    if (!exerciseId) return null;
+  const fetcher =
+    useCallback(async (): Promise<ExerciseProgressionData | null> => {
+      if (!exerciseId) return null;
 
-    const dataPoints = await storage.getExerciseProgression(exerciseId, days);
+      const dataPoints = await storage.getExerciseProgression(exerciseId, days);
 
-    if (dataPoints.length === 0) {
-      return {
-        dataPoints: [],
-        trend: { direction: "stable", delta: 0, percentChange: 0 },
-        hasWeightData: false
-      };
-    }
+      if (dataPoints.length === 0) {
+        return {
+          dataPoints: [],
+          trend: { direction: "stable", delta: 0, percentChange: 0 },
+          hasWeightData: false
+        };
+      }
 
-    // Check if any data point has weight data
-    const hasWeightData = dataPoints.some((dp) => dp.maxWeight !== undefined);
+      // Check if any data point has weight data
+      const hasWeightData = dataPoints.some((dp) => dp.maxWeight !== undefined);
 
-    // Calculate trend based on reps (or weight if available)
-    const trend = calculateTrend(dataPoints, hasWeightData);
+      // Calculate trend based on reps (or weight if available)
+      const trend = calculateTrend(dataPoints, hasWeightData);
 
-    return { dataPoints, trend, hasWeightData };
-  }, [exerciseId, days]);
+      return { dataPoints, trend, hasWeightData };
+    }, [exerciseId, days]);
 
   const { data, loading, error } = useAsyncData(fetcher, [
     progressVersion,
@@ -149,4 +150,3 @@ export function useExercisesWithProgression(): {
 
   return { exerciseIds: data ?? [], loading };
 }
-
