@@ -4,20 +4,23 @@
  * muscle groups, difficulty, equipment, and tags
  */
 
-import { VALID_EXERCISE_CATEGORIES, VALID_EXERCISE_ICONS } from "@/lib/validation";
+import {
+  VALID_EXERCISE_CATEGORIES,
+  VALID_EXERCISE_ICONS
+} from "@/lib/validation";
 import { theme } from "@/theme/theme";
 import type { ExerciseCategory } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
 import {
-    Alert,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
 } from "react-native";
 
 export type ExerciseFormData = {
@@ -65,7 +68,10 @@ export function ExerciseForm({
   const [newTag, setNewTag] = useState("");
 
   const updateField = useCallback(
-    <K extends keyof ExerciseFormData>(field: K, value: ExerciseFormData[K]) => {
+    <K extends keyof ExerciseFormData>(
+      field: K,
+      value: ExerciseFormData[K]
+    ) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
     },
     []
@@ -202,11 +208,7 @@ export function ExerciseForm({
             />
             <Text style={styles.iconPreviewText}>{formData.icon}</Text>
           </View>
-          <Ionicons
-            name="chevron-down"
-            size={16}
-            color={theme.colors.muted}
-          />
+          <Ionicons name="chevron-down" size={16} color={theme.colors.muted} />
         </Pressable>
 
         <View style={{ height: theme.spacing.md }} />
@@ -270,7 +272,7 @@ export function ExerciseForm({
       {/* Muscle Groups */}
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Muscle Groups</Text>
-        
+
         <View style={styles.arrayInputContainer}>
           <TextInput
             value={newMuscleGroup}
@@ -315,7 +317,7 @@ export function ExerciseForm({
       {/* Equipment */}
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Equipment</Text>
-        
+
         <View style={styles.arrayInputContainer}>
           <TextInput
             value={newEquipment}
@@ -360,7 +362,7 @@ export function ExerciseForm({
       {/* Tags */}
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Tags</Text>
-        
+
         <View style={styles.arrayInputContainer}>
           <TextInput
             value={newTag}
@@ -471,7 +473,8 @@ export function ExerciseForm({
                     <Text
                       style={[
                         styles.iconOptionText,
-                        formData.icon === iconName && styles.iconOptionTextSelected
+                        formData.icon === iconName &&
+                          styles.iconOptionTextSelected
                       ]}
                     >
                       {iconName}

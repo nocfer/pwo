@@ -10,24 +10,24 @@ import type { Program } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useMemo, useState } from "react";
 import {
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
 } from "react-native";
 import { ChallengeForm, type ChallengeFormData } from "./ChallengeForm";
 
 // Challenge templates for common challenge types
-const CHALLENGE_TEMPLATES: Array<{
+const CHALLENGE_TEMPLATES: {
   id: string;
   name: string;
   description: string;
   difficulty: "beginner" | "intermediate" | "advanced";
   challengeConfig: ChallengeFormData["challengeConfig"];
   tags: string[];
-}> = [
+}[] = [
   {
     id: "pushup-100",
     name: "100 Push-ups Challenge",
@@ -82,7 +82,8 @@ const CHALLENGE_TEMPLATES: Array<{
   {
     id: "burpee-50",
     name: "50 Burpees Challenge",
-    description: "High-intensity challenge to complete 50 burpees in one session",
+    description:
+      "High-intensity challenge to complete 50 burpees in one session",
     difficulty: "advanced",
     tags: ["full-body", "cardio", "hiit"],
     challengeConfig: {
@@ -113,10 +114,12 @@ export function ChallengeEditor({
 }: ChallengeEditorProps) {
   const actions = useDataActions();
   const { data: exercises } = useExercises();
-  
+
   const [saving, setSaving] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
-  const [initialData, setInitialData] = useState<Partial<ChallengeFormData> | undefined>();
+  const [initialData, setInitialData] = useState<
+    Partial<ChallengeFormData> | undefined
+  >();
 
   // Find existing challenge for edit mode
   const existingChallenge = useMemo(() => {
@@ -129,42 +132,46 @@ export function ChallengeEditor({
   }, [mode, challengeId]);
 
   const exerciseOptions = useMemo(() => {
-    return (exercises || []).map(exercise => ({
+    return (exercises || []).map((exercise) => ({
       id: exercise.id,
       name: exercise.name,
       source: exercise.source
     }));
   }, [exercises]);
 
-  const handleSave = useCallback(async (formData: ChallengeFormData) => {
-    setSaving(true);
-    try {
-      const challengeData = {
-        id: challengeId || "",
-        name: formData.name,
-        description: formData.description,
-        sessions: [], // Challenges generate sessions dynamically
-        challengeConfig: {
-          exerciseId: formData.challengeConfig.exerciseId,
-          sets: formData.challengeConfig.sets,
-          targetReps: formData.challengeConfig.targetReps,
-          warmUpSeconds: formData.challengeConfig.warmUpSeconds,
-          breakSeconds: formData.challengeConfig.breakSeconds,
-          sessionIncreasePercent: formData.challengeConfig.sessionIncreasePercent
-        }
-      };
+  const handleSave = useCallback(
+    async (formData: ChallengeFormData) => {
+      setSaving(true);
+      try {
+        const challengeData = {
+          id: challengeId || "",
+          name: formData.name,
+          description: formData.description,
+          sessions: [], // Challenges generate sessions dynamically
+          challengeConfig: {
+            exerciseId: formData.challengeConfig.exerciseId,
+            sets: formData.challengeConfig.sets,
+            targetReps: formData.challengeConfig.targetReps,
+            warmUpSeconds: formData.challengeConfig.warmUpSeconds,
+            breakSeconds: formData.challengeConfig.breakSeconds,
+            sessionIncreasePercent:
+              formData.challengeConfig.sessionIncreasePercent
+          }
+        };
 
-      const savedChallenge = await actions.upsertProgram(challengeData);
-      
-      if (onSave) {
-        onSave(savedChallenge);
+        const savedChallenge = await actions.upsertProgram(challengeData);
+
+        if (onSave) {
+          onSave(savedChallenge);
+        }
+      } catch (error) {
+        throw error; // Let ChallengeForm handle the error display
+      } finally {
+        setSaving(false);
       }
-    } catch (error) {
-      throw error; // Let ChallengeForm handle the error display
-    } finally {
-      setSaving(false);
-    }
-  }, [actions, challengeId, onSave]);
+    },
+    [actions, challengeId, onSave]
+  );
 
   const handleCancel = useCallback(() => {
     if (onCancel) {
@@ -172,49 +179,54 @@ export function ChallengeEditor({
     }
   }, [onCancel]);
 
-  const applyTemplate = useCallback((template: typeof CHALLENGE_TEMPLATES[0]) => {
-    // Try to find matching exercise for the template
-    let exerciseId = "";
-    
-    // Simple matching based on template name and available exercises
-    if (template.id.includes("pushup") || template.id.includes("push")) {
-      const pushupExercise = exerciseOptions.find(ex => 
-        ex.name.toLowerCase().includes("push") || ex.name.toLowerCase().includes("press")
-      );
-      exerciseId = pushupExercise?.id || exerciseOptions[0]?.id || "";
-    } else if (template.id.includes("squat")) {
-      const squatExercise = exerciseOptions.find(ex => 
-        ex.name.toLowerCase().includes("squat")
-      );
-      exerciseId = squatExercise?.id || exerciseOptions[0]?.id || "";
-    } else if (template.id.includes("plank")) {
-      const plankExercise = exerciseOptions.find(ex => 
-        ex.name.toLowerCase().includes("plank")
-      );
-      exerciseId = plankExercise?.id || exerciseOptions[0]?.id || "";
-    } else if (template.id.includes("burpee")) {
-      const burpeeExercise = exerciseOptions.find(ex => 
-        ex.name.toLowerCase().includes("burpee")
-      );
-      exerciseId = burpeeExercise?.id || exerciseOptions[0]?.id || "";
-    } else {
-      exerciseId = exerciseOptions[0]?.id || "";
-    }
+  const applyTemplate = useCallback(
+    (template: (typeof CHALLENGE_TEMPLATES)[0]) => {
+      // Try to find matching exercise for the template
+      let exerciseId = "";
 
-    const templateData: Partial<ChallengeFormData> = {
-      name: template.name,
-      description: template.description,
-      difficulty: template.difficulty,
-      tags: [...template.tags],
-      challengeConfig: {
-        ...template.challengeConfig,
-        exerciseId
+      // Simple matching based on template name and available exercises
+      if (template.id.includes("pushup") || template.id.includes("push")) {
+        const pushupExercise = exerciseOptions.find(
+          (ex) =>
+            ex.name.toLowerCase().includes("push") ||
+            ex.name.toLowerCase().includes("press")
+        );
+        exerciseId = pushupExercise?.id || exerciseOptions[0]?.id || "";
+      } else if (template.id.includes("squat")) {
+        const squatExercise = exerciseOptions.find((ex) =>
+          ex.name.toLowerCase().includes("squat")
+        );
+        exerciseId = squatExercise?.id || exerciseOptions[0]?.id || "";
+      } else if (template.id.includes("plank")) {
+        const plankExercise = exerciseOptions.find((ex) =>
+          ex.name.toLowerCase().includes("plank")
+        );
+        exerciseId = plankExercise?.id || exerciseOptions[0]?.id || "";
+      } else if (template.id.includes("burpee")) {
+        const burpeeExercise = exerciseOptions.find((ex) =>
+          ex.name.toLowerCase().includes("burpee")
+        );
+        exerciseId = burpeeExercise?.id || exerciseOptions[0]?.id || "";
+      } else {
+        exerciseId = exerciseOptions[0]?.id || "";
       }
-    };
 
-    setInitialData(templateData);
-    setTemplatePickerOpen(false);
-  }, [exerciseOptions]);
+      const templateData: Partial<ChallengeFormData> = {
+        name: template.name,
+        description: template.description,
+        difficulty: template.difficulty,
+        tags: [...template.tags],
+        challengeConfig: {
+          ...template.challengeConfig,
+          exerciseId
+        }
+      };
+
+      setInitialData(templateData);
+      setTemplatePickerOpen(false);
+    },
+    [exerciseOptions]
+  );
 
   const showTemplateButton = mode === "create" && !initialData;
 
@@ -230,9 +242,19 @@ export function ChallengeEditor({
               pressed && styles.templateButtonPressed
             ]}
           >
-            <Ionicons name="trophy-outline" size={20} color={theme.colors.primary} />
-            <Text style={styles.templateButtonText}>Start from Challenge Template</Text>
-            <Ionicons name="chevron-forward" size={16} color={theme.colors.muted} />
+            <Ionicons
+              name="trophy-outline"
+              size={20}
+              color={theme.colors.primary}
+            />
+            <Text style={styles.templateButtonText}>
+              Start from Challenge Template
+            </Text>
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color={theme.colors.muted}
+            />
           </Pressable>
         </View>
       )}
@@ -268,7 +290,7 @@ export function ChallengeEditor({
                 <Ionicons name="close" size={18} color={theme.colors.text} />
               </Pressable>
             </View>
-            
+
             <ScrollView style={styles.templateList}>
               {CHALLENGE_TEMPLATES.map((template) => (
                 <Pressable
@@ -281,10 +303,22 @@ export function ChallengeEditor({
                 >
                   <View style={styles.templateInfo}>
                     <Text style={styles.templateName}>{template.name}</Text>
-                    <Text style={styles.templateDescription}>{template.description}</Text>
+                    <Text style={styles.templateDescription}>
+                      {template.description}
+                    </Text>
                     <View style={styles.templateMeta}>
-                      <View style={[styles.difficultyBadge, styles[`difficulty${template.difficulty}`]]}>
-                        <Text style={[styles.difficultyText, styles[`difficultyText${template.difficulty}`]]}>
+                      <View
+                        style={[
+                          styles.difficultyBadge,
+                          styles[`difficulty${template.difficulty}`]
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.difficultyText,
+                            styles[`difficultyText${template.difficulty}`]
+                          ]}
+                        >
                           {template.difficulty}
                         </Text>
                       </View>
@@ -303,10 +337,14 @@ export function ChallengeEditor({
                       ))}
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.colors.muted} />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.colors.muted}
+                  />
                 </Pressable>
               ))}
-              
+
               {/* Custom/Blank Challenge */}
               <Pressable
                 onPress={() => {
@@ -336,9 +374,15 @@ export function ChallengeEditor({
               >
                 <View style={styles.templateInfo}>
                   <Text style={styles.templateName}>Custom Challenge</Text>
-                  <Text style={styles.templateDescription}>Create your own challenge from scratch</Text>
+                  <Text style={styles.templateDescription}>
+                    Create your own challenge from scratch
+                  </Text>
                 </View>
-                <Ionicons name="add-circle-outline" size={20} color={theme.colors.primary} />
+                <Ionicons
+                  name="add-circle-outline"
+                  size={20}
+                  color={theme.colors.primary}
+                />
               </Pressable>
             </ScrollView>
           </View>

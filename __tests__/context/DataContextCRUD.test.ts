@@ -197,9 +197,10 @@ describe("DataContext CRUD Operations - Property Tests", () => {
 
             // Simulate the dependency check that happens in deleteExercise
             const referencedBy = state.programs.find((p) =>
-              p.sessions.some((s) =>
+              p.sessions.some((s: any) =>
                 s.blocks.some(
-                  (b) => b.type === "exercise" && b.exerciseId === exercise.id
+                  (b: any) =>
+                    b.type === "exercise" && b.exerciseId === exercise.id
                 )
               )
             );
@@ -231,7 +232,7 @@ describe("DataContext CRUD Operations - Property Tests", () => {
           const state = {
             ...initialState,
             exercises: [userExercise],
-            programs: [],
+            programs: [] as any[], // Explicitly type as any[] to avoid never[] inference
             exercisesLoading: false,
             programsLoading: false
           };
@@ -244,9 +245,10 @@ describe("DataContext CRUD Operations - Property Tests", () => {
 
           // Check for dependencies
           const referencedBy = state.programs.find((p) =>
-            p.sessions.some((s) =>
+            p.sessions.some((s: any) =>
               s.blocks.some(
-                (b) => b.type === "exercise" && b.exerciseId === userExercise.id
+                (b: any) =>
+                  b.type === "exercise" && b.exerciseId === userExercise.id
               )
             )
           );

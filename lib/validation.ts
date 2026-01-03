@@ -4,20 +4,20 @@
  */
 
 import type {
-    ChallengeConfig,
-    Exercise,
-    ExerciseCategory,
-    Program
+  ChallengeConfig,
+  Exercise,
+  ExerciseCategory,
+  Program
 } from "@/types";
 import type {
-    DependencyResult,
-    EnhancedChallenge,
-    EnhancedExercise,
-    EnhancedProgram,
-    FieldValidation,
-    ValidationError,
-    ValidationResult,
-    ValidationSchema
+  DependencyResult,
+  EnhancedChallenge,
+  EnhancedExercise,
+  EnhancedProgram,
+  FieldValidation,
+  ValidationError,
+  ValidationResult,
+  ValidationSchema
 } from "@/types/enhanced";
 import { ValidationErrorCode } from "@/types/enhanced";
 
@@ -103,8 +103,7 @@ export function validateField<T>(
 
   // Skip further validation if field is optional and empty (but not for custom validators that need to handle empty values)
   if (
-    !validation.required &&
-    (value === undefined || value === null) ||
+    (!validation.required && (value === undefined || value === null)) ||
     (!validation.customValidator && value === "")
   ) {
     return errors;
@@ -221,7 +220,7 @@ export const exerciseValidationSchema: ValidationSchema<EnhancedExercise> = {
               ]
             };
           }
-          
+
           // Check for whitespace-only strings
           if (typeof value === "string" && value.trim() === "") {
             return {
@@ -235,7 +234,7 @@ export const exerciseValidationSchema: ValidationSchema<EnhancedExercise> = {
               ]
             };
           }
-          
+
           // Check if value is in valid categories
           if (!VALID_EXERCISE_CATEGORIES.includes(value)) {
             return {
@@ -646,9 +645,11 @@ export function validateChallengeConfig(
   const errors: ValidationError[] = [];
 
   // Validate exerciseId - must be non-empty string with non-whitespace content
-  if (!config.exerciseId || 
-      typeof config.exerciseId !== "string" || 
-      config.exerciseId.trim().length === 0) {
+  if (
+    !config.exerciseId ||
+    typeof config.exerciseId !== "string" ||
+    config.exerciseId.trim().length === 0
+  ) {
     errors.push(
       createValidationError(
         "exerciseId",
@@ -658,7 +659,12 @@ export function validateChallengeConfig(
     );
   }
 
-  if (config.sets === null || typeof config.sets !== "number" || config.sets <= 0 || !Number.isInteger(config.sets)) {
+  if (
+    config.sets === null ||
+    typeof config.sets !== "number" ||
+    config.sets <= 0 ||
+    !Number.isInteger(config.sets)
+  ) {
     errors.push(
       createValidationError(
         "sets",
@@ -668,7 +674,12 @@ export function validateChallengeConfig(
     );
   }
 
-  if (config.targetReps === null || typeof config.targetReps !== "number" || config.targetReps <= 0 || !Number.isInteger(config.targetReps)) {
+  if (
+    config.targetReps === null ||
+    typeof config.targetReps !== "number" ||
+    config.targetReps <= 0 ||
+    !Number.isInteger(config.targetReps)
+  ) {
     errors.push(
       createValidationError(
         "targetReps",
@@ -678,7 +689,11 @@ export function validateChallengeConfig(
     );
   }
 
-  if (config.warmUpSeconds === null || typeof config.warmUpSeconds !== "number" || config.warmUpSeconds < 0) {
+  if (
+    config.warmUpSeconds === null ||
+    typeof config.warmUpSeconds !== "number" ||
+    config.warmUpSeconds < 0
+  ) {
     errors.push(
       createValidationError(
         "warmUpSeconds",
@@ -688,7 +703,11 @@ export function validateChallengeConfig(
     );
   }
 
-  if (config.breakSeconds === null || typeof config.breakSeconds !== "number" || config.breakSeconds < 0) {
+  if (
+    config.breakSeconds === null ||
+    typeof config.breakSeconds !== "number" ||
+    config.breakSeconds < 0
+  ) {
     errors.push(
       createValidationError(
         "breakSeconds",

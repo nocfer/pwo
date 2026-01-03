@@ -21,22 +21,34 @@ describe("Program Session Manipulation Property Tests", () => {
     fc.record({
       type: fc.constant("rest" as const),
       seconds: fc.integer({ min: 1, max: 600 }), // 1 second to 10 minutes
-      label: fc.option(fc.string({ minLength: 1, maxLength: 50 }))
+      label: fc.option(fc.string({ minLength: 1, maxLength: 50 }), {
+        nil: undefined
+      })
     }),
     // Exercise block
     fc.record({
       type: fc.constant("exercise" as const),
-      exerciseId: fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0),
-      targetReps: fc.option(fc.integer({ min: 1, max: 100 })),
-      durationSeconds: fc.option(fc.integer({ min: 1, max: 3600 })),
-      note: fc.option(fc.string({ minLength: 1, maxLength: 200 }))
+      exerciseId: fc
+        .string({ minLength: 1, maxLength: 50 })
+        .filter((s) => s.trim().length > 0),
+      targetReps: fc.option(fc.integer({ min: 1, max: 100 }), {
+        nil: undefined
+      }),
+      durationSeconds: fc.option(fc.integer({ min: 1, max: 3600 }), {
+        nil: undefined
+      }),
+      note: fc.option(fc.string({ minLength: 1, maxLength: 200 }), {
+        nil: undefined
+      })
     })
   );
 
   // Generator for valid program sessions
   const programSessionArb: fc.Arbitrary<ProgramSession> = fc.record({
     index: fc.integer({ min: 1, max: 20 }),
-    name: fc.option(fc.string({ minLength: 1, maxLength: 100 })),
+    name: fc.option(fc.string({ minLength: 1, maxLength: 100 }), {
+      nil: undefined
+    }),
     blocks: fc.array(programBlockArb, { minLength: 1, maxLength: 20 })
   });
 
@@ -44,10 +56,14 @@ describe("Program Session Manipulation Property Tests", () => {
   const baseProgramArb = fc.record({
     id: fc.string({ minLength: 1, maxLength: 50 }),
     name: fc.string({ minLength: 1, maxLength: 100 }),
-    description: fc.option(fc.string({ minLength: 1, maxLength: 500 })),
+    description: fc.option(fc.string({ minLength: 1, maxLength: 500 }), {
+      nil: undefined
+    }),
     createdAt: fc.constant(new Date().toISOString()),
     updatedAt: fc.constant(new Date().toISOString()),
-    source: fc.constantFrom("builtin", "user") as fc.Arbitrary<"builtin" | "user">
+    source: fc.constantFrom("builtin", "user") as fc.Arbitrary<
+      "builtin" | "user"
+    >
   });
 
   it("Property 8: Program session manipulation - For any program session, adding, removing, and reordering of blocks should maintain valid session structure", () => {
@@ -68,7 +84,7 @@ describe("Program Session Manipulation Property Tests", () => {
 
           // Validate original program
           const originalResult = validateProgram(originalProgram);
-          
+
           // Only test if original program is valid
           if (originalResult.isValid) {
             // Add new block to session
@@ -86,12 +102,16 @@ describe("Program Session Manipulation Property Tests", () => {
 
             // Modified program should still be valid
             expect(modifiedResult.isValid).toBe(true);
-            
+
             // Session should have one more block
-            expect(modifiedSession.blocks.length).toBe(session.blocks.length + 1);
-            
+            expect(modifiedSession.blocks.length).toBe(
+              session.blocks.length + 1
+            );
+
             // New block should be at the end
-            expect(modifiedSession.blocks[modifiedSession.blocks.length - 1]).toEqual(newBlock);
+            expect(
+              modifiedSession.blocks[modifiedSession.blocks.length - 1]
+            ).toEqual(newBlock);
           }
         }
       ),
@@ -106,17 +126,22 @@ describe("Program Session Manipulation Property Tests", () => {
         fc.integer({ min: 0, max: 19 }),
         (baseProgram, session, removeIndex) => {
           // Only test if we have blocks to remove and won't make session empty
-          if (session.blocks.length > 1 && removeIndex < session.blocks.length) {
+          if (
+            session.blocks.length > 1 &&
+            removeIndex < session.blocks.length
+          ) {
             const originalProgram: Partial<EnhancedProgram> = {
               ...baseProgram,
               sessions: [session]
             };
 
             const originalResult = validateProgram(originalProgram);
-            
+
             if (originalResult.isValid) {
               // Remove block at index
-              const modifiedBlocks = session.blocks.filter((_, i) => i !== removeIndex);
+              const modifiedBlocks = session.blocks.filter(
+                (_, i) => i !== removeIndex
+              );
               const modifiedSession: ProgramSession = {
                 ...session,
                 blocks: modifiedBlocks
@@ -131,9 +156,11 @@ describe("Program Session Manipulation Property Tests", () => {
 
               // Modified program should still be valid
               expect(modifiedResult.isValid).toBe(true);
-              
+
               // Session should have one fewer block
-              expect(modifiedSession.blocks.length).toBe(session.blocks.length - 1);
+              expect(modifiedSession.blocks.length).toBe(
+                session.blocks.length - 1
+              );
             }
           }
         }
@@ -150,14 +177,18 @@ describe("Program Session Manipulation Property Tests", () => {
         fc.integer({ min: 0, max: 19 }),
         (baseProgram, session, fromIndex, toIndex) => {
           // Only test if indices are valid
-          if (fromIndex < session.blocks.length && toIndex < session.blocks.length && fromIndex !== toIndex) {
+          if (
+            fromIndex < session.blocks.length &&
+            toIndex < session.blocks.length &&
+            fromIndex !== toIndex
+          ) {
             const originalProgram: Partial<EnhancedProgram> = {
               ...baseProgram,
               sessions: [session]
             };
 
             const originalResult = validateProgram(originalProgram);
-            
+
             if (originalResult.isValid) {
               // Reorder blocks
               const reorderedBlocks = [...session.blocks];
@@ -178,17 +209,14 @@ describe("Program Session Manipulation Property Tests", () => {
 
               // Modified program should still be valid
               expect(modifiedResult.isValid).toBe(true);
-              
+
               // Session should have same number of blocks
               expect(modifiedSession.blocks.length).toBe(session.blocks.length);
-              
+
               // All original blocks should still be present (just reordered)
-              const originalBlockIds = session.blocks.map((block, i) => `${block.type}-${i}`);
-              const reorderedBlockIds = reorderedBlocks.map((block, i) => `${block.type}-${i}`);
-              
               // Should have same block types (though in different order)
-              const originalTypes = session.blocks.map(b => b.type).sort();
-              const reorderedTypes = reorderedBlocks.map(b => b.type).sort();
+              const originalTypes = session.blocks.map((b) => b.type).sort();
+              const reorderedTypes = reorderedBlocks.map((b) => b.type).sort();
               expect(reorderedTypes).toEqual(originalTypes);
             }
           }
@@ -215,7 +243,7 @@ describe("Program Session Manipulation Property Tests", () => {
           };
 
           const result = validateProgram(program);
-          
+
           if (result.isValid) {
             // Session indices should be sequential
             normalizedSessions.forEach((session, index) => {
@@ -229,47 +257,46 @@ describe("Program Session Manipulation Property Tests", () => {
 
     // Property 5: Block type constraints should be preserved during manipulation
     fc.assert(
-      fc.property(
-        baseProgramArb,
-        programSessionArb,
-        (baseProgram, session) => {
-          const program: Partial<EnhancedProgram> = {
-            ...baseProgram,
-            sessions: [session]
-          };
+      fc.property(baseProgramArb, programSessionArb, (baseProgram, session) => {
+        const program: Partial<EnhancedProgram> = {
+          ...baseProgram,
+          sessions: [session]
+        };
 
-          const result = validateProgram(program);
-          
-          if (result.isValid) {
-            // Each block should have valid type
-            session.blocks.forEach(block => {
-              expect(["warmup", "exercise", "rest"]).toContain(block.type);
-              
-              // Type-specific validations
-              if (block.type === "warmup" || block.type === "rest") {
-                expect(block).toHaveProperty("seconds");
-                expect(typeof block.seconds).toBe("number");
-                expect(block.seconds).toBeGreaterThan(0);
+        const result = validateProgram(program);
+
+        if (result.isValid) {
+          // Each block should have valid type
+          session.blocks.forEach((block) => {
+            expect(["warmup", "exercise", "rest"]).toContain(block.type);
+
+            // Type-specific validations
+            if (block.type === "warmup" || block.type === "rest") {
+              expect(block).toHaveProperty("seconds");
+              expect(typeof block.seconds).toBe("number");
+              expect(block.seconds).toBeGreaterThan(0);
+            }
+
+            if (block.type === "exercise") {
+              expect(typeof block.exerciseId).toBe("string");
+              expect(block.exerciseId.length).toBeGreaterThan(0);
+
+              if (block.targetReps !== undefined && block.targetReps !== null) {
+                expect(typeof block.targetReps).toBe("number");
+                expect(block.targetReps).toBeGreaterThan(0);
               }
-              
-              if (block.type === "exercise") {
-                expect(typeof block.exerciseId).toBe("string");
-                expect(block.exerciseId.length).toBeGreaterThan(0);
-                
-                if (block.targetReps !== undefined && block.targetReps !== null) {
-                  expect(typeof block.targetReps).toBe("number");
-                  expect(block.targetReps).toBeGreaterThan(0);
-                }
-                
-                if (block.durationSeconds !== undefined && block.durationSeconds !== null) {
-                  expect(typeof block.durationSeconds).toBe("number");
-                  expect(block.durationSeconds).toBeGreaterThan(0);
-                }
+
+              if (
+                block.durationSeconds !== undefined &&
+                block.durationSeconds !== null
+              ) {
+                expect(typeof block.durationSeconds).toBe("number");
+                expect(block.durationSeconds).toBeGreaterThan(0);
               }
-            });
-          }
+            }
+          });
         }
-      ),
+      }),
       { numRuns: 100 }
     );
   });
@@ -279,27 +306,26 @@ describe("Program Session Manipulation Property Tests", () => {
 
     // Edge case: Programs with no sessions should be invalid for non-challenge programs
     fc.assert(
-      fc.property(
-        baseProgramArb,
-        (baseProgram) => {
-          const programWithNoSessions: Partial<EnhancedProgram> = {
-            ...baseProgram,
-            sessions: [], // No sessions at all
-            challengeConfig: undefined // Not a challenge
-          };
+      fc.property(baseProgramArb, (baseProgram) => {
+        const programWithNoSessions: Partial<EnhancedProgram> = {
+          ...baseProgram,
+          sessions: [], // No sessions at all
+          challengeConfig: undefined // Not a challenge
+        };
 
-          const result = validateProgram(programWithNoSessions);
-          
-          // Should be invalid due to no sessions (validation requires at least one session for non-challenge programs)
-          expect(result.isValid).toBe(false);
-          
-          // Should have errors about missing sessions
-          const hasSessionError = result.errors.some(error => 
-            error.field.includes("sessions") || error.message.includes("session")
-          );
-          expect(hasSessionError).toBe(true);
-        }
-      ),
+        const result = validateProgram(programWithNoSessions);
+
+        // Should be invalid due to no sessions (validation requires at least one session for non-challenge programs)
+        expect(result.isValid).toBe(false);
+
+        // Should have errors about missing sessions
+        const hasSessionError = result.errors.some(
+          (error) =>
+            error.field.includes("sessions") ||
+            error.message.includes("session")
+        );
+        expect(hasSessionError).toBe(true);
+      }),
       { numRuns: 50 }
     );
 
@@ -321,12 +347,13 @@ describe("Program Session Manipulation Property Tests", () => {
           };
 
           const result = validateProgram(program);
-          
+
           // Should be invalid due to invalid session index
           expect(result.isValid).toBe(false);
-          
-          const indexErrors = result.errors.filter(error => 
-            error.field.includes("index") && error.code === "INVALID_FORMAT"
+
+          const indexErrors = result.errors.filter(
+            (error) =>
+              error.field.includes("index") && error.code === "INVALID_FORMAT"
           );
           expect(indexErrors.length).toBeGreaterThan(0);
         }
@@ -355,9 +382,9 @@ describe("Program Session Manipulation Property Tests", () => {
           // While the validation might not catch duplicate indices directly,
           // the program structure should still be valid in terms of individual sessions
           const result = validateProgram(program);
-          
+
           // Each individual session should be structurally valid
-          duplicateIndexSessions.forEach(session => {
+          duplicateIndexSessions.forEach((session) => {
             expect(session.index).toBe(1);
             expect(Array.isArray(session.blocks)).toBe(true);
           });
