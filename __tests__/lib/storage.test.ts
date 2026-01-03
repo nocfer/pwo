@@ -196,7 +196,8 @@ describe("storage", () => {
         currentSet: 1,
         timer: 120,
         isPaused: false,
-        warmupDone: false
+        warmupDone: false,
+        sessionElapsedSeconds: 0
       };
 
       await storage.saveSessionState(sessionState);
@@ -217,7 +218,8 @@ describe("storage", () => {
         currentSet: 2,
         timer: 60,
         isPaused: true,
-        warmupDone: true
+        warmupDone: true,
+        sessionElapsedSeconds: 120
       };
 
       await storage.saveSessionState(sessionState);

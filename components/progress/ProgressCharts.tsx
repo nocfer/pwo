@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   bar: {
     width: "100%",
     minHeight: 4,
-    borderRadius: theme.radius.xs
+    borderRadius: theme.radius.sm
   },
   barLabel: {
     ...theme.typography.caption,

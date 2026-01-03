@@ -6,20 +6,20 @@
  */
 
 import type {
-  ChallengeProgress,
-  EventRecord,
-  Exercise,
-  ExerciseProgress,
-  HistoryEntry,
-  HistoryFile,
-  PersonalRecord,
-  PRHistory,
-  Program,
-  ProgramProgress,
-  ProgressHistory,
-  SessionState,
-  StreakEntry,
-  WeeklyStats
+    ChallengeProgress,
+    EventRecord,
+    Exercise,
+    ExerciseProgress,
+    HistoryEntry,
+    HistoryFile,
+    PersonalRecord,
+    PRHistory,
+    Program,
+    ProgramProgress,
+    ProgressHistory,
+    SessionState,
+    StreakEntry,
+    WeeklyStats
 } from "@/types";
 import * as FileSystem from "expo-file-system/legacy";
 import { Platform } from "react-native";
@@ -27,11 +27,11 @@ import { getMondayBasedDayIndex, normalizeStreak } from "./utils/date";
 
 // Re-export types for backwards compatibility
 export type {
-  EventRecord,
-  HistoryEntry,
-  HistoryFile,
-  SessionState,
-  StreakEntry
+    EventRecord,
+    HistoryEntry,
+    HistoryFile,
+    SessionState,
+    StreakEntry
 } from "@/types";
 
 // ============================================================================
@@ -176,7 +176,7 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
       const lastActivityAt =
         typeof run?.lastActivityAt === "string" && run.lastActivityAt
           ? run.lastActivityAt
-          : completedSessions.reduce<string | null>((latest, s: any) => {
+          : (completedSessions as any[]).reduce<string | null>((latest: string | null, s: any) => {
               const ts = typeof s.completedAt === "string" ? s.completedAt : null;
               if (!ts) return latest;
               if (!latest) return ts;
@@ -196,19 +196,19 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
       };
     });
 
-    const allCompletedSessions = runs.flatMap((r) =>
-      r.sessions.filter((s) => s.completed)
+    const allCompletedSessions = runs.flatMap((r: any) =>
+      r.sessions.filter((s: any) => s.completed)
     );
     const lifetimeSessionsCompleted = allCompletedSessions.length;
     const lifetimeTimeSpentSeconds = runs.reduce(
-      (sum, r) =>
+      (sum: number, r: any) =>
         sum +
         (typeof r.totalTimeSpentSeconds === "number"
           ? r.totalTimeSpentSeconds
           : 0),
       0
     );
-    const lastActivityAt = runs.reduce<string | null>((latest, r) => {
+    const lastActivityAt = (runs as any[]).reduce<string | null>((latest: string | null, r: any) => {
       if (!r.lastActivityAt) return latest;
       if (!latest) return r.lastActivityAt;
       return new Date(r.lastActivityAt) > new Date(latest)
@@ -266,7 +266,7 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
     typeof (raw as any).lastActivityAt === "string" &&
     (raw as any).lastActivityAt
       ? (raw as any).lastActivityAt
-      : completedSessions.reduce<string | null>((latest, s: any) => {
+      : (completedSessions as any[]).reduce<string | null>((latest: string | null, s: any) => {
           const ts = typeof s.completedAt === "string" ? s.completedAt : null;
           if (!ts) return latest;
           if (!latest) return ts;
@@ -1219,6 +1219,22 @@ export const storage = {
       write(KEYS.PERSONAL_RECORDS, []),
       write(KEYS.WEEKLY_STATS, [])
     ]);
+  },
+
+  // --------------------------------------------------------------------------
+  // Generic storage methods for audit logging
+  // --------------------------------------------------------------------------
+
+  async getItem(key: string): Promise<string | null> {
+    try {
+      return await read<string | null>(key, null);
+    } catch {
+      return null;
+    }
+  },
+
+  async setItem(key: string, value: string): Promise<void> {
+    await write(key, value);
   }
 };
 
