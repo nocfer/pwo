@@ -10,6 +10,7 @@ import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import type { DataType, SearchState } from "@/types/enhanced";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { router } from "expo-router";
 import { useState } from "react";
 import {
   Pressable,
@@ -139,6 +140,22 @@ export function UnifiedDataManager({
     setShowFilters(!showFilters);
   };
 
+  const handleItemPress = (item: any) => {
+    haptics.itemSelection();
+    // Navigate to edit form based on data type
+    switch (activeTab) {
+      case "exercises":
+        router.push(`/library/exercises/${item.id}/edit` as any);
+        break;
+      case "programs":
+        router.push(`/library/programs/${item.id}/edit` as any);
+        break;
+      case "challenges":
+        router.push(`/library/challenges/${item.id}/edit` as any);
+        break;
+    }
+  };
+
   const currentData = getCurrentData();
   const isLoading =
     (activeTab === "exercises" && state.exercisesLoading) ||
@@ -244,6 +261,7 @@ export function UnifiedDataManager({
         searchState={searchState}
         selectedItems={selectedItems}
         onSelectionChange={handleSelectionChange}
+        onItemPress={handleItemPress}
         isLoading={isLoading}
         style={styles.dataList}
       />

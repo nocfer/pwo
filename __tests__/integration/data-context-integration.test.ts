@@ -7,9 +7,9 @@
 import { canSafelyDelete } from "@/lib/dependencyChecker";
 import { storage } from "@/lib/storage";
 import {
-  validateExercise,
-  validateModificationPermissions,
-  validateUniqueName
+    validateExercise,
+    validateModificationPermissions,
+    validateUniqueName
 } from "@/lib/validation";
 import type { Exercise, Program } from "@/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -67,6 +67,11 @@ describe("Data Context Integration", () => {
     });
     vi.mocked(canSafelyDelete).mockReturnValue({
       canDelete: true,
+      dependencies: {
+        programs: [],
+        challenges: [],
+        sessions: []
+      },
       warnings: []
     });
   });
@@ -417,6 +422,19 @@ describe("Data Context Integration", () => {
     it("should handle dependency conflicts", async () => {
       vi.mocked(canSafelyDelete).mockReturnValue({
         canDelete: false,
+        dependencies: {
+          programs: [{
+            id: "prg_1",
+            name: "Test Program",
+            description: "Test Description",
+            sessions: [],
+            createdAt: "2024-01-01T00:00:00.000Z",
+            updatedAt: "2024-01-01T00:00:00.000Z",
+            source: "user"
+          }],
+          challenges: [],
+          sessions: []
+        },
         warnings: ["Exercise is referenced by 1 program(s)"]
       });
 
