@@ -125,11 +125,6 @@ const validEnhancedProgramArb: fc.Arbitrary<Partial<EnhancedProgram>> =
     name: validNameArb,
     description: fc.option(fc.string({ maxLength: 1000 }), { nil: undefined }),
     blocks: programBlocksArb,
-    difficulty: fc.option(validDifficultyArb, { nil: undefined }),
-    estimatedDuration: fc.option(fc.integer({ min: 1, max: 300 }), {
-      nil: undefined
-    }),
-    tags: fc.option(validStringArrayArb, { nil: undefined }),
     usageCount: fc.option(fc.nat(), { nil: undefined }),
     lastUsed: fc.option(fc.constant("2024-01-01T00:00:00.000Z"), {
       nil: undefined
@@ -392,31 +387,16 @@ describe("Validation Infrastructure Property Tests", () => {
         fc.property(
           fc.record({
             name: validNameArb,
-            usageCount: fc.integer({ min: -100, max: -1 }), // Invalid negative number
-            estimatedDuration: fc.integer({ min: -100, max: 0 }) // Invalid non-positive number
+            usageCount: fc.integer({ min: -100, max: -1 }) // Invalid negative number
           }),
           (data) => {
             const exerciseResult = validateExercise(data);
-            const programResult = validateProgram(data);
 
             // Negative usage count should fail exercise validation
             if (data.usageCount !== undefined && data.usageCount < 0) {
               expect(exerciseResult.isValid).toBe(false);
               expect(
                 exerciseResult.errors.some((e) => e.field === "usageCount")
-              ).toBe(true);
-            }
-
-            // Non-positive estimated duration should fail program validation
-            if (
-              data.estimatedDuration !== undefined &&
-              data.estimatedDuration <= 0
-            ) {
-              expect(programResult.isValid).toBe(false);
-              expect(
-                programResult.errors.some(
-                  (e) => e.field === "estimatedDuration"
-                )
               ).toBe(true);
             }
           }

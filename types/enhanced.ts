@@ -4,10 +4,10 @@
  */
 
 import type {
-  ChallengeConfig,
-  Exercise,
-  ExerciseCategory,
-  Program
+    ChallengeConfig,
+    Exercise,
+    ExerciseCategory,
+    Program
 } from "./index";
 
 // ============================================================================
@@ -30,9 +30,6 @@ export interface EnhancedExercise extends Exercise {
 // ============================================================================
 
 export interface EnhancedProgram extends Program {
-  difficulty?: "beginner" | "intermediate" | "advanced";
-  estimatedDuration?: number; // minutes
-  tags?: string[];
   thumbnail?: string;
   usageCount?: number;
   lastUsed?: string;
