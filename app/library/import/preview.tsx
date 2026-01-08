@@ -6,8 +6,8 @@ import { ErrorScreen, ScreenHeader } from "@/components";
 import ProgramImportPreview from "@/components/program/ProgramImportPreview";
 import { useDataActions } from "@/context/DataContext";
 import {
-    decodeProgramFromShare,
-    ShareableProgramData
+  decodeProgramFromShare,
+  ShareableProgramData
 } from "@/lib/utils/programShare";
 import { theme } from "@/theme/theme";
 import { router, useLocalSearchParams } from "expo-router";

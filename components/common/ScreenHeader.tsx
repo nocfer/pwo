@@ -1,7 +1,5 @@
 /**
  * ScreenHeader - Reusable header with optional back button
- *
- * Consolidates the header pattern used across detail screens
  */
 
 import { theme } from "@/theme/theme";
@@ -46,7 +44,7 @@ export function ScreenHeader({
             pressed && styles.backButtonPressed
           ]}
         >
-          <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
+          <Ionicons name="chevron-back" size={22} color={theme.colors.text} />
         </Pressable>
       )}
       <View style={styles.titleContainer}>
@@ -61,31 +59,33 @@ export function ScreenHeader({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.md,
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: theme.spacing.md
+    alignItems: "center",
+    gap: theme.spacing.sm
   },
   backButton: {
-    padding: theme.spacing.xs,
-    marginTop: -theme.spacing.xs,
-    marginLeft: -theme.spacing.xs
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.sm,
+    alignItems: "center",
+    justifyContent: "center"
   },
   backButtonPressed: {
-    opacity: 0.6
+    backgroundColor: theme.colors.background
   },
   titleContainer: {
     flex: 1
   },
   title: {
     ...theme.typography.h2,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs
+    color: theme.colors.text
   },
   subtitle: {
     ...theme.typography.body,
-    color: theme.colors.muted
+    color: theme.colors.muted,
+    marginTop: 2
   },
   rightElement: {
     alignSelf: "center"

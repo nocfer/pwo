@@ -1,6 +1,5 @@
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
 
@@ -17,28 +16,23 @@ type EmptyStateProps = {
 const variantConfig = {
   default: {
     icon: "barbell-outline" as const,
-    gradientColors: [
-      theme.colors.gradient.primaryStart,
-      theme.colors.gradient.primaryEnd
-    ] as const
+    iconColor: theme.colors.primary,
+    iconBg: theme.colors.primaryLight
   },
   search: {
     icon: "search-outline" as const,
-    gradientColors: [theme.colors.muted, theme.colors.subtext] as const
+    iconColor: theme.colors.muted,
+    iconBg: theme.colors.background
   },
   progress: {
     icon: "trending-up-outline" as const,
-    gradientColors: [
-      theme.colors.gradient.successStart,
-      theme.colors.gradient.successEnd
-    ] as const
+    iconColor: theme.colors.success,
+    iconBg: theme.colors.successLight
   },
   history: {
     icon: "time-outline" as const,
-    gradientColors: [
-      theme.colors.gradient.warmStart,
-      theme.colors.gradient.warmEnd
-    ] as const
+    iconColor: theme.colors.accent,
+    iconBg: theme.colors.accentLight
   }
 };
 
@@ -56,14 +50,9 @@ export function EmptyState({
 
   return (
     <View style={[styles.container, style]}>
-      <LinearGradient
-        colors={[...config.gradientColors] as [string, string, ...string[]]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.iconContainer}
-      >
-        <Ionicons name={iconName} size={32} color="#FFFFFF" />
-      </LinearGradient>
+      <View style={[styles.iconContainer, { backgroundColor: config.iconBg }]}>
+        <Ionicons name={iconName} size={28} color={config.iconColor} />
+      </View>
 
       <Text style={styles.title}>{title}</Text>
 
@@ -90,7 +79,7 @@ export function NoSearchResultsEmpty({ query }: { query: string }) {
     <EmptyState
       variant="search"
       title="No results found"
-      description={`We couldn't find any challenges matching "${query}". Try a different search term.`}
+      description={`We couldn't find anything matching "${query}". Try a different search term.`}
     />
   );
 }
@@ -123,13 +112,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xl
   },
   iconContainer: {
-    width: 72,
-    height: 72,
+    width: 64,
+    height: 64,
     borderRadius: theme.radius.lg,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: theme.spacing.lg,
-    ...theme.shadows.md
+    marginBottom: theme.spacing.lg
   },
   title: {
     ...theme.typography.h3,
@@ -149,8 +137,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.xl,
-    borderRadius: theme.radius.lg,
-    ...theme.shadows.sm
+    borderRadius: theme.radius.md
   },
   buttonPressed: {
     opacity: 0.9,

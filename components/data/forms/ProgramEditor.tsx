@@ -209,7 +209,6 @@ export function ProgramEditor({
         const programData = {
           id: programId || "",
           name: formData.name,
-          description: formData.description,
           blocks: formData.blocks || [],
           challengeConfig: undefined // Regular program, not a challenge
         };
@@ -238,7 +237,6 @@ export function ProgramEditor({
     (template: (typeof PROGRAM_TEMPLATES)[0]) => {
       const templateData: Partial<ProgramFormData> = {
         name: template.name,
-        description: template.description,
         blocks: template.blocks.map((block) => {
           // For exercise blocks, we'll need to map to actual exercise IDs
           if (block.type === "exercise" && exerciseOptions.length > 0) {
@@ -379,7 +377,6 @@ export function ProgramEditor({
                 onPress={() => {
                   setInitialData({
                     name: "",
-                    description: "",
                     blocks: [{ type: "warmup", seconds: 180 }]
                   });
                   setTemplatePickerOpen(false);
@@ -426,7 +423,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderColor: theme.colors.border,
     borderWidth: 1,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     padding: theme.spacing.md,
     ...theme.shadows.sm
   },
@@ -435,10 +432,11 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }]
   },
   templateButtonText: {
-    ...theme.typography.bodyBold,
+    ...theme.typography.body,
     color: theme.colors.primary,
     flex: 1,
-    marginLeft: theme.spacing.sm
+    marginLeft: theme.spacing.sm,
+    fontFamily: theme.fonts.semiBold
   },
   modalBackdrop: {
     flex: 1,
@@ -523,26 +521,27 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md
   },
   difficultybeginner: {
-    backgroundColor: "#E8F5E8"
+    backgroundColor: theme.colors.successLight
   },
   difficultyintermediate: {
-    backgroundColor: "#FFF3E0"
+    backgroundColor: theme.colors.warningLight
   },
   difficultyadvanced: {
-    backgroundColor: "#FFEBEE"
+    backgroundColor: theme.colors.dangerLight
   },
   difficultyText: {
     ...theme.typography.caption,
-    textTransform: "capitalize"
+    textTransform: "capitalize",
+    fontFamily: theme.fonts.semiBold
   },
   difficultyTextbeginner: {
-    color: "#2E7D32"
+    color: theme.colors.success
   },
   difficultyTextintermediate: {
-    color: "#F57C00"
+    color: theme.colors.warning
   },
   difficultyTextadvanced: {
-    color: "#C62828"
+    color: theme.colors.danger
   },
   sessionCount: {
     ...theme.typography.caption,

@@ -1,5 +1,5 @@
 /**
- * PersonalRecordsCard - Display recent PRs with celebration
+ * PersonalRecordsCard - Display recent PRs
  */
 
 import { useExercises, usePRs } from "@/hooks/data";
@@ -24,13 +24,12 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
     if (!loading) {
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 300,
+        duration: 250,
         useNativeDriver: true
       }).start();
     }
   }, [loading, fadeAnim]);
 
-  // Map exercise IDs to names
   const exerciseMap = useMemo(() => {
     const map = new Map<string, { name: string; icon?: string }>();
     exercises?.forEach((ex) => {
@@ -56,7 +55,7 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
           <View style={styles.titleRow}>
             <Ionicons
               name="trophy"
-              size={20}
+              size={18}
               color={theme.colors.accent}
               style={styles.titleIcon}
             />
@@ -74,7 +73,7 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
         <View style={styles.titleRow}>
           <Ionicons
             name="trophy"
-            size={20}
+            size={18}
             color={theme.colors.accent}
             style={styles.titleIcon}
           />
@@ -91,7 +90,7 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
             <Text style={styles.viewAllText}>View All</Text>
             <Ionicons
               name="chevron-forward"
-              size={16}
+              size={14}
               color={theme.colors.primary}
             />
           </Pressable>
@@ -119,10 +118,8 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.xl,
+    borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     ...theme.shadows.sm
   },
   header: {
@@ -159,8 +156,8 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm
   },
   skeleton: {
-    height: 200,
+    height: 180,
     backgroundColor: theme.colors.skeleton,
-    borderRadius: theme.radius.md
+    borderRadius: theme.radius.sm
   }
 });

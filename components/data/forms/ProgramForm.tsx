@@ -34,7 +34,6 @@ type BlockDraft =
 
 export type ProgramFormData = {
   name: string;
-  description?: string;
   blocks: ProgramBlock[];
 };
 
@@ -57,7 +56,6 @@ export function ProgramForm({
 }: ProgramFormProps) {
   const [formData, setFormData] = useState<ProgramFormData>({
     name: initialData?.name || "",
-    description: initialData?.description || "",
     blocks: initialData?.blocks || [{ type: "warmup", seconds: 180 }]
   });
 
@@ -129,8 +127,6 @@ export function ProgramForm({
     []
   );
 
-
-
   const addBlock = useCallback(
     (type: BlockDraft["type"]) => {
       haptics.buttonTap();
@@ -187,7 +183,6 @@ export function ProgramForm({
     // Create program object for validation
     const programData = {
       name: trimmed,
-      description: formData.description?.trim() || undefined,
       blocks: finalBlocks
     };
 
@@ -228,7 +223,6 @@ export function ProgramForm({
       await onSave({
         ...formData,
         name: trimmed,
-        description: formData.description?.trim() || undefined,
         blocks: finalBlocks
       });
       haptics.formSave();
@@ -247,7 +241,7 @@ export function ProgramForm({
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      {/* Header */}
+      {/* Header with Name Input */}
       <View style={styles.headerSection}>
         <Pressable
           onPress={() => {
@@ -273,283 +267,348 @@ export function ProgramForm({
         </View>
       </View>
 
-      {/* Basic Information */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Basic Information</Text>
-
-        <Text style={styles.label}>Name *</Text>
+      {/* Program Name Input */}
+      <View style={styles.nameSection}>
+        <Text style={styles.sectionTitle}>Program Name</Text>
         <TextInput
           value={formData.name}
           onChangeText={(value) => updateField("name", value)}
-          placeholder="e.g. Upper Body Strength"
+          placeholder="e.g., Upper Body Strength"
           placeholderTextColor={theme.colors.muted}
-          style={styles.input}
-        />
-
-        <View style={{ height: theme.spacing.md }} />
-
-        <Text style={styles.label}>Description</Text>
-        <TextInput
-          value={formData.description}
-          onChangeText={(value) => updateField("description", value)}
-          placeholder="Brief description of this program"
-          placeholderTextColor={theme.colors.muted}
-          style={[styles.input, styles.textArea]}
-          multiline
-          numberOfLines={3}
+          style={styles.nameInput}
         />
       </View>
 
-      {/* Blocks */}
-      <View style={styles.card}>
-        <View style={styles.rowBetween}>
+      {/* Quick Add Buttons */}
+      <View style={styles.quickAddSection}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.quickAddBtn,
+            pressed && styles.quickAddBtnPressed
+          ]}
+          onPress={() => addBlock("exercise")}
+        >
+          <Ionicons
+            name="barbell-outline"
+            size={20}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.quickAddBtnText}>Add Exercise</Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.quickAddBtn,
+            pressed && styles.quickAddBtnPressed
+          ]}
+          onPress={() => addBlock("rest")}
+        >
+          <Ionicons
+            name="time-outline"
+            size={20}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.quickAddBtnText}>Add Rest</Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.quickAddBtn,
+            pressed && styles.quickAddBtnPressed
+          ]}
+          onPress={() => addBlock("warmup")}
+        >
+          <Ionicons
+            name="timer-outline"
+            size={20}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.quickAddBtnText}>Add Warmup</Text>
+        </Pressable>
+      </View>
+
+      {/* Blocks List */}
+      {blocksDraft.length > 0 && (
+        <View style={styles.blocksSection}>
           <Text style={styles.sectionTitle}>Workout Blocks</Text>
-        </View>
-
-        {/* Block Controls */}
-        <View style={styles.blockControls}>
-          <View style={styles.blockButtonsRow}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.smallBtn,
-                pressed && styles.smallBtnPressed
-              ]}
-              onPress={() => addBlock("warmup")}
-            >
-              <Text style={styles.smallBtnText}>+ Warm-up</Text>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [
-                styles.smallBtn,
-                pressed && styles.smallBtnPressed
-              ]}
-              onPress={() => addBlock("exercise")}
-            >
-              <Text style={styles.smallBtnText}>+ Exercise</Text>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [
-                styles.smallBtn,
-                pressed && styles.smallBtnPressed
-              ]}
-              onPress={() => addBlock("rest")}
-            >
-              <Text style={styles.smallBtnText}>+ Rest</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Blocks */}
-        <View style={styles.blocksList}>
-          {blocksDraft.map((block, index) => (
-            <View key={index} style={styles.blockCard}>
-              <View style={styles.rowBetween}>
-                <View style={styles.blockTitleRow}>
-                  <View style={styles.dragHandle}>
+          <View style={styles.blocksList}>
+            {blocksDraft.map((block, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.blockCard,
+                  block.type === "warmup" && styles.blockCardWarmup,
+                  block.type === "rest" && styles.blockCardRest,
+                  block.type === "exercise" && styles.blockCardExercise
+                ]}
+              >
+                {/* Block Header */}
+                <View
+                  style={[
+                    styles.blockHeader,
+                    block.type === "warmup" && styles.blockHeaderWarmup,
+                    block.type === "rest" && styles.blockHeaderRest,
+                    block.type === "exercise" && styles.blockHeaderExercise
+                  ]}
+                >
+                  <View style={styles.blockTitleRow}>
+                    <View
+                      style={[
+                        styles.dragHandle,
+                        block.type === "warmup" && styles.dragHandleWarmup,
+                        block.type === "rest" && styles.dragHandleRest,
+                        block.type === "exercise" && styles.dragHandleExercise
+                      ]}
+                    >
+                      <Ionicons
+                        name="reorder-two"
+                        size={18}
+                        color={
+                          block.type === "warmup" ||
+                          block.type === "rest" ||
+                          block.type === "exercise"
+                            ? "#FFFFFF"
+                            : theme.colors.primary
+                        }
+                      />
+                    </View>
                     <Ionicons
-                      name="reorder-two"
-                      size={16}
-                      color={theme.colors.muted}
+                      name={
+                        block.type === "warmup"
+                          ? "timer-outline"
+                          : block.type === "rest"
+                            ? "time-outline"
+                            : "barbell-outline"
+                      }
+                      size={20}
+                      color={
+                        block.type === "warmup"
+                          ? theme.colors.phases.warmup
+                          : block.type === "rest"
+                            ? theme.colors.phases.break
+                            : theme.colors.phases.working
+                      }
                     />
+                    <Text
+                      style={[
+                        styles.blockTitle,
+                        block.type === "warmup" && styles.blockTitleWarmup,
+                        block.type === "rest" && styles.blockTitleRest,
+                        block.type === "exercise" && styles.blockTitleExercise
+                      ]}
+                    >
+                      {block.type}
+                    </Text>
                   </View>
-                  <Ionicons
-                    name={
-                      block.type === "warmup"
-                        ? "timer-outline"
-                        : block.type === "rest"
-                          ? "time-outline"
-                          : "barbell-outline"
-                    }
-                    size={18}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={styles.blockTitle}>{block.type}</Text>
+                  <View style={styles.blockActions}>
+                    {index > 0 && (
+                      <Pressable
+                        onPress={() => moveBlock(index, index - 1)}
+                        style={({ pressed }) => [
+                          styles.iconBtn,
+                          pressed && styles.iconBtnPressed
+                        ]}
+                      >
+                        <Ionicons
+                          name="chevron-up"
+                          size={16}
+                          color={theme.colors.muted}
+                        />
+                      </Pressable>
+                    )}
+                    {index < blocksDraft.length - 1 && (
+                      <Pressable
+                        onPress={() => moveBlock(index, index + 1)}
+                        style={({ pressed }) => [
+                          styles.iconBtn,
+                          pressed && styles.iconBtnPressed
+                        ]}
+                      >
+                        <Ionicons
+                          name="chevron-down"
+                          size={16}
+                          color={theme.colors.muted}
+                        />
+                      </Pressable>
+                    )}
+                    <Pressable
+                      onPress={() => removeBlock(index)}
+                      style={({ pressed }) => [
+                        styles.iconBtn,
+                        pressed && styles.iconBtnPressed
+                      ]}
+                    >
+                      <Ionicons
+                        name="trash-outline"
+                        size={16}
+                        color={theme.colors.danger}
+                      />
+                    </Pressable>
+                  </View>
                 </View>
-                <View style={styles.blockActions}>
-                  {index > 0 && (
-                    <Pressable
-                      onPress={() => moveBlock(index, index - 1)}
-                      style={({ pressed }) => [
-                        styles.iconBtn,
-                        pressed && styles.iconBtnPressed
-                      ]}
-                    >
-                      <Ionicons
-                        name="chevron-up"
-                        size={16}
-                        color={theme.colors.muted}
+
+                {/* Block Content */}
+                <View style={styles.blockContent}>
+                  {/* Block-specific fields */}
+                  {block.type === "warmup" && (
+                    <View style={styles.fieldRowVertical}>
+                      <Text style={styles.fieldLabelStandalone}>Duration</Text>
+                      <TextInput
+                        value={block.seconds}
+                        onChangeText={(value) =>
+                          setBlocksDraft((prev) =>
+                            prev.map((b, i) =>
+                              i === index ? { ...b, seconds: value } : b
+                            )
+                          )
+                        }
+                        keyboardType="number-pad"
+                        style={[styles.fieldInputFull, styles.fieldInputWarmup]}
+                        placeholder="Seconds"
                       />
-                    </Pressable>
+                    </View>
                   )}
-                  {index < blocksDraft.length - 1 && (
-                    <Pressable
-                      onPress={() => moveBlock(index, index + 1)}
-                      style={({ pressed }) => [
-                        styles.iconBtn,
-                        pressed && styles.iconBtnPressed
-                      ]}
-                    >
-                      <Ionicons
-                        name="chevron-down"
-                        size={16}
-                        color={theme.colors.muted}
-                      />
-                    </Pressable>
+
+                  {block.type === "rest" && (
+                    <View style={styles.fieldRowVertical}>
+                      <View>
+                        <Text style={styles.fieldLabelStandalone}>Label</Text>
+                        <TextInput
+                          value={block.label || ""}
+                          onChangeText={(value) =>
+                            setBlocksDraft((prev) =>
+                              prev.map((b, i) =>
+                                i === index ? { ...b, label: value } : b
+                              )
+                            )
+                          }
+                          style={[styles.fieldInputFull, styles.fieldInputRest]}
+                          placeholder="e.g., Rest between sets"
+                        />
+                      </View>
+                      <View>
+                        <Text style={styles.fieldLabelStandalone}>
+                          Duration
+                        </Text>
+                        <TextInput
+                          value={block.seconds}
+                          onChangeText={(value) =>
+                            setBlocksDraft((prev) =>
+                              prev.map((b, i) =>
+                                i === index ? { ...b, seconds: value } : b
+                              )
+                            )
+                          }
+                          keyboardType="number-pad"
+                          style={[styles.fieldInputFull, styles.fieldInputRest]}
+                          placeholder="Seconds"
+                        />
+                      </View>
+                    </View>
                   )}
-                  <Pressable
-                    onPress={() => removeBlock(index)}
-                    style={({ pressed }) => [
-                      styles.iconBtn,
-                      pressed && styles.iconBtnPressed
-                    ]}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={16}
-                      color={theme.colors.muted}
-                    />
-                  </Pressable>
+
+                  {block.type === "exercise" && (
+                    <View style={styles.fieldRowVertical}>
+                      <View>
+                        <Text style={styles.fieldLabelStandalone}>
+                          Exercise
+                        </Text>
+                        <Pressable
+                          style={({ pressed }) => [
+                            styles.pickerBtn,
+                            styles.pickerBtnExercise,
+                            pressed && styles.pickerBtnPressed
+                          ]}
+                          onPress={() => {
+                            haptics.buttonTap();
+                            setPickerTargetIndex(index);
+                            setExercisePickerOpen(true);
+                          }}
+                        >
+                          <Text style={styles.pickerBtnText}>
+                            {exerciseNameById.get(block.exerciseId) ||
+                              "Select exercise"}
+                          </Text>
+                          <Ionicons
+                            name="chevron-down"
+                            size={16}
+                            color={theme.colors.muted}
+                          />
+                        </Pressable>
+                      </View>
+
+                      <View style={styles.fieldRowTwoCol}>
+                        <View style={styles.fieldRowTwoColItem}>
+                          <Text style={styles.fieldLabelStandalone}>
+                            Target Reps
+                          </Text>
+                          <TextInput
+                            value={block.targetReps || ""}
+                            onChangeText={(value) =>
+                              setBlocksDraft((prev) =>
+                                prev.map((b, i) =>
+                                  i === index ? { ...b, targetReps: value } : b
+                                )
+                              )
+                            }
+                            keyboardType="number-pad"
+                            style={[
+                              styles.fieldInputFull,
+                              styles.fieldInputExercise
+                            ]}
+                            placeholder="Optional"
+                          />
+                        </View>
+
+                        <View style={styles.fieldRowTwoColItem}>
+                          <Text style={styles.fieldLabelStandalone}>
+                            Duration (sec)
+                          </Text>
+                          <TextInput
+                            value={block.durationSeconds || ""}
+                            onChangeText={(value) =>
+                              setBlocksDraft((prev) =>
+                                prev.map((b, i) =>
+                                  i === index
+                                    ? { ...b, durationSeconds: value }
+                                    : b
+                                )
+                              )
+                            }
+                            keyboardType="number-pad"
+                            style={[
+                              styles.fieldInputFull,
+                              styles.fieldInputExercise
+                            ]}
+                            placeholder="Optional"
+                          />
+                        </View>
+                      </View>
+
+                      <View>
+                        <Text style={styles.fieldLabelStandalone}>Note</Text>
+                        <TextInput
+                          value={block.note || ""}
+                          onChangeText={(value) =>
+                            setBlocksDraft((prev) =>
+                              prev.map((b, i) =>
+                                i === index ? { ...b, note: value } : b
+                              )
+                            )
+                          }
+                          style={[
+                            styles.fieldInputFull,
+                            styles.fieldInputExercise
+                          ]}
+                          placeholder="Optional notes"
+                        />
+                      </View>
+                    </View>
+                  )}
                 </View>
               </View>
-
-              {/* Block-specific fields */}
-              {block.type === "warmup" && (
-                <View style={styles.fieldRow}>
-                  <Text style={styles.fieldLabel}>Seconds</Text>
-                  <TextInput
-                    value={block.seconds}
-                    onChangeText={(value) =>
-                      setBlocksDraft((prev) =>
-                        prev.map((b, i) =>
-                          i === index ? { ...b, seconds: value } : b
-                        )
-                      )
-                    }
-                    keyboardType="number-pad"
-                    style={styles.fieldInput}
-                  />
-                </View>
-              )}
-
-              {block.type === "rest" && (
-                <>
-                  <View style={styles.fieldRow}>
-                    <Text style={styles.fieldLabel}>Label</Text>
-                    <TextInput
-                      value={block.label || ""}
-                      onChangeText={(value) =>
-                        setBlocksDraft((prev) =>
-                          prev.map((b, i) =>
-                            i === index ? { ...b, label: value } : b
-                          )
-                        )
-                      }
-                      style={styles.fieldInput}
-                    />
-                  </View>
-                  <View style={styles.fieldRow}>
-                    <Text style={styles.fieldLabel}>Seconds</Text>
-                    <TextInput
-                      value={block.seconds}
-                      onChangeText={(value) =>
-                        setBlocksDraft((prev) =>
-                          prev.map((b, i) =>
-                            i === index ? { ...b, seconds: value } : b
-                          )
-                        )
-                      }
-                      keyboardType="number-pad"
-                      style={styles.fieldInput}
-                    />
-                  </View>
-                </>
-              )}
-
-              {block.type === "exercise" && (
-                <>
-                  <View style={styles.fieldRow}>
-                    <Text style={styles.fieldLabel}>Exercise</Text>
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.pickerBtn,
-                        pressed && styles.pickerBtnPressed
-                      ]}
-                      onPress={() => {
-                        haptics.buttonTap();
-                        setPickerTargetIndex(index);
-                        setExercisePickerOpen(true);
-                      }}
-                    >
-                      <Text style={styles.pickerBtnText}>
-                        {exerciseNameById.get(block.exerciseId) ||
-                          "Pick exercise"}
-                      </Text>
-                      <Ionicons
-                        name="chevron-down"
-                        size={16}
-                        color={theme.colors.muted}
-                      />
-                    </Pressable>
-                  </View>
-
-                  <View style={styles.fieldRow}>
-                    <Text style={styles.fieldLabel}>Target Reps</Text>
-                    <TextInput
-                      value={block.targetReps || ""}
-                      onChangeText={(value) =>
-                        setBlocksDraft((prev) =>
-                          prev.map((b, i) =>
-                            i === index ? { ...b, targetReps: value } : b
-                          )
-                        )
-                      }
-                      keyboardType="number-pad"
-                      style={styles.fieldInput}
-                      placeholder="Optional"
-                    />
-                  </View>
-
-                  <View style={styles.fieldRow}>
-                    <Text style={styles.fieldLabel}>Duration (sec)</Text>
-                    <TextInput
-                      value={block.durationSeconds || ""}
-                      onChangeText={(value) =>
-                        setBlocksDraft((prev) =>
-                          prev.map((b, i) =>
-                            i === index ? { ...b, durationSeconds: value } : b
-                          )
-                        )
-                      }
-                      keyboardType="number-pad"
-                      style={styles.fieldInput}
-                      placeholder="Optional"
-                    />
-                  </View>
-
-                  <View style={styles.fieldRow}>
-                    <Text style={styles.fieldLabel}>Note</Text>
-                    <TextInput
-                      value={block.note || ""}
-                      onChangeText={(value) =>
-                        setBlocksDraft((prev) =>
-                          prev.map((b, i) =>
-                            i === index ? { ...b, note: value } : b
-                          )
-                        )
-                      }
-                      style={[
-                        styles.fieldInput,
-                        { width: 200, textAlign: "left" }
-                      ]}
-                      placeholder="Optional"
-                    />
-                  </View>
-                </>
-              )}
-            </View>
-          ))}
+            ))}
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Save Button */}
       <Pressable
@@ -640,21 +699,32 @@ const styles = StyleSheet.create({
   headerSection: {
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
+    paddingBottom: theme.spacing.lg,
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: theme.spacing.md
+    alignItems: "center",
+    gap: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    marginBottom: theme.spacing.lg
   },
   headerBack: {
-    padding: theme.spacing.xs,
-    marginTop: -theme.spacing.xs,
-    marginLeft: -theme.spacing.xs
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border
   },
-  headerBackPressed: { opacity: 0.6 },
+  headerBackPressed: {
+    backgroundColor: theme.colors.card,
+    transform: [{ scale: 0.98 }]
+  },
   headerTitle: {
-    ...theme.typography.h2,
+    ...theme.typography.h3,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs
+    flex: 1
   },
   headerSubtitle: {
     ...theme.typography.body,
@@ -759,27 +829,90 @@ const styles = StyleSheet.create({
   blockCard: {
     borderWidth: 1,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm
+    overflow: "hidden",
+    ...theme.shadows.sm
+  },
+  blockCardWarmup: {
+    backgroundColor: theme.colors.phases.warmupBg
+  },
+  blockCardRest: {
+    backgroundColor: theme.colors.phases.breakBg
+  },
+  blockCardExercise: {
+    backgroundColor: theme.colors.phases.workingBg
+  },
+  blockHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.card
+  },
+  blockHeaderWarmup: {
+    backgroundColor: theme.colors.phases.warmupBg
+  },
+  blockHeaderRest: {
+    backgroundColor: theme.colors.phases.breakBg
+  },
+  blockHeaderExercise: {
+    backgroundColor: theme.colors.phases.workingBg
   },
   blockTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm
+    gap: theme.spacing.md,
+    flex: 1
   },
   dragHandle: {
-    padding: theme.spacing.xs
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border
+  },
+  dragHandleWarmup: {
+    backgroundColor: theme.colors.phases.warmup,
+    borderColor: theme.colors.phases.warmup
+  },
+  dragHandleRest: {
+    backgroundColor: theme.colors.phases.break,
+    borderColor: theme.colors.phases.break
+  },
+  dragHandleExercise: {
+    backgroundColor: theme.colors.phases.working,
+    borderColor: theme.colors.phases.working
   },
   blockTitle: {
-    ...theme.typography.bodyBold,
+    ...theme.typography.body,
     color: theme.colors.text,
-    textTransform: "capitalize"
+    textTransform: "capitalize",
+    fontFamily: theme.fonts.semiBold
+  },
+  blockTitleWarmup: {
+    color: theme.colors.phases.warmup
+  },
+  blockTitleRest: {
+    color: theme.colors.phases.break
+  },
+  blockTitleExercise: {
+    color: theme.colors.phases.working
   },
   blockActions: {
     flexDirection: "row",
-    gap: theme.spacing.xs
+    gap: theme.spacing.xs,
+    alignItems: "center"
+  },
+  blockContent: {
+    padding: theme.spacing.lg,
+    gap: theme.spacing.md
   },
   iconBtn: {
     width: 32,
@@ -799,39 +932,88 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: theme.spacing.md,
+    paddingTop: theme.spacing.sm
+  },
+  fieldRowVertical: {
+    flexDirection: "column",
+    gap: theme.spacing.sm
+  },
+  fieldRowTwoCol: {
+    flexDirection: "row",
     gap: theme.spacing.md
+  },
+  fieldRowTwoColItem: {
+    flex: 1
   },
   fieldLabel: {
     ...theme.typography.caption,
-    color: theme.colors.subtext,
-    flex: 1
+    color: theme.colors.muted,
+    flex: 1,
+    fontFamily: theme.fonts.semiBold
+  },
+  fieldLabelStandalone: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    fontFamily: theme.fonts.semiBold,
+    marginBottom: theme.spacing.xs
   },
   fieldInput: {
     width: 110,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.card,
     color: theme.colors.text,
     ...theme.typography.body,
     textAlign: "right"
+  },
+  fieldInputFull: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.card,
+    color: theme.colors.text,
+    ...theme.typography.body,
+    textAlign: "left"
+  },
+  fieldInputWarmup: {
+    backgroundColor: theme.colors.phases.warmupBg,
+    borderColor: theme.colors.phases.warmup
+  },
+  fieldInputRest: {
+    backgroundColor: theme.colors.phases.breakBg,
+    borderColor: theme.colors.phases.break
+  },
+  fieldInputExercise: {
+    backgroundColor: theme.colors.phases.workingBg,
+    borderColor: theme.colors.phases.working
   },
   pickerBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: theme.spacing.sm,
-    flex: 1,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.surface
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.card
   },
-  pickerBtnPressed: { backgroundColor: theme.colors.card },
+  pickerBtnExercise: {
+    backgroundColor: theme.colors.phases.workingBg,
+    borderColor: theme.colors.phases.working
+  },
+  pickerBtnPressed: {
+    backgroundColor: theme.colors.border,
+    transform: [{ scale: 0.98 }]
+  },
   pickerBtnText: {
     ...theme.typography.body,
     color: theme.colors.text,
@@ -842,12 +1024,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     paddingVertical: theme.spacing.lg,
+    marginHorizontal: theme.spacing.lg,
     ...theme.shadows.md
   },
   primaryBtnPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
-  primaryBtnDisabled: { opacity: 0.6 },
+  primaryBtnDisabled: { opacity: 0.5 },
   primaryBtnText: {
     ...theme.typography.bodyBold,
     color: theme.colors.primaryTextOn
@@ -884,5 +1067,62 @@ const styles = StyleSheet.create({
   },
   modalRowPressed: { backgroundColor: theme.colors.card },
   modalRowText: { ...theme.typography.body, color: theme.colors.text },
-  modalRowHint: { ...theme.typography.caption, color: theme.colors.muted }
+  modalRowHint: { ...theme.typography.caption, color: theme.colors.muted },
+  nameSection: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: 0,
+    backgroundColor: theme.colors.background,
+    marginBottom: theme.spacing.lg,
+    gap: theme.spacing.md
+  },
+  nameInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    color: theme.colors.text,
+    ...theme.typography.body,
+    ...theme.shadows.sm
+  },
+  quickAddSection: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: 0,
+    gap: theme.spacing.md,
+    backgroundColor: theme.colors.background,
+    marginBottom: theme.spacing.lg,
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  quickAddBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.sm,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    ...theme.shadows.sm
+  },
+  quickAddBtnPressed: {
+    backgroundColor: theme.colors.card,
+    transform: [{ scale: 0.98 }]
+  },
+  quickAddBtnText: {
+    ...theme.typography.caption,
+    color: theme.colors.text,
+    fontFamily: theme.fonts.semiBold,
+    textAlign: "center"
+  },
+  blocksSection: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: 0,
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.lg
+  }
 });

@@ -10,43 +10,43 @@ import { canSafelyDelete } from "@/lib/dependencyChecker";
 import { dataEvents } from "@/lib/events";
 import { storage } from "@/lib/storage";
 import {
-    validateExercise,
-    validateModificationPermissions,
-    validateUniqueName
+  validateExercise,
+  validateModificationPermissions,
+  validateUniqueName
 } from "@/lib/validation";
 import type {
-    AuditLogEntry,
-    ChallengeProgress,
-    DataAction,
-    DataEvent,
-    DataState,
-    DataType,
-    DependencyCheck,
-    EnhancedDataActions,
-    EnhancedDataState,
-    EventRecord,
-    Exercise,
-    ExerciseProgress,
-    ExportData,
-    HistoryEntry,
-    ImportData,
-    ImportResult,
-    LegacyProgram,
-    Program,
-    ProgramProgress,
-    SearchFacets,
-    SearchQuery,
-    SessionState,
-    UsageStats,
-    WorkoutProgress
+  AuditLogEntry,
+  ChallengeProgress,
+  DataAction,
+  DataEvent,
+  DataState,
+  DataType,
+  DependencyCheck,
+  EnhancedDataActions,
+  EnhancedDataState,
+  EventRecord,
+  Exercise,
+  ExerciseProgress,
+  ExportData,
+  HistoryEntry,
+  ImportData,
+  ImportResult,
+  LegacyProgram,
+  Program,
+  ProgramProgress,
+  SearchFacets,
+  SearchQuery,
+  SessionState,
+  UsageStats,
+  WorkoutProgress
 } from "@/types";
 import React, {
-    createContext,
-    ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useReducer
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useReducer
 } from "react";
 
 type DataContextValue = {
@@ -171,13 +171,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   function migrateProgram(p: LegacyProgram): Program {
     if (!p || typeof p !== "object") return p as Program;
-    
+
     // For the new structure, programs should already have blocks
     // This is just a safety check for any remaining legacy data
     const result: Program = {
       id: String(p.id ?? ""),
       name: String(p.name ?? ""),
-      description: typeof p.description === "string" ? p.description : undefined,
+      description:
+        typeof p.description === "string" ? p.description : undefined,
       blocks: [], // Start with empty blocks - will be populated from sessions if needed
       createdAt: String(p.createdAt ?? new Date().toISOString()),
       updatedAt: String(p.updatedAt ?? new Date().toISOString()),
@@ -190,12 +191,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
       result.challengeConfig = {
         exerciseId: String(config.exerciseId ?? ""),
         sets: typeof config.sets === "number" ? config.sets : 5,
-        targetReps: typeof config.targetReps === "number" ? config.targetReps : 100,
-        warmUpSeconds: typeof config.warmUpSeconds === "number" ? config.warmUpSeconds : 180,
-        breakSeconds: typeof config.breakSeconds === "number" ? config.breakSeconds : 90,
-        sessionIncreasePercent: typeof config.sessionIncreasePercent === "number" 
-          ? config.sessionIncreasePercent 
-          : (typeof config.weeklyIncreasePercent === "number" ? config.weeklyIncreasePercent : 10)
+        targetReps:
+          typeof config.targetReps === "number" ? config.targetReps : 100,
+        warmUpSeconds:
+          typeof config.warmUpSeconds === "number" ? config.warmUpSeconds : 180,
+        breakSeconds:
+          typeof config.breakSeconds === "number" ? config.breakSeconds : 90,
+        sessionIncreasePercent:
+          typeof config.sessionIncreasePercent === "number"
+            ? config.sessionIncreasePercent
+            : typeof config.weeklyIncreasePercent === "number"
+              ? config.weeklyIncreasePercent
+              : 10
       };
     }
 

@@ -51,7 +51,7 @@ export function StepCard({
   ];
 
   return (
-    <AnimatedCard delay={100 * delayMultiplier}>
+    <AnimatedCard delay={80 * delayMultiplier}>
       <View style={containerStyles}>
         <View style={styles.rowBetween}>
           <Text style={titleStyles}>{title}</Text>
@@ -66,24 +66,21 @@ export function StepCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    ...theme.shadows.md
+    ...theme.shadows.sm
   },
   cardActive: {
+    borderWidth: 1,
     borderColor: theme.colors.primary,
     backgroundColor: theme.colors.primaryLight
   },
   cardDone: {
-    borderColor: theme.colors.phases.done,
-    backgroundColor: theme.colors.phases.doneBg,
-    opacity: 0.4
+    backgroundColor: theme.colors.successLight,
+    opacity: 0.5
   },
   cardLocked: {
-    opacity: 0.4,
-    ...theme.shadows.sm
+    opacity: 0.5
   },
   cardTitle: {
     ...theme.typography.bodyBold,

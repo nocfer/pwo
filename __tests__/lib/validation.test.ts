@@ -14,11 +14,7 @@ import {
   validateProgram,
   validateUniqueName
 } from "@/lib/validation";
-import type {
-  ExerciseCategory,
-  Program,
-  ProgramBlock
-} from "@/types";
+import type { ExerciseCategory, Program, ProgramBlock } from "@/types";
 import type {
   EnhancedExercise,
   EnhancedProgram,
@@ -113,7 +109,10 @@ const programBlockArb: fc.Arbitrary<ProgramBlock> = fc.oneof(
 );
 
 // Generate program blocks array
-const programBlocksArb: fc.Arbitrary<ProgramBlock[]> = fc.array(programBlockArb, { minLength: 1, maxLength: 20 });
+const programBlocksArb: fc.Arbitrary<ProgramBlock[]> = fc.array(
+  programBlockArb,
+  { minLength: 1, maxLength: 20 }
+);
 
 // Generate valid enhanced program
 const validEnhancedProgramArb: fc.Arbitrary<Partial<EnhancedProgram>> =

@@ -11,12 +11,12 @@ import type { DataType } from "@/types/enhanced";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMemo, useState } from "react";
 import {
-    FlatList,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
-    ViewStyle
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle
 } from "react-native";
 import { EmptyState, LoadingScreen } from "../common";
 import { SearchInput } from "../common/SearchInput";
