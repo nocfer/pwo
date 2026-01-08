@@ -13,7 +13,6 @@ export type StepCardProps = {
   children?: ReactNode;
   delayMultiplier?: number;
   phaseAccent?: string;
-  phaseBg?: string;
 };
 
 export function StepCard({
@@ -25,7 +24,6 @@ export function StepCard({
   style,
   children,
   phaseAccent,
-  phaseBg,
   delayMultiplier = 0
 }: StepCardProps) {
   // Determine card state styling

@@ -1,16 +1,17 @@
 import { useExercises } from "@/hooks";
 import { UseWorkoutTimerReturn, WorkoutStep } from "@/hooks/session";
-import { formatDuration, formatTime } from "@/lib/utils";
+import { formatTime } from "@/lib/utils";
 import { getPhaseInfo } from "@/lib/utils/colors";
 import { theme } from "@/theme/theme";
 import { Program, ProgramSession } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useMemo, useRef } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FocusCard, StepCard } from "../cards";
+import { CurrentExerciseCard, FocusCard } from "../cards";
 import { AnimatedCard, AnimatedProgressBar } from "../common";
+import { CollapsibleStepsList } from "./CollapsibleStepsList";
 
 type Props = {
   session: ProgramSession;
@@ -28,7 +29,7 @@ export default function ProgramSessionView({
   const title = session.name ?? `Session ${session.index}`;
   const current = timer.currentStep;
   const currentStepIndex = timer.currentIndex;
-  const { phaseAccent, phaseBg } = getPhaseInfo(timer.phase, current?.type);
+  const { phaseAccent } = getPhaseInfo(timer.phase, current?.type);
 
   const { data: exercises } = useExercises();
 
@@ -54,21 +55,6 @@ export default function ProgramSessionView({
       ? (exerciseNameById.get(current.exerciseId) ?? "Exercise")
       : null;
   const nextLabel = getStepLabel(next);
-
-  const listRef = useRef<FlatList<WorkoutStep> | null>(null);
-
-  // Auto-scroll to active step
-  useEffect(() => {
-    try {
-      if (!listRef.current) return;
-      if (currentStepIndex < 0 || currentStepIndex >= steps.length) return;
-      listRef.current.scrollToIndex({
-        index: currentStepIndex,
-        animated: true,
-        viewPosition: 0.3
-      });
-    } catch {}
-  }, [currentStepIndex, steps.length]);
 
   // Auto-start timer for rest steps
   useEffect(() => {
@@ -137,48 +123,32 @@ export default function ProgramSessionView({
           title={formatTime(timer.timer)}
           subTitle={timerSubtitle}
           phaseAccent={timerAccent}
-          phaseBg={phaseBg}
+          phaseBg={theme.colors.background}
           timerEnabled={true}
+          progress={timer.progress}
         />
       );
     }
 
     // Exercise step
     if (current?.type === "exercise") {
-      const hasMultipleSets =
-        current.totalSets != null && current.totalSets > 1;
-      const chipText = hasMultipleSets
-        ? `Set ${current.setNumber} of ${current.totalSets}`
-        : "Exercise";
-
       return (
-        <FocusCard
-          icon="barbell-outline"
-          phaseChipText={chipText}
-          title={currentExerciseName || "Exercise"}
-          subTitle="Ready when you are"
-          phaseAccent={phaseAccent}
-          phaseBg={phaseBg}
+        <CurrentExerciseCard
           current={current}
+          exerciseName={currentExerciseName || undefined}
+          phaseAccent={phaseAccent}
+          phaseBg={theme.colors.background}
         />
       );
     }
 
     // Warmup step
     if (current?.type === "warmup") {
-      const warmupLabel =
-        current.seconds >= 60
-          ? formatDuration(current.seconds, "long")
-          : `${current.seconds} seconds`;
-
       return (
-        <FocusCard
-          title={`Warmup`}
+        <CurrentExerciseCard
+          current={current}
           phaseAccent={theme.colors.phases.warmup}
           phaseBg={theme.colors.phases.warmupBg}
-          subTitle={warmupLabel}
-          phaseChipText="Get Ready"
-          icon="flame"
         />
       );
     }
@@ -186,19 +156,15 @@ export default function ProgramSessionView({
     // Rest step
     if (current?.type === "rest") {
       const isSetRest = current.restContext === "between-sets";
-      const restChip = isSetRest ? "Set Rest" : "Exercise Rest";
       const restAccent = isSetRest
         ? theme.colors.muted
         : theme.colors.phases.break;
 
       return (
-        <FocusCard
-          icon="hourglass-outline"
-          phaseChipText={restChip}
-          title={`${current.seconds}s Rest`}
-          subTitle={nextLabel ? `Next: ${nextLabel}` : "Recover"}
+        <CurrentExerciseCard
+          current={current}
           phaseAccent={restAccent}
-          phaseBg={phaseBg}
+          phaseBg={theme.colors.background}
         />
       );
     }
@@ -211,135 +177,6 @@ export default function ProgramSessionView({
           {nextLabel ? `Next: ${nextLabel}` : "Start when ready"}
         </Text>
       </View>
-    );
-  };
-
-  const renderStepItem = ({
-    item,
-    index: idx
-  }: {
-    item: WorkoutStep;
-    index: number;
-  }) => {
-    const isDone = idx < currentStepIndex || timer.phase === "done";
-    const isActive = idx === currentStepIndex && timer.phase !== "done";
-    const isLocked = idx > currentStepIndex;
-
-    // Status indicator
-    const rightElement = isDone ? (
-      <View style={styles.statusDone}>
-        <Ionicons name="checkmark" size={14} color={theme.colors.success} />
-      </View>
-    ) : isActive ? (
-      <View style={[styles.statusActive, { backgroundColor: phaseAccent }]}>
-        <Text style={styles.statusActiveText}>NOW</Text>
-      </View>
-    ) : (
-      <Text style={styles.stepNumber}>{idx + 1}</Text>
-    );
-
-    // Warmup step
-    if (item.type === "warmup") {
-      const warmupDuration =
-        item.seconds >= 60
-          ? formatDuration(item.seconds, "short")
-          : `${item.seconds}s`;
-
-      return (
-        <StepCard
-          title="Warmup"
-          phaseAccent={theme.colors.phases.warmup}
-          phaseBg={theme.colors.phases.warmupBg}
-          active={isActive}
-          done={isDone}
-          locked={isLocked}
-          right={rightElement}
-          delayMultiplier={idx}
-        >
-          <View style={styles.stepMetaRow}>
-            <Ionicons
-              name="flame"
-              size={12}
-              color={theme.colors.phases.warmup}
-            />
-            <Text
-              style={[styles.stepMeta, { color: theme.colors.phases.warmup }]}
-            >
-              {warmupDuration}
-            </Text>
-          </View>
-        </StepCard>
-      );
-    }
-
-    // Rest step
-    if (item.type === "rest") {
-      const isSetRest = item.restContext === "between-sets";
-      const restColor = isSetRest
-        ? theme.colors.muted
-        : theme.colors.phases.break;
-
-      return (
-        <StepCard
-          title={isSetRest ? "Rest" : "Rest"}
-          phaseAccent={restColor}
-          phaseBg={
-            isSetRest ? theme.colors.background : theme.colors.phases.breakBg
-          }
-          active={isActive}
-          done={isDone}
-          locked={isLocked}
-          right={rightElement}
-          delayMultiplier={idx}
-          style={isSetRest ? styles.setRestCard : undefined}
-        >
-          <View style={styles.stepMetaRow}>
-            <Ionicons name="time-outline" size={12} color={restColor} />
-            <Text style={[styles.stepMeta, { color: restColor }]}>
-              {item.seconds}s
-              {isSetRest ? " • between sets" : " • between exercises"}
-            </Text>
-          </View>
-        </StepCard>
-      );
-    }
-
-    // Exercise step
-    const exName = exerciseNameById.get(item.exerciseId) ?? "Exercise";
-    const hasMultipleSets = item.totalSets != null && item.totalSets > 1;
-
-    return (
-      <StepCard
-        phaseAccent={phaseAccent}
-        phaseBg={phaseBg}
-        title={exName}
-        active={isActive}
-        done={isDone}
-        locked={isLocked}
-        right={rightElement}
-        delayMultiplier={idx}
-      >
-        <View style={styles.exerciseMetaRow}>
-          {hasMultipleSets && (
-            <View style={styles.setChip}>
-              <Text style={styles.setChipText}>
-                Set {item.setNumber}/{item.totalSets}
-              </Text>
-            </View>
-          )}
-          <Text style={styles.stepMeta}>
-            {item.targetReps != null && `${item.targetReps} reps`}
-            {item.targetReps != null && item.durationSeconds != null && " • "}
-            {item.durationSeconds != null && `${item.durationSeconds}s`}
-            {!item.targetReps && !item.durationSeconds && "Complete exercise"}
-          </Text>
-        </View>
-        {item.note && (
-          <Text style={styles.stepNote} numberOfLines={1}>
-            {item.note}
-          </Text>
-        )}
-      </StepCard>
     );
   };
 
@@ -381,27 +218,73 @@ export default function ProgramSessionView({
       </View>
 
       {/* Progress bar */}
-      <AnimatedProgressBar color={phaseAccent} progress={timer.progress} />
-
-      {/* Focus card */}
-      <View style={styles.focusSection}>
-        <AnimatedCard>{renderFocusContent()}</AnimatedCard>
+      <View style={styles.progressBarContainer}>
+        <View style={styles.progressBarBackground}>
+          <AnimatedProgressBar
+            color={phaseAccent}
+            progress={timer.progress}
+            height={6}
+          />
+        </View>
       </View>
 
-      {/* Steps list */}
-      <View style={styles.stepsSection}>
-        <Text style={styles.stepsTitle}>Workout Steps</Text>
-        <FlatList
-          ref={listRef}
-          data={steps}
-          keyExtractor={(item) => item.key}
-          ItemSeparatorComponent={() => <View style={styles.stepSeparator} />}
-          contentContainerStyle={styles.listContent}
-          onScrollToIndexFailed={() => {}}
-          renderItem={renderStepItem}
-          showsVerticalScrollIndicator={false}
+      {/* Main content */}
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Current exercise/phase card */}
+        <View style={styles.focusSection}>
+          <AnimatedCard>{renderFocusContent()}</AnimatedCard>
+        </View>
+
+        {/* Up next preview */}
+        {next && timer.phase !== "done" && (
+          <View style={styles.upNextSection}>
+            <Text style={styles.upNextTitle}>Up Next</Text>
+            <View style={styles.upNextCard}>
+              <Ionicons
+                name={
+                  next.type === "exercise"
+                    ? "barbell-outline"
+                    : next.type === "warmup"
+                      ? "flame"
+                      : "hourglass-outline"
+                }
+                size={20}
+                color={phaseAccent}
+              />
+              <View style={styles.upNextContent}>
+                <Text style={styles.upNextExercise}>{getStepLabel(next)}</Text>
+                {next.type === "exercise" && (
+                  <Text style={styles.upNextMeta}>
+                    {next.targetReps && `${next.targetReps} reps`}
+                    {next.targetReps && next.durationSeconds && " • "}
+                    {next.durationSeconds && `${next.durationSeconds}s`}
+                  </Text>
+                )}
+                {next.type === "rest" && (
+                  <Text style={styles.upNextMeta}>{next.seconds}s rest</Text>
+                )}
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={theme.colors.muted}
+              />
+            </View>
+          </View>
+        )}
+
+        {/* Collapsible steps list */}
+        <CollapsibleStepsList
+          steps={steps}
+          currentStepIndex={currentStepIndex}
+          exerciseNameById={exerciseNameById}
+          phase={timer.phase}
         />
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -473,10 +356,51 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     fontVariant: ["tabular-nums"]
   },
+  // Scroll view
+  scrollView: {
+    flex: 1
+  },
+  scrollContent: {
+    paddingTop: theme.spacing.md,
+    paddingBottom: 200
+  },
   // Focus section
   focusSection: {
     paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md
+    marginBottom: theme.spacing.lg
+  },
+  // Up next section
+  upNextSection: {
+    paddingHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.lg
+  },
+  upNextTitle: {
+    ...theme.typography.captionBold,
+    color: theme.colors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: theme.spacing.sm
+  },
+  upNextCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    ...theme.shadows.sm
+  },
+  upNextContent: {
+    flex: 1
+  },
+  upNextExercise: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs
+  },
+  upNextMeta: {
+    ...theme.typography.caption,
+    color: theme.colors.muted
   },
   // Done card
   doneCard: {
@@ -539,86 +463,16 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.muted
   },
-  // Steps section
-  stepsSection: {
-    flex: 1,
-    marginTop: theme.spacing.lg
-  },
-  stepsTitle: {
-    ...theme.typography.captionBold,
-    color: theme.colors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+  // Progress bar
+  progressBarContainer: {
     paddingHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.sm
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.surface
   },
-  listContent: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: 180
-  },
-  stepSeparator: {
-    height: theme.spacing.xs
-  },
-  // Step items
-  stepMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.xs
-  },
-  exerciseMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm,
-    flexWrap: "wrap"
-  },
-  stepMeta: {
-    ...theme.typography.caption,
-    color: theme.colors.muted
-  },
-  stepNote: {
-    ...theme.typography.small,
-    color: theme.colors.subtext,
-    marginTop: theme.spacing.xs,
-    fontStyle: "italic"
-  },
-  setChip: {
-    backgroundColor: theme.colors.primaryLight,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 2,
-    borderRadius: theme.radius.xs
-  },
-  setChipText: {
-    ...theme.typography.small,
-    color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold
-  },
-  setRestCard: {
-    marginLeft: theme.spacing.lg,
-    opacity: 0.85
-  },
-  // Status indicators
-  statusDone: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: theme.colors.successLight,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  statusActive: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 3,
-    borderRadius: theme.radius.xs
-  },
-  statusActiveText: {
-    ...theme.typography.small,
-    color: theme.colors.primaryTextOn,
-    fontFamily: theme.fonts.bold,
-    letterSpacing: 0.5
-  },
-  stepNumber: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    fontFamily: theme.fonts.medium
+  progressBarBackground: {
+    height: 6,
+    backgroundColor: theme.colors.border,
+    borderRadius: theme.radius.full,
+    overflow: "hidden"
   }
 });
