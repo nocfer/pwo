@@ -1,5 +1,4 @@
 import { ConfettiCelebration, ErrorScreen, LoadingScreen } from "@/components";
-import ProgramFooter from "@/components/program/ProgramFooter";
 import ProgramSessionView from "@/components/program/ProgramSessionView";
 import { useDataActions } from "@/context/DataContext";
 import { usePrograms } from "@/hooks/data";
@@ -56,8 +55,6 @@ export default function ProgramSessionRunner() {
         steps={steps}
         timer={timer}
       />
-
-      {timer.phase !== "done" && <ProgramFooter timer={timer} />}
     </View>
   );
 }

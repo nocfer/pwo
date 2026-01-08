@@ -94,12 +94,9 @@ export function ProgramListItem({
           {showMetadata && (
             <View style={styles.metadata}>
               <Text style={styles.metadataText}>
-                {program.blocks.length} block
-                {program.blocks.length !== 1 ? "s" : ""}
+                {program.blocks.length} block{program.blocks.length !== 1 ? "s" : ""}
+                {isChallenge ? " • Challenge" : ""}
               </Text>
-              {isChallenge && (
-                <Text style={styles.metadataText}> • Challenge</Text>
-              )}
             </View>
           )}
         </View>

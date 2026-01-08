@@ -41,6 +41,7 @@ export type WorkoutStep =
  * @param isLastExercise - Whether this is the last exercise block in the session
  * @param defaultRestBetweenExercises - Default rest duration between exercises
  * @param currentStepCount - Current count of steps (for unique key generation)
+ * @param hasExplicitRestAfter - Whether there's an explicit rest block following this exercise
  * @returns Array of expanded workout steps
  */
 function expandExerciseBlock(
@@ -48,7 +49,8 @@ function expandExerciseBlock(
   blockIndex: number,
   isLastExercise: boolean,
   defaultRestBetweenExercises: number,
-  currentStepCount: number
+  currentStepCount: number,
+  hasExplicitRestAfter: boolean
 ): WorkoutStep[] {
   const steps: WorkoutStep[] = [];
   const sets = exerciseBlock.sets ?? DEFAULT_SETS;
@@ -81,8 +83,8 @@ function expandExerciseBlock(
     }
   }
 
-  // Add rest between exercises (not after the last exercise)
-  if (!isLastExercise && defaultRestBetweenExercises > 0) {
+  // Add rest between exercises (not after the last exercise, and not if there's an explicit rest block following)
+  if (!isLastExercise && !hasExplicitRestAfter && defaultRestBetweenExercises > 0) {
     steps.push({
       key: `rest-between-exercises-${blockIndex}-${currentStepCount + steps.length}`,
       type: "rest",
@@ -164,12 +166,16 @@ export function useWorkoutSteps(
 
       // Exercise block → expand into multiple steps based on sets
       const isLastExercise = blockIdx === lastExerciseBlockIndex;
+      // Check if the next block is an explicit rest block to avoid duplication
+      const nextBlock = session.blocks[blockIdx + 1];
+      const hasExplicitRestAfter = nextBlock?.type === "rest";
       const expandedSteps = expandExerciseBlock(
         block,
         blockIdx,
         isLastExercise,
         defaultRestBetweenExercises,
-        list.length
+        list.length,
+        hasExplicitRestAfter
       );
       list.push(...expandedSteps);
     }
