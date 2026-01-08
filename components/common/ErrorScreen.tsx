@@ -1,10 +1,9 @@
 /**
  * ErrorScreen - Consistent error/not-found state wrapper
- *
- * Provides a centered error message with optional back button
  */
 
 import { theme } from "@/theme/theme";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -31,6 +30,13 @@ export function ErrorScreen({
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
+        <View style={styles.iconContainer}>
+          <Ionicons
+            name="alert-circle-outline"
+            size={32}
+            color={theme.colors.muted}
+          />
+        </View>
         <Text style={styles.message}>{message}</Text>
         {showBackButton && (
           <Pressable
@@ -40,7 +46,7 @@ export function ErrorScreen({
               pressed && styles.buttonPressed
             ]}
           >
-            <Text style={styles.buttonText}>Back</Text>
+            <Text style={styles.buttonText}>Go Back</Text>
           </Pressable>
         )}
       </View>
@@ -59,22 +65,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: theme.spacing.lg
   },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: theme.spacing.md
+  },
   message: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center"
+    textAlign: "center",
+    marginBottom: theme.spacing.lg
   },
   button: {
-    marginTop: theme.spacing.md,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.xl,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface
   },
   buttonPressed: {
-    backgroundColor: theme.colors.card
+    backgroundColor: theme.colors.background,
+    transform: [{ scale: 0.98 }]
   },
   buttonText: {
     ...theme.typography.bodyBold,

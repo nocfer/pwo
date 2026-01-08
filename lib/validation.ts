@@ -4,20 +4,20 @@
  */
 
 import type {
-    ChallengeConfig,
-    Exercise,
-    ExerciseCategory,
-    Program
+  ChallengeConfig,
+  Exercise,
+  ExerciseCategory,
+  Program
 } from "@/types";
 import type {
-    DependencyResult,
-    EnhancedChallenge,
-    EnhancedExercise,
-    EnhancedProgram,
-    FieldValidation,
-    ValidationError,
-    ValidationResult,
-    ValidationSchema
+  DependencyResult,
+  EnhancedChallenge,
+  EnhancedExercise,
+  EnhancedProgram,
+  FieldValidation,
+  ValidationError,
+  ValidationResult,
+  ValidationSchema
 } from "@/types/enhanced";
 import { ValidationErrorCode } from "@/types/enhanced";
 
@@ -395,44 +395,6 @@ export const programValidationSchema: ValidationSchema<EnhancedProgram> = {
     {
       field: "description",
       maxLength: 1000
-    },
-    {
-      field: "difficulty",
-      customValidator: (value) => {
-        if (value && !VALID_DIFFICULTIES.includes(value)) {
-          return {
-            isValid: false,
-            errors: [
-              createValidationError(
-                "difficulty",
-                `Difficulty must be one of: ${VALID_DIFFICULTIES.join(", ")}`,
-                ValidationErrorCode.INVALID_FORMAT
-              )
-            ]
-          };
-        }
-        return { isValid: true, errors: [] };
-      }
-    },
-    {
-      field: "estimatedDuration",
-      customValidator: (value) => {
-        if (value !== undefined && value !== null) {
-          if (typeof value !== "number" || value <= 0) {
-            return {
-              isValid: false,
-              errors: [
-                createValidationError(
-                  "estimatedDuration",
-                  "Estimated duration must be a positive number",
-                  ValidationErrorCode.INVALID_RANGE
-                )
-              ]
-            };
-          }
-        }
-        return { isValid: true, errors: [] };
-      }
     }
   ],
   customValidators: [
@@ -470,22 +432,6 @@ export const programValidationSchema: ValidationSchema<EnhancedProgram> = {
         );
         errors.push(...blockErrors);
       });
-
-      // Validate tags array
-      if (program.tags && Array.isArray(program.tags)) {
-        for (const tag of program.tags) {
-          if (typeof tag !== "string" || tag.trim().length === 0) {
-            errors.push(
-              createValidationError(
-                "tags",
-                "All tags must be non-empty strings",
-                ValidationErrorCode.INVALID_FORMAT
-              )
-            );
-            break;
-          }
-        }
-      }
 
       return { isValid: errors.length === 0, errors };
     }

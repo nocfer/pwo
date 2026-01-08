@@ -8,7 +8,6 @@ import {
 import { theme } from "@/theme/theme";
 import { Program } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -28,7 +27,6 @@ export default function Index() {
     ProgramWithPriority[]
   >([]);
 
-  // Prioritize programs when data changes
   useEffect(() => {
     if (programs) {
       prioritizePrograms(programs).then(setPrioritizedPrograms);
@@ -37,7 +35,6 @@ export default function Index() {
     }
   }, [programs]);
 
-  // Separate regular programs and challenges from prioritized list
   const { regularPrograms, challenges, allPrograms } = useMemo(() => {
     if (prioritizedPrograms.length === 0) {
       return { regularPrograms: [], challenges: [], allPrograms: [] };
@@ -60,72 +57,48 @@ export default function Index() {
   const progressStats = useMemo(() => {
     if (!aggregated) return [];
     return [
-      {
-        label: "Total Workouts",
-        value: aggregated.totalWorkoutsCompleted
-      },
-      {
-        label: "Current Streak",
-        value: `${aggregated.currentStreak} days`
-      }
+      { label: "Total Workouts", value: aggregated.totalWorkoutsCompleted },
+      { label: "Current Streak", value: `${aggregated.currentStreak} days` }
     ];
   }, [aggregated]);
 
   const handleProgramSelect = (program: Program | ProgramWithPriority) => {
     setProgramSelectorOpen(false);
-    router.navigate({
-      pathname: "/programs/[id]",
-      params: { id: program.id }
-    });
+    router.navigate({ pathname: "/programs/[id]", params: { id: program.id } });
   };
 
   const handleQuickStart = () => {
     if (allPrograms.length === 1) {
-      // If only one program, start it directly
       handleProgramSelect(allPrograms[0]);
     } else if (allPrograms.length > 1) {
-      // If multiple programs, show selector
       setProgramSelectorOpen(true);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["left", "right"]}>
-      <LinearGradient
-        colors={[
-          theme.colors.gradient.primaryStart,
-          theme.colors.gradient.primaryEnd
-        ]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
+    <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerContent}>
+        {/* Header */}
+        <View style={styles.header}>
           <Text style={styles.greeting}>Welcome back</Text>
-          <Text style={styles.headerSubtitle}>
-            Ready to crush your workout?
-          </Text>
+          <Text style={styles.subtitle}>Ready to crush your workout?</Text>
         </View>
-      </LinearGradient>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Gradient Header */}
 
         <View style={styles.content}>
           {/* Progress Summary */}
           {aggregated && progressStats.length > 0 && (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <LinearGradient
-                  colors={[
-                    theme.colors.gradient.primaryStart,
-                    theme.colors.gradient.primaryEnd
-                  ]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.cardIconGradient}
-                >
-                  <Ionicons name="stats-chart" size={20} color="#FFFFFF" />
-                </LinearGradient>
+                <View style={styles.cardIconContainer}>
+                  <Ionicons
+                    name="stats-chart"
+                    size={18}
+                    color={theme.colors.primary}
+                  />
+                </View>
                 <Text style={styles.cardTitle}>Your Progress</Text>
               </View>
               <ProgressStats stats={progressStats} columns={2} />
@@ -176,60 +149,40 @@ export default function Index() {
                 ]}
                 onPress={handleQuickStart}
               >
-                <LinearGradient
-                  colors={[
-                    theme.colors.gradient.primaryStart,
-                    theme.colors.gradient.primaryEnd
-                  ]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.actionGradient}
-                >
-                  <View style={styles.actionIconContainerPrimary}>
-                    <Ionicons
-                      name="play"
-                      size={20}
-                      color={theme.colors.primaryTextOn}
-                    />
-                  </View>
-                  <Text style={styles.actionPrimaryText}>
-                    {allPrograms.length === 1
-                      ? "Quick Start"
-                      : `Start Program (${allPrograms.length})`}
-                  </Text>
-                </LinearGradient>
+                <View style={styles.actionIconContainerPrimary}>
+                  <Ionicons
+                    name="play"
+                    size={20}
+                    color={theme.colors.primaryTextOn}
+                  />
+                </View>
+                <Text style={styles.actionPrimaryText}>
+                  {allPrograms.length === 1
+                    ? "Quick Start"
+                    : `Start (${allPrograms.length})`}
+                </Text>
               </Pressable>
             ) : (
-              <View style={styles.actionButtonPrimary}>
-                <LinearGradient
-                  colors={[
-                    theme.colors.gradient.primaryStart,
-                    theme.colors.gradient.primaryEnd
-                  ]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[styles.actionGradient, styles.actionDisabled]}
-                >
-                  <View style={styles.actionIconContainerPrimary}>
-                    <Ionicons
-                      name="add"
-                      size={20}
-                      color={theme.colors.primaryTextOn}
-                    />
-                  </View>
-                  <Text style={styles.actionPrimaryText}>No Programs</Text>
-                </LinearGradient>
+              <View style={[styles.actionButtonPrimary, styles.actionDisabled]}>
+                <View style={styles.actionIconContainerPrimary}>
+                  <Ionicons
+                    name="add"
+                    size={20}
+                    color={theme.colors.primaryTextOn}
+                  />
+                </View>
+                <Text style={styles.actionPrimaryText}>No Programs</Text>
               </View>
             )}
           </View>
 
-          {/* Empty State for No Programs */}
+          {/* Empty State */}
           {allPrograms.length === 0 && (
             <EmptyState
               variant="default"
               icon="barbell-outline"
               title="No programs yet"
-              description="Create your first program or challenge to get started on your fitness journey"
+              description="Create your first program or challenge to get started"
               actionLabel="Go to Library"
               onAction={() => router.navigate("/(tabs)/library")}
             />
@@ -255,7 +208,7 @@ export default function Index() {
                   pressed && styles.modalCloseButtonPressed
                 ]}
               >
-                <Ionicons name="close" size={24} color={theme.colors.text} />
+                <Ionicons name="close" size={22} color={theme.colors.text} />
               </Pressable>
             </View>
 
@@ -276,42 +229,33 @@ export default function Index() {
                       ]}
                     >
                       <View style={styles.programItemContent}>
-                        <View style={styles.programIconContainer}>
+                        <View
+                          style={[
+                            styles.programIconContainer,
+                            { backgroundColor: theme.colors.accentLight }
+                          ]}
+                        >
                           <Ionicons
                             name="trophy-outline"
-                            size={20}
-                            color={theme.colors.primary}
+                            size={18}
+                            color={theme.colors.accent}
                           />
                         </View>
                         <View style={styles.programInfo}>
-                          <View style={styles.programNameRow}>
-                            <Text style={styles.programName}>
-                              {program.name}
-                            </Text>
-                            {program.usageCount && program.usageCount > 0 && (
-                              <View style={styles.usageBadge}>
-                                <Text style={styles.usageText}>
-                                  {program.usageCount}
-                                </Text>
-                              </View>
-                            )}
-                          </View>
+                          <Text style={styles.programName}>{program.name}</Text>
                           {program.description && (
-                            <Text style={styles.programDescription}>
+                            <Text
+                              style={styles.programDescription}
+                              numberOfLines={1}
+                            >
                               {program.description}
-                            </Text>
-                          )}
-                          {program.lastUsed && (
-                            <Text style={styles.lastUsedText}>
-                              Last used:{" "}
-                              {new Date(program.lastUsed).toLocaleDateString()}
                             </Text>
                           )}
                         </View>
                       </View>
                       <Ionicons
                         name="chevron-forward"
-                        size={20}
+                        size={18}
                         color={theme.colors.muted}
                       />
                     </Pressable>
@@ -322,7 +266,7 @@ export default function Index() {
               {regularPrograms.length > 0 && (
                 <>
                   <Text style={styles.sectionTitle}>
-                    {challenges.length > 0 ? "Regular Programs" : "Programs"}
+                    {challenges.length > 0 ? "Programs" : "Programs"}
                   </Text>
                   {regularPrograms.map((program) => (
                     <Pressable
@@ -334,42 +278,33 @@ export default function Index() {
                       ]}
                     >
                       <View style={styles.programItemContent}>
-                        <View style={styles.programIconContainer}>
+                        <View
+                          style={[
+                            styles.programIconContainer,
+                            { backgroundColor: theme.colors.primaryLight }
+                          ]}
+                        >
                           <Ionicons
                             name="barbell-outline"
-                            size={20}
+                            size={18}
                             color={theme.colors.primary}
                           />
                         </View>
                         <View style={styles.programInfo}>
-                          <View style={styles.programNameRow}>
-                            <Text style={styles.programName}>
-                              {program.name}
-                            </Text>
-                            {program.usageCount && program.usageCount > 0 && (
-                              <View style={styles.usageBadge}>
-                                <Text style={styles.usageText}>
-                                  {program.usageCount}
-                                </Text>
-                              </View>
-                            )}
-                          </View>
+                          <Text style={styles.programName}>{program.name}</Text>
                           {program.description && (
-                            <Text style={styles.programDescription}>
+                            <Text
+                              style={styles.programDescription}
+                              numberOfLines={1}
+                            >
                               {program.description}
-                            </Text>
-                          )}
-                          {program.lastUsed && (
-                            <Text style={styles.lastUsedText}>
-                              Last used:{" "}
-                              {new Date(program.lastUsed).toLocaleDateString()}
                             </Text>
                           )}
                         </View>
                       </View>
                       <Ionicons
                         name="chevron-forward"
-                        size={20}
+                        size={18}
                         color={theme.colors.muted}
                       />
                     </Pressable>
@@ -389,49 +324,44 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   },
-  headerGradient: {
-    paddingTop: theme.spacing.xxl,
-    paddingBottom: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.lg,
-    borderBottomLeftRadius: theme.radius.xl,
-    borderBottomRightRadius: theme.radius.xl,
-    marginBottom: theme.spacing.md
+  scrollView: {
+    flex: 1
   },
-  headerContent: {
-    paddingTop: theme.spacing.lg
+  header: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.lg
   },
   greeting: {
     ...theme.typography.h1,
-    color: "#FFFFFF",
+    color: theme.colors.text,
     marginBottom: theme.spacing.xs
   },
-  headerSubtitle: {
+  subtitle: {
     ...theme.typography.body,
-    color: "rgba(255,255,255,0.85)"
+    color: theme.colors.muted
   },
   content: {
-    flex: 1,
-    padding: theme.spacing.lg,
-    marginTop: -theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.xxl * 2,
     gap: theme.spacing.lg
   },
   card: {
     backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    ...theme.shadows.md
+    ...theme.shadows.sm
   },
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: theme.spacing.md
   },
-  cardIconGradient: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.md,
+  cardIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
     marginRight: theme.spacing.sm
@@ -440,11 +370,21 @@ const styles = StyleSheet.create({
     ...theme.typography.h3,
     color: theme.colors.text
   },
-  muted: {
+  viewProgressButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.xs
+  },
+  viewProgressButtonPressed: {
+    opacity: 0.7
+  },
+  viewProgressText: {
     ...theme.typography.body,
-    color: theme.colors.muted,
-    textAlign: "center",
-    paddingVertical: theme.spacing.lg
+    color: theme.colors.primary,
+    fontFamily: theme.fonts.semiBold
   },
   actionsRow: {
     flexDirection: "row",
@@ -453,8 +393,6 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
     paddingVertical: theme.spacing.lg,
     paddingHorizontal: theme.spacing.md,
@@ -462,14 +400,14 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   actionPressed: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.background,
     transform: [{ scale: 0.98 }]
   },
   actionIconContainer: {
     width: 44,
     height: 44,
     borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.background,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: theme.spacing.sm
@@ -481,13 +419,11 @@ const styles = StyleSheet.create({
   actionButtonPrimary: {
     flex: 1,
     borderRadius: theme.radius.lg,
-    overflow: "hidden",
-    ...theme.shadows.md
-  },
-  actionGradient: {
+    backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.lg,
     paddingHorizontal: theme.spacing.md,
-    alignItems: "center"
+    alignItems: "center",
+    ...theme.shadows.sm
   },
   actionPrimaryPressed: {
     opacity: 0.9,
@@ -509,32 +445,16 @@ const styles = StyleSheet.create({
   actionDisabled: {
     opacity: 0.5
   },
-  viewProgressButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    gap: theme.spacing.xs
-  },
-  viewProgressButtonPressed: {
-    opacity: 0.7
-  },
-  viewProgressText: {
-    ...theme.typography.body,
-    color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold
-  },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: theme.colors.overlay,
     justifyContent: "flex-end"
   },
   modalContent: {
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    maxHeight: "80%",
+    maxHeight: "75%",
     paddingBottom: theme.spacing.xl
   },
   modalHeader: {
@@ -543,31 +463,32 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: theme.spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
+    borderBottomColor: theme.colors.borderLight
   },
   modalTitle: {
     ...theme.typography.h3,
     color: theme.colors.text
   },
   modalCloseButton: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.md,
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.sm,
     alignItems: "center",
     justifyContent: "center"
   },
   modalCloseButtonPressed: {
-    backgroundColor: theme.colors.card
+    backgroundColor: theme.colors.background
   },
   programList: {
-    flex: 1,
     paddingHorizontal: theme.spacing.lg
   },
   sectionTitle: {
-    ...theme.typography.h3,
-    color: theme.colors.text,
+    ...theme.typography.captionBold,
+    color: theme.colors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
     marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.md
+    marginBottom: theme.spacing.sm
   },
   programItem: {
     flexDirection: "row",
@@ -575,13 +496,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    marginBottom: theme.spacing.sm,
-    backgroundColor: theme.colors.card
+    borderRadius: theme.radius.md,
+    marginBottom: theme.spacing.xs,
+    backgroundColor: theme.colors.surface
   },
   programItemPressed: {
-    backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.98 }]
+    backgroundColor: theme.colors.background
   },
   programItemContent: {
     flexDirection: "row",
@@ -589,10 +509,9 @@ const styles = StyleSheet.create({
     flex: 1
   },
   programIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.surface,
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.sm,
     alignItems: "center",
     justifyContent: "center",
     marginRight: theme.spacing.md
@@ -600,42 +519,13 @@ const styles = StyleSheet.create({
   programInfo: {
     flex: 1
   },
-  programNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing.xs
-  },
   programName: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text,
-    flex: 1
-  },
-  usageBadge: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.sm,
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
-    marginLeft: theme.spacing.sm,
-    minWidth: 20,
-    alignItems: "center"
-  },
-  usageText: {
-    ...theme.typography.caption,
-    color: theme.colors.primaryTextOn,
-    fontSize: 10,
-    fontWeight: "600"
+    color: theme.colors.text
   },
   programDescription: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    lineHeight: 16,
-    marginBottom: theme.spacing.xs
-  },
-  lastUsedText: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    fontSize: 11,
-    fontStyle: "italic"
+    marginTop: 2
   }
 });

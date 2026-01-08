@@ -1,7 +1,5 @@
 /**
  * SessionListItem - Reusable session row component
- *
- * Consolidates the duplicate session row pattern from ChallengeView.tsx and others
  */
 
 import { formatCount } from "@/lib/utils/format";
@@ -16,7 +14,6 @@ type Props = {
   isLocked?: boolean;
   isNext?: boolean;
   onPress?: () => void;
-  /** Optional subtitle override - defaults to showing sets and reps info */
   subtitle?: string;
 };
 
@@ -28,7 +25,6 @@ export function SessionListItem({
   onPress,
   subtitle
 }: Props) {
-  // Calculate default subtitle from blocks
   const defaultSubtitle = (() => {
     const exerciseBlocks = session.blocks.filter((b) => b.type === "exercise");
     const totalReps = exerciseBlocks.reduce(
@@ -59,7 +55,7 @@ export function SessionListItem({
           {isCompleted && (
             <Ionicons
               name="checkmark-circle"
-              size={20}
+              size={18}
               color={theme.colors.success}
             />
           )}
@@ -73,8 +69,8 @@ export function SessionListItem({
       </View>
       <Ionicons
         name={isLocked ? "lock-closed" : "chevron-forward"}
-        size={18}
-        color={isLocked ? theme.colors.muted : theme.colors.subtext}
+        size={16}
+        color={isLocked ? theme.colors.muted : theme.colors.muted}
       />
     </Pressable>
   );
@@ -82,16 +78,24 @@ export function SessionListItem({
 
 const styles = StyleSheet.create({
   container: {
-    ...theme.presets.sessionRow
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+    ...theme.shadows.sm
   },
   containerPressed: {
-    ...theme.presets.sessionRowPressed
+    backgroundColor: theme.colors.background,
+    transform: [{ scale: 0.98 }]
   },
   containerCompleted: {
-    ...theme.presets.sessionRowCompleted
+    backgroundColor: theme.colors.successLight
   },
   containerLocked: {
-    ...theme.presets.sessionRowLocked
+    opacity: 0.5
   },
   content: {
     flex: 1
@@ -112,14 +116,13 @@ const styles = StyleSheet.create({
   },
   nextPill: {
     paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
+    paddingVertical: 2,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primaryLight
   },
   nextPillText: {
-    ...theme.typography.caption,
-    color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold
+    ...theme.typography.small,
+    color: theme.colors.primary
   }
 });
 

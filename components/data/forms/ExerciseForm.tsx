@@ -1,40 +1,35 @@
 /**
- * Enhanced Exercise Form Component
- * Supports enhanced exercise properties including description, instructions,
- * muscle groups, difficulty, equipment, and tags
+ * Exercise Form Component
+ * Simplified MVP version with essential fields only
  */
 
 import haptics from "@/lib/haptics";
 import {
-  VALID_EXERCISE_CATEGORIES,
-  VALID_EXERCISE_ICONS,
-  validateExercise
+    VALID_EXERCISE_CATEGORIES,
+    VALID_EXERCISE_ICONS,
+    validateExercise
 } from "@/lib/validation";
 import { theme } from "@/theme/theme";
 import type { ExerciseCategory } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
 import {
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View
+    Alert,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View
 } from "react-native";
 
 export type ExerciseFormData = {
   name: string;
   category: ExerciseCategory;
   icon: string;
-  description?: string;
-  instructions?: string;
-  muscleGroups?: string[];
-  difficulty?: "beginner" | "intermediate" | "advanced";
-  equipment?: string[];
-  tags?: string[];
 };
 
 export type ExerciseFormProps = {
@@ -55,26 +50,17 @@ export function ExerciseForm({
   const [formData, setFormData] = useState<ExerciseFormData>({
     name: initialData?.name || "",
     category: initialData?.category || "strength",
-    icon: initialData?.icon || "barbell",
-    description: initialData?.description || "",
-    instructions: initialData?.instructions || "",
-    muscleGroups: initialData?.muscleGroups || [],
-    difficulty: initialData?.difficulty || "beginner",
-    equipment: initialData?.equipment || [],
-    tags: initialData?.tags || []
+    icon: initialData?.icon || "barbell"
   });
 
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
-  const [newMuscleGroup, setNewMuscleGroup] = useState("");
-  const [newEquipment, setNewEquipment] = useState("");
-  const [newTag, setNewTag] = useState("");
 
   const updateField = useCallback(
     <K extends keyof ExerciseFormData>(
       field: K,
       value: ExerciseFormData[K]
     ) => {
-      if (field === "category" || field === "difficulty") {
+      if (field === "category") {
         haptics.buttonTap();
       }
       setFormData((prev) => ({ ...prev, [field]: value }));
@@ -82,47 +68,15 @@ export function ExerciseForm({
     []
   );
 
-  const addArrayItem = useCallback(
-    (field: "muscleGroups" | "equipment" | "tags", value: string) => {
-      if (!value.trim()) return;
-      const currentArray = formData[field] || [];
-      if (!currentArray.includes(value.trim())) {
-        haptics.buttonTap();
-        updateField(field, [...currentArray, value.trim()]);
-      }
-    },
-    [formData, updateField]
-  );
-
-  const removeArrayItem = useCallback(
-    (field: "muscleGroups" | "equipment" | "tags", index: number) => {
-      haptics.buttonTap();
-      const currentArray = formData[field] || [];
-      updateField(
-        field,
-        currentArray.filter((_, i) => i !== index)
-      );
-    },
-    [formData, updateField]
-  );
-
   const handleSave = useCallback(async () => {
     const trimmed = formData.name.trim();
 
-    // Create exercise object for validation
     const exerciseData = {
       name: trimmed,
       category: formData.category,
-      icon: formData.icon,
-      description: formData.description?.trim() || undefined,
-      instructions: formData.instructions?.trim() || undefined,
-      muscleGroups: formData.muscleGroups,
-      equipment: formData.equipment,
-      difficulty: formData.difficulty,
-      tags: formData.tags
+      icon: formData.icon
     };
 
-    // Validate using centralized validation
     const validationResult = validateExercise(exerciseData as any);
 
     if (!validationResult.isValid) {
@@ -135,9 +89,7 @@ export function ExerciseForm({
     try {
       await onSave({
         ...formData,
-        name: trimmed,
-        description: formData.description?.trim() || undefined,
-        instructions: formData.instructions?.trim() || undefined
+        name: trimmed
       });
       haptics.formSave();
     } catch (error) {
@@ -149,315 +101,140 @@ export function ExerciseForm({
     }
   }, [formData, onSave]);
 
+  const handleCancel = useCallback(() => {
+    haptics.formCancel();
+    onCancel();
+  }, [onCancel]);
+
   return (
-    <ScrollView
+    <KeyboardAvoidingView
       style={styles.container}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* Header */}
-      <View style={styles.headerSection}>
+      <View style={styles.header}>
         <Pressable
-          onPress={() => {
-            haptics.formCancel();
-            onCancel();
-          }}
+          onPress={handleCancel}
           accessibilityRole="button"
-          accessibilityLabel="Cancel"
+          accessibilityLabel="Go back"
           style={({ pressed }) => [
-            styles.headerBack,
-            pressed && styles.headerBackPressed
+            styles.headerBackBtn,
+            pressed && styles.headerBackBtnPressed
           ]}
         >
-          <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
+          <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
         </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>
-            {mode === "create" ? "New Exercise" : "Edit Exercise"}
-          </Text>
-          <Text style={styles.headerSubtitle}>
-            {mode === "create"
-              ? "Add an exercise to your library"
-              : "Modify exercise details"}
-          </Text>
-        </View>
+        <Text style={styles.headerTitle}>
+          {mode === "create" ? "New Exercise" : "Edit Exercise"}
+        </Text>
+        <View style={styles.headerSpacer} />
       </View>
 
-      {/* Basic Information */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Basic Information</Text>
-
-        <Text style={styles.label}>Name *</Text>
-        <TextInput
-          value={formData.name}
-          onChangeText={(value) => updateField("name", value)}
-          placeholder="e.g. Bench Press"
-          placeholderTextColor={theme.colors.muted}
-          style={styles.input}
-        />
-
-        <View style={{ height: theme.spacing.md }} />
-
-        <Text style={styles.label}>Category *</Text>
-        <View style={styles.segmented}>
-          {VALID_EXERCISE_CATEGORIES.map((category) => (
-            <Pressable
-              key={category}
-              onPress={() => updateField("category", category)}
-              style={[
-                styles.segment,
-                formData.category === category && styles.segmentActive
-              ]}
-            >
-              <Text
-                style={[
-                  styles.segmentText,
-                  formData.category === category && styles.segmentTextActive
-                ]}
-              >
-                {category}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        <View style={{ height: theme.spacing.md }} />
-
-        <Text style={styles.label}>Icon</Text>
-        <Pressable
-          onPress={() => {
-            haptics.buttonTap();
-            setIconPickerOpen(true);
-          }}
-          style={({ pressed }) => [
-            styles.iconSelector,
-            pressed && styles.iconSelectorPressed
-          ]}
-        >
-          <View style={styles.iconPreview}>
-            <Ionicons
-              name={(formData.icon as any) || "help"}
-              size={22}
-              color={theme.colors.primary}
+      {/* Form Content */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.card}>
+          {/* Name Field */}
+          <View style={styles.field}>
+            <Text style={styles.label}>Name</Text>
+            <TextInput
+              value={formData.name}
+              onChangeText={(value) => updateField("name", value)}
+              placeholder="e.g. Bench Press"
+              placeholderTextColor={theme.colors.muted}
+              style={styles.input}
+              autoFocus={mode === "create"}
             />
-            <Text style={styles.iconPreviewText}>{formData.icon}</Text>
           </View>
-          <Ionicons name="chevron-down" size={16} color={theme.colors.muted} />
-        </Pressable>
 
-        <View style={{ height: theme.spacing.md }} />
-
-        <Text style={styles.label}>Difficulty</Text>
-        <View style={styles.segmented}>
-          {(["beginner", "intermediate", "advanced"] as const).map(
-            (difficulty) => (
-              <Pressable
-                key={difficulty}
-                onPress={() => updateField("difficulty", difficulty)}
-                style={[
-                  styles.segment,
-                  formData.difficulty === difficulty && styles.segmentActive
-                ]}
-              >
-                <Text
+          {/* Category Field */}
+          <View style={styles.field}>
+            <Text style={styles.label}>Category</Text>
+            <View style={styles.chipGroup}>
+              {VALID_EXERCISE_CATEGORIES.map((category) => (
+                <Pressable
+                  key={category}
+                  onPress={() => updateField("category", category)}
                   style={[
-                    styles.segmentText,
-                    formData.difficulty === difficulty &&
-                      styles.segmentTextActive
+                    styles.chip,
+                    formData.category === category && styles.chipActive
                   ]}
                 >
-                  {difficulty}
-                </Text>
-              </Pressable>
-            )
-          )}
-        </View>
-      </View>
-
-      {/* Description and Instructions */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Description & Instructions</Text>
-
-        <Text style={styles.label}>Description</Text>
-        <TextInput
-          value={formData.description}
-          onChangeText={(value) => updateField("description", value)}
-          placeholder="Brief description of the exercise"
-          placeholderTextColor={theme.colors.muted}
-          style={[styles.input, styles.textArea]}
-          multiline
-          numberOfLines={3}
-        />
-
-        <View style={{ height: theme.spacing.md }} />
-
-        <Text style={styles.label}>Instructions</Text>
-        <TextInput
-          value={formData.instructions}
-          onChangeText={(value) => updateField("instructions", value)}
-          placeholder="Step-by-step instructions for proper form"
-          placeholderTextColor={theme.colors.muted}
-          style={[styles.input, styles.textArea]}
-          multiline
-          numberOfLines={4}
-        />
-      </View>
-
-      {/* Muscle Groups */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Muscle Groups</Text>
-
-        <View style={styles.arrayInputContainer}>
-          <TextInput
-            value={newMuscleGroup}
-            onChangeText={setNewMuscleGroup}
-            placeholder="Add muscle group (e.g. chest, shoulders)"
-            placeholderTextColor={theme.colors.muted}
-            style={[styles.input, { flex: 1 }]}
-            onSubmitEditing={() => {
-              addArrayItem("muscleGroups", newMuscleGroup);
-              setNewMuscleGroup("");
-            }}
-          />
-          <Pressable
-            onPress={() => {
-              addArrayItem("muscleGroups", newMuscleGroup);
-              setNewMuscleGroup("");
-            }}
-            style={({ pressed }) => [
-              styles.addButton,
-              pressed && styles.addButtonPressed
-            ]}
-          >
-            <Ionicons name="add" size={20} color={theme.colors.primary} />
-          </Pressable>
-        </View>
-
-        <View style={styles.tagContainer}>
-          {formData.muscleGroups?.map((group, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{group}</Text>
-              <Pressable
-                onPress={() => removeArrayItem("muscleGroups", index)}
-                style={styles.tagRemove}
-              >
-                <Ionicons name="close" size={14} color={theme.colors.muted} />
-              </Pressable>
+                  <Text
+                    style={[
+                      styles.chipText,
+                      formData.category === category && styles.chipTextActive
+                    ]}
+                  >
+                    {category}
+                  </Text>
+                </Pressable>
+              ))}
             </View>
-          ))}
+          </View>
+
+          {/* Icon Field */}
+          <View style={styles.field}>
+            <Text style={styles.label}>Icon</Text>
+            <Pressable
+              onPress={() => {
+                haptics.buttonTap();
+                setIconPickerOpen(true);
+              }}
+              style={({ pressed }) => [
+                styles.iconSelector,
+                pressed && styles.iconSelectorPressed
+              ]}
+            >
+              <View style={styles.iconPreview}>
+                <View style={styles.iconPreviewCircle}>
+                  <Ionicons
+                    name={(formData.icon as any) || "help"}
+                    size={20}
+                    color={theme.colors.primary}
+                  />
+                </View>
+                <Text style={styles.iconPreviewText}>{formData.icon}</Text>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={theme.colors.muted}
+              />
+            </Pressable>
+          </View>
         </View>
+      </ScrollView>
+
+      {/* Fixed Footer */}
+      <View style={styles.footer}>
+        <Pressable
+          onPress={handleCancel}
+          style={({ pressed }) => [
+            styles.cancelBtn,
+            pressed && styles.cancelBtnPressed
+          ]}
+        >
+          <Text style={styles.cancelBtnText}>Cancel</Text>
+        </Pressable>
+        <Pressable
+          onPress={handleSave}
+          disabled={saving}
+          style={({ pressed }) => [
+            styles.saveBtn,
+            pressed && !saving && styles.saveBtnPressed,
+            saving && styles.saveBtnDisabled
+          ]}
+        >
+          <Text style={styles.saveBtnText}>
+            {saving ? "Saving..." : "Save"}
+          </Text>
+        </Pressable>
       </View>
-
-      {/* Equipment */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Equipment</Text>
-
-        <View style={styles.arrayInputContainer}>
-          <TextInput
-            value={newEquipment}
-            onChangeText={setNewEquipment}
-            placeholder="Add equipment (e.g. barbell, dumbbells)"
-            placeholderTextColor={theme.colors.muted}
-            style={[styles.input, { flex: 1 }]}
-            onSubmitEditing={() => {
-              addArrayItem("equipment", newEquipment);
-              setNewEquipment("");
-            }}
-          />
-          <Pressable
-            onPress={() => {
-              addArrayItem("equipment", newEquipment);
-              setNewEquipment("");
-            }}
-            style={({ pressed }) => [
-              styles.addButton,
-              pressed && styles.addButtonPressed
-            ]}
-          >
-            <Ionicons name="add" size={20} color={theme.colors.primary} />
-          </Pressable>
-        </View>
-
-        <View style={styles.tagContainer}>
-          {formData.equipment?.map((item, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{item}</Text>
-              <Pressable
-                onPress={() => removeArrayItem("equipment", index)}
-                style={styles.tagRemove}
-              >
-                <Ionicons name="close" size={14} color={theme.colors.muted} />
-              </Pressable>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      {/* Tags */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Tags</Text>
-
-        <View style={styles.arrayInputContainer}>
-          <TextInput
-            value={newTag}
-            onChangeText={setNewTag}
-            placeholder="Add tag (e.g. compound, isolation)"
-            placeholderTextColor={theme.colors.muted}
-            style={[styles.input, { flex: 1 }]}
-            onSubmitEditing={() => {
-              addArrayItem("tags", newTag);
-              setNewTag("");
-            }}
-          />
-          <Pressable
-            onPress={() => {
-              addArrayItem("tags", newTag);
-              setNewTag("");
-            }}
-            style={({ pressed }) => [
-              styles.addButton,
-              pressed && styles.addButtonPressed
-            ]}
-          >
-            <Ionicons name="add" size={20} color={theme.colors.primary} />
-          </Pressable>
-        </View>
-
-        <View style={styles.tagContainer}>
-          {formData.tags?.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-              <Pressable
-                onPress={() => removeArrayItem("tags", index)}
-                style={styles.tagRemove}
-              >
-                <Ionicons name="close" size={14} color={theme.colors.muted} />
-              </Pressable>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      {/* Save Button */}
-      <Pressable
-        onPress={handleSave}
-        disabled={saving}
-        style={({ pressed }) => [
-          styles.primaryBtn,
-          pressed && !saving && styles.primaryBtnPressed,
-          saving && styles.primaryBtnDisabled
-        ]}
-      >
-        <Ionicons
-          name="save-outline"
-          size={18}
-          color={theme.colors.primaryTextOn}
-          style={{ marginRight: theme.spacing.sm }}
-        />
-        <Text style={styles.primaryBtnText}>
-          {saving ? "Saving..." : "Save Exercise"}
-        </Text>
-      </Pressable>
 
       {/* Icon Picker Modal */}
       <Modal
@@ -473,14 +250,17 @@ export function ExerciseForm({
               <Pressable
                 onPress={() => setIconPickerOpen(false)}
                 style={({ pressed }) => [
-                  styles.iconBtn,
-                  pressed && styles.iconBtnPressed
+                  styles.modalCloseBtn,
+                  pressed && styles.modalCloseBtnPressed
                 ]}
               >
                 <Ionicons name="close" size={18} color={theme.colors.text} />
               </Pressable>
             </View>
-            <ScrollView style={styles.iconGrid}>
+            <ScrollView
+              style={styles.iconGrid}
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.iconGridContainer}>
                 {VALID_EXERCISE_ICONS.map((iconName) => (
                   <Pressable
@@ -498,22 +278,13 @@ export function ExerciseForm({
                   >
                     <Ionicons
                       name={iconName as any}
-                      size={24}
+                      size={22}
                       color={
                         formData.icon === iconName
                           ? theme.colors.primary
-                          : theme.colors.text
+                          : theme.colors.subtext
                       }
                     />
-                    <Text
-                      style={[
-                        styles.iconOptionText,
-                        formData.icon === iconName &&
-                          styles.iconOptionTextSelected
-                      ]}
-                    >
-                      {iconName}
-                    </Text>
                   </Pressable>
                 ))}
               </View>
@@ -521,97 +292,99 @@ export function ExerciseForm({
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface
+  },
+  headerBackBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.background
+  },
+  headerBackBtnPressed: {
+    backgroundColor: theme.colors.border,
+    transform: [{ scale: 0.96 }]
+  },
+  headerTitle: {
+    ...theme.typography.h3,
+    color: theme.colors.text
+  },
+  headerSpacer: {
+    width: 36
+  },
+  scrollView: {
+    flex: 1
+  },
   content: {
     padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
-    paddingTop: 0,
     paddingBottom: theme.spacing.xxl
-  },
-  headerSection: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: theme.spacing.md
-  },
-  headerBack: {
-    padding: theme.spacing.xs,
-    marginTop: -theme.spacing.xs,
-    marginLeft: -theme.spacing.xs
-  },
-  headerBackPressed: { opacity: 0.6 },
-  headerTitle: {
-    ...theme.typography.h2,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs
-  },
-  headerSubtitle: {
-    ...theme.typography.body,
-    color: theme.colors.muted
   },
   card: {
     backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
+    gap: theme.spacing.lg,
     ...theme.shadows.sm
   },
-  sectionTitle: {
-    ...theme.typography.h3,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md
+  field: {
+    gap: theme.spacing.sm
   },
   label: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
-    marginBottom: theme.spacing.xs
+    color: theme.colors.subtext,
+    fontFamily: theme.fonts.semiBold
   },
   input: {
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.card,
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
     color: theme.colors.text,
     ...theme.typography.body
   },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: "top"
-  },
-  segmented: {
+  chipGroup: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.sm
+    gap: theme.spacing.sm
   },
-  segment: {
+  chip: {
     borderWidth: 1,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md
   },
-  segmentActive: {
+  chipActive: {
     borderColor: theme.colors.primary,
     backgroundColor: theme.colors.primaryLight
   },
-  segmentText: {
+  chipText: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
+    color: theme.colors.subtext,
     textTransform: "capitalize"
   },
-  segmentTextActive: {
+  chipTextActive: {
     color: theme.colors.primary,
     fontFamily: theme.fonts.semiBold
   },
@@ -621,77 +394,80 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.card
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.surface
   },
-  iconSelectorPressed: { backgroundColor: theme.colors.border },
+  iconSelectorPressed: {
+    backgroundColor: theme.colors.background
+  },
   iconPreview: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm
+    gap: theme.spacing.md
+  },
+  iconPreviewCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center"
   },
   iconPreviewText: {
     ...theme.typography.body,
     color: theme.colors.text
   },
-  arrayInputContainer: {
+  footer: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.md
+    gap: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    backgroundColor: theme.colors.surface
   },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primaryLight,
+  cancelBtn: {
+    flex: 1,
     alignItems: "center",
-    justifyContent: "center"
-  },
-  addButtonPressed: { opacity: 0.7 },
-  tagContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: theme.spacing.sm
-  },
-  tag: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.primaryLight,
+    justifyContent: "center",
     borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    gap: theme.spacing.xs
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border
   },
-  tagText: {
-    ...theme.typography.caption,
-    color: theme.colors.primary
+  cancelBtnPressed: {
+    backgroundColor: theme.colors.border,
+    transform: [{ scale: 0.98 }]
   },
-  tagRemove: {
-    padding: 2
+  cancelBtnText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.subtext
   },
-  primaryBtn: {
-    flexDirection: "row",
+  saveBtn: {
+    flex: 2,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.lg,
-    paddingVertical: theme.spacing.lg,
-    ...theme.shadows.md
+    borderRadius: theme.radius.md,
+    paddingVertical: theme.spacing.md
   },
-  primaryBtnPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
-  primaryBtnDisabled: { opacity: 0.6 },
-  primaryBtnText: {
+  saveBtnPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }]
+  },
+  saveBtnDisabled: {
+    opacity: 0.5
+  },
+  saveBtnText: {
     ...theme.typography.bodyBold,
     color: theme.colors.primaryTextOn
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: theme.colors.overlay,
     justifyContent: "flex-end"
   },
   modalCard: {
@@ -699,62 +475,54 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
     padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    maxHeight: "80%"
+    maxHeight: "70%"
   },
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: theme.spacing.md
+    marginBottom: theme.spacing.lg
   },
-  modalTitle: { ...theme.typography.h3, color: theme.colors.text },
-  iconBtn: {
+  modalTitle: {
+    ...theme.typography.h3,
+    color: theme.colors.text
+  },
+  modalCloseBtn: {
     width: 36,
     height: 36,
     borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.surface
+    backgroundColor: theme.colors.background
   },
-  iconBtnPressed: {
-    backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }]
+  modalCloseBtnPressed: {
+    backgroundColor: theme.colors.border,
+    transform: [{ scale: 0.96 }]
   },
   iconGrid: {
-    maxHeight: 400
+    maxHeight: 350
   },
   iconGridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.sm
+    gap: theme.spacing.sm,
+    paddingBottom: theme.spacing.lg
   },
   iconOption: {
-    width: "30%",
-    aspectRatio: 1,
+    width: 52,
+    height: 52,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.card,
-    gap: theme.spacing.xs
+    backgroundColor: theme.colors.surface
   },
   iconOptionSelected: {
     borderColor: theme.colors.primary,
     backgroundColor: theme.colors.primaryLight
   },
-  iconOptionPressed: { opacity: 0.7 },
-  iconOptionText: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    fontSize: 10,
-    textAlign: "center"
-  },
-  iconOptionTextSelected: {
-    color: theme.colors.primary
+  iconOptionPressed: {
+    backgroundColor: theme.colors.background
   }
 });

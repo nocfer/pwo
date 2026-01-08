@@ -13,50 +13,30 @@ export default function TabLayout() {
         tabBarInactiveTintColor: theme.colors.muted,
         headerShown: false,
         headerStyle: {
-          backgroundColor: theme.colors.surface,
-          ...Platform.select({
-            ios: {
-              shadowColor: theme.shadows.sm.shadowColor,
-              shadowOpacity: theme.shadows.sm.shadowOpacity,
-              shadowOffset: theme.shadows.sm.shadowOffset,
-              shadowRadius: theme.shadows.sm.shadowRadius
-            },
-            android: {
-              elevation: theme.shadows.sm.elevation
-            }
-          })
+          backgroundColor: theme.colors.surface
         },
         headerShadowVisible: false,
         headerTintColor: theme.colors.text,
         headerTitleStyle: {
           fontFamily: theme.fonts.semiBold,
-          fontSize: 18
+          fontSize: 17
         },
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.border,
+          borderTopColor: theme.colors.borderLight,
           borderTopWidth: 1,
           paddingTop: theme.spacing.xs,
-          height: Platform.OS === "ios" ? 88 : 64,
-          ...Platform.select({
-            ios: {
-              shadowColor: theme.shadows.md.shadowColor,
-              shadowOpacity: theme.shadows.md.shadowOpacity,
-              shadowOffset: { width: 0, height: -2 },
-              shadowRadius: theme.shadows.md.shadowRadius
-            },
-            android: {
-              elevation: theme.shadows.md.elevation
-            }
-          })
+          paddingBottom:
+            Platform.OS === "ios" ? theme.spacing.xl : theme.spacing.sm,
+          height: Platform.OS === "ios" ? 84 : 60
         },
         tabBarLabelStyle: {
           fontFamily: theme.fonts.medium,
-          fontSize: 12,
-          marginTop: theme.spacing.xs
+          fontSize: 11,
+          marginTop: 2
         },
         tabBarIconStyle: {
-          marginTop: theme.spacing.xs
+          marginTop: 2
         }
       }}
     >

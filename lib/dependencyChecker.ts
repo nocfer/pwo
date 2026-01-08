@@ -5,11 +5,11 @@
 
 import type { Exercise, Program } from "@/types";
 import type {
-    DataType,
-    DependencyCheck,
-    DependencyResult,
-    ValidationError,
-    ValidationResult
+  DataType,
+  DependencyCheck,
+  DependencyResult,
+  ValidationError,
+  ValidationResult
 } from "@/types/enhanced";
 import { ValidationErrorCode } from "@/types/enhanced";
 import { createValidationError } from "./validation";
