@@ -126,18 +126,16 @@ export function useExercisesWithProgression(): {
     const exerciseIds = new Set<string>();
 
     for (const prog of programProgress) {
-      for (const run of prog.runs ?? []) {
-        for (const session of run.sessions ?? []) {
-          for (const ex of session.exercises ?? []) {
-            exerciseIds.add(ex.exerciseId);
-          }
+      for (const workout of prog.workouts ?? []) {
+        for (const ex of workout.exercises ?? []) {
+          exerciseIds.add(ex.exerciseId);
         }
       }
     }
 
     for (const challenge of challengeProgress) {
-      for (const session of challenge.sessions ?? []) {
-        for (const ex of session.exercises ?? []) {
+      for (const workout of challenge.workouts ?? []) {
+        for (const ex of workout.exercises ?? []) {
           exerciseIds.add(ex.exerciseId);
         }
       }

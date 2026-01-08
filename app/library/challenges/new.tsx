@@ -1,6 +1,6 @@
 import {
-  ChallengeForm,
-  type ChallengeFormData
+    ChallengeForm,
+    type ChallengeFormData
 } from "@/components/data/forms/ChallengeForm";
 import { useDataActions } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
@@ -21,7 +21,7 @@ export default function NewChallengeScreen() {
         id: "",
         name: formData.name,
         description: formData.description,
-        sessions: [], // Challenges generate sessions dynamically
+        blocks: [], // Challenges generate blocks dynamically
         challengeConfig: formData.challengeConfig
       });
       router.back();

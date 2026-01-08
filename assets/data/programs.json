@@ -2,45 +2,39 @@
   {
     "id": "prg_starter_full_body",
     "name": "Starter Full Body",
-    "description": "A simple, repeatable full body session.",
-    "sessions": [
+    "description": "A simple, repeatable full body workout.",
+    "blocks": [
       {
-        "index": 1,
-        "name": "Session 1",
-        "blocks": [
-          {
-            "type": "warmup",
-            "seconds": 180
-          },
-          {
-            "type": "exercise",
-            "exerciseId": "ex_squats",
-            "targetReps": 12,
-            "note": "Steady tempo, full depth"
-          },
-          {
-            "type": "rest",
-            "seconds": 60,
-            "label": "Rest"
-          },
-          {
-            "type": "exercise",
-            "exerciseId": "ex_pushups",
-            "targetReps": 10,
-            "note": "Keep ribs down"
-          },
-          {
-            "type": "rest",
-            "seconds": 60,
-            "label": "Rest"
-          },
-          {
-            "type": "exercise",
-            "exerciseId": "ex_pullups",
-            "targetReps": 5,
-            "note": "Controlled descent"
-          }
-        ]
+        "type": "warmup",
+        "seconds": 180
+      },
+      {
+        "type": "exercise",
+        "exerciseId": "ex_squats",
+        "targetReps": 12,
+        "note": "Steady tempo, full depth"
+      },
+      {
+        "type": "rest",
+        "seconds": 60,
+        "label": "Rest"
+      },
+      {
+        "type": "exercise",
+        "exerciseId": "ex_pushups",
+        "targetReps": 10,
+        "note": "Keep ribs down"
+      },
+      {
+        "type": "rest",
+        "seconds": 60,
+        "label": "Rest"
+      },
+      {
+        "type": "exercise",
+        "exerciseId": "ex_pullups",
+        "targetReps": 5,
+        "note": "Controlled descent"
       }
     ],
     "createdAt": "2025-01-01T00:00:00.000Z",
@@ -51,7 +45,7 @@
     "id": "challenge_pull-ups",
     "name": "Pull Ups",
     "description": "Build upper body pulling strength with progressive overload",
-    "sessions": [],
+    "blocks": [],
     "createdAt": "2025-01-01T00:00:00.000Z",
     "updatedAt": "2025-01-01T00:00:00.000Z",
     "source": "builtin",
@@ -68,7 +62,7 @@
     "id": "challenge_push-ups",
     "name": "Push Ups",
     "description": "Classic bodyweight exercise for chest and triceps",
-    "sessions": [],
+    "blocks": [],
     "createdAt": "2025-01-01T00:00:00.000Z",
     "updatedAt": "2025-01-01T00:00:00.000Z",
     "source": "builtin",
@@ -85,7 +79,7 @@
     "id": "challenge_bycicle-crunch",
     "name": "Bycicle Crunch",
     "description": "Build core strength and stability with a bycicle crunch challenge",
-    "sessions": [],
+    "blocks": [],
     "createdAt": "2025-01-01T00:00:00.000Z",
     "updatedAt": "2025-01-01T00:00:00.000Z",
     "source": "builtin",

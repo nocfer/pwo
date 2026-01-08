@@ -185,7 +185,6 @@ export function ChallengeForm({
     const challengeData = {
       name: trimmed,
       description: formData.description?.trim() || undefined,
-      sessions: [], // Challenges generate sessions dynamically
       challengeConfig: formData.challengeConfig
     };
 

@@ -1,6 +1,6 @@
 /**
  * Progress tracking type definitions
- * Separate tracking systems for challenges and training programs
+ * Simplified structure without sessions - programs are tracked as individual workout completions
  */
 
 /**
@@ -14,13 +14,13 @@ export type SetRecord = {
 };
 
 /**
- * Exercise-level progress tracking (enhanced with set details)
+ * Exercise-level progress tracking
  */
 export type ExerciseProgress = {
   exerciseId: string;
   repsCompleted: number;
   setsCompleted: number;
-  sets?: SetRecord[]; // Detailed per-set tracking (optional for backward compat)
+  sets?: SetRecord[]; // Detailed per-set tracking
   totalVolume?: number; // weight x reps (for weighted exercises)
   lastCompletedAt: string; // ISO date
 };
@@ -43,7 +43,7 @@ export type PersonalRecord = {
   type: PersonalRecordType;
   value: number;
   achievedAt: string; // ISO date
-  sessionId?: string; // Reference to the session where PR was achieved
+  workoutId?: string; // Reference to the workout where PR was achieved
   details?: {
     weight?: number;
     reps?: number;
@@ -75,69 +75,42 @@ export type WeeklyStats = {
 };
 
 /**
- * Session-level progress tracking
+ * Single workout completion (replaces SessionProgress)
  */
-export type SessionProgress = {
-  sessionIndex: number;
+export type WorkoutProgress = {
+  workoutId: string; // Unique identifier for this workout instance
+  programId: string; // Which program was completed
   completed: boolean;
   completedAt?: string; // ISO date
-  timeSpentSeconds?: number; // Duration of the session
-  exercises: ExerciseProgress[]; // Exercise-level progress for this session
+  timeSpentSeconds?: number; // Duration of the workout
+  exercises: ExerciseProgress[]; // Exercise-level progress for this workout
 };
 
 /**
- * Program run - a single full pass through a program's sessions
- */
-export type ProgramRun = {
-  runId: string;
-  startedAt: string; // ISO date
-  completedAt?: string; // ISO date
-  sessions: SessionProgress[]; // Progress for each session in this run
-  totalTimeSpentSeconds: number; // Total time for this run
-  lastActivityAt: string | null; // ISO date of last session completion within this run
-  updatedAt: string; // ISO date of last update for this run
-};
-
-/**
- * Program-level progress tracking (for regular training programs)
- *
- * Programs are open-ended and can be repeated many times.
- * - `runs` captures each individual cycle through the program.
- * - `lifetime*` aggregates capture totals across all runs.
- *
- * The legacy single-run shape (`startedAt`, `completedAt`, `sessions`,
- * `totalTimeSpentSeconds`) is kept optional for migration/backwards
- * compatibility. New code should use runs + lifetime fields instead.
+ * Program-level progress tracking (simplified)
+ * Each program completion is tracked as a separate workout
  */
 export type ProgramProgress = {
   programId: string;
-  runs: ProgramRun[];
-  lifetimeSessionsCompleted: number;
+  workouts: WorkoutProgress[]; // All completed workouts for this program
+  lifetimeWorkoutsCompleted: number;
   lifetimeTimeSpentSeconds: number;
-  lastActivityAt: string | null; // ISO date of last session completion across all runs
+  lastActivityAt: string | null; // ISO date of last workout completion
   updatedAt: string; // ISO date of last update
-
-  /**
-   * Legacy single-run shape (deprecated, kept for migration/back-compat).
-   * Do not rely on these fields in new code.
-   */
-  startedAt?: string; // ISO date
-  completedAt?: string; // ISO date
-  sessions?: SessionProgress[]; // Progress for each session (single run)
-  totalTimeSpentSeconds?: number; // Total time across legacy sessions
 };
 
 /**
- * Challenge-specific progress tracking
+ * Challenge-specific progress tracking (simplified)
+ * Challenges generate dynamic workouts based on progression
  */
 export type ChallengeProgress = {
   challengeId: string;
   startedAt: string; // ISO date
   completedAt?: string; // ISO date
-  sessions: SessionProgress[]; // Progress for each session
-  totalRepsCompleted: number; // Total reps across all sessions
+  workouts: WorkoutProgress[]; // Progress for each generated workout
+  totalRepsCompleted: number; // Total reps across all workouts
   targetReps: number; // Target reps from challenge config
-  lastActivityAt: string; // ISO date of last session completion
+  lastActivityAt: string; // ISO date of last workout completion
   updatedAt: string; // ISO date of last update
 };
 
@@ -148,9 +121,12 @@ export type ProgressHistoryEntry = {
   date: string; // ISO date
   programId?: string; // For program progress
   challengeId?: string; // For challenge progress
-  sessionsCompleted: number;
+  workoutsCompleted: number;
   totalReps?: number; // For challenges
   timeSpentSeconds?: number; // For programs
 };
 
 export type ProgressHistory = ProgressHistoryEntry[];
+
+// Legacy types for migration (deprecated)
+export type SessionProgress = WorkoutProgress; // Alias for backward compatibility

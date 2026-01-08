@@ -15,25 +15,19 @@ describe("Program Share Utilities", () => {
     id: "prg_test",
     name: "Test Program",
     description: "A test program for sharing",
-    sessions: [
+    blocks: [
       {
-        index: 1,
-        name: "Session 1",
-        blocks: [
-          {
-            type: "warmup",
-            seconds: 300
-          },
-          {
-            type: "exercise",
-            exerciseId: "ex_pushups",
-            targetReps: 10
-          },
-          {
-            type: "rest",
-            seconds: 60
-          }
-        ]
+        type: "warmup",
+        seconds: 300
+      },
+      {
+        type: "exercise",
+        exerciseId: "ex_pushups",
+        targetReps: 10
+      },
+      {
+        type: "rest",
+        seconds: 60
       }
     ],
     source: "user",
@@ -45,7 +39,7 @@ describe("Program Share Utilities", () => {
     id: "prg_challenge",
     name: "Push-up Challenge",
     description: "30-day push-up challenge",
-    sessions: [],
+    blocks: [],
     challengeConfig: {
       exerciseId: "ex_pushups",
       sets: 3,
@@ -66,7 +60,7 @@ describe("Program Share Utilities", () => {
 
       expect(parsed.name).toBe(mockProgram.name);
       expect(parsed.description).toBe(mockProgram.description);
-      expect(parsed.sessions).toEqual(mockProgram.sessions);
+      expect(parsed.blocks).toEqual(mockProgram.blocks);
       expect(parsed.challengeConfig).toBeUndefined();
 
       // Should not include metadata
@@ -81,7 +75,7 @@ describe("Program Share Utilities", () => {
 
       expect(parsed.name).toBe(mockChallenge.name);
       expect(parsed.description).toBe(mockChallenge.description);
-      expect(parsed.sessions).toEqual(mockChallenge.sessions);
+      expect(parsed.blocks).toEqual(mockChallenge.blocks);
       expect(parsed.challengeConfig).toEqual(mockChallenge.challengeConfig);
 
       // Should not include metadata
@@ -98,7 +92,7 @@ describe("Program Share Utilities", () => {
 
       expect(decoded.name).toBe(mockProgram.name);
       expect(decoded.description).toBe(mockProgram.description);
-      expect(decoded.sessions).toEqual(mockProgram.sessions);
+      expect(decoded.blocks).toEqual(mockProgram.blocks);
     });
 
     it("should decode a valid challenge correctly", () => {
@@ -127,14 +121,9 @@ describe("Program Share Utilities", () => {
     it("should validate a correct program", () => {
       const validData = {
         name: "Test Program",
-        sessions: [
-          {
-            index: 1,
-            blocks: [
-              { type: "warmup", seconds: 300 },
-              { type: "exercise", exerciseId: "ex_test" }
-            ]
-          }
+        blocks: [
+          { type: "warmup", seconds: 300 },
+          { type: "exercise", exerciseId: "ex_test" }
         ]
       };
 
@@ -144,7 +133,7 @@ describe("Program Share Utilities", () => {
     it("should validate a correct challenge", () => {
       const validChallenge = {
         name: "Test Challenge",
-        sessions: [],
+        blocks: [],
         challengeConfig: {
           exerciseId: "ex_test",
           sets: 3,
@@ -166,24 +155,22 @@ describe("Program Share Utilities", () => {
     it("should reject missing required fields", () => {
       expect(validateProgramData({})).toBe(false);
       expect(validateProgramData({ name: "" })).toBe(false);
-      expect(validateProgramData({ name: "Test" })).toBe(false); // Missing sessions
+      expect(validateProgramData({ name: "Test" })).toBe(false); // Missing blocks
     });
 
     it("should reject invalid sessions", () => {
-      const invalidSessions = {
+      const invalidBlocks = {
         name: "Test",
-        sessions: "not an array"
+        blocks: "not an array"
       };
-      expect(validateProgramData(invalidSessions)).toBe(false);
+      expect(validateProgramData(invalidBlocks)).toBe(false);
     });
 
     it("should reject invalid blocks", () => {
       const invalidBlocks = {
         name: "Test",
-        sessions: [
-          {
-            blocks: [{ type: "invalid" }]
-          }
+        blocks: [
+          { type: "invalid" }
         ]
       };
       expect(validateProgramData(invalidBlocks)).toBe(false);
@@ -192,11 +179,7 @@ describe("Program Share Utilities", () => {
     it("should reject exercise blocks without exerciseId", () => {
       const missingExerciseId = {
         name: "Test",
-        sessions: [
-          {
-            blocks: [{ type: "exercise" }] // Missing exerciseId
-          }
-        ]
+        blocks: [{ type: "exercise" }] // Missing exerciseId
       };
       expect(validateProgramData(missingExerciseId)).toBe(false);
     });
@@ -204,11 +187,7 @@ describe("Program Share Utilities", () => {
     it("should reject warmup/rest blocks without seconds", () => {
       const missingSeconds = {
         name: "Test",
-        sessions: [
-          {
-            blocks: [{ type: "warmup" }] // Missing seconds
-          }
-        ]
+        blocks: [{ type: "warmup" }] // Missing seconds
       };
       expect(validateProgramData(missingSeconds)).toBe(false);
     });
@@ -228,7 +207,7 @@ describe("Program Share Utilities", () => {
       // Verify data integrity
       expect(decoded.name).toBe(mockProgram.name);
       expect(decoded.description).toBe(mockProgram.description);
-      expect(decoded.sessions).toEqual(mockProgram.sessions);
+      expect(decoded.blocks).toEqual(mockProgram.blocks);
     });
 
     it("should handle challenge encode -> decode cycle", () => {
@@ -237,7 +216,7 @@ describe("Program Share Utilities", () => {
 
       expect(decoded.name).toBe(mockChallenge.name);
       expect(decoded.challengeConfig).toEqual(mockChallenge.challengeConfig);
-      expect(decoded.sessions).toEqual([]); // Challenges have empty sessions
+      expect(decoded.blocks).toEqual([]); // Challenges have empty blocks
     });
   });
 });

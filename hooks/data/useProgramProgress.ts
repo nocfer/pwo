@@ -9,9 +9,9 @@ import { useRefreshVersions } from "@/context/DataContext";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { storage } from "@/lib/storage";
 import {
-  calculateCompletionPercentage,
-  calculateStreak,
-  findNextSessionIndex
+    calculateCompletionPercentage,
+    calculateStreak,
+    findNextSessionIndex
 } from "@/lib/utils/progress";
 import type { Program, ProgramProgress } from "@/types";
 import { useCallback, useMemo } from "react";
@@ -65,7 +65,7 @@ export function useProgramProgress(program: Program | null | undefined): {
       return null;
     }
 
-    const totalSessions = program.sessions.length;
+    const totalSessions = program.blocks.length;
 
     // Default values when there is no progress yet
     if (!progress) {
@@ -89,17 +89,15 @@ export function useProgramProgress(program: Program | null | undefined): {
       };
     }
 
-    const runs = progress.runs ?? [];
-    const currentRun = runs.length > 0 ? runs[runs.length - 1] : undefined;
-    const currentRunSessions =
-      currentRun?.sessions?.filter((s) => s.completed) ?? [];
-    const currentRunSessionsCompleted = currentRunSessions.length;
+    const workouts = progress.workouts ?? [];
+    const completedWorkouts = workouts.filter((w) => w.completed);
+    const currentRunSessionsCompleted = completedWorkouts.length;
     const currentRunCompletionPercentage = calculateCompletionPercentage(
       currentRunSessionsCompleted,
       totalSessions
     );
 
-    const lifetimeSessionsCompleted = progress.lifetimeSessionsCompleted ?? 0;
+    const lifetimeSessionsCompleted = progress.lifetimeWorkoutsCompleted ?? 0;
     const lifetimeTimeSpentSeconds = progress.lifetimeTimeSpentSeconds ?? 0;
     const averageTimePerSessionSeconds =
       lifetimeSessionsCompleted > 0
@@ -107,11 +105,11 @@ export function useProgramProgress(program: Program | null | undefined): {
         : 0;
 
     // Use shared utility for streak calculation
-    const currentStreak = calculateStreak(currentRunSessions);
+    const currentStreak = calculateStreak(completedWorkouts);
 
     // Use shared utility for finding next session
     const completedIndices = new Set(
-      currentRunSessions.map((s) => s.sessionIndex)
+      completedWorkouts.map((w, idx) => idx + 1)
     );
     const nextSessionIndex = findNextSessionIndex(
       completedIndices,
@@ -124,31 +122,28 @@ export function useProgramProgress(program: Program | null | undefined): {
       { completed: number; total: number }
     >();
 
-    // Count total occurrences of each exercise across all sessions
-    program.sessions.forEach((session) => {
-      session.blocks.forEach((block) => {
-        if (block.type === "exercise") {
-          const current = exerciseCompletion.get(block.exerciseId) || {
-            completed: 0,
-            total: 0
-          };
-          current.total++;
-          exerciseCompletion.set(block.exerciseId, current);
-        }
-      });
+    // Count total occurrences of each exercise across all blocks
+    program.blocks.forEach((block) => {
+      if (block.type === "exercise") {
+        const current = exerciseCompletion.get(block.exerciseId) || {
+          completed: 0,
+          total: 0
+        };
+        current.total++;
+        exerciseCompletion.set(block.exerciseId, current);
+      }
     });
 
-    // Count completed occurrences from all runs for exercise completion
-    runs.forEach((run) => {
-      const completed = run.sessions.filter((s) => s.completed);
-      completed.forEach((sessionProgress) => {
-        sessionProgress.exercises.forEach((exerciseProgress) => {
+    // Count completed occurrences from all workouts for exercise completion
+    workouts.forEach((workout) => {
+      if (workout.completed) {
+        workout.exercises.forEach((exerciseProgress) => {
           const current = exerciseCompletion.get(exerciseProgress.exerciseId);
           if (current) {
             current.completed++;
           }
         });
-      });
+      }
     });
 
     const isCurrentRunCompleted =
@@ -158,11 +153,11 @@ export function useProgramProgress(program: Program | null | undefined): {
       programId: program.id,
       progress,
       totalSessions,
-      currentRunIndex: currentRun ? runs.length : null,
+      currentRunIndex: workouts.length > 0 ? 1 : null,
       currentRunSessionsCompleted,
       currentRunCompletionPercentage,
-      currentRunStartedAt: currentRun?.startedAt ?? null,
-      currentRunCompletedAt: currentRun?.completedAt ?? null,
+      currentRunStartedAt: workouts.length > 0 ? workouts[0]?.completedAt ?? null : null,
+      currentRunCompletedAt: null,
       lifetimeSessionsCompleted,
       lifetimeTimeSpentSeconds,
       averageTimePerSessionSeconds,

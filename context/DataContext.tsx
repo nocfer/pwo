@@ -33,13 +33,12 @@ import type {
   ImportResult,
   LegacyProgram,
   Program,
-  ProgramBlock,
   ProgramProgress,
   SearchFacets,
   SearchQuery,
-  SessionProgress,
   SessionState,
-  UsageStats
+  UsageStats,
+  WorkoutProgress
 } from "@/types";
 import React, {
   createContext,
@@ -95,7 +94,7 @@ type DataContextValue = {
     upsertProgram: (
       input: Pick<
         Program,
-        "id" | "name" | "description" | "sessions" | "challengeConfig"
+        "id" | "name" | "description" | "blocks" | "challengeConfig"
       > & {
         id?: string;
       }
@@ -172,91 +171,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   function migrateProgram(p: LegacyProgram): Program {
     if (!p || typeof p !== "object") return p as Program;
-    if (!Array.isArray(p.sessions)) return p as Program;
-
-    const nextSessions = p.sessions.map((s, idx) => {
-      const blocksRaw = Array.isArray(s?.blocks) ? s.blocks : [];
-      const blocks: ProgramBlock[] = [];
-
-      for (const b of blocksRaw) {
-        if (!b || typeof b !== "object") continue;
-
-        if (b.type === "warmup") {
-          blocks.push({ type: "warmup", seconds: Number(b.seconds) || 0 });
-          continue;
-        }
-
-        if (b.type === "rest") {
-          blocks.push({
-            type: "rest",
-            seconds: Number(b.seconds) || 0,
-            label: typeof b.label === "string" ? b.label : undefined
-          });
-          continue;
-        }
-
-        if (b.type !== "exercise") continue;
-
-        // New shape already?
-        if ("targetReps" in b || "durationSeconds" in b || "note" in b) {
-          blocks.push({
-            type: "exercise",
-            exerciseId: String(b.exerciseId ?? ""),
-            targetReps:
-              typeof b.targetReps === "number" ? b.targetReps : undefined,
-            durationSeconds:
-              typeof b.durationSeconds === "number"
-                ? b.durationSeconds
-                : undefined,
-            note: typeof b.note === "string" ? b.note : undefined
-          });
-          continue;
-        }
-
-        // Old shape: { sets, repsPerSet, restSecondsBetweenSets }
-        const sets = typeof b.sets === "number" ? b.sets : undefined;
-        const reps = b.repsPerSet;
-        let targetReps: number | undefined;
-        const noteParts: string[] = [];
-
-        if (typeof reps === "number") {
-          targetReps = reps;
-          if (sets && sets > 1) noteParts.push(`Previously: ${sets} sets`);
-        } else if (Array.isArray(reps)) {
-          const repsList = reps.filter((x) => typeof x === "number");
-          if (repsList.length)
-            noteParts.push(`Previously: ${repsList.join(", ")} reps`);
-          if (sets && sets > 1) noteParts.push(`${sets} sets`);
-        } else if (sets && sets > 1) {
-          noteParts.push(`Previously: ${sets} sets`);
-        }
-
-        blocks.push({
-          type: "exercise",
-          exerciseId: String(b.exerciseId ?? ""),
-          targetReps,
-          note: noteParts.length ? noteParts.join(" • ") : undefined
-        });
-
-        const restBetween = Number(b.restSecondsBetweenSets);
-        if (Number.isFinite(restBetween) && restBetween > 0) {
-          blocks.push({ type: "rest", seconds: restBetween, label: "Rest" });
-        }
-      }
-
-      return {
-        index: typeof s?.index === "number" ? s.index : idx + 1,
-        name: typeof s?.name === "string" ? s.name : undefined,
-        blocks
-      };
-    });
-
+    
+    // For the new structure, programs should already have blocks
+    // This is just a safety check for any remaining legacy data
     const result: Program = {
       id: String(p.id ?? ""),
       name: String(p.name ?? ""),
-      description:
-        typeof p.description === "string" ? p.description : undefined,
-      sessions: nextSessions,
+      description: typeof p.description === "string" ? p.description : undefined,
+      blocks: [], // Start with empty blocks - will be populated from sessions if needed
       createdAt: String(p.createdAt ?? new Date().toISOString()),
       updatedAt: String(p.updatedAt ?? new Date().toISOString()),
       source: p.source === "builtin" ? "builtin" : "user"
@@ -268,12 +190,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       result.challengeConfig = {
         exerciseId: String(config.exerciseId ?? ""),
         sets: typeof config.sets === "number" ? config.sets : 5,
-        targetReps:
-          typeof config.targetReps === "number" ? config.targetReps : 100,
-        warmUpSeconds:
-          typeof config.warmUpSeconds === "number" ? config.warmUpSeconds : 0,
-        breakSeconds:
-          typeof config.breakSeconds === "number" ? config.breakSeconds : 0
+        targetReps: typeof config.targetReps === "number" ? config.targetReps : 100,
+        warmUpSeconds: typeof config.warmUpSeconds === "number" ? config.warmUpSeconds : 180,
+        breakSeconds: typeof config.breakSeconds === "number" ? config.breakSeconds : 90,
+        sessionIncreasePercent: typeof config.sessionIncreasePercent === "number" 
+          ? config.sessionIncreasePercent 
+          : (typeof config.weeklyIncreasePercent === "number" ? config.weeklyIncreasePercent : 10)
       };
     }
 
@@ -511,30 +433,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
           if (existing) {
             // Update existing progress
-            const sessionProgressIndex = existing.sessions.findIndex(
-              (s) => s.sessionIndex === sessionIndex
+            const workoutId = `${slug}_workout_${sessionIndex}`;
+            const workoutProgressIndex = existing.workouts.findIndex(
+              (w) => w.workoutId === workoutId
             );
-            const sessionProgress: SessionProgress = {
-              sessionIndex,
+            const workoutProgress: WorkoutProgress = {
+              workoutId,
+              programId: slug,
               completed: true,
               completedAt: dateISO,
               timeSpentSeconds,
               exercises: exerciseProgress
             };
 
-            if (sessionProgressIndex >= 0) {
-              existing.sessions[sessionProgressIndex] = sessionProgress;
+            if (workoutProgressIndex >= 0) {
+              existing.workouts[workoutProgressIndex] = workoutProgress;
             } else {
-              existing.sessions.push(sessionProgress);
+              existing.workouts.push(workoutProgress);
             }
 
             // Recalculate total reps
-            totalRepsCompleted = existing.sessions
-              .filter((s) => s.completed)
-              .reduce((sum, s) => {
+            totalRepsCompleted = existing.workouts
+              .filter((w) => w.completed)
+              .reduce((sum, w) => {
                 return (
                   sum +
-                  s.exercises.reduce((eSum, e) => eSum + e.repsCompleted, 0)
+                  w.exercises.reduce((eSum, e) => eSum + e.repsCompleted, 0)
                 );
               }, 0);
 
@@ -543,11 +467,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
             existing.updatedAt = dateISO;
 
             // Check if challenge is completed
-            const completedSessions = existing.sessions.filter(
-              (s) => s.completed
+            const completedWorkouts = existing.workouts.filter(
+              (w) => w.completed
             );
             if (
-              completedSessions.length === sessions.length &&
+              completedWorkouts.length === sessions.length &&
               totalRepsCompleted >= program.challengeConfig.targetReps
             ) {
               existing.completedAt = dateISO;
@@ -556,12 +480,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
             await storage.saveChallengeProgress(existing);
           } else {
             // Create new challenge progress
+            const workoutId = `${slug}_workout_${sessionIndex}`;
             const newProgress: ChallengeProgress = {
               challengeId: slug,
               startedAt: dateISO,
-              sessions: [
+              workouts: [
                 {
-                  sessionIndex,
+                  workoutId,
+                  programId: slug,
                   completed: true,
                   completedAt: dateISO,
                   timeSpentSeconds,
@@ -580,15 +506,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
           await storage.appendProgressHistory({
             date: dateISO.slice(0, 10),
             challengeId: slug,
-            sessionsCompleted: 1,
+            workoutsCompleted: 1,
             totalReps: totalRepsCompleted
           });
         } else {
           // Update program progress (open-ended runs model)
           const existing = await storage.loadProgramProgress(slug);
 
-          const sessionProgress: SessionProgress = {
-            sessionIndex,
+          const workoutId = `${slug}_workout_${sessionIndex}`;
+          const workoutProgress: WorkoutProgress = {
+            workoutId,
+            programId: slug,
             completed: true,
             completedAt: dateISO,
             timeSpentSeconds,
@@ -596,92 +524,41 @@ export function DataProvider({ children }: { children: ReactNode }) {
           };
 
           if (existing) {
-            const runs = existing.runs ?? [];
-            const nowISO = dateISO;
+            const workouts = existing.workouts ?? [];
 
-            // Use the latest run as the current run, or create one if none exist
-            const currentRunIndex = runs.length > 0 ? runs.length - 1 : 0;
-            if (!runs[currentRunIndex]) {
-              runs[currentRunIndex] = {
-                runId: `run_${currentRunIndex + 1}`,
-                startedAt: nowISO,
-                sessions: [],
-                totalTimeSpentSeconds: 0,
-                lastActivityAt: null,
-                updatedAt: nowISO
-              } as any;
-            }
-
-            const currentRun = runs[currentRunIndex];
-
-            // Upsert session within current run
-            const sessionIdx = currentRun.sessions.findIndex(
-              (s) => s.sessionIndex === sessionIndex
+            // Upsert workout
+            const workoutIdx = workouts.findIndex(
+              (w) => w.workoutId === workoutId
             );
-            if (sessionIdx >= 0) {
-              currentRun.sessions[sessionIdx] = sessionProgress;
+            if (workoutIdx >= 0) {
+              workouts[workoutIdx] = workoutProgress;
             } else {
-              currentRun.sessions.push(sessionProgress);
+              workouts.push(workoutProgress);
             }
 
-            // Recalculate run time and activity
-            const completedSessions = currentRun.sessions.filter(
-              (s) => s.completed
-            );
-            currentRun.totalTimeSpentSeconds = completedSessions.reduce(
-              (sum, s) => sum + (s.timeSpentSeconds || 0),
+            // Recalculate aggregates
+            const completedWorkouts = workouts.filter((w) => w.completed);
+            const totalTimeSpentSeconds = completedWorkouts.reduce(
+              (sum, w) => sum + (w.timeSpentSeconds || 0),
               0
             );
-            currentRun.lastActivityAt = dateISO;
-            currentRun.updatedAt = dateISO;
 
-            // If this run has all sessions completed, mark it completedAt
-            if (
-              completedSessions.length === program.sessions.length &&
-              program.sessions.length > 0
-            ) {
-              currentRun.completedAt = dateISO;
-            }
-
-            // Update lifetime aggregates on ProgramProgress
-            const allRuns = runs;
-            const allCompletedSessions = allRuns.flatMap((r) =>
-              r.sessions.filter((s) => s.completed)
-            );
-            existing.lifetimeSessionsCompleted = allCompletedSessions.length;
-            existing.lifetimeTimeSpentSeconds = allRuns.reduce(
-              (sum, r) => sum + (r.totalTimeSpentSeconds || 0),
-              0
-            );
+            existing.workouts = workouts;
+            existing.lifetimeWorkoutsCompleted = completedWorkouts.length;
+            existing.lifetimeTimeSpentSeconds = totalTimeSpentSeconds;
             existing.lastActivityAt = dateISO;
             existing.updatedAt = dateISO;
-            existing.runs = allRuns;
 
             await storage.saveProgramProgress(existing);
           } else {
-            // Create new program progress with a first run
+            // Create new program progress
             const newProgress: ProgramProgress = {
               programId: slug,
-              runs: [
-                {
-                  runId: "run_1",
-                  startedAt: dateISO,
-                  completedAt: undefined,
-                  sessions: [sessionProgress],
-                  totalTimeSpentSeconds: timeSpentSeconds,
-                  lastActivityAt: dateISO,
-                  updatedAt: dateISO
-                }
-              ],
-              lifetimeSessionsCompleted: 1,
+              workouts: [workoutProgress],
+              lifetimeWorkoutsCompleted: 1,
               lifetimeTimeSpentSeconds: timeSpentSeconds,
               lastActivityAt: dateISO,
-              updatedAt: dateISO,
-              // Legacy fields (single-run) for back-compat
-              startedAt: dateISO,
-              completedAt: undefined,
-              sessions: [sessionProgress],
-              totalTimeSpentSeconds: timeSpentSeconds
+              updatedAt: dateISO
             };
             await storage.saveProgramProgress(newProgress);
           }
@@ -690,7 +567,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           await storage.appendProgressHistory({
             date: dateISO.slice(0, 10),
             programId: slug,
-            sessionsCompleted: 1,
+            workoutsCompleted: 1,
             timeSpentSeconds
           });
         }
@@ -852,7 +729,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     async (
       input: Pick<
         Program,
-        "id" | "name" | "description" | "sessions" | "challengeConfig"
+        "id" | "name" | "description" | "blocks" | "challengeConfig"
       > & {
         id?: string;
       }
@@ -869,7 +746,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         id: input.id ?? "",
         name: input.name,
         description: input.description,
-        sessions: input.sessions,
+        blocks: input.blocks,
         challengeConfig: input.challengeConfig,
         source: "user"
       });
@@ -924,9 +801,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
           // Check dependencies
           const referencedBy = state.programs.find((p) =>
-            p.sessions.some((s) =>
-              s.blocks.some((b) => b.type === "exercise" && b.exerciseId === id)
-            )
+            p.blocks.some((b) => b.type === "exercise" && b.exerciseId === id)
           );
 
           if (referencedBy) {
@@ -1364,9 +1239,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       if (type === "exercises") {
         const referencingPrograms = state.programs.filter((p) =>
-          p.sessions.some((s) =>
-            s.blocks.some((b) => b.type === "exercise" && b.exerciseId === id)
-          )
+          p.blocks.some((b) => b.type === "exercise" && b.exerciseId === id)
         );
 
         if (referencingPrograms.length > 0) {

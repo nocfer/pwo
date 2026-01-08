@@ -5,11 +5,11 @@
 
 import type { Exercise, Program } from "@/types";
 import type {
-  DataType,
-  DependencyCheck,
-  DependencyResult,
-  ValidationError,
-  ValidationResult
+    DataType,
+    DependencyCheck,
+    DependencyResult,
+    ValidationError,
+    ValidationResult
 } from "@/types/enhanced";
 import { ValidationErrorCode } from "@/types/enhanced";
 import { createValidationError } from "./validation";
@@ -43,19 +43,16 @@ export class DependencyChecker {
     const dependentChallenges: Program[] = [];
     const warnings: string[] = [];
 
-    // Check program session blocks
+    // Check program blocks
     for (const program of this.programs) {
       let hasReference = false;
 
-      // Check session blocks
-      for (const session of program.sessions) {
-        for (const block of session.blocks) {
-          if (block.type === "exercise" && block.exerciseId === exerciseId) {
-            hasReference = true;
-            break;
-          }
+      // Check blocks
+      for (const block of program.blocks) {
+        if (block.type === "exercise" && block.exerciseId === exerciseId) {
+          hasReference = true;
+          break;
         }
-        if (hasReference) break;
       }
 
       // Check challenge config
@@ -137,19 +134,17 @@ export class DependencyChecker {
       }
     }
 
-    // Check session block exercise references
-    program.sessions.forEach((session, sessionIndex) => {
-      session.blocks.forEach((block, blockIndex) => {
-        if (block.type === "exercise" && !exerciseIds.has(block.exerciseId)) {
-          errors.push(
-            createValidationError(
-              `sessions[${sessionIndex}].blocks[${blockIndex}].exerciseId`,
-              `Session ${sessionIndex + 1}, block ${blockIndex + 1} references non-existent exercise: ${block.exerciseId}`,
-              ValidationErrorCode.INVALID_REFERENCE
-            )
-          );
-        }
-      });
+    // Check block exercise references
+    program.blocks.forEach((block, blockIndex) => {
+      if (block.type === "exercise" && !exerciseIds.has(block.exerciseId)) {
+        errors.push(
+          createValidationError(
+            `blocks[${blockIndex}].exerciseId`,
+            `Block ${blockIndex + 1} references non-existent exercise: ${block.exerciseId}`,
+            ValidationErrorCode.INVALID_REFERENCE
+          )
+        );
+      }
     });
 
     return {
@@ -196,12 +191,10 @@ export class DependencyChecker {
         usedExerciseIds.add(program.challengeConfig.exerciseId);
       }
 
-      // Check session blocks
-      for (const session of program.sessions) {
-        for (const block of session.blocks) {
-          if (block.type === "exercise") {
-            usedExerciseIds.add(block.exerciseId);
-          }
+      // Check blocks
+      for (const block of program.blocks) {
+        if (block.type === "exercise") {
+          usedExerciseIds.add(block.exerciseId);
         }
       }
     }
@@ -251,12 +244,10 @@ export class DependencyChecker {
         blockCount++; // Count challenge config as one usage
       }
 
-      // Check session blocks
-      for (const session of program.sessions) {
-        for (const block of session.blocks) {
-          if (block.type === "exercise" && block.exerciseId === exerciseId) {
-            blockCount++;
-          }
+      // Check blocks
+      for (const block of program.blocks) {
+        if (block.type === "exercise" && block.exerciseId === exerciseId) {
+          blockCount++;
         }
       }
 

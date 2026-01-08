@@ -1,8 +1,8 @@
 import { AnimatedCard } from "@/components/common";
 import {
-  useChallengeSessions,
-  useExercises,
-  useLiveHistory
+    useChallengeSessions,
+    useExercises,
+    useLiveHistory
 } from "@/hooks/data";
 import { formatCount } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
@@ -22,15 +22,15 @@ export default function ProgramOverview({
   isChallenge
 }: Props) {
   const challengeSessions = useChallengeSessions(program);
-  const sessionCount =
+  const blockCount =
     totalSessions ??
-    (isChallenge ? challengeSessions.length : program.sessions.length);
+    (isChallenge ? challengeSessions.length : program.blocks.length);
   const typeLabel = isChallenge ? "Challenge" : "Program";
   const sourceLabel = program.source === "builtin" ? "Built-in" : "Custom";
-  const descriptionFallback = `This ${typeLabel.toLowerCase()} has ${formatCount(sessionCount, "session")}.`;
+  const descriptionFallback = `This ${typeLabel.toLowerCase()} has ${formatCount(blockCount, "block")}.`;
 
   const stats: { label: string; value: string | number; icon: string }[] = [
-    { label: "Sessions", value: sessionCount, icon: "calendar-outline" },
+    { label: "Blocks", value: blockCount, icon: "calendar-outline" },
     { label: "Type", value: typeLabel, icon: "flash-outline" },
     { label: "Source", value: sourceLabel, icon: "apps-outline" }
   ];
@@ -107,15 +107,15 @@ type ExercisesPreviewProps = {
 function ExercisesPreview({ program, isChallenge }: ExercisesPreviewProps) {
   const { data: exercises } = useExercises();
   const challengeSessions = useChallengeSessions(program);
-  const allSessions = isChallenge ? challengeSessions : program.sessions;
+  const allBlocks = isChallenge 
+    ? challengeSessions.flatMap(s => s.blocks)
+    : program.blocks;
 
   const exerciseIds = new Set<string>();
-  allSessions.forEach((session) => {
-    session.blocks.forEach((block) => {
-      if (block.type === "exercise") {
-        exerciseIds.add(block.exerciseId);
-      }
-    });
+  allBlocks.forEach((block) => {
+    if (block.type === "exercise") {
+      exerciseIds.add(block.exerciseId);
+    }
   });
 
   if (exerciseIds.size === 0) {

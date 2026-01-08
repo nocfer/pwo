@@ -123,9 +123,7 @@ describe("storage", () => {
           id: "prg_1",
           name: "Beginner",
           description: "For beginners",
-          sessions: [
-            { index: 1, blocks: [{ type: "warmup" as const, seconds: 300 }] }
-          ],
+          blocks: [{ type: "warmup" as const, seconds: 300 }],
           source: "builtin" as const,
           createdAt: "2025-01-01T00:00:00.000Z",
           updatedAt: "2025-01-01T00:00:00.000Z"
@@ -142,7 +140,7 @@ describe("storage", () => {
         id: "prg_test",
         name: "Test Program",
         description: "Test",
-        sessions: [{ index: 1, blocks: [] }],
+        blocks: [],
         source: "user"
       });
 
@@ -156,7 +154,7 @@ describe("storage", () => {
         id: "prg_upd",
         name: "Original",
         description: "Desc",
-        sessions: [{ index: 1, blocks: [] }],
+        blocks: [],
         source: "user"
       });
 
@@ -164,7 +162,7 @@ describe("storage", () => {
         id: initial.id,
         name: "Updated",
         description: "Updated",
-        sessions: initial.sessions,
+        blocks: initial.blocks,
         source: "user"
       });
 
@@ -177,7 +175,7 @@ describe("storage", () => {
         id: "prg_del",
         name: "To Delete",
         description: "Delete",
-        sessions: [],
+        blocks: [],
         source: "user"
       });
 
@@ -378,8 +376,8 @@ describe("storage", () => {
     it("saveProgramProgress and loadProgramProgress work together", async () => {
       const progress = {
         programId: "test",
-        runs: [],
-        lifetimeSessionsCompleted: 0,
+        workouts: [],
+        lifetimeWorkoutsCompleted: 0,
         lifetimeTimeSpentSeconds: 0,
         lastActivityAt: null,
         updatedAt: "2025-01-01T00:00:00.000Z"
@@ -389,7 +387,7 @@ describe("storage", () => {
       const loaded = await storage.loadProgramProgress("test");
       expect(loaded).not.toBeNull();
       expect(loaded?.programId).toBe("test");
-      expect(loaded?.lifetimeSessionsCompleted).toBe(0);
+      expect(loaded?.lifetimeWorkoutsCompleted).toBe(0);
       expect(loaded?.lifetimeTimeSpentSeconds).toBe(0);
     });
   });

@@ -151,11 +151,11 @@ export function SessionsCompletedChart({
 
         if (!mounted) return;
 
-        // Group by date and sum sessions
+        // Group by date and sum workouts
         const byDate = new Map<string, number>();
         history.forEach((entry) => {
           const existing = byDate.get(entry.date) || 0;
-          byDate.set(entry.date, existing + entry.sessionsCompleted);
+          byDate.set(entry.date, existing + entry.workoutsCompleted);
         });
 
         const sorted = Array.from(byDate.entries())

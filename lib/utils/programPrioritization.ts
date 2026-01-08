@@ -70,21 +70,19 @@ async function getProgramUsageStats(): Promise<
   // Process regular program progress
   for (const progress of programProgress) {
     const programId = progress.programId;
-    let totalSessions = 0;
+    const workouts = progress.workouts ?? [];
+    const completedWorkouts = workouts.filter((w) => w.completed);
+    const usageCount = completedWorkouts.length;
+
+    // Track latest activity
     let latestActivity: string | undefined;
-
-    // Count sessions across all runs
-    for (const run of progress.runs ?? []) {
-      const completedSessions = run.sessions?.filter((s) => s.completed) ?? [];
-      totalSessions += completedSessions.length;
-
-      // Track latest activity
-      if (run.lastActivityAt) {
+    for (const workout of completedWorkouts) {
+      if (workout.completedAt) {
         if (
           !latestActivity ||
-          new Date(run.lastActivityAt) > new Date(latestActivity)
+          new Date(workout.completedAt) > new Date(latestActivity)
         ) {
-          latestActivity = run.lastActivityAt;
+          latestActivity = workout.completedAt;
         }
       }
     }
@@ -101,16 +99,15 @@ async function getProgramUsageStats(): Promise<
 
     usageStats.set(programId, {
       lastUsed: latestActivity,
-      usageCount: totalSessions
+      usageCount
     });
   }
 
   // Process challenge progress
   for (const progress of challengeProgress) {
     const challengeId = progress.challengeId;
-    const completedSessions =
-      progress.sessions?.filter((s) => s.completed) ?? [];
-    const usageCount = completedSessions.length;
+    const completedWorkouts = progress.workouts.filter((w) => w.completed);
+    const usageCount = completedWorkouts.length;
 
     usageStats.set(challengeId, {
       lastUsed: progress.lastActivityAt || undefined,

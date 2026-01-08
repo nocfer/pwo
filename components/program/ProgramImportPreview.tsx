@@ -7,7 +7,7 @@ import { calculateChallengeSessionCount, useExercises } from "@/hooks/data";
 import { formatCount, formatReps } from "@/lib/utils/format";
 import { ShareableProgramData } from "@/lib/utils/programShare";
 import { theme } from "@/theme/theme";
-import { ChallengeConfig, ProgramBlock, ProgramSession } from "@/types";
+import { ChallengeConfig, ProgramBlock } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -33,11 +33,9 @@ export default function ProgramImportPreview({
   // Extract all exercise IDs from the program
   const exerciseIds = useMemo(() => {
     const ids = new Set<string>();
-    for (const session of programData.sessions) {
-      for (const block of session.blocks) {
-        if (block.type === "exercise") {
-          ids.add(block.exerciseId);
-        }
+    for (const block of programData.blocks) {
+      if (block.type === "exercise") {
+        ids.add(block.exerciseId);
       }
     }
     if (programData.challengeConfig) {
@@ -62,8 +60,8 @@ export default function ProgramImportPreview({
     if (isChallenge && programData.challengeConfig) {
       return calculateChallengeSessionCount(programData.challengeConfig);
     }
-    return programData.sessions.length;
-  }, [isChallenge, programData.challengeConfig, programData.sessions.length]);
+    return 1; // Regular programs are now single workouts
+  }, [isChallenge, programData.challengeConfig]);
 
   // Count exercises in program
   const exerciseCount = exerciseIds.length;
@@ -184,8 +182,8 @@ export default function ProgramImportPreview({
       )}
 
       {!isChallenge && (
-        <ProgramSessionsPreview
-          sessions={programData.sessions}
+        <BlocksPreview
+          blocks={programData.blocks}
           exercises={exercises ?? []}
           missingExerciseIds={missingExercises}
         />
@@ -439,18 +437,18 @@ const styles = StyleSheet.create({
   }
 });
 
-// Component to display all sessions with their blocks
-type ProgramSessionsPreviewProps = {
-  sessions: ProgramSession[];
+// Component to display all blocks
+type BlocksPreviewProps = {
+  blocks: ProgramBlock[];
   exercises: { id: string; name: string }[];
   missingExerciseIds: string[];
 };
 
-function ProgramSessionsPreview({
-  sessions,
+function BlocksPreview({
+  blocks,
   exercises,
   missingExerciseIds
-}: ProgramSessionsPreviewProps) {
+}: BlocksPreviewProps) {
   const exerciseMap = useMemo(() => {
     return new Map(exercises.map((e) => [e.id, e.name] as const));
   }, [exercises]);
@@ -459,7 +457,7 @@ function ProgramSessionsPreview({
     return new Set(missingExerciseIds);
   }, [missingExerciseIds]);
 
-  if (sessions.length === 0) {
+  if (blocks.length === 0) {
     return null;
   }
 
@@ -472,69 +470,25 @@ function ProgramSessionsPreview({
             size={20}
             color={theme.colors.primary}
           />
-          <Text style={styles.sessionsTitle}>Program Sessions</Text>
+          <Text style={styles.sessionsTitle}>Workout Blocks</Text>
         </View>
         <Text style={styles.sessionsSubtitle}>
-          {formatCount(sessions.length, "session")} total
+          {formatCount(blocks.length, "block")} total
         </Text>
 
-        <View style={styles.sessionsList}>
-          {sessions.map((session, sessionIdx) => (
-            <SessionPreview
-              key={sessionIdx}
-              session={session}
+        <View style={styles.blocksList}>
+          {blocks.map((block, blockIdx) => (
+            <BlockPreview
+              key={blockIdx}
+              block={block}
               exerciseMap={exerciseMap}
               missingExerciseSet={missingExerciseSet}
+              index={blockIdx}
             />
           ))}
         </View>
       </View>
     </AnimatedCard>
-  );
-}
-
-type SessionPreviewProps = {
-  session: ProgramSession;
-  exerciseMap: Map<string, string>;
-  missingExerciseSet: Set<string>;
-};
-
-function SessionPreview({
-  session,
-  exerciseMap,
-  missingExerciseSet
-}: SessionPreviewProps) {
-  const sessionName = session.name || `Session ${session.index}`;
-  const blockCount = session.blocks.length;
-
-  return (
-    <View style={styles.sessionContainer}>
-      <View style={styles.sessionHeader}>
-        <View style={styles.sessionHeaderLeft}>
-          <View style={styles.sessionNumber}>
-            <Text style={styles.sessionNumberText}>{session.index}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.sessionName}>{sessionName}</Text>
-            <Text style={styles.sessionBlockCount}>
-              {formatCount(blockCount, "step")}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.blocksList}>
-        {session.blocks.map((block, blockIdx) => (
-          <BlockPreview
-            key={blockIdx}
-            block={block}
-            exerciseMap={exerciseMap}
-            missingExerciseSet={missingExerciseSet}
-            index={blockIdx}
-          />
-        ))}
-      </View>
-    </View>
   );
 }
 

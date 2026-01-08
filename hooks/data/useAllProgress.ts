@@ -62,40 +62,41 @@ export function useAllProgress(): {
     let totalRepsCompleted = 0;
     const recentActivity: AggregatedProgress["recentActivity"] = [];
 
-    // Process program progress (across all runs)
+    // Process program progress
     programProgress.forEach((progress) => {
-      const runs = progress.runs ?? [];
-      runs.forEach((run) => {
-        const completedSessions = run.sessions.filter((s) => s.completed);
-        totalWorkoutsCompleted += completedSessions.length;
-        totalTimeSpentSeconds += run.totalTimeSpentSeconds || 0;
+      const workouts = progress.workouts ?? [];
+      const completedWorkouts = workouts.filter((w) => w.completed);
+      totalWorkoutsCompleted += completedWorkouts.length;
+      totalTimeSpentSeconds += completedWorkouts.reduce(
+        (sum, w) => sum + (w.timeSpentSeconds || 0),
+        0
+      );
 
-        completedSessions.forEach((session) => {
-          if (session.completedAt) {
-            recentActivity.push({
-              date: session.completedAt,
-              type: "program",
-              id: progress.programId,
-              sessionIndex: session.sessionIndex
-            });
-          }
-        });
+      completedWorkouts.forEach((workout) => {
+        if (workout.completedAt) {
+          recentActivity.push({
+            date: workout.completedAt,
+            type: "program",
+            id: progress.programId,
+            sessionIndex: 0 // workoutId is now used instead of sessionIndex
+          });
+        }
       });
     });
 
     // Process challenge progress
     challengeProgress.forEach((progress) => {
-      const completedSessions = progress.sessions.filter((s) => s.completed);
-      totalWorkoutsCompleted += completedSessions.length;
+      const completedWorkouts = progress.workouts.filter((w) => w.completed);
+      totalWorkoutsCompleted += completedWorkouts.length;
       totalRepsCompleted += progress.totalRepsCompleted || 0;
 
-      completedSessions.forEach((session) => {
-        if (session.completedAt) {
+      completedWorkouts.forEach((workout) => {
+        if (workout.completedAt) {
           recentActivity.push({
-            date: session.completedAt,
+            date: workout.completedAt,
             type: "challenge",
             id: progress.challengeId,
-            sessionIndex: session.sessionIndex
+            sessionIndex: 0 // workoutId is now used instead of sessionIndex
           });
         }
       });
@@ -138,17 +139,15 @@ export function useAllProgress(): {
 
     // Count active programs/challenges
     const activePrograms = programProgress.filter((p) => {
-      const runs = p.runs ?? [];
-      const currentRun = runs[runs.length - 1];
-      if (!currentRun) return false;
-      const completed = currentRun.sessions.filter((s) => s.completed).length;
-      const total = currentRun.sessions.length;
+      const workouts = p.workouts ?? [];
+      const completed = workouts.filter((w) => w.completed).length;
+      const total = workouts.length;
       return completed > 0 && total > 0 && completed < total;
     }).length;
 
     const activeChallenges = challengeProgress.filter((c) => {
-      const completed = c.sessions.filter((s) => s.completed).length;
-      return completed > 0 && completed < c.sessions.length;
+      const completed = c.workouts.filter((w) => w.completed).length;
+      return completed > 0 && completed < c.workouts.length;
     }).length;
 
     return {

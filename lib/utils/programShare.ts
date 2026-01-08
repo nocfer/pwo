@@ -22,7 +22,7 @@ export function encodeProgramForShare(program: Program): string {
   const shareable: ShareableProgramData = {
     name: program.name,
     description: program.description,
-    sessions: program.sessions,
+    blocks: program.blocks,
     challengeConfig: program.challengeConfig,
     source: program.source
   };
@@ -68,73 +68,46 @@ export function validateProgramData(
     return false;
   }
 
-  // Sessions must be an array
-  if (!Array.isArray(obj.sessions)) {
+  // Blocks must be an array
+  if (!Array.isArray(obj.blocks)) {
     return false;
   }
 
-  // For challenges, sessions can be empty (sessions are generated from challengeConfig)
-  // For regular programs, sessions must not be empty
+  // For challenges, blocks can be empty (blocks are generated from challengeConfig)
+  // For regular programs, blocks must not be empty
   const isChallenge = obj.challengeConfig !== undefined;
-  if (!isChallenge && obj.sessions.length === 0) {
+  if (!isChallenge && obj.blocks.length === 0) {
     return false;
   }
 
-  // Validate each session
-  for (const session of obj.sessions) {
-    if (!session || typeof session !== "object") {
+  // Validate each block
+  for (const block of obj.blocks) {
+    if (!block || typeof block !== "object") {
       return false;
     }
 
-    const sessionObj = session as Record<string, unknown>;
+    const blockObj = block as Record<string, unknown>;
 
-    // Index should be a number
+    // Type must be one of the valid types
     if (
-      sessionObj.index !== undefined &&
-      typeof sessionObj.index !== "number"
+      blockObj.type !== "warmup" &&
+      blockObj.type !== "exercise" &&
+      blockObj.type !== "rest"
     ) {
       return false;
     }
 
-    // Name is optional but must be string if present
-    if (sessionObj.name !== undefined && typeof sessionObj.name !== "string") {
-      return false;
-    }
-
-    // Blocks must be an array
-    if (!Array.isArray(sessionObj.blocks)) {
-      return false;
-    }
-
-    // Validate each block
-    for (const block of sessionObj.blocks) {
-      if (!block || typeof block !== "object") {
+    // Exercise blocks must have exerciseId
+    if (blockObj.type === "exercise") {
+      if (typeof blockObj.exerciseId !== "string") {
         return false;
       }
+    }
 
-      const blockObj = block as Record<string, unknown>;
-
-      // Type must be one of the valid types
-      if (
-        blockObj.type !== "warmup" &&
-        blockObj.type !== "exercise" &&
-        blockObj.type !== "rest"
-      ) {
+    // Warmup and rest blocks must have seconds
+    if (blockObj.type === "warmup" || blockObj.type === "rest") {
+      if (typeof blockObj.seconds !== "number") {
         return false;
-      }
-
-      // Exercise blocks must have exerciseId
-      if (blockObj.type === "exercise") {
-        if (typeof blockObj.exerciseId !== "string") {
-          return false;
-        }
-      }
-
-      // Warmup and rest blocks must have seconds
-      if (blockObj.type === "warmup" || blockObj.type === "rest") {
-        if (typeof blockObj.seconds !== "number") {
-          return false;
-        }
       }
     }
   }

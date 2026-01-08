@@ -123,15 +123,9 @@ describe("Data Context Integration", () => {
       const mockProgram: Program = {
         id: "prg_1",
         name: "Test Program",
-        sessions: [
-          {
-            index: 1,
-            name: "Session 1",
-            blocks: [
-              { type: "warmup", seconds: 180 },
-              { type: "exercise", exerciseId: "ex_1", targetReps: 10 }
-            ]
-          }
+        blocks: [
+          { type: "warmup", seconds: 180 },
+          { type: "exercise", exerciseId: "ex_1", targetReps: 10 }
         ],
         source: "user",
         createdAt: "2024-01-01T00:00:00.000Z",
@@ -143,14 +137,14 @@ describe("Data Context Integration", () => {
       await storage.upsertProgram({
         id: "",
         name: "Test Program",
-        sessions: mockProgram.sessions,
+        blocks: mockProgram.blocks,
         source: "user"
       });
 
       expect(storage.upsertProgram).toHaveBeenCalledWith({
         id: "",
         name: "Test Program",
-        sessions: mockProgram.sessions,
+        blocks: mockProgram.blocks,
         source: "user"
       });
     });
@@ -169,13 +163,7 @@ describe("Data Context Integration", () => {
       const mockProgram: Program = {
         id: "prg_1",
         name: "Test Program",
-        sessions: [
-          {
-            index: 1,
-            name: "Session 1",
-            blocks: [{ type: "exercise", exerciseId: "ex_1", targetReps: 10 }]
-          }
-        ],
+        blocks: [{ type: "exercise", exerciseId: "ex_1", targetReps: 10 }],
         source: "user",
         createdAt: "2024-01-01T00:00:00.000Z",
         updatedAt: "2024-01-01T00:00:00.000Z"
@@ -428,7 +416,7 @@ describe("Data Context Integration", () => {
               id: "prg_1",
               name: "Test Program",
               description: "Test Description",
-              sessions: [],
+              blocks: [],
               createdAt: "2024-01-01T00:00:00.000Z",
               updatedAt: "2024-01-01T00:00:00.000Z",
               source: "user"
