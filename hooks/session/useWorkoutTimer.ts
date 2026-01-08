@@ -331,7 +331,13 @@ export function useWorkoutTimer(opts: {
 
   // Auto-start rest timers when advancing to a rest step
   useEffect(() => {
-    if (!currentStep || currentStep.type !== "rest" || phase !== "working" || stepTimer > 0) return;
+    if (
+      !currentStep ||
+      currentStep.type !== "rest" ||
+      phase !== "working" ||
+      stepTimer > 0
+    )
+      return;
     startStepTimer(currentStep.seconds);
   }, [currentStep, phase, stepTimer, startStepTimer]);
 

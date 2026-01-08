@@ -84,7 +84,11 @@ function expandExerciseBlock(
   }
 
   // Add rest between exercises (not after the last exercise, and not if there's an explicit rest block following)
-  if (!isLastExercise && !hasExplicitRestAfter && defaultRestBetweenExercises > 0) {
+  if (
+    !isLastExercise &&
+    !hasExplicitRestAfter &&
+    defaultRestBetweenExercises > 0
+  ) {
     steps.push({
       key: `rest-between-exercises-${blockIndex}-${currentStepCount + steps.length}`,
       type: "rest",

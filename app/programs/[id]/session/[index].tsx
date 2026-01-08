@@ -54,7 +54,9 @@ export default function ProgramSessionRunner() {
         session={session}
         steps={steps}
         timer={timer}
-        onProgramUpdate={actions.upsertProgram}
+        onProgramUpdate={async (updatedProgram) => {
+          await actions.upsertProgram(updatedProgram);
+        }}
       />
     </View>
   );
