@@ -6,12 +6,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -50,7 +50,9 @@ export function WorkoutExecutionScreen({
   const [completedSets, setCompletedSets] = useState<SetCompletion[]>([]);
   const [currentReps, setCurrentReps] = useState<number | null>(null);
   const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
-  const [lastCompletion, setLastCompletion] = useState<SetCompletion | null>(null);
+  const [lastCompletion, setLastCompletion] = useState<SetCompletion | null>(
+    null
+  );
 
   // Initialize current reps when step changes
   useEffect(() => {
@@ -120,7 +122,9 @@ export function WorkoutExecutionScreen({
         const durationInfo = step.durationSeconds
           ? `${step.durationSeconds}s`
           : "";
-        detail = [setInfo, repsInfo || durationInfo].filter(Boolean).join(" • ");
+        detail = [setInfo, repsInfo || durationInfo]
+          .filter(Boolean)
+          .join(" • ");
       } else if (step.type === "warmup") {
         detail = formatTime(step.seconds);
       } else if (step.type === "rest") {
@@ -526,7 +530,9 @@ export function WorkoutExecutionScreen({
                   pressed && styles.primaryButtonPressed
                 ]}
                 onPress={
-                  current?.type === "exercise" ? handleCompleteSet : timer.handleComplete
+                  current?.type === "exercise"
+                    ? handleCompleteSet
+                    : timer.handleComplete
                 }
               >
                 <Ionicons
@@ -576,7 +582,9 @@ export function WorkoutExecutionScreen({
                 ]}
                 onPress={() => setShowUpdatePrompt(false)}
               >
-                <Text style={styles.modalButtonSecondaryText}>Keep Original</Text>
+                <Text style={styles.modalButtonSecondaryText}>
+                  Keep Original
+                </Text>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [
@@ -635,7 +643,6 @@ export function WorkoutExecutionScreen({
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {

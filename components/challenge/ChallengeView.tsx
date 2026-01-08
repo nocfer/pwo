@@ -10,7 +10,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AnimatedCard } from "../common";
-import ProgramOverview from "../program/ProgramOverview";
 import { ProgressCard } from "../progress";
 
 type Props = {
@@ -68,11 +67,13 @@ export default function ChallengeViewV2({ challengeMetrics, program }: Props) {
         </View>
       </AnimatedCard>
 
-      <ProgramOverview
-        program={program}
-        totalSessions={challengeMetrics.totalSessions}
-        isChallenge
-      />
+      {program.description && (
+        <AnimatedCard>
+          <View style={styles.card}>
+            <Text style={styles.description}>{program.description}</Text>
+          </View>
+        </AnimatedCard>
+      )}
 
       {nextSession && (
         <AnimatedCard>
@@ -193,6 +194,11 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
     ...theme.shadows.sm
+  },
+  description: {
+    ...theme.typography.body,
+    color: theme.colors.text,
+    lineHeight: 22
   },
   progressStats: {
     flexDirection: "row",

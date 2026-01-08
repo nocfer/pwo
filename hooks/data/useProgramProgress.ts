@@ -9,8 +9,8 @@ import { useRefreshVersions } from "@/context/DataContext";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { storage } from "@/lib/storage";
 import {
-    calculateCompletionPercentage,
-    calculateStreak
+  calculateCompletionPercentage,
+  calculateStreak
 } from "@/lib/utils/progress";
 import type { Program, ProgramProgress } from "@/types";
 import { useCallback, useMemo } from "react";
