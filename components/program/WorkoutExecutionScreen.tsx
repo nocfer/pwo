@@ -464,6 +464,7 @@ export function WorkoutExecutionScreen({
             <Pressable
               style={({ pressed }) => [
                 styles.primaryButton,
+                styles.primaryButtonFull,
                 pressed && styles.primaryButtonPressed
               ]}
               onPress={() => router.back()}
@@ -476,21 +477,8 @@ export function WorkoutExecutionScreen({
               <Text style={styles.primaryButtonText}>Done</Text>
             </Pressable>
           ) : timer.phase === "timed" ? (
-            // Timer running - show pause/play and skip
+            // Timer running - skip on left, pause/resume on right
             <>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.timerButton,
-                  pressed && styles.buttonPressed
-                ]}
-                onPress={timer.handlePauseResume}
-              >
-                <Ionicons
-                  name={timer.isPaused ? "play" : "pause"}
-                  size={24}
-                  color={theme.colors.text}
-                />
-              </Pressable>
               <Pressable
                 style={({ pressed }) => [
                   styles.skipTextButton,
@@ -500,9 +488,26 @@ export function WorkoutExecutionScreen({
               >
                 <Text style={styles.skipText}>Skip</Text>
               </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  styles.primaryButtonFlex,
+                  pressed && styles.primaryButtonPressed
+                ]}
+                onPress={timer.handlePauseResume}
+              >
+                <Ionicons
+                  name={timer.isPaused ? "play" : "pause"}
+                  size={24}
+                  color={theme.colors.primaryTextOn}
+                />
+                <Text style={styles.primaryButtonText}>
+                  {timer.isPaused ? "Resume" : "Pause"}
+                </Text>
+              </Pressable>
             </>
           ) : (
-            // Ready state - show skip and main action
+            // Ready state - skip on left, main action on right
             <>
               <Pressable
                 style={({ pressed }) => [
@@ -517,6 +522,7 @@ export function WorkoutExecutionScreen({
               <Pressable
                 style={({ pressed }) => [
                   styles.primaryButton,
+                  styles.primaryButtonFlex,
                   pressed && styles.primaryButtonPressed
                 ]}
                 onPress={
@@ -776,10 +782,12 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xl
   },
   timerButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: theme.radius.md,
     backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     alignItems: "center",
     justifyContent: "center"
   },
@@ -1033,14 +1041,15 @@ const styles = StyleSheet.create({
   },
   skipTextButton: {
     paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md
+    paddingHorizontal: theme.spacing.md,
+    height: 52,
+    justifyContent: "center"
   },
   skipText: {
     ...theme.typography.body,
     color: theme.colors.muted
   },
   primaryButton: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -1048,6 +1057,12 @@ const styles = StyleSheet.create({
     height: 52,
     backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.lg
+  },
+  primaryButtonFull: {
+    flex: 1
+  },
+  primaryButtonFlex: {
+    flex: 1
   },
   primaryButtonPressed: {
     opacity: 0.9,

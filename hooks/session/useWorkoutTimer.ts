@@ -329,6 +329,12 @@ export function useWorkoutTimer(opts: {
     setPhase("working");
   }, [currentStep, phase, stepTimer]);
 
+  // Auto-start rest timers when advancing to a rest step
+  useEffect(() => {
+    if (!currentStep || currentStep.type !== "rest" || phase !== "working" || stepTimer > 0) return;
+    startStepTimer(currentStep.seconds);
+  }, [currentStep, phase, stepTimer, startStepTimer]);
+
   // Play tick sound for last 3 seconds
   useEffect(() => {
     if (stepTimer > 0 && stepTimer <= 3) {
