@@ -6,7 +6,7 @@ module.exports = defineConfig([
   expoConfig,
   eslintPluginPrettierRecommended,
   {
-    ignores: ["dist/*"],
+    ignores: ["dist/*", "node_modules/*", ".expo/*"],
     rules: {
       "comma-dangle": ["error", "never"]
     }

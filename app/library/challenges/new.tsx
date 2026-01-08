@@ -1,0 +1,56 @@
+import {
+  ChallengeForm,
+  type ChallengeFormData
+} from "@/components/data/forms/ChallengeForm";
+import { useDataActions } from "@/context/DataContext";
+import { useExercises } from "@/hooks/data";
+import { router } from "expo-router";
+import { useState } from "react";
+import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+export default function NewChallengeScreen() {
+  const actions = useDataActions();
+  const { data: exercises } = useExercises();
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave(formData: ChallengeFormData) {
+    setSaving(true);
+    try {
+      await actions.upsertProgram({
+        id: "",
+        name: formData.name,
+        description: formData.description,
+        sessions: [], // Challenges generate sessions dynamically
+        challengeConfig: formData.challengeConfig
+      });
+      router.back();
+    } catch (e) {
+      throw e; // Let the form handle the error display
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleCancel() {
+    router.back();
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ChallengeForm
+        mode="create"
+        onSave={handleSave}
+        onCancel={handleCancel}
+        saving={saving}
+        exercises={exercises || []}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1
+  }
+});

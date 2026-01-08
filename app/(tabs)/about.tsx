@@ -118,117 +118,120 @@ export default function AboutScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top", "right", "left"]}>
       <ScrollView>
-
-      <View style={styles.card}>
-        <View style={styles.iconContainer}>
-          <Ionicons name="barbell" size={48} color={theme.colors.primary} />
-        </View>
-        <Text style={styles.title}>PWO</Text>
-        <Text style={styles.subtitle}>Personal Workout Organizer</Text>
-        <Text style={styles.version}>Version 1.0.0</Text>
-      </View>
-
-      <View style={styles.infoCard}>
-        <View style={styles.infoRow}>
-          <View style={styles.infoIconContainer}>
-            <Ionicons
-              name="fitness-outline"
-              size={20}
-              color={theme.colors.primary}
-            />
+        <View style={styles.card}>
+          <View style={styles.iconContainer}>
+            <Ionicons name="barbell" size={48} color={theme.colors.primary} />
           </View>
-          <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>Track Your Progress</Text>
-            <Text style={styles.infoText}>
-              Monitor your workout streaks and achievements
-            </Text>
-          </View>
+          <Text style={styles.title}>PWO</Text>
+          <Text style={styles.subtitle}>Personal Workout Organizer</Text>
+          <Text style={styles.version}>Version 1.0.0</Text>
         </View>
 
-        <View style={styles.divider} />
-
-        <View style={styles.infoRow}>
-          <View style={styles.infoIconContainer}>
-            <Ionicons
-              name="time-outline"
-              size={20}
-              color={theme.colors.success}
-            />
+        <View style={styles.infoCard}>
+          <View style={styles.infoRow}>
+            <View style={styles.infoIconContainer}>
+              <Ionicons
+                name="fitness-outline"
+                size={20}
+                color={theme.colors.primary}
+              />
+            </View>
+            <View style={styles.infoContent}>
+              <Text style={styles.infoTitle}>Track Your Progress</Text>
+              <Text style={styles.infoText}>
+                Monitor your workout streaks and achievements
+              </Text>
+            </View>
           </View>
-          <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>Guided Sessions</Text>
-            <Text style={styles.infoText}>
-              Follow structured challenge sessions with timers
-            </Text>
+
+          <View style={styles.divider} />
+
+          <View style={styles.infoRow}>
+            <View style={styles.infoIconContainer}>
+              <Ionicons
+                name="time-outline"
+                size={20}
+                color={theme.colors.success}
+              />
+            </View>
+            <View style={styles.infoContent}>
+              <Text style={styles.infoTitle}>Guided Sessions</Text>
+              <Text style={styles.infoText}>
+                Follow structured challenge sessions with timers
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.infoRow}>
+            <View style={styles.infoIconContainer}>
+              <Ionicons
+                name="trophy-outline"
+                size={20}
+                color={theme.colors.warning}
+              />
+            </View>
+            <View style={styles.infoContent}>
+              <Text style={styles.infoTitle}>Set Goals</Text>
+              <Text style={styles.infoText}>
+                Define targets and work towards them
+              </Text>
+            </View>
           </View>
         </View>
 
-        <View style={styles.divider} />
+        {/* Data Management Section */}
+        <View style={styles.dangerCard}>
+          <Text style={styles.dangerTitle}>Data Management</Text>
 
-        <View style={styles.infoRow}>
-          <View style={styles.infoIconContainer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.dangerButton,
+              styles.warningButton,
+              pressed && styles.dangerButtonPressed,
+              clearing && styles.dangerButtonDisabled
+            ]}
+            onPress={handleClearProgressData}
+            disabled={clearing}
+          >
             <Ionicons
-              name="trophy-outline"
+              name="refresh-outline"
               size={20}
               color={theme.colors.warning}
             />
-          </View>
-          <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>Set Goals</Text>
-            <Text style={styles.infoText}>
-              Define targets and work towards them
-            </Text>
-          </View>
+            <View style={styles.dangerButtonContent}>
+              <Text style={[styles.dangerButtonTitle, styles.warningText]}>
+                Clear Progress Data
+              </Text>
+              <Text style={styles.dangerButtonDesc}>
+                Reset history, streaks, and PRs
+              </Text>
+            </View>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.dangerButton,
+              pressed && styles.dangerButtonPressed,
+              clearing && styles.dangerButtonDisabled
+            ]}
+            onPress={handleClearAllData}
+            disabled={clearing}
+          >
+            <Ionicons
+              name="trash-outline"
+              size={20}
+              color={theme.colors.danger}
+            />
+            <View style={styles.dangerButtonContent}>
+              <Text style={styles.dangerButtonTitle}>Clear All Data</Text>
+              <Text style={styles.dangerButtonDesc}>
+                Full reset including library
+              </Text>
+            </View>
+          </Pressable>
         </View>
-      </View>
-
-      {/* Data Management Section */}
-      <View style={styles.dangerCard}>
-        <Text style={styles.dangerTitle}>Data Management</Text>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.dangerButton,
-            styles.warningButton,
-            pressed && styles.dangerButtonPressed,
-            clearing && styles.dangerButtonDisabled
-          ]}
-          onPress={handleClearProgressData}
-          disabled={clearing}
-        >
-          <Ionicons
-            name="refresh-outline"
-            size={20}
-            color={theme.colors.warning}
-          />
-          <View style={styles.dangerButtonContent}>
-            <Text style={[styles.dangerButtonTitle, styles.warningText]}>
-              Clear Progress Data
-            </Text>
-            <Text style={styles.dangerButtonDesc}>
-              Reset history, streaks, and PRs
-            </Text>
-          </View>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.dangerButton,
-            pressed && styles.dangerButtonPressed,
-            clearing && styles.dangerButtonDisabled
-          ]}
-          onPress={handleClearAllData}
-          disabled={clearing}
-        >
-          <Ionicons name="trash-outline" size={20} color={theme.colors.danger} />
-          <View style={styles.dangerButtonContent}>
-            <Text style={styles.dangerButtonTitle}>Clear All Data</Text>
-            <Text style={styles.dangerButtonDesc}>
-              Full reset including library
-            </Text>
-          </View>
-        </Pressable>
-      </View>
       </ScrollView>
     </SafeAreaView>
   );

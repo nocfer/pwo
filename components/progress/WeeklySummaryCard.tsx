@@ -126,7 +126,8 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
         <View style={styles.streakContainer}>
           <Ionicons name="flame" size={18} color={theme.colors.accent} />
           <Text style={styles.streakText}>
-            Current streak: <Text style={styles.streakValue}>{streak} days</Text>
+            Current streak:{" "}
+            <Text style={styles.streakValue}>{streak} days</Text>
           </Text>
         </View>
       )}
@@ -154,7 +155,9 @@ function StatRow({
       </View>
       <View style={styles.statText}>
         <Text style={styles.statLabel}>{label}</Text>
-        <Text style={[styles.statValue, highlight && styles.statValueHighlight]}>
+        <Text
+          style={[styles.statValue, highlight && styles.statValueHighlight]}
+        >
           {value}
         </Text>
       </View>
@@ -247,4 +250,3 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md
   }
 });
-

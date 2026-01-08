@@ -28,7 +28,7 @@ export default function IconButton({
   const iconColor =
     color ??
     (variant === "danger"
-      ? theme.colors.danger ?? theme.colors.text
+      ? (theme.colors.danger ?? theme.colors.text)
       : variant === "primary"
         ? theme.colors.primary
         : theme.colors.text);
@@ -77,4 +77,3 @@ const styles = StyleSheet.create({
     opacity: 0.5
   }
 });
-

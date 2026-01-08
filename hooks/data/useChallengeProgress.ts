@@ -110,7 +110,10 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
     const completedIndices = new Set(
       completedSessions.map((s) => s.sessionIndex)
     );
-    const nextSessionIndex = findNextSessionIndex(completedIndices, totalSessions);
+    const nextSessionIndex = findNextSessionIndex(
+      completedIndices,
+      totalSessions
+    );
 
     const isCompleted =
       sessionsCompleted === totalSessions && totalRepsCompleted >= targetReps;

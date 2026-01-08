@@ -1,6 +1,6 @@
 /**
  * Program Sharing Utilities
- * 
+ *
  * Handles encoding and decoding of program data for QR code sharing
  */
 
@@ -23,8 +23,8 @@ export function encodeProgramForShare(program: Program): string {
     name: program.name,
     description: program.description,
     sessions: program.sessions,
-    source: "user", // Always set to user for imported programs
-    challengeConfig: program.challengeConfig
+    challengeConfig: program.challengeConfig,
+    source: program.source
   };
 
   return JSON.stringify(shareable);
@@ -34,12 +34,10 @@ export function encodeProgramForShare(program: Program): string {
  * Decodes a JSON string to program data
  * Validates the structure and returns a shareable program object
  */
-export function decodeProgramFromShare(
-  data: string
-): ShareableProgramData {
+export function decodeProgramFromShare(data: string): ShareableProgramData {
   try {
     const parsed = JSON.parse(data);
-    
+
     if (!validateProgramData(parsed)) {
       throw new Error("Invalid program data structure");
     }
@@ -56,7 +54,9 @@ export function decodeProgramFromShare(
 /**
  * Validates that the data structure matches a shareable program
  */
-export function validateProgramData(data: unknown): data is ShareableProgramData {
+export function validateProgramData(
+  data: unknown
+): data is ShareableProgramData {
   if (!data || typeof data !== "object") {
     return false;
   }
@@ -89,7 +89,10 @@ export function validateProgramData(data: unknown): data is ShareableProgramData
     const sessionObj = session as Record<string, unknown>;
 
     // Index should be a number
-    if (sessionObj.index !== undefined && typeof sessionObj.index !== "number") {
+    if (
+      sessionObj.index !== undefined &&
+      typeof sessionObj.index !== "number"
+    ) {
       return false;
     }
 
@@ -176,4 +179,3 @@ export function validateProgramData(data: unknown): data is ShareableProgramData
 
   return true;
 }
-

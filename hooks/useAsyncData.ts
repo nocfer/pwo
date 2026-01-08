@@ -86,4 +86,3 @@ export function useAsyncData<T>(
 }
 
 export default useAsyncData;
-

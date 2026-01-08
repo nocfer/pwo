@@ -55,7 +55,13 @@ export default function RingChart({
     <View style={[styles.container, { width: size, height: size }]}>
       <Svg width={size} height={size} style={styles.svg}>
         <Defs>
-          <LinearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <LinearGradient
+            id="progressGradient"
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="0%"
+          >
             <Stop offset="0%" stopColor={theme.colors.primary} />
             <Stop offset="100%" stopColor={theme.colors.primaryDark} />
           </LinearGradient>
@@ -89,12 +95,7 @@ export default function RingChart({
 
       {showLabel && (
         <View style={styles.labelContainer}>
-          <Text
-            style={[
-              styles.label,
-              { fontSize: size * 0.22 }
-            ]}
-          >
+          <Text style={[styles.label, { fontSize: size * 0.22 }]}>
             {displayValue}
           </Text>
         </View>
@@ -122,4 +123,3 @@ const styles = StyleSheet.create({
     color: theme.colors.primary
   }
 });
-

@@ -28,9 +28,13 @@ export function useLiveProgress(slug: string | undefined) {
     };
   }, [slug]);
 
-  const { data, loading, error } = useAsyncData(fetcher, [slug, progressVersion], {
-    skip: !slug
-  });
+  const { data, loading, error } = useAsyncData(
+    fetcher,
+    [slug, progressVersion],
+    {
+      skip: !slug
+    }
+  );
 
   return { data, loading, error } as const;
 }

@@ -1,0 +1,29 @@
+# Product Overview
+
+Progressive Workout is a React Native fitness application built with Expo that helps users track and complete workout programs and challenges.
+
+## Core Features
+
+- **Program Management**: Create, edit, and run structured workout programs with sessions containing exercise blocks, rest periods, and warmups
+- **Challenge System**: Time-based fitness challenges with target reps and progress tracking
+- **Exercise Library**: Built-in and user-created exercises with categories and icons
+- **Progress Tracking**: Personal records (PRs), consistency heatmaps, exercise progression charts, and weekly statistics
+- **Session Management**: Real-time workout sessions with timers, set completion tracking, and state persistence
+- **Data Import/Export**: QR code sharing and program import functionality
+
+## User Flow
+
+1. Users select from built-in programs or create custom ones
+2. Programs consist of sessions with exercise blocks, rest periods, and warmups
+3. During sessions, users complete sets with rep tracking and timing
+4. Progress is automatically tracked with PR detection and analytics
+5. Challenges provide structured goal-oriented workouts with completion tracking
+
+## Data Model
+
+The app manages three primary data types:
+- **Exercises**: Individual movements with categories and metadata
+- **Programs**: Structured workout plans with multiple sessions
+- **Progress**: Historical data, PRs, and completion tracking
+
+Built-in content is read-only while user-created content supports full CRUD operations.

@@ -12,7 +12,6 @@ export {
   FadeIn,
   IconButton,
   LoadingScreen,
-  NoChallengesEmpty,
   NoHistoryEmpty,
   NoProgressEmpty,
   NoSearchResultsEmpty,
@@ -37,8 +36,8 @@ export {
   ConsistencyHeatmap,
   ExerciseProgressionChart,
   LineChart,
-  PersonalRecordsCard,
   PRItem,
+  PersonalRecordsCard,
   ProgramProgressView,
   ProgressCalendar,
   ProgressCard,
@@ -55,7 +54,17 @@ export {
   WeeklySummaryCard
 } from "./progress";
 
-export { ChallengesView, SwipeableChallengeButton } from "./challenge";
+export { ChallengeView } from "./challenge";
+
+// Data management components
+export {
+  DataList,
+  FilterControls,
+  LoadingStateList,
+  SearchableList,
+  SortControls,
+  UnifiedDataManager
+} from "./data";
 
 // Individual components (not moved)
 export { ConfettiCelebration } from "./ConfettiCelebration";

@@ -16,10 +16,12 @@ import {
 } from "@/components";
 import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
   Animated,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -89,8 +91,7 @@ export default function ProgressScreen() {
   }, []);
 
   const handleViewAllPRs = useCallback(() => {
-    // Could navigate to a dedicated PRs screen in the future
-    // For now, just scroll or do nothing
+    router.push("/(tabs)/analytics");
   }, []);
 
   return (
@@ -110,8 +111,26 @@ export default function ProgressScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Progress</Text>
-          <Text style={styles.subtitle}>Your fitness journey</Text>
+          <View style={styles.headerContent}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.title}>Progress</Text>
+              <Text style={styles.subtitle}>Your fitness journey</Text>
+            </View>
+            <Pressable
+              style={({ pressed }) => [
+                styles.analyticsButton,
+                pressed && styles.analyticsButtonPressed
+              ]}
+              onPress={() => router.push("/(tabs)/analytics")}
+            >
+              <Ionicons
+                name="analytics-outline"
+                size={20}
+                color={theme.colors.primary}
+              />
+              <Text style={styles.analyticsButtonText}>Analytics</Text>
+            </Pressable>
+          </View>
         </View>
 
         {/* Section 1: Weekly Summary */}
@@ -210,6 +229,11 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: theme.spacing.lg
   },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
   title: {
     ...theme.typography.h1,
     color: theme.colors.text,
@@ -218,6 +242,26 @@ const styles = StyleSheet.create({
   subtitle: {
     ...theme.typography.body,
     color: theme.colors.muted
+  },
+  analyticsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+    backgroundColor: theme.colors.surface,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    ...theme.shadows.sm
+  },
+  analyticsButtonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.95 }]
+  },
+  analyticsButtonText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primary
   },
   section: {
     marginBottom: theme.spacing.lg

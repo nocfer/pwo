@@ -42,9 +42,9 @@ export type {
 export type {
   ChallengeProgress,
   ExerciseProgress,
+  PRHistory,
   PersonalRecord,
   PersonalRecordType,
-  PRHistory,
   ProgramProgress,
   ProgressHistory,
   ProgressHistoryEntry,
@@ -52,3 +52,42 @@ export type {
   SetRecord,
   WeeklyStats
 } from "./progress";
+
+// Enhanced types
+export type {
+  AuditAction,
+  AuditLogEntry,
+  ConflictResolution,
+  CustomValidator,
+  DataType,
+  DateRange,
+  DependencyCheck,
+  DependencyResult,
+  EnhancedChallenge,
+  EnhancedChallengeConfig,
+  EnhancedDataActions,
+  EnhancedDataState,
+  EnhancedExercise,
+  EnhancedProgram,
+  ExportData,
+  FieldValidation,
+  ImportData,
+  ImportError,
+  ImportErrorCode,
+  ImportResult,
+  ImportedItem,
+  OperationStatus,
+  SearchFacets,
+  SearchQuery,
+  SearchResult,
+  SearchState,
+  SkippedItem,
+  UsageStats,
+  UsageTrend,
+  ValidationError,
+  ValidationErrorCode,
+  ValidationResult,
+  ValidationSchema,
+  ValidationWarning,
+  ValidationWarningCode
+} from "./enhanced";
