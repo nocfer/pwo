@@ -97,7 +97,9 @@ export function ProgressViewBase({
       {nextSessionIndex && !isCompleted && (
         <View style={styles.nextSession}>
           <Text style={styles.nextSessionLabel}>Next Session</Text>
-          <Text style={styles.nextSessionValue}>Session {nextSessionIndex}</Text>
+          <Text style={styles.nextSessionValue}>
+            Session {nextSessionIndex}
+          </Text>
         </View>
       )}
 
@@ -167,4 +169,3 @@ const styles = StyleSheet.create({
 });
 
 export default ProgressViewBase;
-

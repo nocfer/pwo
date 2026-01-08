@@ -2,10 +2,13 @@
  * Program Import Preview Screen
  */
 
-import { ErrorScreen, LoadingScreen, ScreenHeader } from "@/components";
+import { ErrorScreen, ScreenHeader } from "@/components";
 import ProgramImportPreview from "@/components/program/ProgramImportPreview";
 import { useDataActions } from "@/context/DataContext";
-import { decodeProgramFromShare, ShareableProgramData } from "@/lib/utils/programShare";
+import {
+  decodeProgramFromShare,
+  ShareableProgramData
+} from "@/lib/utils/programShare";
 import { theme } from "@/theme/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -53,6 +56,7 @@ export default function ImportPreviewScreen() {
     try {
       // Import the program using DataContext
       await actions.upsertProgram({
+        id: `prg_${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
         name: programData.name,
         description: programData.description,
         sessions: programData.sessions,
@@ -109,4 +113,3 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   }
 });
-

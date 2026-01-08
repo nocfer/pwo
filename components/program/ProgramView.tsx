@@ -24,9 +24,7 @@ export default function ProgramView({ program, programMetrics }: Props) {
         <View style={styles.card}>
           <ProgressCard
             title={program.name}
-            completionPercentage={
-              programMetrics.currentRunCompletionPercentage
-            }
+            completionPercentage={programMetrics.currentRunCompletionPercentage}
             sessionsCompleted={programMetrics.currentRunSessionsCompleted}
             totalSessions={programMetrics.totalSessions}
             variant="program"

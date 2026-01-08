@@ -170,18 +170,24 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
           : completedSessions.reduce(
               (sum: number, s: any) =>
                 sum +
-                (typeof s.timeSpentSeconds === "number" ? s.timeSpentSeconds : 0),
+                (typeof s.timeSpentSeconds === "number"
+                  ? s.timeSpentSeconds
+                  : 0),
               0
             );
       const lastActivityAt =
         typeof run?.lastActivityAt === "string" && run.lastActivityAt
           ? run.lastActivityAt
-          : completedSessions.reduce<string | null>((latest, s: any) => {
-              const ts = typeof s.completedAt === "string" ? s.completedAt : null;
-              if (!ts) return latest;
-              if (!latest) return ts;
-              return new Date(ts) > new Date(latest) ? ts : latest;
-            }, null);
+          : (completedSessions as any[]).reduce<string | null>(
+              (latest: string | null, s: any) => {
+                const ts =
+                  typeof s.completedAt === "string" ? s.completedAt : null;
+                if (!ts) return latest;
+                if (!latest) return ts;
+                return new Date(ts) > new Date(latest) ? ts : latest;
+              },
+              null
+            );
       const updatedAt = String(run?.updatedAt ?? lastActivityAt ?? startedAt);
 
       return {
@@ -196,29 +202,32 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
       };
     });
 
-    const allCompletedSessions = runs.flatMap((r) =>
-      r.sessions.filter((s) => s.completed)
+    const allCompletedSessions = runs.flatMap((r: any) =>
+      r.sessions.filter((s: any) => s.completed)
     );
     const lifetimeSessionsCompleted = allCompletedSessions.length;
     const lifetimeTimeSpentSeconds = runs.reduce(
-      (sum, r) =>
+      (sum: number, r: any) =>
         sum +
         (typeof r.totalTimeSpentSeconds === "number"
           ? r.totalTimeSpentSeconds
           : 0),
       0
     );
-    const lastActivityAt = runs.reduce<string | null>((latest, r) => {
-      if (!r.lastActivityAt) return latest;
-      if (!latest) return r.lastActivityAt;
-      return new Date(r.lastActivityAt) > new Date(latest)
-        ? r.lastActivityAt
-        : latest;
-    }, null);
+    const lastActivityAt = (runs as any[]).reduce<string | null>(
+      (latest: string | null, r: any) => {
+        if (!r.lastActivityAt) return latest;
+        if (!latest) return r.lastActivityAt;
+        return new Date(r.lastActivityAt) > new Date(latest)
+          ? r.lastActivityAt
+          : latest;
+      },
+      null
+    );
     const updatedAt =
       typeof (raw as any).updatedAt === "string"
         ? (raw as any).updatedAt
-        : lastActivityAt ?? runs[0]?.startedAt ?? nowISO;
+        : (lastActivityAt ?? runs[0]?.startedAt ?? nowISO);
 
     return {
       programId,
@@ -266,12 +275,15 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
     typeof (raw as any).lastActivityAt === "string" &&
     (raw as any).lastActivityAt
       ? (raw as any).lastActivityAt
-      : completedSessions.reduce<string | null>((latest, s: any) => {
-          const ts = typeof s.completedAt === "string" ? s.completedAt : null;
-          if (!ts) return latest;
-          if (!latest) return ts;
-          return new Date(ts) > new Date(latest) ? ts : latest;
-        }, null);
+      : (completedSessions as any[]).reduce<string | null>(
+          (latest: string | null, s: any) => {
+            const ts = typeof s.completedAt === "string" ? s.completedAt : null;
+            if (!ts) return latest;
+            if (!latest) return ts;
+            return new Date(ts) > new Date(latest) ? ts : latest;
+          },
+          null
+        );
   const startedAt =
     typeof (raw as any).startedAt === "string" && (raw as any).startedAt
       ? (raw as any).startedAt
@@ -279,14 +291,13 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
   const updatedAt =
     typeof (raw as any).updatedAt === "string" && (raw as any).updatedAt
       ? (raw as any).updatedAt
-      : lastActivityAt ?? startedAt;
+      : (lastActivityAt ?? startedAt);
 
   const run = {
     runId: "run_1",
     startedAt,
     completedAt:
-      typeof (raw as any).completedAt === "string" &&
-      (raw as any).completedAt
+      typeof (raw as any).completedAt === "string" && (raw as any).completedAt
         ? (raw as any).completedAt
         : undefined,
     sessions,
@@ -877,9 +888,6 @@ export const storage = {
       ? this.getWeekStart(weekStart)
       : this.getWeekStart(new Date());
     const weekStartISO = targetWeekStart.toISOString().slice(0, 10);
-    const weekEndISO = this.getWeekEnd(targetWeekStart)
-      .toISOString()
-      .slice(0, 10);
 
     const allStats = await this.loadWeeklyStats();
     const existing = allStats.find((s) => s.weekStart === weekStartISO);
@@ -899,13 +907,11 @@ export const storage = {
     const weekEndISO = weekEnd.toISOString().slice(0, 10);
 
     // Get all program and challenge progress
-    const [programProgress, challengeProgress, prHistory, history] =
-      await Promise.all([
-        this.loadAllProgramProgress(),
-        this.loadAllChallengeProgress(),
-        this.loadAllPRs(),
-        this.getProgressHistory(undefined, undefined, 7)
-      ]);
+    const [programProgress, challengeProgress, prHistory] = await Promise.all([
+      this.loadAllProgramProgress(),
+      this.loadAllChallengeProgress(),
+      this.loadAllPRs()
+    ]);
 
     let workoutsCompleted = 0;
     let totalTimeSeconds = 0;
@@ -1100,7 +1106,9 @@ export const storage = {
   async getExerciseProgression(
     exerciseId: string,
     days: number = 30
-  ): Promise<{ date: string; reps: number; maxWeight?: number; volume?: number }[]> {
+  ): Promise<
+    { date: string; reps: number; maxWeight?: number; volume?: number }[]
+  > {
     const [programProgress, challengeProgress] = await Promise.all([
       this.loadAllProgramProgress(),
       this.loadAllChallengeProgress()
@@ -1219,6 +1227,22 @@ export const storage = {
       write(KEYS.PERSONAL_RECORDS, []),
       write(KEYS.WEEKLY_STATS, [])
     ]);
+  },
+
+  // --------------------------------------------------------------------------
+  // Generic storage methods for audit logging
+  // --------------------------------------------------------------------------
+
+  async getItem(key: string): Promise<string | null> {
+    try {
+      return await read<string | null>(key, null);
+    } catch {
+      return null;
+    }
+  },
+
+  async setItem(key: string, value: string): Promise<void> {
+    await write(key, value);
   }
 };
 

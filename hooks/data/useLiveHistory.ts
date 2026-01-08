@@ -26,9 +26,13 @@ export function useLiveHistory(slug: string | undefined) {
     );
   }, [slug]);
 
-  const { data, loading, error } = useAsyncData(fetcher, [slug, historyVersion], {
-    skip: !slug
-  });
+  const { data, loading, error } = useAsyncData(
+    fetcher,
+    [slug, historyVersion],
+    {
+      skip: !slug
+    }
+  );
 
   return { data, loading, error } as const;
 }

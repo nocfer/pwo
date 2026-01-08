@@ -16,11 +16,7 @@ type Props = {
   onClose: () => void;
 };
 
-export default function QRCodeShareModal({
-  program,
-  visible,
-  onClose
-}: Props) {
+export default function QRCodeShareModal({ program, visible, onClose }: Props) {
   const qrData = useMemo(() => {
     return encodeProgramForShare(program);
   }, [program]);
@@ -155,4 +151,3 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.sm
   }
 });
-
