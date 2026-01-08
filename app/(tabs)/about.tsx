@@ -68,122 +68,86 @@ export default function AboutScreen() {
   }, [refreshAll]);
 
   const handleClearProgressData = useCallback(() => {
+    const message =
+      "This will delete all your workout history, streaks, and personal records. Your exercise and program library will be kept. This cannot be undone.";
     if (isWeb) {
-      const confirmed = window.confirm(
-        "This will delete all your workout history, streaks, and personal records. Your exercise and program library will be kept. This cannot be undone.\n\nContinue?"
-      );
-      if (confirmed) {
+      if (window.confirm(message + "\n\nContinue?")) {
         void doClearProgressData();
       }
     } else {
-      Alert.alert(
-        "Clear Progress Data",
-        "This will delete all your workout history, streaks, and personal records. Your exercise and program library will be kept. This cannot be undone.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Clear Progress",
-            style: "destructive",
-            onPress: () => void doClearProgressData()
-          }
-        ]
-      );
+      Alert.alert("Clear Progress Data", message, [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear Progress",
+          style: "destructive",
+          onPress: () => void doClearProgressData()
+        }
+      ]);
     }
   }, [doClearProgressData]);
 
   const handleClearAllData = useCallback(() => {
+    const message =
+      "This will delete ALL your data including exercises, programs, workout history, and personal records. This is a full reset and cannot be undone.";
     if (isWeb) {
-      const confirmed = window.confirm(
-        "This will delete ALL your data including exercises, programs, workout history, and personal records. This is a full reset and cannot be undone.\n\nContinue?"
-      );
-      if (confirmed) {
+      if (window.confirm(message + "\n\nContinue?")) {
         void doClearAllData();
       }
     } else {
-      Alert.alert(
-        "Clear All Data",
-        "This will delete ALL your data including exercises, programs, workout history, and personal records. This is a full reset and cannot be undone.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Clear Everything",
-            style: "destructive",
-            onPress: () => void doClearAllData()
-          }
-        ]
-      );
+      Alert.alert("Clear All Data", message, [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear Everything",
+          style: "destructive",
+          onPress: () => void doClearAllData()
+        }
+      ]);
     }
   }, [doClearAllData]);
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "right", "left"]}>
-      <ScrollView>
-        <View style={styles.card}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* App Info Card */}
+        <View style={styles.heroCard}>
           <View style={styles.iconContainer}>
-            <Ionicons name="barbell" size={48} color={theme.colors.primary} />
+            <Ionicons name="barbell" size={36} color={theme.colors.primary} />
           </View>
-          <Text style={styles.title}>PWO</Text>
-          <Text style={styles.subtitle}>Personal Workout Organizer</Text>
+          <Text style={styles.appName}>PWO</Text>
+          <Text style={styles.appSubtitle}>Personal Workout Organizer</Text>
           <Text style={styles.version}>Version 1.0.0</Text>
         </View>
 
-        <View style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <View style={styles.infoIconContainer}>
-              <Ionicons
-                name="fitness-outline"
-                size={20}
-                color={theme.colors.primary}
-              />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>Track Your Progress</Text>
-              <Text style={styles.infoText}>
-                Monitor your workout streaks and achievements
-              </Text>
-            </View>
-          </View>
-
+        {/* Features Card */}
+        <View style={styles.card}>
+          <FeatureRow
+            icon="fitness-outline"
+            iconColor={theme.colors.primary}
+            title="Track Your Progress"
+            description="Monitor your workout streaks and achievements"
+          />
           <View style={styles.divider} />
-
-          <View style={styles.infoRow}>
-            <View style={styles.infoIconContainer}>
-              <Ionicons
-                name="time-outline"
-                size={20}
-                color={theme.colors.success}
-              />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>Guided Sessions</Text>
-              <Text style={styles.infoText}>
-                Follow structured challenge sessions with timers
-              </Text>
-            </View>
-          </View>
-
+          <FeatureRow
+            icon="time-outline"
+            iconColor={theme.colors.success}
+            title="Guided Sessions"
+            description="Follow structured sessions with timers"
+          />
           <View style={styles.divider} />
-
-          <View style={styles.infoRow}>
-            <View style={styles.infoIconContainer}>
-              <Ionicons
-                name="trophy-outline"
-                size={20}
-                color={theme.colors.warning}
-              />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>Set Goals</Text>
-              <Text style={styles.infoText}>
-                Define targets and work towards them
-              </Text>
-            </View>
-          </View>
+          <FeatureRow
+            icon="trophy-outline"
+            iconColor={theme.colors.accent}
+            title="Set Goals"
+            description="Define targets and work towards them"
+          />
         </View>
 
-        {/* Data Management Section */}
-        <View style={styles.dangerCard}>
-          <Text style={styles.dangerTitle}>Data Management</Text>
+        {/* Data Management */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Data Management</Text>
 
           <Pressable
             style={({ pressed }) => [
@@ -195,13 +159,25 @@ export default function AboutScreen() {
             onPress={handleClearProgressData}
             disabled={clearing}
           >
-            <Ionicons
-              name="refresh-outline"
-              size={20}
-              color={theme.colors.warning}
-            />
+            <View
+              style={[
+                styles.dangerIconContainer,
+                { backgroundColor: theme.colors.warningLight }
+              ]}
+            >
+              <Ionicons
+                name="refresh-outline"
+                size={18}
+                color={theme.colors.warning}
+              />
+            </View>
             <View style={styles.dangerButtonContent}>
-              <Text style={[styles.dangerButtonTitle, styles.warningText]}>
+              <Text
+                style={[
+                  styles.dangerButtonTitle,
+                  { color: theme.colors.warning }
+                ]}
+              >
                 Clear Progress Data
               </Text>
               <Text style={styles.dangerButtonDesc}>
@@ -219,13 +195,27 @@ export default function AboutScreen() {
             onPress={handleClearAllData}
             disabled={clearing}
           >
-            <Ionicons
-              name="trash-outline"
-              size={20}
-              color={theme.colors.danger}
-            />
+            <View
+              style={[
+                styles.dangerIconContainer,
+                { backgroundColor: theme.colors.dangerLight }
+              ]}
+            >
+              <Ionicons
+                name="trash-outline"
+                size={18}
+                color={theme.colors.danger}
+              />
+            </View>
             <View style={styles.dangerButtonContent}>
-              <Text style={styles.dangerButtonTitle}>Clear All Data</Text>
+              <Text
+                style={[
+                  styles.dangerButtonTitle,
+                  { color: theme.colors.danger }
+                ]}
+              >
+                Clear All Data
+              </Text>
               <Text style={styles.dangerButtonDesc}>
                 Full reset including library
               </Text>
@@ -237,37 +227,62 @@ export default function AboutScreen() {
   );
 }
 
+function FeatureRow({
+  icon,
+  iconColor,
+  title,
+  description
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  iconColor: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <View style={styles.featureRow}>
+      <View style={[styles.featureIcon, { backgroundColor: `${iconColor}15` }]}>
+        <Ionicons name={icon} size={18} color={iconColor} />
+      </View>
+      <View style={styles.featureContent}>
+        <Text style={styles.featureTitle}>{title}</Text>
+        <Text style={styles.featureDescription}>{description}</Text>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-    padding: theme.spacing.lg
+    backgroundColor: theme.colors.background
   },
-  card: {
+  content: {
+    padding: theme.spacing.lg,
+    paddingBottom: theme.spacing.xxl * 2
+  },
+  heroCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.xl,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    padding: theme.spacing.xxl,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.xl,
     alignItems: "center",
     marginBottom: theme.spacing.lg,
-    ...theme.shadows.md
+    ...theme.shadows.sm
   },
   iconContainer: {
-    width: 80,
-    height: 80,
+    width: 72,
+    height: 72,
     borderRadius: theme.radius.lg,
     backgroundColor: theme.colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: theme.spacing.lg
+    marginBottom: theme.spacing.md
   },
-  title: {
+  appName: {
     ...theme.typography.h1,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs
   },
-  subtitle: {
+  appSubtitle: {
     ...theme.typography.body,
     color: theme.colors.muted,
     marginBottom: theme.spacing.sm
@@ -276,55 +291,44 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.muted
   },
-  infoCard: {
+  card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
     ...theme.shadows.sm
   },
-  infoRow: {
+  featureRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: theme.spacing.sm
   },
-  infoIconContainer: {
+  featureIcon: {
     width: 36,
     height: 36,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primaryLight,
+    borderRadius: theme.radius.sm,
     alignItems: "center",
     justifyContent: "center",
     marginRight: theme.spacing.md
   },
-  infoContent: {
+  featureContent: {
     flex: 1
   },
-  infoTitle: {
+  featureTitle: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
     marginBottom: 2
   },
-  infoText: {
+  featureDescription: {
     ...theme.typography.caption,
     color: theme.colors.muted
   },
   divider: {
     height: 1,
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.borderLight,
     marginVertical: theme.spacing.sm
   },
-  dangerCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    padding: theme.spacing.lg,
-    ...theme.shadows.sm
-  },
-  dangerTitle: {
+  sectionTitle: {
     ...theme.typography.h3,
     color: theme.colors.text,
     marginBottom: theme.spacing.md
@@ -334,32 +338,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: theme.spacing.md,
     borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.dangerLight,
-    backgroundColor: theme.colors.dangerLight + "30",
     marginBottom: theme.spacing.sm,
-    gap: theme.spacing.md
+    backgroundColor: theme.colors.background
   },
-  warningButton: {
-    borderColor: theme.colors.warningLight,
-    backgroundColor: theme.colors.warningLight + "30"
-  },
+  warningButton: {},
   dangerButtonPressed: {
     opacity: 0.7
   },
   dangerButtonDisabled: {
     opacity: 0.5
   },
+  dangerIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: theme.spacing.md
+  },
   dangerButtonContent: {
     flex: 1
   },
   dangerButtonTitle: {
     ...theme.typography.bodyBold,
-    color: theme.colors.danger,
     marginBottom: 2
-  },
-  warningText: {
-    color: theme.colors.warning
   },
   dangerButtonDesc: {
     ...theme.typography.caption,

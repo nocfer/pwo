@@ -1,6 +1,5 @@
 /**
  * ConsistencyHeatmap - GitHub-style activity heatmap
- * Layout: Days as rows (M-S), Weeks as columns (oldest left, newest right)
  */
 
 import {
@@ -17,14 +16,14 @@ type Props = {
   weeks?: number;
 };
 
-const CELL_SIZE = 24;
+const CELL_SIZE = 22;
 const CELL_GAP = 3;
 
 const levelColors: Record<ConsistencyLevel, string> = {
-  0: theme.colors.card,
+  0: theme.colors.background,
   1: theme.colors.successLight,
   2: theme.colors.success,
-  3: "#059669" // emerald-600 for high activity
+  3: "#059669"
 };
 
 export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
@@ -35,7 +34,7 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
     if (!loading && data) {
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 400,
+        duration: 300,
         useNativeDriver: true
       }).start();
     }
@@ -74,7 +73,6 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
       </View>
 
       <View style={styles.gridContainer}>
-        {/* Day labels column */}
         <View style={styles.dayLabelsColumn}>
           {dayLabels.map((label, i) => (
             <View key={i} style={styles.dayLabelCell}>
@@ -83,7 +81,6 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
           ))}
         </View>
 
-        {/* Weeks grid - horizontally scrollable */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -111,7 +108,6 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
         </ScrollView>
       </View>
 
-      {/* Legend */}
       <View style={styles.legend}>
         <Text style={styles.legendLabel}>Less</Text>
         {([0, 1, 2, 3] as ConsistencyLevel[]).map((level) => (
@@ -129,10 +125,8 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.xl,
+    borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     ...theme.shadows.sm
   },
   header: {
@@ -179,7 +173,7 @@ const styles = StyleSheet.create({
   cell: {
     width: CELL_SIZE,
     height: CELL_SIZE,
-    borderRadius: 4
+    borderRadius: theme.radius.xs
   },
   cellFuture: {
     borderWidth: 1,
@@ -195,10 +189,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: theme.spacing.xs,
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing.md,
     paddingTop: theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border
+    borderTopColor: theme.colors.borderLight
   },
   legendLabel: {
     ...theme.typography.caption,
@@ -206,13 +200,13 @@ const styles = StyleSheet.create({
     fontSize: 10
   },
   legendCell: {
-    width: 14,
-    height: 14,
+    width: 12,
+    height: 12,
     borderRadius: 3
   },
   skeleton: {
-    height: 220,
+    height: 200,
     backgroundColor: theme.colors.skeleton,
-    borderRadius: theme.radius.md
+    borderRadius: theme.radius.sm
   }
 });

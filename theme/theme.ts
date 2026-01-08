@@ -1,55 +1,59 @@
 const colors = {
   // Neutral palette - refined slate with better contrast
-  background: "#FAFBFC", // softer, more neutral background
+  background: "#F8FAFC", // slate-50 - subtle warmth
   surface: "#FFFFFF",
-  text: "#1A1F2E", // deeper, richer black for better readability
-  subtext: "#475569", // slate-600 - better contrast than slate-700
-  muted: "#64748B", // slate-500
+  text: "#0F172A", // slate-900 - deeper for better readability
+  subtext: "#475569", // slate-600
+  muted: "#94A3B8", // slate-400 - softer for secondary text
   border: "#E2E8F0", // slate-200
-  card: "#F8FAFC", // slate-50
+  borderLight: "#F1F5F9", // slate-100 - for subtle dividers
+  card: "#FFFFFF", // pure white for cards
 
-  // Primary palette - sophisticated indigo/blue
-  primary: "#4F46E5", // indigo-600 - more professional than bright blue
-  primaryDark: "#4338CA", // indigo-700
+  // Primary palette - sophisticated indigo
+  primary: "#6366F1", // indigo-500 - vibrant but professional
+  primaryDark: "#4F46E5", // indigo-600
   primaryLight: "#EEF2FF", // indigo-50
+  primaryMuted: "#C7D2FE", // indigo-200
   primaryTextOn: "#FFFFFF",
 
-  // Accent - refined gold/amber
-  accent: "#F59E0B", // amber-500 - more professional than bright yellow
+  // Accent - refined amber
+  accent: "#F59E0B", // amber-500
+  accentLight: "#FEF3C7", // amber-100
 
   // Status colors - refined and cohesive
-  success: "#10B981", // emerald-500 - more sophisticated green
+  success: "#10B981", // emerald-500
   successLight: "#D1FAE5", // emerald-100
   danger: "#EF4444", // red-500
   dangerLight: "#FEE2E2", // red-100
   warning: "#F59E0B", // amber-500
   warningLight: "#FEF3C7", // amber-100
 
-  // Phase palette for workout states - more cohesive and professional
+  // Phase palette for workout states
   phases: {
-    warmup: "#F97316", // orange-500 - slightly softer
+    warmup: "#F97316", // orange-500
     warmupBg: "#FFF7ED", // orange-50
-    working: "#6366F1", // indigo-500 - matches primary theme
+    working: "#6366F1", // indigo-500
     workingBg: "#EEF2FF", // indigo-50
-    break: "#0891B2", // cyan-600 - deeper, more professional
+    break: "#06B6D4", // cyan-500
     breakBg: "#ECFEFF", // cyan-50
-    done: "#10B981", // emerald-500 - matches success
+    done: "#10B981", // emerald-500
     doneBg: "#D1FAE5" // emerald-100
   },
 
-  // Gradient colors - refined and cohesive
+  // Gradient colors
   gradient: {
-    primaryStart: "#4F46E5", // indigo-600
-    primaryEnd: "#7C3AED", // violet-600 - complementary
+    primaryStart: "#6366F1", // indigo-500
+    primaryEnd: "#8B5CF6", // violet-500
     warmStart: "#F97316", // orange-500
     warmEnd: "#EF4444", // red-500
     successStart: "#10B981", // emerald-500
     successEnd: "#14B8A6" // teal-500
   },
 
-  overlayGlass: "#FFFFFFF5", // slightly more opaque
-  skeleton: "#E2E8F0", // slate-200
-  skeletonHighlight: "#F1F5F9" // slate-100
+  overlayGlass: "#FFFFFFF5",
+  overlay: "rgba(15, 23, 42, 0.5)", // slate-900 with opacity
+  skeleton: "#E2E8F0",
+  skeletonHighlight: "#F1F5F9"
 } as const;
 
 const fonts = {
@@ -69,52 +73,62 @@ const spacing = {
 } as const;
 
 const radius = {
-  sm: 8,
+  xs: 6,
+  sm: 10,
   md: 14,
-  lg: 20,
-  xl: 28,
+  lg: 18,
+  xl: 24,
   full: 9999
 } as const;
 
 const shadows = {
+  none: {
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 0,
+    elevation: 0
+  },
   sm: {
-    shadowColor: "#64748B",
-    shadowOpacity: 0.06,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.04,
     shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 4,
+    shadowRadius: 3,
     elevation: 1
   },
   md: {
-    shadowColor: "#64748B",
-    shadowOpacity: 0.08,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
+    shadowRadius: 6,
     elevation: 2
   },
   lg: {
-    shadowColor: "#64748B",
-    shadowOpacity: 0.1,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 16,
+    shadowRadius: 12,
     elevation: 4
   }
 };
 
 const typography = {
   h1: {
-    fontSize: 28,
+    fontSize: 26,
     fontFamily: "DMSans_700Bold",
-    lineHeight: 34
+    lineHeight: 32,
+    letterSpacing: -0.5
   },
   h2: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: "DMSans_600SemiBold",
-    lineHeight: 28
+    lineHeight: 26,
+    letterSpacing: -0.3
   },
   h3: {
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: "DMSans_600SemiBold",
-    lineHeight: 24
+    lineHeight: 22
   },
   body: {
     fontSize: 15,
@@ -130,10 +144,42 @@ const typography = {
     fontSize: 13,
     fontFamily: "DMSans_400Regular",
     lineHeight: 18
+  },
+  captionBold: {
+    fontSize: 13,
+    fontFamily: "DMSans_600SemiBold",
+    lineHeight: 18
+  },
+  small: {
+    fontSize: 11,
+    fontFamily: "DMSans_500Medium",
+    lineHeight: 14
   }
 } as const;
 
 const cards = {
+  // Standard card container
+  base: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    ...shadows.sm
+  },
+  // Card with border
+  bordered: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.lg
+  },
+  // Elevated card
+  elevated: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    ...shadows.md
+  },
   focus: {
     container: {
       marginTop: spacing.md,
@@ -154,7 +200,7 @@ const cards = {
       sm: {
         width: 32,
         height: 32,
-        borderRadius: radius.md,
+        borderRadius: radius.sm,
         alignItems: "center",
         justifyContent: "center"
       }
@@ -173,11 +219,18 @@ const presets = {
   // Standard card container
   card: {
     backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderWidth: 1,
     borderRadius: radius.lg,
     padding: spacing.lg,
     ...shadows.sm
+  },
+
+  // Card with border (no shadow)
+  cardBordered: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: spacing.lg
   },
 
   // Row with space-between
@@ -193,22 +246,43 @@ const presets = {
     alignItems: "center" as const
   },
 
+  // Screen container
+  screenContainer: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+
+  // Screen content with padding
+  screenContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl * 2
+  },
+
+  // Section header
+  sectionHeader: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    marginBottom: spacing.md
+  },
+
   // Primary button style
   buttonPrimary: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
     backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    ...shadows.md
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    ...shadows.sm
   },
   buttonPrimaryPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.98 }]
   },
   buttonPrimaryDisabled: {
-    opacity: 0.6
+    opacity: 0.5
   },
   buttonPrimaryText: {
     ...typography.bodyBold,
@@ -220,18 +294,66 @@ const presets = {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface
   },
   buttonSecondaryPressed: {
-    backgroundColor: colors.card
+    backgroundColor: colors.background
   },
   buttonSecondaryText: {
     ...typography.bodyBold,
     color: colors.text
+  },
+
+  // Ghost button style
+  buttonGhost: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md
+  },
+  buttonGhostPressed: {
+    opacity: 0.7
+  },
+  buttonGhostText: {
+    ...typography.bodyBold,
+    color: colors.primary
+  },
+
+  // Icon button
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  iconButtonPressed: {
+    backgroundColor: colors.background,
+    transform: [{ scale: 0.96 }]
+  },
+
+  // Input field
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.surface,
+    color: colors.text,
+    ...typography.body
+  },
+  inputFocused: {
+    borderColor: colors.primary
   },
 
   // Muted text
@@ -246,28 +368,60 @@ const presets = {
     color: colors.muted
   },
 
+  // Chip/badge
+  chip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    backgroundColor: colors.primaryLight
+  },
+  chipText: {
+    ...typography.caption,
+    fontFamily: fonts.semiBold,
+    color: colors.primary
+  },
+
   // Session row base
   sessionRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "space-between" as const,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
     padding: spacing.md,
-    marginBottom: spacing.sm
+    marginBottom: spacing.sm,
+    ...shadows.sm
   },
   sessionRowPressed: {
     backgroundColor: colors.background,
     transform: [{ scale: 0.98 }]
   },
   sessionRowCompleted: {
-    borderColor: colors.success,
     backgroundColor: colors.successLight
   },
   sessionRowLocked: {
-    opacity: 0.6
+    opacity: 0.5
+  },
+
+  // List item
+  listItem: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadows.sm
+  },
+  listItemPressed: {
+    backgroundColor: colors.background,
+    transform: [{ scale: 0.98 }]
+  },
+
+  // Divider
+  divider: {
+    height: 1,
+    backgroundColor: colors.border
   }
 } as const;
 

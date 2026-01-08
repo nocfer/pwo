@@ -29,24 +29,17 @@ export function FocusCard({
   return (
     <View
       style={[
-        theme.cards.focus.container,
-        {
-          borderColor: phaseAccent,
-          backgroundColor: phaseBg
-        }
+        styles.container,
+        { borderColor: phaseAccent, backgroundColor: phaseBg }
       ]}
     >
-      {/* Header row */}
-      <View style={styles.focusTopRow}>
-        {/* Left group */}
+      {/* Header */}
+      <View style={styles.topRow}>
         <View style={styles.headerGroup}>
           <View
-            style={[
-              styles.focusIconSmall,
-              { backgroundColor: phaseAccent + "20" }
-            ]}
+            style={[styles.iconSmall, { backgroundColor: `${phaseAccent}20` }]}
           >
-            <Ionicons name={icon as any} size={20} color={phaseAccent} />
+            <Ionicons name={icon as any} size={18} color={phaseAccent} />
           </View>
           <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
             {phaseChipText}
@@ -54,46 +47,40 @@ export function FocusCard({
         </View>
       </View>
 
-      <Text style={timerEnabled ? styles.timerHero : styles.focusTitle}>
+      <Text style={timerEnabled ? styles.timerHero : styles.title}>
         {title}
       </Text>
-
-      <Text style={styles.focusSub}>{subTitle}</Text>
+      <Text style={styles.subtitle}>{subTitle}</Text>
 
       {current?.type === "exercise" && (
-        <View style={styles.focusMetrics}>
+        <View style={styles.metrics}>
           {current.targetReps != null && (
-            <View style={styles.focusMetric}>
-              <Ionicons name="repeat" size={16} color={theme.colors.muted} />
-              <Text style={styles.focusMetricText}>
-                {current.targetReps} reps
-              </Text>
+            <View style={styles.metric}>
+              <Ionicons name="repeat" size={14} color={theme.colors.muted} />
+              <Text style={styles.metricText}>{current.targetReps} reps</Text>
             </View>
           )}
-
           {current.durationSeconds != null && (
-            <View style={styles.focusMetric}>
+            <View style={styles.metric}>
               <Ionicons
                 name="time-outline"
-                size={16}
+                size={14}
                 color={theme.colors.muted}
               />
-              <Text style={styles.focusMetricText}>
-                {current.durationSeconds}s
-              </Text>
+              <Text style={styles.metricText}>{current.durationSeconds}s</Text>
             </View>
           )}
         </View>
       )}
 
       {current?.type === "exercise" && current.note && (
-        <View style={styles.focusNoteContainer}>
+        <View style={styles.noteContainer}>
           <Ionicons
             name="information-circle-outline"
-            size={16}
+            size={14}
             color={theme.colors.subtext}
           />
-          <Text style={styles.focusNote}>{current.note}</Text>
+          <Text style={styles.note}>{current.note}</Text>
         </View>
       )}
     </View>
@@ -101,79 +88,90 @@ export function FocusCard({
 }
 
 const styles = StyleSheet.create({
-  focusTopRow: {
-    ...theme.cards.focus.topRow,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center"
+  container: {
+    marginTop: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    paddingVertical: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.lg,
+    ...theme.shadows.sm
   },
-
+  topRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md
+  },
   headerGroup: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.xs
   },
-
-  focusIconSmall: theme.cards.focus.icons.sm,
-
-  phaseChipText: theme.cards.focus.chipText,
-
-  focusTitle: {
+  iconSmall: {
+    width: 28,
+    height: 28,
+    borderRadius: theme.radius.xs,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  phaseChipText: {
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
+    textTransform: "uppercase",
+    letterSpacing: 0.5
+  },
+  title: {
     ...theme.typography.h2,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
     textAlign: "center"
   },
-
-  focusSub: {
+  subtitle: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textAlign: "center"
   },
-
-  focusMetrics: {
+  metrics: {
     flexDirection: "row",
     gap: theme.spacing.lg,
     marginTop: theme.spacing.md,
     marginBottom: theme.spacing.sm,
     justifyContent: "center"
   },
-
-  focusMetric: {
+  metric: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.xs
   },
-
-  focusMetricText: {
+  metricText: {
     ...theme.typography.body,
     color: theme.colors.text,
-    fontFamily: theme.fonts.semiBold
+    fontFamily: theme.fonts.semiBold,
+    fontSize: 14
   },
-
-  focusNoteContainer: {
+  noteContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: theme.spacing.xs,
     marginTop: theme.spacing.md,
     paddingTop: theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border
+    borderTopColor: theme.colors.borderLight
   },
-
-  focusNote: {
+  note: {
     ...theme.typography.caption,
     color: theme.colors.subtext,
     flex: 1,
     lineHeight: 18
   },
-
   timerHero: {
-    fontSize: 46,
+    fontSize: 42,
     fontWeight: "500",
     fontVariant: ["tabular-nums"],
     marginBottom: theme.spacing.sm,
-    textAlign: "center"
+    textAlign: "center",
+    color: theme.colors.text
   }
 });
 

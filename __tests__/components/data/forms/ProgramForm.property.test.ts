@@ -71,44 +71,40 @@ describe("Program Session Manipulation Property Tests", () => {
 
     // Property 1: Adding blocks to a session should maintain validity
     fc.assert(
-      fc.property(
-        baseProgramArb,
-        programBlockArb,
-        (baseProgram, newBlock) => {
-          // Create program with original blocks
-          const originalProgram: Partial<EnhancedProgram> = {
+      fc.property(baseProgramArb, programBlockArb, (baseProgram, newBlock) => {
+        // Create program with original blocks
+        const originalProgram: Partial<EnhancedProgram> = {
+          ...baseProgram,
+          blocks: [{ type: "warmup", seconds: 180 }]
+        };
+
+        // Validate original program
+        const originalResult = validateProgram(originalProgram);
+
+        // Only test if original program is valid
+        if (originalResult.isValid) {
+          // Add new block to program
+          const modifiedProgram: Partial<EnhancedProgram> = {
             ...baseProgram,
-            blocks: [{ type: "warmup", seconds: 180 }]
+            blocks: [...(originalProgram.blocks || []), newBlock]
           };
 
-          // Validate original program
-          const originalResult = validateProgram(originalProgram);
+          const modifiedResult = validateProgram(modifiedProgram);
 
-          // Only test if original program is valid
-          if (originalResult.isValid) {
-            // Add new block to program
-            const modifiedProgram: Partial<EnhancedProgram> = {
-              ...baseProgram,
-              blocks: [...(originalProgram.blocks || []), newBlock]
-            };
+          // Modified program should still be valid
+          expect(modifiedResult.isValid).toBe(true);
 
-            const modifiedResult = validateProgram(modifiedProgram);
+          // Program should have one more block
+          expect(modifiedProgram.blocks!.length).toBe(
+            (originalProgram.blocks?.length || 0) + 1
+          );
 
-            // Modified program should still be valid
-            expect(modifiedResult.isValid).toBe(true);
-
-            // Program should have one more block
-            expect(modifiedProgram.blocks!.length).toBe(
-              (originalProgram.blocks?.length || 0) + 1
-            );
-
-            // New block should be at the end
-            expect(
-              modifiedProgram.blocks![modifiedProgram.blocks!.length - 1]
-            ).toEqual(newBlock);
-          }
+          // New block should be at the end
+          expect(
+            modifiedProgram.blocks![modifiedProgram.blocks!.length - 1]
+          ).toEqual(newBlock);
         }
-      ),
+      }),
       { numRuns: 100 }
     );
 
@@ -196,7 +192,9 @@ describe("Program Session Manipulation Property Tests", () => {
               expect(modifiedResult.isValid).toBe(true);
 
               // Program should have same number of blocks
-              expect(modifiedProgram.blocks!.length).toBe(session.blocks.length);
+              expect(modifiedProgram.blocks!.length).toBe(
+                session.blocks.length
+              );
 
               // All original blocks should still be present (just reordered)
               // Should have same block types (though in different order)
@@ -305,8 +303,7 @@ describe("Program Session Manipulation Property Tests", () => {
         // Should have errors about missing blocks
         const hasBlockError = result.errors.some(
           (error) =>
-            error.field.includes("blocks") ||
-            error.message.includes("block")
+            error.field.includes("blocks") || error.message.includes("block")
         );
         expect(hasBlockError).toBe(true);
       }),

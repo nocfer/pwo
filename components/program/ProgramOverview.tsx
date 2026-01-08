@@ -1,8 +1,8 @@
 import { AnimatedCard } from "@/components/common";
 import {
-    useChallengeSessions,
-    useExercises,
-    useLiveHistory
+  useChallengeSessions,
+  useExercises,
+  useLiveHistory
 } from "@/hooks/data";
 import { formatCount } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
@@ -107,8 +107,8 @@ type ExercisesPreviewProps = {
 function ExercisesPreview({ program, isChallenge }: ExercisesPreviewProps) {
   const { data: exercises } = useExercises();
   const challengeSessions = useChallengeSessions(program);
-  const allBlocks = isChallenge 
-    ? challengeSessions.flatMap(s => s.blocks)
+  const allBlocks = isChallenge
+    ? challengeSessions.flatMap((s) => s.blocks)
     : program.blocks;
 
   const exerciseIds = new Set<string>();

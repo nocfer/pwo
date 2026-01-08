@@ -4,10 +4,10 @@ import {
 } from "@/components/data/forms/ProgramForm";
 import { useDataActions } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
+import { theme } from "@/theme/theme";
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
 
 export default function NewProgramScreen() {
   const actions = useDataActions();
@@ -20,12 +20,11 @@ export default function NewProgramScreen() {
       await actions.upsertProgram({
         id: "",
         name: formData.name,
-        description: formData.description,
-        blocks: [{ type: "warmup", seconds: 180 }] // Start with a warmup
+        blocks: formData.blocks
       });
       router.back();
     } catch (e) {
-      throw e; // Let the form handle the error display
+      throw e;
     } finally {
       setSaving(false);
     }
@@ -36,7 +35,7 @@ export default function NewProgramScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ProgramForm
         mode="create"
         onSave={handleSave}
@@ -44,12 +43,13 @@ export default function NewProgramScreen() {
         saving={saving}
         exercises={exercises || []}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
+    backgroundColor: theme.colors.background
   }
 });

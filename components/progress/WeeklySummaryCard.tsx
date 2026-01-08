@@ -22,7 +22,7 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
     if (!loading) {
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 300,
+        duration: 250,
         useNativeDriver: true
       }).start();
     }
@@ -43,7 +43,6 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
   const prsAchieved = stats?.prsAchieved ?? 0;
   const streak = stats?.currentStreak ?? 0;
 
-  // Get week date range (parse as local date to avoid timezone issues)
   const parseLocalDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
     return new Date(year, month - 1, day);
@@ -93,8 +92,8 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
         <View style={styles.ringSection}>
           <RingChart
             percentage={percentage}
-            size={110}
-            strokeWidth={12}
+            size={100}
+            strokeWidth={10}
             labelText={`${completed}/${goal}`}
           />
         </View>
@@ -124,7 +123,7 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
 
       {streak > 0 && (
         <View style={styles.streakContainer}>
-          <Ionicons name="flame" size={18} color={theme.colors.accent} />
+          <Ionicons name="flame" size={16} color={theme.colors.accent} />
           <Text style={styles.streakText}>
             Current streak:{" "}
             <Text style={styles.streakValue}>{streak} days</Text>
@@ -151,7 +150,7 @@ function StatRow({
   return (
     <View style={styles.statRow}>
       <View style={[styles.statIcon, { backgroundColor: `${color}15` }]}>
-        <Ionicons name={icon as any} size={16} color={color} />
+        <Ionicons name={icon as any} size={14} color={color} />
       </View>
       <View style={styles.statText}>
         <Text style={styles.statLabel}>{label}</Text>
@@ -168,20 +167,18 @@ function StatRow({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.xl,
+    borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    ...theme.shadows.md
+    ...theme.shadows.sm
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing.lg
+    marginBottom: theme.spacing.md
   },
   title: {
-    ...theme.typography.h2,
+    ...theme.typography.h3,
     color: theme.colors.text
   },
   dateRange: {
@@ -199,7 +196,7 @@ const styles = StyleSheet.create({
   },
   statsSection: {
     flex: 1,
-    gap: theme.spacing.md
+    gap: theme.spacing.sm
   },
   statRow: {
     flexDirection: "row",
@@ -207,9 +204,9 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm
   },
   statIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: theme.radius.sm,
+    width: 28,
+    height: 28,
+    borderRadius: theme.radius.xs,
     alignItems: "center",
     justifyContent: "center"
   },
@@ -222,7 +219,8 @@ const styles = StyleSheet.create({
   },
   statValue: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text
+    color: theme.colors.text,
+    fontSize: 14
   },
   statValueHighlight: {
     color: theme.colors.accent
@@ -231,22 +229,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.xs,
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing.md,
     paddingTop: theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border
+    borderTopColor: theme.colors.borderLight
   },
   streakText: {
     ...theme.typography.body,
-    color: theme.colors.text
+    color: theme.colors.text,
+    fontSize: 14
   },
   streakValue: {
     fontFamily: theme.fonts.bold,
     color: theme.colors.accent
   },
   skeleton: {
-    height: 200,
+    height: 180,
     backgroundColor: theme.colors.skeleton,
-    borderRadius: theme.radius.md
+    borderRadius: theme.radius.sm
   }
 });
