@@ -27,7 +27,7 @@ export {
 } from "./common";
 
 // Session components
-export { FocusCard, StepCard } from "./cards";
+export { CurrentExerciseCard, FocusCard, StepCard } from "./cards";
 
 // Progress components
 export {

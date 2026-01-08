@@ -178,17 +178,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
   function migrateProgram(p: LegacyProgram): Program {
     if (!p || typeof p !== "object") return p as Program;
 
+    // Check if this is already a modern Program with blocks
+    const existingBlocks = (p as any).blocks;
+    const hasValidBlocks =
+      Array.isArray(existingBlocks) && existingBlocks.length > 0;
+
     // For the new structure, programs should already have blocks
-    // This is just a safety check for any remaining legacy data
+    // Preserve existing blocks if present, otherwise start with empty array
     const result: Program = {
       id: String(p.id ?? ""),
       name: String(p.name ?? ""),
       description:
         typeof p.description === "string" ? p.description : undefined,
-      blocks: [], // Start with empty blocks - will be populated from sessions if needed
+      blocks: hasValidBlocks ? existingBlocks : [],
       createdAt: String(p.createdAt ?? new Date().toISOString()),
       updatedAt: String(p.updatedAt ?? new Date().toISOString()),
-      source: p.source === "builtin" ? "builtin" : "user"
+      source: p.source === "builtin" ? "builtin" : "user",
+      // Preserve initialWarmup and defaultRestBetweenExercises if present
+      initialWarmup: (p as any).initialWarmup,
+      defaultRestBetweenExercises: (p as any).defaultRestBetweenExercises
     };
 
     // Preserve challengeConfig if present

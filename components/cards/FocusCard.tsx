@@ -12,6 +12,7 @@ type FocusCardProps = {
   icon: string;
   current?: WorkoutStep;
   timerEnabled?: boolean;
+  progress?: number;
 };
 
 export function FocusCard({
@@ -22,7 +23,8 @@ export function FocusCard({
   title,
   icon,
   current,
-  timerEnabled = false
+  timerEnabled = false,
+  progress = 0
 }: FocusCardProps) {
   const isExercise = current?.type === "exercise";
   const hasMultipleSets =
@@ -57,10 +59,38 @@ export function FocusCard({
           )}
         </View>
 
-        {/* Main title */}
-        <Text style={timerEnabled ? styles.timerHero : styles.title}>
-          {title}
-        </Text>
+        {/* Timer with circular progress (if enabled) */}
+        {timerEnabled && (
+          <View style={styles.timerContainer}>
+            <View
+              style={[
+                styles.circularProgressBg,
+                { borderColor: `${phaseAccent}20` }
+              ]}
+            >
+              <View
+                style={[
+                  styles.circularProgressFill,
+                  {
+                    borderColor: phaseAccent,
+                    transform: [
+                      {
+                        rotate: `${progress * 360}deg`
+                      }
+                    ]
+                  }
+                ]}
+              />
+              <View style={styles.timerContent}>
+                <Text style={styles.timerHero}>{title}</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Main title (non-timer) */}
+        {!timerEnabled && <Text style={styles.title}>{title}</Text>}
+
         <Text style={styles.subtitle}>{subTitle}</Text>
 
         {/* Exercise metrics */}
@@ -155,6 +185,33 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryTextOn,
     letterSpacing: 0.5
   },
+  timerContainer: {
+    alignItems: "center",
+    marginVertical: theme.spacing.lg
+  },
+  circularProgressBg: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative"
+  },
+  circularProgressFill: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 8,
+    borderTopColor: "transparent",
+    borderRightColor: "transparent",
+    borderBottomColor: "transparent"
+  },
+  timerContent: {
+    alignItems: "center",
+    justifyContent: "center"
+  },
   title: {
     ...theme.typography.h1,
     color: theme.colors.text,
@@ -172,7 +229,6 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
     color: theme.colors.text,
     textAlign: "center",
-    marginBottom: theme.spacing.xs,
     letterSpacing: -1
   },
   metricsRow: {
