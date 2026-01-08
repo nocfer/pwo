@@ -54,6 +54,7 @@ export default function ProgramSessionRunner() {
         session={session}
         steps={steps}
         timer={timer}
+        onProgramUpdate={actions.upsertProgram}
       />
     </View>
   );
