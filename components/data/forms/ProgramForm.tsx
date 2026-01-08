@@ -1,6 +1,6 @@
 /**
  * Program Form Component
- * Professional form for creating workout programs
+ * Clean, professional form for creating and editing workout programs
  */
 
 import haptics from "@/lib/haptics";
@@ -33,9 +33,7 @@ type BlockDraft = {
 export type ProgramFormData = {
   name: string;
   blocks: ProgramBlock[];
-  initialWarmup?: {
-    seconds: number;
-  };
+  initialWarmup?: { seconds: number };
   defaultRestBetweenExercises?: number;
 };
 
@@ -50,10 +48,9 @@ export type ProgramFormProps = {
 
 const DEFAULT_WARMUP_SECONDS = 300;
 const DEFAULT_REST_BETWEEN_EXERCISES = 60;
-const DEFAULT_SETS = 1;
+const DEFAULT_SETS = 3;
 const DEFAULT_REST_BETWEEN_SETS = 60;
 
-// Helper functions for mm:ss format conversion
 function secondsToMmss(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60);
   const secs = totalSeconds % 60;
@@ -77,29 +74,29 @@ function convertBlocksToDraft(blocks: ProgramBlock[]): BlockDraft[] {
     .filter((block) => block.type === "exercise")
     .map((block) => ({
       type: "exercise" as const,
-      exerciseId: (block as any).exerciseId,
-      targetReps: (block as any).targetReps
-        ? String((block as any).targetReps)
+      exerciseId: (block as { exerciseId: string }).exerciseId,
+      targetReps: (block as { targetReps?: number }).targetReps
+        ? String((block as { targetReps?: number }).targetReps)
         : "",
-      sets: (block as any).sets
-        ? String((block as any).sets)
+      sets: (block as { sets?: number }).sets
+        ? String((block as { sets?: number }).sets)
         : String(DEFAULT_SETS),
-      restBetweenSets: (block as any).restBetweenSets
-        ? secondsToMmss((block as any).restBetweenSets)
+      restBetweenSets: (block as { restBetweenSets?: number }).restBetweenSets
+        ? secondsToMmss(
+            (block as { restBetweenSets?: number }).restBetweenSets!
+          )
         : secondsToMmss(DEFAULT_REST_BETWEEN_SETS)
     }));
 }
 
 function convertDraftToBlocks(drafts: BlockDraft[]): ProgramBlock[] {
   return drafts.map((draft) => {
-    // Parse sets - must be positive integer, default to 1
     const parsedSets = draft.sets ? Number(draft.sets) : DEFAULT_SETS;
     const sets =
       Number.isInteger(parsedSets) && parsedSets >= 1
         ? parsedSets
         : DEFAULT_SETS;
 
-    // Parse rest between sets - must be non-negative, default to 60
     const parsedRest = draft.restBetweenSets
       ? mmssToSeconds(draft.restBetweenSets)
       : DEFAULT_REST_BETWEEN_SETS;
@@ -133,7 +130,6 @@ export function ProgramForm({
     null
   );
 
-  // Program options
   const [warmupEnabled, setWarmupEnabled] = useState(
     initialData?.initialWarmup !== undefined
   );
@@ -148,6 +144,11 @@ export function ProgramForm({
       initialData?.defaultRestBetweenExercises ?? DEFAULT_REST_BETWEEN_EXERCISES
     )
   );
+
+  const exerciseNameById = exercises.reduce((map, ex) => {
+    map.set(ex.id, ex.name);
+    return map;
+  }, new Map<string, string>());
 
   const addExercise = useCallback(() => {
     haptics.buttonTap();
@@ -192,16 +193,10 @@ export function ProgramForm({
     []
   );
 
-  const exerciseNameById = exercises.reduce((map, ex) => {
-    map.set(ex.id, ex.name);
-    return map;
-  }, new Map<string, string>());
-
   const handleSave = useCallback(async () => {
     const trimmed = name.trim();
     const finalBlocks = convertDraftToBlocks(blocksDraft);
 
-    // Validate warmup duration if enabled
     const warmupSeconds = warmupEnabled ? mmssToSeconds(warmupTime) : 0;
     if (warmupEnabled && warmupSeconds <= 0) {
       haptics.formValidationError();
@@ -209,7 +204,6 @@ export function ProgramForm({
       return;
     }
 
-    // Validate default rest duration if enabled
     const defaultRestSeconds = restEnabled ? mmssToSeconds(restTime) : 0;
     if (restEnabled && defaultRestSeconds < 0) {
       haptics.formValidationError();
@@ -217,7 +211,6 @@ export function ProgramForm({
       return;
     }
 
-    // Validate each block's sets and rest values
     for (let i = 0; i < blocksDraft.length; i++) {
       const block = blocksDraft[i];
       const setsValue = block.sets ? Number(block.sets) : DEFAULT_SETS;
@@ -258,7 +251,8 @@ export function ProgramForm({
       initialWarmup,
       defaultRestBetweenExercises
     };
-    const validationResult = validateProgram(programData as any);
+
+    const validationResult = validateProgram(programData as never);
 
     if (!validationResult.isValid) {
       haptics.formValidationError();
@@ -288,12 +282,7 @@ export function ProgramForm({
     }
 
     try {
-      await onSave({
-        name: trimmed,
-        blocks: finalBlocks,
-        initialWarmup,
-        defaultRestBetweenExercises
-      });
+      await onSave(programData);
       haptics.formSave();
     } catch (error) {
       haptics.formValidationError();
@@ -327,19 +316,34 @@ export function ProgramForm({
       <View style={styles.header}>
         <Pressable
           onPress={handleCancel}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
           style={({ pressed }) => [
-            styles.headerBackBtn,
-            pressed && styles.headerBackBtnPressed
+            styles.backButton,
+            pressed && styles.backButtonPressed
           ]}
         >
-          <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
+          <Ionicons name="close" size={24} color={theme.colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>
           {mode === "create" ? "New Program" : "Edit Program"}
         </Text>
-        <View style={styles.headerSpacer} />
+        <Pressable
+          onPress={handleSave}
+          disabled={saving || !name.trim()}
+          style={({ pressed }) => [
+            styles.saveButton,
+            pressed && !saving && styles.saveButtonPressed,
+            (saving || !name.trim()) && styles.saveButtonDisabled
+          ]}
+        >
+          <Text
+            style={[
+              styles.saveButtonText,
+              (saving || !name.trim()) && styles.saveButtonTextDisabled
+            ]}
+          >
+            {saving ? "Saving..." : "Save"}
+          </Text>
+        </Pressable>
       </View>
 
       {/* Form Content */}
@@ -349,230 +353,226 @@ export function ProgramForm({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Name Card */}
-        <View style={styles.card}>
-          <View style={styles.field}>
-            <Text style={styles.label}>Program Name</Text>
+        {/* Name */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Program Name</Text>
+          <View style={styles.card}>
             <TextInput
               value={name}
               onChangeText={setName}
               placeholder="e.g. Upper Body Strength"
               placeholderTextColor={theme.colors.muted}
-              style={styles.input}
+              style={styles.nameInput}
               autoFocus={mode === "create"}
             />
           </View>
         </View>
 
-        {/* Program Options Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Program Options</Text>
-
-          {/* Initial Warmup Toggle */}
-          <Pressable
-            onPress={() => {
-              haptics.buttonTap();
-              setWarmupEnabled((prev) => !prev);
-            }}
-            style={({ pressed }) => [
-              styles.optionRow,
-              pressed && styles.optionRowPressed
-            ]}
-          >
-            <View style={styles.optionLeft}>
+        {/* Options */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Options</Text>
+          <View style={styles.card}>
+            {/* Warmup Toggle */}
+            <Pressable
+              onPress={() => {
+                haptics.buttonTap();
+                setWarmupEnabled((prev) => !prev);
+              }}
+              style={styles.optionRow}
+            >
+              <View style={styles.optionLeft}>
+                <View
+                  style={[
+                    styles.optionIcon,
+                    warmupEnabled && styles.optionIconWarmup
+                  ]}
+                >
+                  <Ionicons
+                    name="flame"
+                    size={18}
+                    color={
+                      warmupEnabled
+                        ? theme.colors.phases.warmup
+                        : theme.colors.muted
+                    }
+                  />
+                </View>
+                <View>
+                  <Text style={styles.optionLabel}>Initial Warmup</Text>
+                  {warmupEnabled && (
+                    <Text style={styles.optionValue}>{warmupTime}</Text>
+                  )}
+                </View>
+              </View>
               <View
-                style={[
-                  styles.optionIcon,
-                  warmupEnabled && styles.optionIconActiveWarmup
-                ]}
+                style={[styles.toggle, warmupEnabled && styles.toggleActive]}
               >
-                <Ionicons
-                  name="flame-outline"
-                  size={18}
-                  color={
-                    warmupEnabled
-                      ? theme.colors.phases.warmup
-                      : theme.colors.muted
-                  }
+                <View
+                  style={[
+                    styles.toggleKnob,
+                    warmupEnabled && styles.toggleKnobActive
+                  ]}
                 />
               </View>
-              <Text
-                style={[
-                  styles.optionLabel,
-                  warmupEnabled && styles.optionLabelActive
-                ]}
-              >
-                Initial Warmup
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.toggle,
-                warmupEnabled && styles.toggleActiveWarmup
-              ]}
-            >
-              <View
-                style={[
-                  styles.toggleKnob,
-                  warmupEnabled && styles.toggleKnobActive
-                ]}
-              />
-            </View>
-          </Pressable>
+            </Pressable>
 
-          {warmupEnabled && (
-            <View style={styles.optionConfig}>
-              <Text style={styles.optionConfigLabel}>Duration (mm:ss)</Text>
-              <TextInput
-                value={warmupTime}
-                onChangeText={setWarmupTime}
-                style={styles.optionConfigInput}
-                placeholder="5:00"
-                placeholderTextColor={theme.colors.muted}
-              />
-            </View>
-          )}
-
-          {/* Default Rest Toggle */}
-          <Pressable
-            onPress={() => {
-              haptics.buttonTap();
-              setRestEnabled((prev) => !prev);
-            }}
-            style={({ pressed }) => [
-              styles.optionRow,
-              pressed && styles.optionRowPressed
-            ]}
-          >
-            <View style={styles.optionLeft}>
-              <View
-                style={[
-                  styles.optionIcon,
-                  restEnabled && styles.optionIconActiveRest
-                ]}
-              >
-                <Ionicons
-                  name="timer-outline"
-                  size={18}
-                  color={
-                    restEnabled ? theme.colors.phases.break : theme.colors.muted
-                  }
+            {warmupEnabled && (
+              <View style={styles.optionExpanded}>
+                <Text style={styles.optionExpandedLabel}>Duration (mm:ss)</Text>
+                <TextInput
+                  value={warmupTime}
+                  onChangeText={setWarmupTime}
+                  style={styles.timeInput}
+                  placeholder="5:00"
+                  placeholderTextColor={theme.colors.muted}
                 />
               </View>
-              <Text
-                style={[
-                  styles.optionLabel,
-                  restEnabled && styles.optionLabelActive
-                ]}
-              >
-                Rest Between Exercises
-              </Text>
-            </View>
-            <View
-              style={[styles.toggle, restEnabled && styles.toggleActiveRest]}
-            >
-              <View
-                style={[
-                  styles.toggleKnob,
-                  restEnabled && styles.toggleKnobActive
-                ]}
-              />
-            </View>
-          </Pressable>
+            )}
 
-          {restEnabled && (
-            <View style={styles.optionConfig}>
-              <Text style={styles.optionConfigLabel}>Duration (mm:ss)</Text>
-              <TextInput
-                value={restTime}
-                onChangeText={setRestTime}
-                style={styles.optionConfigInput}
-                placeholder="1:00"
-                placeholderTextColor={theme.colors.muted}
-              />
-            </View>
-          )}
+            <View style={styles.divider} />
+
+            {/* Rest Toggle */}
+            <Pressable
+              onPress={() => {
+                haptics.buttonTap();
+                setRestEnabled((prev) => !prev);
+              }}
+              style={styles.optionRow}
+            >
+              <View style={styles.optionLeft}>
+                <View
+                  style={[
+                    styles.optionIcon,
+                    restEnabled && styles.optionIconRest
+                  ]}
+                >
+                  <Ionicons
+                    name="timer"
+                    size={18}
+                    color={
+                      restEnabled
+                        ? theme.colors.phases.break
+                        : theme.colors.muted
+                    }
+                  />
+                </View>
+                <View>
+                  <Text style={styles.optionLabel}>Rest Between Exercises</Text>
+                  {restEnabled && (
+                    <Text style={styles.optionValue}>{restTime}</Text>
+                  )}
+                </View>
+              </View>
+              <View style={[styles.toggle, restEnabled && styles.toggleActive]}>
+                <View
+                  style={[
+                    styles.toggleKnob,
+                    restEnabled && styles.toggleKnobActive
+                  ]}
+                />
+              </View>
+            </Pressable>
+
+            {restEnabled && (
+              <View style={styles.optionExpanded}>
+                <Text style={styles.optionExpandedLabel}>Duration (mm:ss)</Text>
+                <TextInput
+                  value={restTime}
+                  onChangeText={setRestTime}
+                  style={styles.timeInput}
+                  placeholder="1:00"
+                  placeholderTextColor={theme.colors.muted}
+                />
+              </View>
+            )}
+          </View>
         </View>
 
-        {/* Exercises Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Exercises</Text>
+        {/* Exercises */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Exercises</Text>
             <Pressable
               onPress={addExercise}
               style={({ pressed }) => [
-                styles.addBtn,
-                pressed && styles.addBtnPressed
+                styles.addButton,
+                pressed && styles.addButtonPressed
               ]}
             >
               <Ionicons name="add" size={18} color={theme.colors.primary} />
-              <Text style={styles.addBtnText}>Add</Text>
+              <Text style={styles.addButtonText}>Add</Text>
             </Pressable>
           </View>
 
           {blocksDraft.length === 0 ? (
-            <View style={styles.emptyState}>
+            <View style={styles.emptyCard}>
               <Ionicons
                 name="barbell-outline"
-                size={32}
+                size={40}
                 color={theme.colors.muted}
               />
-              <Text style={styles.emptyStateText}>
+              <Text style={styles.emptyText}>
                 Add exercises to build your program
               </Text>
+              <Pressable
+                onPress={addExercise}
+                style={({ pressed }) => [
+                  styles.emptyButton,
+                  pressed && styles.emptyButtonPressed
+                ]}
+              >
+                <Ionicons
+                  name="add"
+                  size={20}
+                  color={theme.colors.primaryTextOn}
+                />
+                <Text style={styles.emptyButtonText}>Add Exercise</Text>
+              </Pressable>
             </View>
           ) : (
             <View style={styles.exerciseList}>
               {blocksDraft.map((block, index) => (
-                <View key={index} style={styles.exerciseItem}>
-                  <View style={styles.exerciseItemHeader}>
-                    <View style={styles.exerciseItemLeft}>
-                      <View style={styles.exerciseNumber}>
-                        <Text style={styles.exerciseNumberText}>
-                          {index + 1}
-                        </Text>
-                      </View>
-                      <Pressable
-                        onPress={() => {
-                          haptics.buttonTap();
-                          setPickerTargetIndex(index);
-                          setExercisePickerOpen(true);
-                        }}
-                        style={({ pressed }) => [
-                          styles.exercisePicker,
-                          pressed && styles.exercisePickerPressed
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.exercisePickerText,
-                            !block.exerciseId &&
-                              styles.exercisePickerPlaceholder
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {exerciseNameById.get(block.exerciseId) ||
-                            "Select exercise"}
-                        </Text>
-                        <Ionicons
-                          name="chevron-down"
-                          size={16}
-                          color={theme.colors.muted}
-                        />
-                      </Pressable>
+                <View key={index} style={styles.exerciseCard}>
+                  <View style={styles.exerciseHeader}>
+                    <View style={styles.exerciseNumber}>
+                      <Text style={styles.exerciseNumberText}>{index + 1}</Text>
                     </View>
+                    <Pressable
+                      onPress={() => {
+                        haptics.buttonTap();
+                        setPickerTargetIndex(index);
+                        setExercisePickerOpen(true);
+                      }}
+                      style={({ pressed }) => [
+                        styles.exercisePicker,
+                        pressed && styles.exercisePickerPressed
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.exercisePickerText,
+                          !block.exerciseId && styles.exercisePickerPlaceholder
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {exerciseNameById.get(block.exerciseId) ||
+                          "Select exercise"}
+                      </Text>
+                      <Ionicons
+                        name="chevron-down"
+                        size={16}
+                        color={theme.colors.muted}
+                      />
+                    </Pressable>
                     <View style={styles.exerciseActions}>
                       {index > 0 && (
                         <Pressable
                           onPress={() => moveExercise(index, "up")}
-                          style={({ pressed }) => [
-                            styles.actionBtn,
-                            pressed && styles.actionBtnPressed
-                          ]}
+                          style={styles.actionButton}
                         >
                           <Ionicons
                             name="chevron-up"
-                            size={16}
+                            size={18}
                             color={theme.colors.muted}
                           />
                         </Pressable>
@@ -580,64 +580,58 @@ export function ProgramForm({
                       {index < blocksDraft.length - 1 && (
                         <Pressable
                           onPress={() => moveExercise(index, "down")}
-                          style={({ pressed }) => [
-                            styles.actionBtn,
-                            pressed && styles.actionBtnPressed
-                          ]}
+                          style={styles.actionButton}
                         >
                           <Ionicons
                             name="chevron-down"
-                            size={16}
+                            size={18}
                             color={theme.colors.muted}
                           />
                         </Pressable>
                       )}
                       <Pressable
                         onPress={() => removeExercise(index)}
-                        style={({ pressed }) => [
-                          styles.actionBtn,
-                          pressed && styles.actionBtnPressed
-                        ]}
+                        style={styles.actionButton}
                       >
                         <Ionicons
                           name="trash-outline"
-                          size={16}
+                          size={18}
                           color={theme.colors.danger}
                         />
                       </Pressable>
                     </View>
                   </View>
-                  <View style={styles.exerciseItemFooter}>
-                    <View style={styles.exerciseFieldRow}>
-                      <Text style={styles.fieldLabel}>Target Reps</Text>
+
+                  <View style={styles.exerciseFields}>
+                    <View style={styles.exerciseField}>
+                      <Text style={styles.exerciseFieldLabel}>Reps</Text>
                       <TextInput
                         value={block.targetReps || ""}
                         onChangeText={(v) =>
                           updateExerciseField(index, "targetReps", v)
                         }
                         keyboardType="number-pad"
-                        style={styles.fieldInput}
+                        style={styles.exerciseFieldInput}
                         placeholder="10"
                         placeholderTextColor={theme.colors.muted}
                       />
                     </View>
-                    <View style={styles.exerciseFieldRow}>
-                      <Text style={styles.fieldLabel}>Sets</Text>
+                    <View style={styles.exerciseField}>
+                      <Text style={styles.exerciseFieldLabel}>Sets</Text>
                       <TextInput
                         value={block.sets || String(DEFAULT_SETS)}
                         onChangeText={(v) => {
-                          // Only allow positive integers
                           const cleaned = v.replace(/[^0-9]/g, "");
                           updateExerciseField(index, "sets", cleaned);
                         }}
                         keyboardType="number-pad"
-                        style={styles.fieldInput}
-                        placeholder="1"
+                        style={styles.exerciseFieldInput}
+                        placeholder="3"
                         placeholderTextColor={theme.colors.muted}
                       />
                     </View>
-                    <View style={styles.exerciseFieldRow}>
-                      <Text style={styles.fieldLabel}>Rest Between Sets</Text>
+                    <View style={styles.exerciseField}>
+                      <Text style={styles.exerciseFieldLabel}>Rest</Text>
                       <TextInput
                         value={
                           block.restBetweenSets ||
@@ -646,7 +640,7 @@ export function ProgramForm({
                         onChangeText={(v) =>
                           updateExerciseField(index, "restBetweenSets", v)
                         }
-                        style={styles.fieldInput}
+                        style={styles.exerciseFieldInput}
                         placeholder="1:00"
                         placeholderTextColor={theme.colors.muted}
                       />
@@ -659,32 +653,6 @@ export function ProgramForm({
         </View>
       </ScrollView>
 
-      {/* Fixed Footer */}
-      <View style={styles.footer}>
-        <Pressable
-          onPress={handleCancel}
-          style={({ pressed }) => [
-            styles.cancelBtn,
-            pressed && styles.cancelBtnPressed
-          ]}
-        >
-          <Text style={styles.cancelBtnText}>Cancel</Text>
-        </Pressable>
-        <Pressable
-          onPress={handleSave}
-          disabled={saving}
-          style={({ pressed }) => [
-            styles.saveBtn,
-            pressed && !saving && styles.saveBtnPressed,
-            saving && styles.saveBtnDisabled
-          ]}
-        >
-          <Text style={styles.saveBtnText}>
-            {saving ? "Saving..." : "Save"}
-          </Text>
-        </Pressable>
-      </View>
-
       {/* Exercise Picker Modal */}
       <Modal
         visible={exercisePickerOpen}
@@ -692,19 +660,17 @@ export function ProgramForm({
         animationType="slide"
         onRequestClose={() => setExercisePickerOpen(false)}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setExercisePickerOpen(false)}
+        >
+          <View
+            style={styles.modalContent}
+            onStartShouldSetResponder={() => true}
+          >
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Exercise</Text>
-              <Pressable
-                onPress={() => setExercisePickerOpen(false)}
-                style={({ pressed }) => [
-                  styles.modalCloseBtn,
-                  pressed && styles.modalCloseBtnPressed
-                ]}
-              >
-                <Ionicons name="close" size={18} color={theme.colors.text} />
-              </Pressable>
             </View>
             <ScrollView
               style={styles.modalList}
@@ -744,8 +710,8 @@ export function ProgramForm({
                     </Text>
                     {isSelected && (
                       <Ionicons
-                        name="checkmark"
-                        size={18}
+                        name="checkmark-circle"
+                        size={22}
                         color={theme.colors.primary}
                       />
                     )}
@@ -753,13 +719,20 @@ export function ProgramForm({
                 );
               })}
               {exercises.length === 0 && (
-                <Text style={styles.emptyText}>
-                  No exercises available. Create an exercise first.
-                </Text>
+                <View style={styles.modalEmpty}>
+                  <Ionicons
+                    name="fitness-outline"
+                    size={32}
+                    color={theme.colors.muted}
+                  />
+                  <Text style={styles.modalEmptyText}>
+                    No exercises available.{"\n"}Create an exercise first.
+                  </Text>
+                </View>
               )}
             </ScrollView>
           </View>
-        </View>
+        </Pressable>
       </Modal>
     </KeyboardAvoidingView>
   );
@@ -774,83 +747,81 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.surface
-  },
-  headerBackBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
     backgroundColor: theme.colors.background
   },
-  headerBackBtnPressed: {
-    backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.96 }]
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.full,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  backButtonPressed: {
+    backgroundColor: theme.colors.surface
   },
   headerTitle: {
     ...theme.typography.h3,
     color: theme.colors.text
   },
-  headerSpacer: {
-    width: 36
+  saveButton: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primary
+  },
+  saveButtonPressed: {
+    opacity: 0.9
+  },
+  saveButtonDisabled: {
+    backgroundColor: theme.colors.border
+  },
+  saveButtonText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primaryTextOn
+  },
+  saveButtonTextDisabled: {
+    color: theme.colors.muted
   },
   scrollView: {
     flex: 1
   },
   content: {
     padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-    gap: theme.spacing.lg
+    paddingBottom: theme.spacing.xxl * 2,
+    gap: theme.spacing.xl
+  },
+  section: {
+    gap: theme.spacing.sm
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  sectionTitle: {
+    ...theme.typography.small,
+    color: theme.colors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginLeft: theme.spacing.xs
   },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
     ...theme.shadows.sm
   },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: -theme.spacing.sm
-  },
-  cardTitle: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.text
-  },
-  field: {
-    gap: theme.spacing.sm
-  },
-  label: {
-    ...theme.typography.caption,
-    color: theme.colors.subtext,
-    fontFamily: theme.fonts.semiBold
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.surface,
+  nameInput: {
+    ...theme.typography.body,
     color: theme.colors.text,
-    ...theme.typography.body
+    padding: theme.spacing.lg
   },
-  // Option rows (toggle style)
   optionRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: theme.spacing.sm
-  },
-  optionRowPressed: {
-    opacity: 0.7
+    padding: theme.spacing.lg
   },
   optionLeft: {
     flexDirection: "row",
@@ -858,285 +829,237 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md
   },
   optionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.sm,
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.md,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: theme.colors.background
   },
-  optionIconActiveWarmup: {
+  optionIconWarmup: {
     backgroundColor: theme.colors.phases.warmupBg
   },
-  optionIconActiveRest: {
+  optionIconRest: {
     backgroundColor: theme.colors.phases.breakBg
   },
   optionLabel: {
     ...theme.typography.body,
-    color: theme.colors.subtext
+    color: theme.colors.text
   },
-  optionLabelActive: {
-    color: theme.colors.text,
-    fontFamily: theme.fonts.semiBold
+  optionValue: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    marginTop: 2
   },
   toggle: {
-    width: 44,
-    height: 26,
-    borderRadius: 13,
+    width: 48,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: theme.colors.border,
     padding: 2,
     justifyContent: "center"
   },
-  toggleActiveWarmup: {
-    backgroundColor: theme.colors.phases.warmup
-  },
-  toggleActiveRest: {
-    backgroundColor: theme.colors.phases.break
+  toggleActive: {
+    backgroundColor: theme.colors.primary
   },
   toggleKnob: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: theme.colors.surface
   },
   toggleKnobActive: {
     alignSelf: "flex-end"
   },
-  optionConfig: {
+  optionExpanded: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingLeft: 52,
-    marginTop: -theme.spacing.sm
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg,
+    paddingLeft: 72
   },
-  optionConfigLabel: {
+  optionExpandedLabel: {
     ...theme.typography.caption,
     color: theme.colors.muted
   },
-  optionConfigInput: {
+  timeInput: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primary,
+    textAlign: "center",
     width: 80,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    padding: theme.spacing.sm,
     backgroundColor: theme.colors.background,
-    color: theme.colors.text,
-    ...theme.typography.body,
-    textAlign: "center"
+    borderRadius: theme.radius.md
   },
-  // Add button
-  addBtn: {
+  divider: {
+    height: 1,
+    backgroundColor: theme.colors.borderLight,
+    marginHorizontal: theme.spacing.lg
+  },
+  addButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.xs,
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.radius.md,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primaryLight
   },
-  addBtnPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.98 }]
+  addButtonPressed: {
+    opacity: 0.7
   },
-  addBtnText: {
+  addButtonText: {
     ...theme.typography.captionBold,
     color: theme.colors.primary
   },
-  // Empty state
-  emptyState: {
+  emptyCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.xxl,
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: theme.spacing.xl,
-    gap: theme.spacing.sm
+    gap: theme.spacing.md,
+    ...theme.shadows.sm
   },
-  emptyStateText: {
+  emptyText: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textAlign: "center"
   },
-  // Exercise list
+  emptyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primary,
+    marginTop: theme.spacing.sm
+  },
+  emptyButtonPressed: {
+    opacity: 0.9
+  },
+  emptyButtonText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primaryTextOn
+  },
   exerciseList: {
     gap: theme.spacing.sm
   },
-  exerciseItem: {
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.md,
+  exerciseCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
-    gap: theme.spacing.md
+    gap: theme.spacing.md,
+    ...theme.shadows.sm
   },
-  exerciseItemHeader: {
+  exerciseHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     gap: theme.spacing.sm
   },
-  exerciseItemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm,
-    flex: 1
-  },
   exerciseNumber: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primary,
     alignItems: "center",
     justifyContent: "center"
   },
   exerciseNumberText: {
-    ...theme.typography.small,
-    color: theme.colors.primaryTextOn,
-    fontFamily: theme.fonts.semiBold
+    ...theme.typography.captionBold,
+    color: theme.colors.primaryTextOn
   },
   exercisePicker: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.background
   },
   exercisePickerPressed: {
     backgroundColor: theme.colors.border
   },
   exercisePickerText: {
-    ...theme.typography.body,
+    ...theme.typography.bodyBold,
     color: theme.colors.text,
     flex: 1
   },
   exercisePickerPlaceholder: {
-    color: theme.colors.muted
+    color: theme.colors.muted,
+    fontFamily: theme.fonts.regular
   },
   exerciseActions: {
     flexDirection: "row",
     gap: theme.spacing.xs
   },
-  actionBtn: {
-    width: 28,
-    height: 28,
+  actionButton: {
+    width: 32,
+    height: 32,
     borderRadius: theme.radius.sm,
     alignItems: "center",
     justifyContent: "center"
   },
-  actionBtnPressed: {
-    backgroundColor: theme.colors.surface
-  },
-  exerciseItemFooter: {
-    flexDirection: "column",
-    gap: theme.spacing.sm,
-    paddingLeft: 32
-  },
-  exerciseFieldRow: {
+  exerciseFields: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between"
+    gap: theme.spacing.sm
   },
-  fieldLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.muted
+  exerciseField: {
+    flex: 1,
+    gap: theme.spacing.xs
   },
-  fieldInput: {
-    width: 80,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
-    color: theme.colors.text,
-    ...theme.typography.body,
+  exerciseFieldLabel: {
+    ...theme.typography.small,
+    color: theme.colors.muted,
     textAlign: "center"
   },
-  // Footer
-  footer: {
-    flexDirection: "row",
-    gap: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    backgroundColor: theme.colors.surface
-  },
-  cancelBtn: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.md,
+  exerciseFieldInput: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text,
+    textAlign: "center",
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm,
     backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border
+    borderRadius: theme.radius.md
   },
-  cancelBtnPressed: {
-    backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.98 }]
-  },
-  cancelBtnText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.subtext
-  },
-  saveBtn: {
-    flex: 2,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.md
-  },
-  saveBtnPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }]
-  },
-  saveBtnDisabled: {
-    opacity: 0.5
-  },
-  saveBtnText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn
-  },
-  // Modal
   modalBackdrop: {
     flex: 1,
     backgroundColor: theme.colors.overlay,
     justifyContent: "flex-end"
   },
-  modalCard: {
+  modalContent: {
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    padding: theme.spacing.lg,
-    maxHeight: "60%"
+    maxHeight: "60%",
+    paddingBottom: theme.spacing.xxl
+  },
+  modalHandle: {
+    width: 36,
+    height: 4,
+    backgroundColor: theme.colors.border,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing.lg
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderLight
   },
   modalTitle: {
     ...theme.typography.h3,
-    color: theme.colors.text
-  },
-  modalCloseBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background
-  },
-  modalCloseBtnPressed: {
-    backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.96 }]
+    color: theme.colors.text,
+    textAlign: "center"
   },
   modalList: {
-    maxHeight: 350
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md
   },
   modalItem: {
     flexDirection: "row",
@@ -1158,13 +1081,17 @@ const styles = StyleSheet.create({
     color: theme.colors.text
   },
   modalItemTextSelected: {
-    color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold
+    ...theme.typography.bodyBold,
+    color: theme.colors.primary
   },
-  emptyText: {
+  modalEmpty: {
+    alignItems: "center",
+    paddingVertical: theme.spacing.xxl,
+    gap: theme.spacing.md
+  },
+  modalEmptyText: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center",
-    padding: theme.spacing.xl
+    textAlign: "center"
   }
 });
