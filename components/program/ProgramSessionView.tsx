@@ -1,6 +1,6 @@
 import { useExercises } from "@/hooks";
 import { UseWorkoutTimerReturn, WorkoutStep } from "@/hooks/session";
-import { formatTime } from "@/lib/utils";
+import { formatDuration, formatTime } from "@/lib/utils";
 import { getPhaseInfo } from "@/lib/utils/colors";
 import { theme } from "@/theme/theme";
 import { Program, ProgramSession } from "@/types";
@@ -186,14 +186,28 @@ export default function ProgramSessionView({
                       ? `Complete ${currentExerciseName ?? "exercise"}`
                       : "Continue"
               }
-              phaseAccent={phaseAccent}
-              phaseBg={phaseBg}
+              phaseAccent={
+                current?.type === "warmup"
+                  ? theme.colors.phases.warmup
+                  : phaseAccent
+              }
+              phaseBg={
+                current?.type === "warmup"
+                  ? theme.colors.phases.warmupBg
+                  : phaseBg
+              }
               timerEnabled={true}
             />
           ) : current?.type === "exercise" ? (
             <FocusCard
               icon="barbell"
-              phaseChipText="Current Exercise"
+              phaseChipText={
+                current.setNumber != null &&
+                current.totalSets != null &&
+                current.totalSets > 1
+                  ? `Set ${current.setNumber} of ${current.totalSets}`
+                  : "Current Exercise"
+              }
               title={currentExerciseName || "Exercise"}
               subTitle="Let's go!"
               phaseAccent={phaseAccent}
@@ -202,20 +216,36 @@ export default function ProgramSessionView({
             />
           ) : current?.type === "warmup" ? (
             <FocusCard
-              title={formatTime(current.seconds)}
-              phaseAccent={phaseAccent}
-              phaseBg={phaseBg}
+              title={
+                current.seconds >= 60
+                  ? `Warmup - ${formatDuration(current.seconds, "long")}`
+                  : `Warmup - ${current.seconds} seconds`
+              }
+              phaseAccent={theme.colors.phases.warmup}
+              phaseBg={theme.colors.phases.warmupBg}
               subTitle={"Stretch well to prepare for your workout!"}
               phaseChipText="Warm-up"
               icon="flame"
-              timerEnabled={true}
+              timerEnabled={false}
             />
           ) : current?.type === "rest" ? (
             <FocusCard
               icon="pause-circle"
-              phaseChipText="Rest period"
+              phaseChipText={
+                current.restContext === "between-sets"
+                  ? "Rest between sets"
+                  : current.restContext === "between-exercises"
+                    ? "Rest between exercises"
+                    : "Rest period"
+              }
               title={current.label ? current.label : "Rest"}
-              subTitle={current.seconds + " seconds"}
+              subTitle={
+                current.restContext === "between-sets"
+                  ? `${current.seconds} seconds before next set`
+                  : current.restContext === "between-exercises"
+                    ? `${current.seconds} seconds before next exercise`
+                    : `${current.seconds} seconds`
+              }
               phaseAccent={phaseAccent}
               phaseBg={phaseBg}
             />
@@ -277,26 +307,55 @@ export default function ProgramSessionView({
           ) : undefined;
 
           if (item.type === "warmup") {
+            // Apply warmup-specific colors for distinct styling (always use warmup colors)
+            const warmupAccent = theme.colors.phases.warmup;
+            const warmupBg = theme.colors.phases.warmupBg;
+            // Format warmup duration as "Warmup - X minutes" or "Warmup - X:XX"
+            const warmupDurationLabel =
+              item.seconds >= 60
+                ? formatDuration(item.seconds, "long")
+                : `${item.seconds} seconds`;
+
             return (
               <StepCard
-                title="Warm-up"
-                phaseAccent={phaseAccent}
-                phaseBg={phaseBg}
+                title={`Warmup - ${warmupDurationLabel}`}
+                phaseAccent={warmupAccent}
+                phaseBg={warmupBg}
                 active={isActive}
                 done={isDone}
                 locked={isLocked}
                 right={right}
                 delayMultiplier={idx}
+                style={styles.warmupCard}
               >
-                <Text style={styles.stepMeta}>{item.seconds} sec</Text>
+                <View style={styles.warmupMeta}>
+                  <Ionicons
+                    name="flame"
+                    size={14}
+                    color={warmupAccent}
+                    style={{ marginRight: theme.spacing.xs }}
+                  />
+                  <Text style={[styles.stepMeta, { color: warmupAccent }]}>
+                    Prepare for your workout
+                  </Text>
+                </View>
               </StepCard>
             );
           }
 
           if (item.type === "rest") {
+            // Display rest context (between sets or between exercises)
+            const restTitle = item.label || "Rest";
+            const restContextLabel =
+              item.restContext === "between-sets"
+                ? "Between sets"
+                : item.restContext === "between-exercises"
+                  ? "Between exercises"
+                  : null;
+
             return (
               <StepCard
-                title={item.label || "Rest"}
+                title={restTitle}
                 phaseAccent={phaseAccent}
                 phaseBg={phaseBg}
                 active={isActive}
@@ -306,12 +365,21 @@ export default function ProgramSessionView({
                 delayMultiplier={idx}
               >
                 <Text style={styles.stepMeta}>{item.seconds} sec</Text>
+                {restContextLabel && (
+                  <Text style={styles.stepRestContext}>{restContextLabel}</Text>
+                )}
               </StepCard>
             );
           }
 
           // exercise
           const exName = exerciseNameById.get(item.exerciseId) ?? "Exercise";
+          // Display set information if available (e.g., "Set 1 of 3")
+          const hasMultipleSets = item.totalSets != null && item.totalSets > 1;
+          const setInfo = hasMultipleSets
+            ? `Set ${item.setNumber} of ${item.totalSets}`
+            : null;
+
           return (
             <StepCard
               phaseAccent={phaseAccent}
@@ -323,6 +391,7 @@ export default function ProgramSessionView({
               right={right}
               delayMultiplier={idx}
             >
+              {setInfo && <Text style={styles.stepSetInfo}>{setInfo}</Text>}
               <Text style={styles.stepMeta}>
                 {item.targetReps != null
                   ? `${item.targetReps} reps`
@@ -489,6 +558,26 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.subtext,
     marginTop: theme.spacing.xs
+  },
+  stepSetInfo: {
+    ...theme.typography.captionBold,
+    color: theme.colors.primary,
+    marginBottom: theme.spacing.xs
+  },
+  stepRestContext: {
+    ...theme.typography.small,
+    color: theme.colors.muted,
+    marginTop: theme.spacing.xs,
+    fontStyle: "italic"
+  },
+  warmupCard: {
+    borderWidth: 1,
+    borderColor: theme.colors.phases.warmup,
+    backgroundColor: theme.colors.phases.warmupBg
+  },
+  warmupMeta: {
+    flexDirection: "row",
+    alignItems: "center"
   },
   focusCard: {
     marginTop: theme.spacing.md,

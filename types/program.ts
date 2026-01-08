@@ -31,6 +31,14 @@ export type ProgramExerciseBlock = {
    * Optional short note (e.g. form cue, load, previous sets info after migration).
    */
   note?: string;
+  /**
+   * Number of sets for this exercise block (defaults to 1).
+   */
+  sets?: number;
+  /**
+   * Rest duration in seconds between consecutive sets (defaults to 60).
+   */
+  restBetweenSets?: number;
 };
 
 export type ProgramBlock =
@@ -77,6 +85,19 @@ export type Program = {
    * percentage increase per session (default: 10%).
    */
   challengeConfig?: ChallengeConfig;
+  /**
+   * Optional initial warmup configuration for the program.
+   * When configured, displays as a distinct warmup block at the start.
+   */
+  initialWarmup?: {
+    seconds: number;
+  };
+  /**
+   * Default rest duration in seconds between different exercises.
+   * Applied when transitioning between exercises unless overridden.
+   * Defaults to 60 seconds if not specified.
+   */
+  defaultRestBetweenExercises?: number;
 };
 
 /**

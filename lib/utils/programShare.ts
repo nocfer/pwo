@@ -24,7 +24,10 @@ export function encodeProgramForShare(program: Program): string {
     description: program.description,
     blocks: program.blocks,
     challengeConfig: program.challengeConfig,
-    source: program.source
+    source: program.source,
+    // Include new configuration fields for sets and rest timers
+    initialWarmup: program.initialWarmup,
+    defaultRestBetweenExercises: program.defaultRestBetweenExercises
   };
 
   return JSON.stringify(shareable);
@@ -102,6 +105,25 @@ export function validateProgramData(
       if (typeof blockObj.exerciseId !== "string") {
         return false;
       }
+      // Validate sets if present (must be positive integer)
+      if (blockObj.sets !== undefined) {
+        if (
+          typeof blockObj.sets !== "number" ||
+          blockObj.sets < 1 ||
+          !Number.isInteger(blockObj.sets)
+        ) {
+          return false;
+        }
+      }
+      // Validate restBetweenSets if present (must be non-negative number)
+      if (blockObj.restBetweenSets !== undefined) {
+        if (
+          typeof blockObj.restBetweenSets !== "number" ||
+          blockObj.restBetweenSets < 0
+        ) {
+          return false;
+        }
+      }
     }
 
     // Warmup and rest blocks must have seconds
@@ -124,6 +146,27 @@ export function validateProgramData(
     obj.source !== "user"
   ) {
     return false;
+  }
+
+  // initialWarmup is optional but must be valid structure if present
+  if (obj.initialWarmup !== undefined) {
+    if (!obj.initialWarmup || typeof obj.initialWarmup !== "object") {
+      return false;
+    }
+    const warmup = obj.initialWarmup as Record<string, unknown>;
+    if (typeof warmup.seconds !== "number" || warmup.seconds <= 0) {
+      return false;
+    }
+  }
+
+  // defaultRestBetweenExercises is optional but must be non-negative number if present
+  if (obj.defaultRestBetweenExercises !== undefined) {
+    if (
+      typeof obj.defaultRestBetweenExercises !== "number" ||
+      obj.defaultRestBetweenExercises < 0
+    ) {
+      return false;
+    }
   }
 
   // ChallengeConfig is optional but must be valid structure if present

@@ -1,6 +1,6 @@
 import {
-    ProgramForm,
-    type ProgramFormData
+  ProgramForm,
+  type ProgramFormData
 } from "@/components/data/forms/ProgramForm";
 import { useDataActions } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
@@ -20,7 +20,9 @@ export default function NewProgramScreen() {
       await actions.upsertProgram({
         id: "",
         name: formData.name,
-        blocks: formData.blocks
+        blocks: formData.blocks,
+        initialWarmup: formData.initialWarmup,
+        defaultRestBetweenExercises: formData.defaultRestBetweenExercises
       });
       router.back();
     } catch (e) {

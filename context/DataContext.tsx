@@ -94,7 +94,13 @@ type DataContextValue = {
     upsertProgram: (
       input: Pick<
         Program,
-        "id" | "name" | "description" | "blocks" | "challengeConfig"
+        | "id"
+        | "name"
+        | "description"
+        | "blocks"
+        | "challengeConfig"
+        | "initialWarmup"
+        | "defaultRestBetweenExercises"
       > & {
         id?: string;
       }
@@ -736,7 +742,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     async (
       input: Pick<
         Program,
-        "id" | "name" | "description" | "blocks" | "challengeConfig"
+        | "id"
+        | "name"
+        | "description"
+        | "blocks"
+        | "challengeConfig"
+        | "initialWarmup"
+        | "defaultRestBetweenExercises"
       > & {
         id?: string;
       }
@@ -755,6 +767,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         description: input.description,
         blocks: input.blocks,
         challengeConfig: input.challengeConfig,
+        initialWarmup: input.initialWarmup,
+        defaultRestBetweenExercises: input.defaultRestBetweenExercises,
         source: "user"
       });
 
