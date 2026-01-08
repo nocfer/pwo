@@ -4,7 +4,7 @@ import { theme } from "@/theme/theme";
 import { Program, ProgramSession } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     Pressable,
     ScrollView,
@@ -31,6 +31,7 @@ type Props = {
   steps: WorkoutStep[];
   program: Program;
   exerciseNameById: Map<string, string>;
+  onProgramUpdate?: (updatedProgram: Program) => Promise<void>;
 };
 
 export function WorkoutExecutionScreen({
@@ -38,7 +39,8 @@ export function WorkoutExecutionScreen({
   timer,
   steps,
   program,
-  exerciseNameById
+  exerciseNameById,
+  onProgramUpdate
 }: Props) {
   const title = session.name ?? `Session ${session.index}`;
   const current = timer.currentStep;
@@ -51,7 +53,7 @@ export function WorkoutExecutionScreen({
   const [lastCompletion, setLastCompletion] = useState<SetCompletion | null>(null);
 
   // Initialize current reps when step changes
-  useMemo(() => {
+  useEffect(() => {
     if (current?.type === "exercise" && current.targetReps) {
       setCurrentReps(current.targetReps);
     } else {
@@ -196,15 +198,6 @@ export function WorkoutExecutionScreen({
       <Text style={styles.completedTime}>
         Total time: {formatTime(timer.sessionElapsedSeconds)}
       </Text>
-      <Pressable
-        style={({ pressed }) => [
-          styles.doneButton,
-          pressed && styles.buttonPressed
-        ]}
-        onPress={() => router.back()}
-      >
-        <Text style={styles.doneButtonText}>Done</Text>
-      </Pressable>
     </View>
   );
 
@@ -221,32 +214,6 @@ export function WorkoutExecutionScreen({
           {isRest && nextLabel ? `Next: ${nextLabel}` : ""}
           {isWarmup ? "Prepare your body" : ""}
         </Text>
-
-        {/* Timer controls */}
-        <View style={styles.timerControls}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.timerButton,
-              pressed && styles.buttonPressed
-            ]}
-            onPress={timer.handlePauseResume}
-          >
-            <Ionicons
-              name={timer.isPaused ? "play" : "pause"}
-              size={24}
-              color={theme.colors.text}
-            />
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [
-              styles.skipTextButton,
-              pressed && styles.buttonPressed
-            ]}
-            onPress={timer.handleSkip}
-          >
-            <Text style={styles.skipText}>Skip</Text>
-          </Pressable>
-        </View>
       </View>
     );
   };
@@ -254,7 +221,7 @@ export function WorkoutExecutionScreen({
   const renderWarmupState = () => (
     <View style={styles.warmupContainer}>
       <View style={styles.warmupIcon}>
-        <Ionicons name="flame" size={32} color={theme.colors.phases.warmup} />
+        <Ionicons name="flame" size={40} color={theme.colors.phases.warmup} />
       </View>
       <Text style={styles.warmupTitle}>Warmup</Text>
       <Text style={styles.warmupDuration}>
@@ -266,11 +233,13 @@ export function WorkoutExecutionScreen({
 
   const renderRestReadyState = () => (
     <View style={styles.restContainer}>
-      <Ionicons
-        name="hourglass-outline"
-        size={32}
-        color={theme.colors.phases.break}
-      />
+      <View style={styles.restIcon}>
+        <Ionicons
+          name="hourglass-outline"
+          size={40}
+          color={theme.colors.phases.break}
+        />
+      </View>
       <Text style={styles.restTitle}>Rest</Text>
       <Text style={styles.restDuration}>
         {current?.type === "rest" ? `${current.seconds}s` : ""}
@@ -311,7 +280,7 @@ export function WorkoutExecutionScreen({
 
               <TextInput
                 style={styles.repInput}
-                value={String(currentReps ?? current.targetReps)}
+                value={String(currentReps ?? 0)}
                 onChangeText={(text) => {
                   const num = parseInt(text, 10);
                   if (!isNaN(num) && num >= 0) {
@@ -488,52 +457,97 @@ export function WorkoutExecutionScreen({
       </ScrollView>
 
       {/* Footer actions */}
-      {timer.phase !== "done" && timer.phase !== "timed" && (
-        <SafeAreaView style={styles.footer} edges={["bottom"]}>
-          <View style={styles.footerContent}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.skipTextButton,
-                pressed && styles.buttonPressed
-              ]}
-              onPress={timer.handleSkip}
-            >
-              <Text style={styles.skipText}>Skip</Text>
-            </Pressable>
-
+      <SafeAreaView style={styles.footer} edges={["bottom"]}>
+        <View style={styles.footerContent}>
+          {timer.phase === "done" ? (
+            // Completed state - show Done button
             <Pressable
               style={({ pressed }) => [
                 styles.primaryButton,
                 pressed && styles.primaryButtonPressed
               ]}
-              onPress={
-                current?.type === "exercise" ? handleCompleteSet : timer.handleComplete
-              }
+              onPress={() => router.back()}
             >
               <Ionicons
-                name={
-                  current?.type === "exercise" && !current.durationSeconds
-                    ? "checkmark"
-                    : "play"
-                }
+                name="checkmark"
                 size={22}
                 color={theme.colors.primaryTextOn}
               />
-              <Text style={styles.primaryButtonText}>
-                {current?.type === "warmup"
-                  ? "Start Warmup"
-                  : current?.type === "rest"
-                    ? "Start Rest"
-                    : current?.type === "exercise"
-                      ? current.durationSeconds
-                        ? "Start Timer"
-                        : "Complete Set"
-                      : "Continue"}
-              </Text>
+              <Text style={styles.primaryButtonText}>Done</Text>
             </Pressable>
-          </View>
-        </SafeAreaView>
-      )}
+          ) : timer.phase === "timed" ? (
+            // Timer running - show pause/play and skip
+            <>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.timerButton,
+                  pressed && styles.buttonPressed
+                ]}
+                onPress={timer.handlePauseResume}
+              >
+                <Ionicons
+                  name={timer.isPaused ? "play" : "pause"}
+                  size={24}
+                  color={theme.colors.text}
+                />
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.skipTextButton,
+                  pressed && styles.buttonPressed
+                ]}
+                onPress={timer.handleSkip}
+              >
+                <Text style={styles.skipText}>Skip</Text>
+              </Pressable>
+            </>
+          ) : (
+            // Ready state - show skip and main action
+            <>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.skipTextButton,
+                  pressed && styles.buttonPressed
+                ]}
+                onPress={timer.handleSkip}
+              >
+                <Text style={styles.skipText}>Skip</Text>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  pressed && styles.primaryButtonPressed
+                ]}
+                onPress={
+                  current?.type === "exercise" ? handleCompleteSet : timer.handleComplete
+                }
+              >
+                <Ionicons
+                  name={
+                    current?.type === "exercise" && !current.durationSeconds
+                      ? "checkmark"
+                      : "play"
+                  }
+                  size={22}
+                  color={theme.colors.primaryTextOn}
+                />
+                <Text style={styles.primaryButtonText}>
+                  {current?.type === "warmup"
+                    ? "Start Warmup"
+                    : current?.type === "rest"
+                      ? "Start Rest"
+                      : current?.type === "exercise"
+                        ? current.durationSeconds
+                          ? "Start Timer"
+                          : "Complete Set"
+                        : "Continue"}
+                </Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+      </SafeAreaView>
 
       {/* Update prompt modal */}
       {showUpdatePrompt && lastCompletion && (
@@ -563,9 +577,47 @@ export function WorkoutExecutionScreen({
                   styles.modalButtonPrimary,
                   pressed && styles.buttonPressed
                 ]}
-                onPress={() => {
-                  // TODO: Implement program update logic
-                  setShowUpdatePrompt(false);
+                onPress={async () => {
+                  if (!lastCompletion || !onProgramUpdate) {
+                    setShowUpdatePrompt(false);
+                    return;
+                  }
+
+                  // Find the block that needs updating
+                  const blockIndex = program.blocks.findIndex(
+                    (block) =>
+                      block.type === "exercise" &&
+                      block.exerciseId === lastCompletion.exerciseId &&
+                      block.targetReps === lastCompletion.targetReps
+                  );
+
+                  if (blockIndex === -1) {
+                    setShowUpdatePrompt(false);
+                    return;
+                  }
+
+                  // Create updated program with new reps
+                  const updatedBlocks = [...program.blocks];
+                  const block = updatedBlocks[blockIndex];
+                  if (block.type === "exercise") {
+                    updatedBlocks[blockIndex] = {
+                      ...block,
+                      targetReps: lastCompletion.actualReps
+                    };
+                  }
+
+                  const updatedProgram: Program = {
+                    ...program,
+                    blocks: updatedBlocks,
+                    updatedAt: new Date().toISOString()
+                  };
+
+                  try {
+                    await onProgramUpdate(updatedProgram);
+                    setShowUpdatePrompt(false);
+                  } catch (error) {
+                    console.error("Failed to update program:", error);
+                  }
                 }}
               >
                 <Text style={styles.modalButtonPrimaryText}>Update</Text>
@@ -765,18 +817,27 @@ const styles = StyleSheet.create({
   // Rest state
   restContainer: {
     alignItems: "center",
-    paddingVertical: theme.spacing.xl
+    paddingVertical: theme.spacing.lg
+  },
+  restIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: theme.colors.phases.breakBg,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: theme.spacing.md
   },
   restTitle: {
     ...theme.typography.h2,
     color: theme.colors.text,
-    marginTop: theme.spacing.md,
     marginBottom: theme.spacing.xs
   },
   restDuration: {
-    fontSize: 40,
+    fontSize: 48,
     fontFamily: theme.fonts.bold,
-    color: theme.colors.text
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs
   },
 
   // Exercise state

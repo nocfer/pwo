@@ -9,9 +9,8 @@ import { useRefreshVersions } from "@/context/DataContext";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { storage } from "@/lib/storage";
 import {
-  calculateCompletionPercentage,
-  calculateStreak,
-  findNextSessionIndex
+    calculateCompletionPercentage,
+    calculateStreak
 } from "@/lib/utils/progress";
 import type { Program, ProgramProgress } from "@/types";
 import { useCallback, useMemo } from "react";
@@ -65,7 +64,8 @@ export function useProgramProgress(program: Program | null | undefined): {
       return null;
     }
 
-    const totalSessions = program.blocks.length;
+    // For regular programs, there's only 1 session (the entire program)
+    const totalSessions = 1;
 
     // Default values when there is no progress yet
     if (!progress) {
@@ -107,14 +107,9 @@ export function useProgramProgress(program: Program | null | undefined): {
     // Use shared utility for streak calculation
     const currentStreak = calculateStreak(completedWorkouts);
 
-    // Use shared utility for finding next session
-    const completedIndices = new Set(
-      completedWorkouts.map((w, idx) => idx + 1)
-    );
-    const nextSessionIndex = findNextSessionIndex(
-      completedIndices,
-      totalSessions
-    );
+    // For regular programs, always allow re-running session 1
+    // (unlike challenges where you progress through sessions)
+    const nextSessionIndex = 1;
 
     // Calculate exercise completion
     const exerciseCompletion = new Map<

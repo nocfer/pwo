@@ -10,43 +10,43 @@ import { canSafelyDelete } from "@/lib/dependencyChecker";
 import { dataEvents } from "@/lib/events";
 import { storage } from "@/lib/storage";
 import {
-  validateExercise,
-  validateModificationPermissions,
-  validateUniqueName
+    validateExercise,
+    validateModificationPermissions,
+    validateUniqueName
 } from "@/lib/validation";
 import type {
-  AuditLogEntry,
-  ChallengeProgress,
-  DataAction,
-  DataEvent,
-  DataState,
-  DataType,
-  DependencyCheck,
-  EnhancedDataActions,
-  EnhancedDataState,
-  EventRecord,
-  Exercise,
-  ExerciseProgress,
-  ExportData,
-  HistoryEntry,
-  ImportData,
-  ImportResult,
-  LegacyProgram,
-  Program,
-  ProgramProgress,
-  SearchFacets,
-  SearchQuery,
-  SessionState,
-  UsageStats,
-  WorkoutProgress
+    AuditLogEntry,
+    ChallengeProgress,
+    DataAction,
+    DataEvent,
+    DataState,
+    DataType,
+    DependencyCheck,
+    EnhancedDataActions,
+    EnhancedDataState,
+    EventRecord,
+    Exercise,
+    ExerciseProgress,
+    ExportData,
+    HistoryEntry,
+    ImportData,
+    ImportResult,
+    LegacyProgram,
+    Program,
+    ProgramProgress,
+    SearchFacets,
+    SearchQuery,
+    SessionState,
+    UsageStats,
+    WorkoutProgress
 } from "@/types";
 import React, {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useReducer
+    createContext,
+    ReactNode,
+    useCallback,
+    useContext,
+    useEffect,
+    useReducer
 } from "react";
 
 type DataContextValue = {
@@ -629,6 +629,70 @@ export function DataProvider({ children }: { children: ReactNode }) {
   );
 
   const refreshAll = useCallback(() => {
+    // Reload exercises and programs from storage
+    (async () => {
+      try {
+        const [seedExercises, userExercises] = await Promise.all([
+          (async () => {
+            try {
+              type ExerciseModule = { default: Exercise[] };
+              const mod = await import("@/assets/data/exercises.json");
+              return (mod as unknown as ExerciseModule).default;
+            } catch {
+              return [] as Exercise[];
+            }
+          })(),
+          storage.loadExercises()
+        ]);
+
+        const exercisesById = new Map<string, Exercise>();
+        for (const e of seedExercises) exercisesById.set(e.id, e);
+        for (const e of userExercises) exercisesById.set(e.id, e);
+        const mergedExercises = Array.from(exercisesById.values()).sort(
+          (a, b) => a.name.localeCompare(b.name)
+        );
+
+        dispatch({ type: "SET_EXERCISES", exercises: mergedExercises });
+      } catch (error) {
+        console.error("Failed to reload exercises:", error);
+        dispatch({ type: "SET_EXERCISES_LOADING", loading: false });
+      }
+
+      try {
+        const [seedPrograms, userPrograms] = await Promise.all([
+          (async () => {
+            try {
+              type ProgramModule = { default: LegacyProgram[] };
+              const mod = await import("@/assets/data/programs.json");
+              return (mod as unknown as ProgramModule).default;
+            } catch {
+              return [] as LegacyProgram[];
+            }
+          })(),
+          storage.loadPrograms()
+        ]);
+
+        const programsById = new Map<string, Program>();
+        for (const p of seedPrograms) {
+          const migrated = migrateProgram(p);
+          programsById.set(migrated.id, migrated);
+        }
+        for (const p of userPrograms) {
+          const migrated = migrateProgram(p);
+          programsById.set(migrated.id, migrated);
+        }
+        const mergedPrograms = Array.from(programsById.values()).sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+
+        dispatch({ type: "SET_PROGRAMS", programs: mergedPrograms });
+      } catch (error) {
+        console.error("Failed to reload programs:", error);
+        dispatch({ type: "SET_PROGRAMS_LOADING", loading: false });
+      }
+    })();
+
+    // Also increment version counters for progress/history
     dispatch({ type: "REFRESH_ALL" });
   }, []);
 

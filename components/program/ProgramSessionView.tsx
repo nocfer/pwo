@@ -9,13 +9,15 @@ type Props = {
   timer: UseWorkoutTimerReturn;
   steps: WorkoutStep[];
   program: Program;
+  onProgramUpdate?: (program: Program) => Promise<void>;
 };
 
 export default function ProgramSessionView({
   session,
   timer,
   steps,
-  program
+  program,
+  onProgramUpdate
 }: Props) {
   const { data: exercises } = useExercises();
 
@@ -32,6 +34,7 @@ export default function ProgramSessionView({
       steps={steps}
       program={program}
       exerciseNameById={exerciseNameById}
+      onProgramUpdate={onProgramUpdate}
     />
   );
 }
