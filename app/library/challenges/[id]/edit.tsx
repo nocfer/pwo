@@ -1,14 +1,13 @@
-import { ErrorScreen, LoadingScreen } from "@/components/common";
 import {
-  ChallengeForm,
-  type ChallengeFormData
+    ChallengeForm,
+    type ChallengeFormData
 } from "@/components/data/forms/ChallengeForm";
 import { useDataActions, useDataContext } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
+import { theme } from "@/theme/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function EditChallengeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,7 +25,6 @@ export default function EditChallengeScreen() {
 
     return {
       name: challenge.name,
-      description: challenge.description || "",
       challengeConfig: {
         exerciseId: challenge.challengeConfig.exerciseId,
         sets: challenge.challengeConfig.sets,
@@ -47,12 +45,11 @@ export default function EditChallengeScreen() {
       await actions.upsertProgram({
         ...challenge,
         name: formData.name,
-        description: formData.description,
         challengeConfig: formData.challengeConfig
       });
       router.back();
     } catch (e) {
-      throw e; // Let the form handle the error display
+      throw e;
     } finally {
       setSaving(false);
     }
@@ -62,18 +59,27 @@ export default function EditChallengeScreen() {
     router.back();
   }
 
-  if (!challenge) {
-    return <LoadingScreen message="Loading challenge..." />;
-  }
-
-  if (!initialData) {
+  if (!challenge || !initialData) {
     return (
-      <ErrorScreen message="The challenge you're trying to edit could not be found." />
+      <View style={styles.container}>
+        <View style={styles.errorCard}>
+          <Text style={styles.errorText}>Challenge not found.</Text>
+          <Pressable
+            onPress={() => router.back()}
+            style={({ pressed }) => [
+              styles.backBtn,
+              pressed && styles.backBtnPressed
+            ]}
+          >
+            <Text style={styles.backBtnText}>Go Back</Text>
+          </Pressable>
+        </View>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ChallengeForm
         mode="edit"
         initialData={initialData}
@@ -82,12 +88,42 @@ export default function EditChallengeScreen() {
         saving={saving}
         exercises={exercises || []}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
+    backgroundColor: theme.colors.background
+  },
+  errorCard: {
+    margin: theme.spacing.lg,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.xl,
+    alignItems: "center",
+    gap: theme.spacing.lg,
+    ...theme.shadows.sm
+  },
+  errorText: {
+    ...theme.typography.body,
+    color: theme.colors.muted,
+    textAlign: "center"
+  },
+  backBtn: {
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border
+  },
+  backBtnPressed: {
+    backgroundColor: theme.colors.border
+  },
+  backBtnText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text
   }
 });

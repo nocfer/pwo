@@ -1,6 +1,6 @@
 import {
-  ExerciseForm,
-  type ExerciseFormData
+    ExerciseForm,
+    type ExerciseFormData
 } from "@/components/data/forms/ExerciseForm";
 import { useDataActions } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
@@ -8,7 +8,6 @@ import { theme } from "@/theme/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditExerciseScreen() {
   const params = useLocalSearchParams();
@@ -33,7 +32,7 @@ export default function EditExerciseScreen() {
       });
       router.back();
     } catch (e) {
-      throw e; // Let the form handle the error display
+      throw e;
     } finally {
       setSaving(false);
     }
@@ -45,40 +44,41 @@ export default function EditExerciseScreen() {
 
   if (!exercise) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={[styles.card, { margin: theme.spacing.lg }]}>
-          <Text style={styles.muted}>Exercise not found.</Text>
+      <View style={styles.container}>
+        <View style={styles.errorCard}>
+          <Text style={styles.errorText}>Exercise not found.</Text>
           <Pressable
             onPress={() => router.back()}
             style={({ pressed }) => [
-              styles.secondaryBtn,
-              pressed && styles.secondaryBtnPressed
+              styles.backBtn,
+              pressed && styles.backBtnPressed
             ]}
           >
-            <Text style={styles.secondaryBtnText}>Back</Text>
+            <Text style={styles.backBtnText}>Go Back</Text>
           </Pressable>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
-  // Check if this is a built-in exercise that can't be edited
   if (exercise.source === "builtin") {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={[styles.card, { margin: theme.spacing.lg }]}>
-          <Text style={styles.muted}>Built-in exercises cannot be edited.</Text>
+      <View style={styles.container}>
+        <View style={styles.errorCard}>
+          <Text style={styles.errorText}>
+            Built-in exercises cannot be edited.
+          </Text>
           <Pressable
             onPress={() => router.back()}
             style={({ pressed }) => [
-              styles.secondaryBtn,
-              pressed && styles.secondaryBtnPressed
+              styles.backBtn,
+              pressed && styles.backBtnPressed
             ]}
           >
-            <Text style={styles.secondaryBtnText}>Back</Text>
+            <Text style={styles.backBtnText}>Go Back</Text>
           </Pressable>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -89,7 +89,7 @@ export default function EditExerciseScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ExerciseForm
         mode="edit"
         initialData={initialData}
@@ -97,7 +97,7 @@ export default function EditExerciseScreen() {
         onCancel={handleCancel}
         saving={saving}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -106,32 +106,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   },
-  card: {
+  errorCard: {
+    margin: theme.spacing.lg,
     backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderWidth: 1,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    ...theme.shadows.sm,
-    gap: theme.spacing.xs
+    padding: theme.spacing.xl,
+    alignItems: "center",
+    gap: theme.spacing.lg,
+    ...theme.shadows.sm
   },
-  muted: {
+  errorText: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textAlign: "center"
   },
-  secondaryBtn: {
-    marginTop: theme.spacing.md,
-    borderRadius: theme.radius.lg,
+  backBtn: {
     paddingVertical: theme.spacing.md,
-    alignItems: "center",
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.border
   },
-  secondaryBtnPressed: {
-    backgroundColor: theme.colors.card
+  backBtnPressed: {
+    backgroundColor: theme.colors.border
   },
-  secondaryBtnText: {
+  backBtnText: {
     ...theme.typography.bodyBold,
     color: theme.colors.text
   }
