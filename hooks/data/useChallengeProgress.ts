@@ -9,9 +9,9 @@ import { useRefreshVersions } from "@/context/DataContext";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { storage } from "@/lib/storage";
 import {
-  calculateCompletionPercentage,
-  calculateStreak,
-  findNextSessionIndex
+    calculateCompletionPercentage,
+    calculateStreak,
+    findNextSessionIndex
 } from "@/lib/utils/progress";
 import type { ChallengeProgress, Program } from "@/types";
 import { useCallback, useMemo } from "react";
@@ -90,8 +90,8 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
       };
     }
 
-    const completedSessions = progress.sessions.filter((s) => s.completed);
-    const sessionsCompleted = completedSessions.length;
+    const completedWorkouts = progress.workouts.filter((w) => w.completed);
+    const sessionsCompleted = completedWorkouts.length;
     const completionPercentage = calculateCompletionPercentage(
       sessionsCompleted,
       totalSessions
@@ -104,11 +104,11 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
         : 0;
 
     // Use shared utility for streak calculation
-    const currentStreak = calculateStreak(completedSessions);
+    const currentStreak = calculateStreak(completedWorkouts);
 
     // Use shared utility for finding next session
     const completedIndices = new Set(
-      completedSessions.map((s) => s.sessionIndex)
+      completedWorkouts.map((w, idx) => idx + 1)
     );
     const nextSessionIndex = findNextSessionIndex(
       completedIndices,

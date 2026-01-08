@@ -165,7 +165,7 @@ export function ChallengeEditor({
           id: challengeId || "",
           name: formData.name,
           description: formData.description,
-          sessions: [], // Challenges generate sessions dynamically
+          blocks: [], // Challenges generate blocks dynamically
           challengeConfig: {
             exerciseId: formData.challengeConfig.exerciseId,
             sets: formData.challengeConfig.sets,

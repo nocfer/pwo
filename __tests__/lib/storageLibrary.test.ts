@@ -65,13 +65,7 @@ describe("storage library CRUD", () => {
       id: "",
       name: "Test Program",
       description: "desc",
-      sessions: [
-        {
-          index: 1,
-          name: "Session 1",
-          blocks: [{ type: "warmup", seconds: 60 }]
-        }
-      ],
+      blocks: [{ type: "warmup", seconds: 60 }],
       source: "user"
     });
 

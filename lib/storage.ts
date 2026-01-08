@@ -152,172 +152,138 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
 
   const nowISO = new Date().toISOString();
 
-  // If already in new shape (has runs array), normalize lifetime aggregates.
-  if (Array.isArray((raw as any).runs)) {
-    const runs = (raw as any).runs.map((run: any, idx: number) => {
-      const runId =
-        typeof run?.runId === "string" && run.runId.length > 0
-          ? run.runId
-          : `run_${idx + 1}`;
-      const startedAt = String(run?.startedAt ?? nowISO);
-      const sessions = Array.isArray(run?.sessions) ? run.sessions : [];
-      const completedSessions = sessions.filter(
-        (s: any) => s && typeof s === "object" && s.completed
-      );
-      const totalTimeSpentSeconds =
-        typeof run?.totalTimeSpentSeconds === "number"
-          ? run.totalTimeSpentSeconds
-          : completedSessions.reduce(
-              (sum: number, s: any) =>
-                sum +
-                (typeof s.timeSpentSeconds === "number"
-                  ? s.timeSpentSeconds
-                  : 0),
-              0
-            );
-      const lastActivityAt =
-        typeof run?.lastActivityAt === "string" && run.lastActivityAt
-          ? run.lastActivityAt
-          : (completedSessions as any[]).reduce<string | null>(
-              (latest: string | null, s: any) => {
-                const ts =
-                  typeof s.completedAt === "string" ? s.completedAt : null;
-                if (!ts) return latest;
-                if (!latest) return ts;
-                return new Date(ts) > new Date(latest) ? ts : latest;
-              },
-              null
-            );
-      const updatedAt = String(run?.updatedAt ?? lastActivityAt ?? startedAt);
-
-      return {
-        runId,
-        startedAt,
-        completedAt:
-          typeof run?.completedAt === "string" ? run.completedAt : undefined,
-        sessions,
-        totalTimeSpentSeconds,
-        lastActivityAt,
-        updatedAt
-      };
-    });
-
-    const allCompletedSessions = runs.flatMap((r: any) =>
-      r.sessions.filter((s: any) => s.completed)
+  // If already in new shape (has workouts array), normalize lifetime aggregates.
+  if (Array.isArray((raw as any).workouts)) {
+    const workouts = Array.isArray((raw as any).workouts)
+      ? (raw as any).workouts
+      : [];
+    const completedWorkouts = workouts.filter(
+      (w: any) => w && typeof w === "object" && w.completed
     );
-    const lifetimeSessionsCompleted = allCompletedSessions.length;
-    const lifetimeTimeSpentSeconds = runs.reduce(
-      (sum: number, r: any) =>
+    const lifetimeWorkoutsCompleted = completedWorkouts.length;
+    const lifetimeTimeSpentSeconds = completedWorkouts.reduce(
+      (sum: number, w: any) =>
         sum +
-        (typeof r.totalTimeSpentSeconds === "number"
-          ? r.totalTimeSpentSeconds
-          : 0),
+        (typeof w.timeSpentSeconds === "number" ? w.timeSpentSeconds : 0),
       0
     );
-    const lastActivityAt = (runs as any[]).reduce<string | null>(
-      (latest: string | null, r: any) => {
-        if (!r.lastActivityAt) return latest;
-        if (!latest) return r.lastActivityAt;
-        return new Date(r.lastActivityAt) > new Date(latest)
-          ? r.lastActivityAt
-          : latest;
+    const lastActivityAt = (completedWorkouts as any[]).reduce<string | null>(
+      (latest: string | null, w: any) => {
+        const ts = typeof w.completedAt === "string" ? w.completedAt : null;
+        if (!ts) return latest;
+        if (!latest) return ts;
+        return new Date(ts) > new Date(latest) ? ts : latest;
       },
       null
     );
     const updatedAt =
       typeof (raw as any).updatedAt === "string"
         ? (raw as any).updatedAt
-        : (lastActivityAt ?? runs[0]?.startedAt ?? nowISO);
+        : (lastActivityAt ?? nowISO);
 
     return {
       programId,
-      runs,
-      lifetimeSessionsCompleted,
+      workouts,
+      lifetimeWorkoutsCompleted,
       lifetimeTimeSpentSeconds,
       lastActivityAt,
-      updatedAt,
-      // Legacy fields (best-effort for backwards compatibility)
-      startedAt:
-        typeof (raw as any).startedAt === "string"
-          ? (raw as any).startedAt
-          : runs[0]?.startedAt,
-      completedAt:
-        typeof (raw as any).completedAt === "string"
-          ? (raw as any).completedAt
-          : runs[0]?.completedAt,
-      sessions: Array.isArray((raw as any).sessions)
-        ? (raw as any).sessions
-        : runs[0]?.sessions,
-      totalTimeSpentSeconds:
-        typeof (raw as any).totalTimeSpentSeconds === "number"
-          ? (raw as any).totalTimeSpentSeconds
-          : lifetimeTimeSpentSeconds
+      updatedAt
     };
   }
 
-  // Legacy single-run shape → wrap into first run + lifetime aggregates
+  // Legacy runs shape → convert to workouts
+  if (Array.isArray((raw as any).runs)) {
+    const runs = (raw as any).runs;
+    const workouts: any[] = [];
+
+    runs.forEach((run: any) => {
+      const sessions = Array.isArray(run?.sessions) ? run.sessions : [];
+      sessions.forEach((session: any, idx: number) => {
+        if (session && typeof session === "object" && session.completed) {
+          workouts.push({
+            workoutId: `${programId}_workout_${idx}`,
+            programId,
+            completed: session.completed,
+            completedAt: session.completedAt,
+            timeSpentSeconds: session.timeSpentSeconds,
+            exercises: session.exercises || []
+          });
+        }
+      });
+    });
+
+    const lifetimeWorkoutsCompleted = workouts.length;
+    const lifetimeTimeSpentSeconds = workouts.reduce(
+      (sum: number, w: any) =>
+        sum + (typeof w.timeSpentSeconds === "number" ? w.timeSpentSeconds : 0),
+      0
+    );
+    const lastActivityAt = workouts.reduce<string | null>(
+      (latest: string | null, w: any) => {
+        const ts = typeof w.completedAt === "string" ? w.completedAt : null;
+        if (!ts) return latest;
+        if (!latest) return ts;
+        return new Date(ts) > new Date(latest) ? ts : latest;
+      },
+      null
+    );
+    const updatedAt =
+      typeof (raw as any).updatedAt === "string"
+        ? (raw as any).updatedAt
+        : (lastActivityAt ?? nowISO);
+
+    return {
+      programId,
+      workouts,
+      lifetimeWorkoutsCompleted,
+      lifetimeTimeSpentSeconds,
+      lastActivityAt,
+      updatedAt
+    };
+  }
+
+  // Legacy single-session shape → convert to workouts
   const sessions = Array.isArray((raw as any).sessions)
     ? (raw as any).sessions
     : [];
-  const completedSessions = sessions.filter(
-    (s: any) => s && typeof s === "object" && s.completed
-  );
-  const totalTimeSpentSeconds =
-    typeof (raw as any).totalTimeSpentSeconds === "number"
-      ? (raw as any).totalTimeSpentSeconds
-      : completedSessions.reduce(
-          (sum: number, s: any) =>
-            sum +
-            (typeof s.timeSpentSeconds === "number" ? s.timeSpentSeconds : 0),
-          0
-        );
-  const lastActivityAt =
-    typeof (raw as any).lastActivityAt === "string" &&
-    (raw as any).lastActivityAt
-      ? (raw as any).lastActivityAt
-      : (completedSessions as any[]).reduce<string | null>(
-          (latest: string | null, s: any) => {
-            const ts = typeof s.completedAt === "string" ? s.completedAt : null;
-            if (!ts) return latest;
-            if (!latest) return ts;
-            return new Date(ts) > new Date(latest) ? ts : latest;
-          },
-          null
-        );
-  const startedAt =
-    typeof (raw as any).startedAt === "string" && (raw as any).startedAt
-      ? (raw as any).startedAt
-      : nowISO;
-  const updatedAt =
-    typeof (raw as any).updatedAt === "string" && (raw as any).updatedAt
-      ? (raw as any).updatedAt
-      : (lastActivityAt ?? startedAt);
+  const workouts: any[] = sessions
+    .filter((s: any) => s && typeof s === "object" && s.completed)
+    .map((session: any, idx: number) => ({
+      workoutId: `${programId}_workout_${idx}`,
+      programId,
+      completed: session.completed,
+      completedAt: session.completedAt,
+      timeSpentSeconds: session.timeSpentSeconds,
+      exercises: session.exercises || []
+    }));
 
-  const run = {
-    runId: "run_1",
-    startedAt,
-    completedAt:
-      typeof (raw as any).completedAt === "string" && (raw as any).completedAt
-        ? (raw as any).completedAt
-        : undefined,
-    sessions,
-    totalTimeSpentSeconds,
-    lastActivityAt,
-    updatedAt
-  };
+  const lifetimeWorkoutsCompleted = workouts.length;
+  const lifetimeTimeSpentSeconds = workouts.reduce(
+    (sum: number, w: any) =>
+      sum + (typeof w.timeSpentSeconds === "number" ? w.timeSpentSeconds : 0),
+    0
+  );
+  const lastActivityAt = workouts.reduce<string | null>(
+    (latest: string | null, w: any) => {
+      const ts = typeof w.completedAt === "string" ? w.completedAt : null;
+      if (!ts) return latest;
+      if (!latest) return ts;
+      return new Date(ts) > new Date(latest) ? ts : latest;
+    },
+    null
+  );
+  const updatedAt =
+    typeof (raw as any).updatedAt === "string"
+      ? (raw as any).updatedAt
+      : (lastActivityAt ?? nowISO);
 
   return {
     programId,
-    runs: [run],
-    lifetimeSessionsCompleted: completedSessions.length,
-    lifetimeTimeSpentSeconds: totalTimeSpentSeconds,
+    workouts,
+    lifetimeWorkoutsCompleted,
+    lifetimeTimeSpentSeconds,
     lastActivityAt,
-    updatedAt,
-    // Legacy fields preserved
-    startedAt,
-    completedAt: run.completedAt,
-    sessions,
-    totalTimeSpentSeconds
+    updatedAt
   };
 }
 
@@ -392,7 +358,7 @@ export const storage = {
       id,
       name: input.name,
       description: input.description,
-      sessions: input.sessions,
+      blocks: input.blocks,
       challengeConfig: input.challengeConfig,
       source: input.source,
       createdAt,
@@ -712,7 +678,7 @@ export const storage = {
   async detectAndSavePRs(
     exerciseId: string,
     exerciseProgress: ExerciseProgress,
-    sessionId?: string
+    workoutId?: string
   ): Promise<PersonalRecord[]> {
     const existingPRs = await this.loadPRsForExercise(exerciseId);
     const newPRs: PersonalRecord[] = [];
@@ -742,7 +708,7 @@ export const storage = {
         type: "max_reps",
         value: exerciseProgress.repsCompleted,
         achievedAt: now,
-        sessionId,
+        workoutId,
         details: { reps: exerciseProgress.repsCompleted }
       };
       newPRs.push(pr);
@@ -766,7 +732,7 @@ export const storage = {
             type: "max_weight",
             value: maxWeightSet.weight!,
             achievedAt: now,
-            sessionId,
+            workoutId,
             details: { weight: maxWeightSet.weight, reps: maxWeightSet.reps }
           };
           newPRs.push(pr);
@@ -786,7 +752,7 @@ export const storage = {
             type: "max_volume",
             value: maxSetVolume,
             achievedAt: now,
-            sessionId,
+            workoutId,
             details: { weight: maxVolumeSet.weight, reps: maxVolumeSet.reps }
           };
           newPRs.push(pr);
@@ -811,7 +777,7 @@ export const storage = {
             type: "estimated_1rm",
             value: Math.round(best1RM * 10) / 10, // Round to 1 decimal
             achievedAt: now,
-            sessionId
+            workoutId
           };
           newPRs.push(pr);
         }
@@ -921,19 +887,17 @@ export const storage = {
 
     // Process program progress
     for (const prog of programProgress) {
-      for (const run of prog.runs ?? []) {
-        for (const session of run.sessions ?? []) {
-          if (!session.completed || !session.completedAt) continue;
-          const sessionDate = session.completedAt.slice(0, 10);
-          if (sessionDate >= weekStartISO && sessionDate <= weekEndISO) {
-            workoutsCompleted++;
-            totalTimeSeconds += session.timeSpentSeconds ?? 0;
+      for (const workout of prog.workouts ?? []) {
+        if (!workout.completed || !workout.completedAt) continue;
+        const workoutDate = workout.completedAt.slice(0, 10);
+        if (workoutDate >= weekStartISO && workoutDate <= weekEndISO) {
+          workoutsCompleted++;
+          totalTimeSeconds += workout.timeSpentSeconds ?? 0;
 
-            for (const ex of session.exercises ?? []) {
-              exercisesSet.add(ex.exerciseId);
-              totalReps += ex.repsCompleted ?? 0;
-              totalVolume += ex.totalVolume ?? 0;
-            }
+          for (const ex of workout.exercises ?? []) {
+            exercisesSet.add(ex.exerciseId);
+            totalReps += ex.repsCompleted ?? 0;
+            totalVolume += ex.totalVolume ?? 0;
           }
         }
       }
@@ -941,14 +905,14 @@ export const storage = {
 
     // Process challenge progress
     for (const challenge of challengeProgress) {
-      for (const session of challenge.sessions ?? []) {
-        if (!session.completed || !session.completedAt) continue;
-        const sessionDate = session.completedAt.slice(0, 10);
-        if (sessionDate >= weekStartISO && sessionDate <= weekEndISO) {
+      for (const workout of challenge.workouts ?? []) {
+        if (!workout.completed || !workout.completedAt) continue;
+        const workoutDate = workout.completedAt.slice(0, 10);
+        if (workoutDate >= weekStartISO && workoutDate <= weekEndISO) {
           workoutsCompleted++;
-          totalTimeSeconds += session.timeSpentSeconds ?? 0;
+          totalTimeSeconds += workout.timeSpentSeconds ?? 0;
 
-          for (const ex of session.exercises ?? []) {
+          for (const ex of workout.exercises ?? []) {
             exercisesSet.add(ex.exerciseId);
             totalReps += ex.repsCompleted ?? 0;
           }
@@ -997,19 +961,17 @@ export const storage = {
     const workoutDates = new Set<string>();
 
     for (const prog of programProgress) {
-      for (const run of prog.runs ?? []) {
-        for (const session of run.sessions ?? []) {
-          if (session.completed && session.completedAt) {
-            workoutDates.add(session.completedAt.slice(0, 10));
-          }
+      for (const workout of prog.workouts ?? []) {
+        if (workout.completed && workout.completedAt) {
+          workoutDates.add(workout.completedAt.slice(0, 10));
         }
       }
     }
 
     for (const challenge of challengeProgress) {
-      for (const session of challenge.sessions ?? []) {
-        if (session.completed && session.completedAt) {
-          workoutDates.add(session.completedAt.slice(0, 10));
+      for (const workout of challenge.workouts ?? []) {
+        if (workout.completed && workout.completedAt) {
+          workoutDates.add(workout.completedAt.slice(0, 10));
         }
       }
     }
@@ -1072,13 +1034,11 @@ export const storage = {
 
     // Count program workouts
     for (const prog of programProgress) {
-      for (const run of prog.runs ?? []) {
-        for (const session of run.sessions ?? []) {
-          if (session.completed && session.completedAt) {
-            const dateISO = session.completedAt.slice(0, 10);
-            if (dateISO >= cutoffISO) {
-              workoutCounts.set(dateISO, (workoutCounts.get(dateISO) ?? 0) + 1);
-            }
+      for (const workout of prog.workouts ?? []) {
+        if (workout.completed && workout.completedAt) {
+          const dateISO = workout.completedAt.slice(0, 10);
+          if (dateISO >= cutoffISO) {
+            workoutCounts.set(dateISO, (workoutCounts.get(dateISO) ?? 0) + 1);
           }
         }
       }
@@ -1086,9 +1046,9 @@ export const storage = {
 
     // Count challenge workouts
     for (const challenge of challengeProgress) {
-      for (const session of challenge.sessions ?? []) {
-        if (session.completed && session.completedAt) {
-          const dateISO = session.completedAt.slice(0, 10);
+      for (const workout of challenge.workouts ?? []) {
+        if (workout.completed && workout.completedAt) {
+          const dateISO = workout.completedAt.slice(0, 10);
           if (dateISO >= cutoffISO) {
             workoutCounts.set(dateISO, (workoutCounts.get(dateISO) ?? 0) + 1);
           }
@@ -1125,52 +1085,50 @@ export const storage = {
       volume?: number;
     }[] = [];
 
-    // Process program sessions
+    // Process program workouts
     for (const prog of programProgress) {
-      for (const run of prog.runs ?? []) {
-        for (const session of run.sessions ?? []) {
-          if (!session.completed || !session.completedAt) continue;
-          const dateISO = session.completedAt.slice(0, 10);
-          if (dateISO < cutoffISO) continue;
+      for (const workout of prog.workouts ?? []) {
+        if (!workout.completed || !workout.completedAt) continue;
+        const dateISO = workout.completedAt.slice(0, 10);
+        if (dateISO < cutoffISO) continue;
 
-          for (const ex of session.exercises ?? []) {
-            if (ex.exerciseId !== exerciseId) continue;
+        for (const ex of workout.exercises ?? []) {
+          if (ex.exerciseId !== exerciseId) continue;
 
-            let maxWeight: number | undefined;
-            let volume: number | undefined;
+          let maxWeight: number | undefined;
+          let volume: number | undefined;
 
-            if (ex.sets && ex.sets.length > 0) {
-              const weightedSets = ex.sets.filter(
-                (s) => !s.isBodyweight && s.weight
+          if (ex.sets && ex.sets.length > 0) {
+            const weightedSets = ex.sets.filter(
+              (s) => !s.isBodyweight && s.weight
+            );
+            if (weightedSets.length > 0) {
+              maxWeight = Math.max(...weightedSets.map((s) => s.weight ?? 0));
+              volume = weightedSets.reduce(
+                (sum, s) => sum + (s.weight ?? 0) * s.reps,
+                0
               );
-              if (weightedSets.length > 0) {
-                maxWeight = Math.max(...weightedSets.map((s) => s.weight ?? 0));
-                volume = weightedSets.reduce(
-                  (sum, s) => sum + (s.weight ?? 0) * s.reps,
-                  0
-                );
-              }
             }
-
-            dataPoints.push({
-              date: dateISO,
-              reps: ex.repsCompleted,
-              maxWeight,
-              volume
-            });
           }
+
+          dataPoints.push({
+            date: dateISO,
+            reps: ex.repsCompleted,
+            maxWeight,
+            volume
+          });
         }
       }
     }
 
-    // Process challenge sessions
+    // Process challenge workouts
     for (const challenge of challengeProgress) {
-      for (const session of challenge.sessions ?? []) {
-        if (!session.completed || !session.completedAt) continue;
-        const dateISO = session.completedAt.slice(0, 10);
+      for (const workout of challenge.workouts ?? []) {
+        if (!workout.completed || !workout.completedAt) continue;
+        const dateISO = workout.completedAt.slice(0, 10);
         if (dateISO < cutoffISO) continue;
 
-        for (const ex of session.exercises ?? []) {
+        for (const ex of workout.exercises ?? []) {
           if (ex.exerciseId !== exerciseId) continue;
 
           dataPoints.push({

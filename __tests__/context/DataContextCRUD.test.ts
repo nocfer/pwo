@@ -55,30 +55,24 @@ const programArb = fc.record({
   id: fc.string({ minLength: 1, maxLength: 50 }),
   name: fc.string({ minLength: 1, maxLength: 100 }),
   description: fc.option(fc.string({ maxLength: 500 })),
-  sessions: fc.array(
-    fc.record({
-      index: fc.integer({ min: 1, max: 10 }),
-      blocks: fc.array(
-        fc.oneof(
-          fc.record({
-            type: fc.constant("warmup" as const),
-            seconds: fc.integer({ min: 30, max: 600 })
-          }),
-          fc.record({
-            type: fc.constant("exercise" as const),
-            exerciseId: fc.string({ minLength: 1, maxLength: 50 }),
-            targetReps: fc.option(fc.integer({ min: 1, max: 100 }))
-          }),
-          fc.record({
-            type: fc.constant("rest" as const),
-            seconds: fc.integer({ min: 10, max: 300 }),
-            label: fc.option(fc.string({ maxLength: 50 }))
-          })
-        ),
-        { minLength: 1, maxLength: 10 }
-      )
-    }),
-    { minLength: 1, maxLength: 5 }
+  blocks: fc.array(
+    fc.oneof(
+      fc.record({
+        type: fc.constant("warmup" as const),
+        seconds: fc.integer({ min: 30, max: 600 })
+      }),
+      fc.record({
+        type: fc.constant("exercise" as const),
+        exerciseId: fc.string({ minLength: 1, maxLength: 50 }),
+        targetReps: fc.option(fc.integer({ min: 1, max: 100 }))
+      }),
+      fc.record({
+        type: fc.constant("rest" as const),
+        seconds: fc.integer({ min: 10, max: 300 }),
+        label: fc.option(fc.string({ maxLength: 50 }))
+      })
+    ),
+    { minLength: 1, maxLength: 10 }
   ),
   source: fc.constantFrom("builtin", "user"),
   createdAt: fc.constant(new Date().toISOString()),
@@ -172,16 +166,11 @@ describe("DataContext CRUD Operations - Property Tests", () => {
             // Create a program that references the exercise
             const referencingProgram: Program = {
               ...program,
-              sessions: [
+              blocks: [
                 {
-                  index: 1,
-                  blocks: [
-                    {
-                      type: "exercise",
-                      exerciseId: exercise.id,
-                      targetReps: 10
-                    }
-                  ]
+                  type: "exercise",
+                  exerciseId: exercise.id,
+                  targetReps: 10
                 }
               ]
             };
@@ -197,11 +186,9 @@ describe("DataContext CRUD Operations - Property Tests", () => {
 
             // Simulate the dependency check that happens in deleteExercise
             const referencedBy = state.programs.find((p) =>
-              p.sessions.some((s: any) =>
-                s.blocks.some(
-                  (b: any) =>
-                    b.type === "exercise" && b.exerciseId === exercise.id
-                )
+              p.blocks.some(
+                (b: any) =>
+                  b.type === "exercise" && b.exerciseId === exercise.id
               )
             );
 
@@ -245,11 +232,9 @@ describe("DataContext CRUD Operations - Property Tests", () => {
 
           // Check for dependencies
           const referencedBy = state.programs.find((p) =>
-            p.sessions.some((s: any) =>
-              s.blocks.some(
-                (b: any) =>
-                  b.type === "exercise" && b.exerciseId === userExercise.id
-              )
+            p.blocks.some(
+              (b: any) =>
+                b.type === "exercise" && b.exerciseId === userExercise.id
             )
           );
 

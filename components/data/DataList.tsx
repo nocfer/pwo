@@ -79,7 +79,7 @@ export function DataList({
           baseItem.description = item.description;
         }
         // Add program-specific fields for ProgramListItem
-        baseItem.sessions = (item as Program).sessions;
+        baseItem.blocks = (item as Program).blocks;
         baseItem.challengeConfig = (item as Program).challengeConfig;
       }
 

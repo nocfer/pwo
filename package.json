@@ -8,6 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "compile": "npx tsc --noEmit",
     "lint": "expo lint",
     "lint:fix": "eslint ./components ./lib ./__tests__ ./app ./context ./hooks --ext .ts,.tsx --fix",
     "test": "vitest",

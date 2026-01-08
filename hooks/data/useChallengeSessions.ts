@@ -1,4 +1,4 @@
-import type { ChallengeConfig, ProgramSession } from "@/types";
+import type { ChallengeConfig, ProgramBlock, ProgramSession } from "@/types";
 import { useMemo } from "react";
 
 function distributeIntoSets(total: number, sets: number): number[] {
@@ -150,7 +150,7 @@ export function calculateChallengeSessionCount(
  */
 export function useChallengeSessions(
   program:
-    | { sessions: ProgramSession[]; challengeConfig?: ChallengeConfig }
+    | { blocks: ProgramBlock[]; challengeConfig?: ChallengeConfig }
     | null
     | undefined
 ): ProgramSession[] {
@@ -159,6 +159,13 @@ export function useChallengeSessions(
     if (program.challengeConfig) {
       return generateChallengeSessions(program.challengeConfig);
     }
-    return program.sessions;
+    // For regular programs, create a single session from blocks
+    return [
+      {
+        index: 1,
+        name: "Workout",
+        blocks: program.blocks
+      }
+    ];
   }, [program]);
 }

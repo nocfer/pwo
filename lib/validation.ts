@@ -4,20 +4,20 @@
  */
 
 import type {
-  ChallengeConfig,
-  Exercise,
-  ExerciseCategory,
-  Program
+    ChallengeConfig,
+    Exercise,
+    ExerciseCategory,
+    Program
 } from "@/types";
 import type {
-  DependencyResult,
-  EnhancedChallenge,
-  EnhancedExercise,
-  EnhancedProgram,
-  FieldValidation,
-  ValidationError,
-  ValidationResult,
-  ValidationSchema
+    DependencyResult,
+    EnhancedChallenge,
+    EnhancedExercise,
+    EnhancedProgram,
+    FieldValidation,
+    ValidationError,
+    ValidationResult,
+    ValidationSchema
 } from "@/types/enhanced";
 import { ValidationErrorCode } from "@/types/enhanced";
 
@@ -439,72 +439,36 @@ export const programValidationSchema: ValidationSchema<EnhancedProgram> = {
     (program) => {
       const errors: ValidationError[] = [];
 
-      // Validate sessions array
-      if (!program.sessions || !Array.isArray(program.sessions)) {
+      // Validate blocks array
+      if (!program.blocks || !Array.isArray(program.blocks)) {
         errors.push(
           createValidationError(
-            "sessions",
-            "Program must have sessions array",
+            "blocks",
+            "Program must have blocks array",
             ValidationErrorCode.REQUIRED_FIELD
           )
         );
         return { isValid: false, errors };
       }
 
-      // For non-challenge programs, must have at least one session
-      if (!program.challengeConfig && program.sessions.length === 0) {
+      // For non-challenge programs, must have at least one block
+      if (!program.challengeConfig && program.blocks.length === 0) {
         errors.push(
           createValidationError(
-            "sessions",
-            "Non-challenge programs must have at least one session",
+            "blocks",
+            "Non-challenge programs must have at least one block",
             ValidationErrorCode.INVALID_FORMAT
           )
         );
       }
 
-      // Validate each session
-      program.sessions.forEach((session, sessionIndex) => {
-        if (!session || typeof session !== "object") {
-          errors.push(
-            createValidationError(
-              `sessions[${sessionIndex}]`,
-              "Session must be an object",
-              ValidationErrorCode.INVALID_FORMAT
-            )
-          );
-          return;
-        }
-
-        // Validate session index
-        if (typeof session.index !== "number" || session.index < 1) {
-          errors.push(
-            createValidationError(
-              `sessions[${sessionIndex}].index`,
-              "Session index must be a positive number",
-              ValidationErrorCode.INVALID_FORMAT
-            )
-          );
-        }
-
-        // Validate blocks
-        if (!Array.isArray(session.blocks)) {
-          errors.push(
-            createValidationError(
-              `sessions[${sessionIndex}].blocks`,
-              "Session blocks must be an array",
-              ValidationErrorCode.INVALID_FORMAT
-            )
-          );
-          return;
-        }
-
-        session.blocks.forEach((block, blockIndex) => {
-          const blockErrors = validateProgramBlock(
-            block,
-            `sessions[${sessionIndex}].blocks[${blockIndex}]`
-          );
-          errors.push(...blockErrors);
-        });
+      // Validate each block
+      program.blocks.forEach((block, blockIndex) => {
+        const blockErrors = validateProgramBlock(
+          block,
+          `blocks[${blockIndex}]`
+        );
+        errors.push(...blockErrors);
       });
 
       // Validate tags array
@@ -797,10 +761,8 @@ export function checkExerciseDependencies(
   const warnings: string[] = [];
 
   for (const program of programs) {
-    const hasReference = program.sessions.some((session) =>
-      session.blocks.some(
-        (block) => block.type === "exercise" && block.exerciseId === exerciseId
-      )
+    const hasReference = program.blocks.some(
+      (block) => block.type === "exercise" && block.exerciseId === exerciseId
     );
 
     if (hasReference) {
@@ -854,19 +816,17 @@ export function validateExerciseReferences(
     );
   }
 
-  // Check session block exercise references
-  program.sessions.forEach((session, sessionIndex) => {
-    session.blocks.forEach((block, blockIndex) => {
-      if (block.type === "exercise" && !exerciseIds.has(block.exerciseId)) {
-        errors.push(
-          createValidationError(
-            `sessions[${sessionIndex}].blocks[${blockIndex}].exerciseId`,
-            `Session references non-existent exercise: ${block.exerciseId}`,
-            ValidationErrorCode.INVALID_REFERENCE
-          )
-        );
-      }
-    });
+  // Check block exercise references
+  program.blocks.forEach((block, blockIndex) => {
+    if (block.type === "exercise" && !exerciseIds.has(block.exerciseId)) {
+      errors.push(
+        createValidationError(
+          `blocks[${blockIndex}].exerciseId`,
+          `Program references non-existent exercise: ${block.exerciseId}`,
+          ValidationErrorCode.INVALID_REFERENCE
+        )
+      );
+    }
   });
 
   return {

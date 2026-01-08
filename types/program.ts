@@ -67,13 +67,13 @@ export type Program = {
   id: string;
   name: string;
   description?: string;
-  sessions: ProgramSession[];
+  blocks: ProgramBlock[];
   createdAt: string; // ISO
   updatedAt: string; // ISO
   source: ProgramSource;
   /**
-   * If present, this program is a challenge that generates sessions dynamically.
-   * Sessions will be generated from 20 reps to targetReps, with configurable
+   * If present, this program is a challenge that generates blocks dynamically.
+   * Blocks will be generated from 20 reps to targetReps, with configurable
    * percentage increase per session (default: 10%).
    */
   challengeConfig?: ChallengeConfig;
@@ -103,6 +103,20 @@ export type LegacyProgramSession = {
   index?: number;
   name?: string;
   blocks?: LegacyProgramBlock[];
+};
+
+/**
+ * Legacy program format with sessions (used for migration from old data format)
+ */
+export type LegacyProgramWithSessions = {
+  id?: string;
+  name?: string;
+  description?: string;
+  sessions?: LegacyProgramSession[];
+  createdAt?: string;
+  updatedAt?: string;
+  source?: ProgramSource;
+  challengeConfig?: Partial<ChallengeConfig>;
 };
 
 /**

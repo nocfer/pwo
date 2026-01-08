@@ -7,14 +7,14 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View
+    Alert,
+    Modal,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -70,7 +70,7 @@ export default function EditProgramScreen() {
 
   const [sessionBlocks, setSessionBlocks] = useState<BlockDraft[]>(
     toDraftBlocks(
-      program?.sessions?.[0]?.blocks ?? [{ type: "warmup", seconds: 180 }]
+      program?.blocks ?? [{ type: "warmup", seconds: 180 }]
     )
   );
 
@@ -293,15 +293,7 @@ export default function EditProgramScreen() {
         id: program.id,
         name: trimmed,
         description: description.trim() || undefined,
-        sessions: isChallenge
-          ? []
-          : [
-              {
-                index: 1,
-                name: program.sessions?.[0]?.name ?? "Session 1",
-                blocks
-              }
-            ],
+        blocks: isChallenge ? [] : blocks,
         challengeConfig
       });
       router.back();

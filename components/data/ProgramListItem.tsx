@@ -137,8 +137,7 @@ export function ProgramListItem({
                 <Text style={styles.metadataText}>• Challenge</Text>
               )}
               <Text style={styles.metadataText}>
-                • {program.sessions.length} session
-                {program.sessions.length !== 1 ? "s" : ""}
+                • {program.blocks.length} block{program.blocks.length !== 1 ? "s" : ""}
               </Text>
             </View>
           )}

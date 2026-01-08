@@ -7,7 +7,7 @@
 import haptics from "@/lib/haptics";
 import { validateProgram } from "@/lib/validation";
 import { theme } from "@/theme/theme";
-import type { ProgramBlock, ProgramSession } from "@/types";
+import type { ProgramBlock } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
 import {
@@ -38,7 +38,7 @@ export type ProgramFormData = {
   difficulty?: "beginner" | "intermediate" | "advanced";
   estimatedDuration?: number; // minutes
   tags?: string[];
-  sessions: ProgramSession[];
+  blocks: ProgramBlock[];
 };
 
 export type ProgramFormProps = {
@@ -64,18 +64,11 @@ export function ProgramForm({
     difficulty: initialData?.difficulty || "beginner",
     estimatedDuration: initialData?.estimatedDuration || undefined,
     tags: initialData?.tags || [],
-    sessions: initialData?.sessions || [
-      {
-        index: 1,
-        name: "Session 1",
-        blocks: [{ type: "warmup", seconds: 180 }]
-      }
-    ]
+    blocks: initialData?.blocks || [{ type: "warmup", seconds: 180 }]
   });
 
-  const [activeSessionIndex, setActiveSessionIndex] = useState(0);
-  const [sessionBlocks, setSessionBlocks] = useState<BlockDraft[]>(
-    convertSessionBlocksToDraft(formData.sessions[0]?.blocks || [])
+  const [blocksDraft, setBlocksDraft] = useState<BlockDraft[]>(
+    convertSessionBlocksToDraft(formData.blocks || [])
   );
 
   const [exercisePickerOpen, setExercisePickerOpen] = useState(false);
@@ -168,82 +161,19 @@ export function ProgramForm({
     [formData.tags, updateField]
   );
 
-  const addSession = useCallback(() => {
-    haptics.buttonTap();
-    const newSession: ProgramSession = {
-      index: formData.sessions.length + 1,
-      name: `Session ${formData.sessions.length + 1}`,
-      blocks: [{ type: "warmup", seconds: 180 }]
-    };
-    updateField("sessions", [...formData.sessions, newSession]);
-  }, [formData.sessions, updateField]);
-
-  const removeSession = useCallback(
-    (sessionIndex: number) => {
-      if (formData.sessions.length <= 1) {
-        haptics.formValidationError();
-        Alert.alert(
-          "Cannot remove",
-          "Programs must have at least one session."
-        );
-        return;
-      }
-      haptics.deleteItem();
-      const updatedSessions = formData.sessions
-        .filter((_, i) => i !== sessionIndex)
-        .map((session, i) => ({
-          ...session,
-          index: i + 1,
-          name: `Session ${i + 1}`
-        }));
-      updateField("sessions", updatedSessions);
-
-      // Switch to first session if we removed the active one
-      if (sessionIndex === activeSessionIndex) {
-        setActiveSessionIndex(0);
-        setSessionBlocks(
-          convertSessionBlocksToDraft(updatedSessions[0]?.blocks || [])
-        );
-      } else if (sessionIndex < activeSessionIndex) {
-        setActiveSessionIndex(activeSessionIndex - 1);
-      }
-    },
-    [formData.sessions, activeSessionIndex, updateField]
-  );
-
-  const switchSession = useCallback(
-    (sessionIndex: number) => {
-      haptics.dataTabSwitch();
-      // Save current session blocks
-      const updatedSessions = [...formData.sessions];
-      updatedSessions[activeSessionIndex] = {
-        ...updatedSessions[activeSessionIndex],
-        blocks: convertDraftToSessionBlocks(sessionBlocks)
-      };
-      updateField("sessions", updatedSessions);
-
-      // Switch to new session
-      setActiveSessionIndex(sessionIndex);
-      setSessionBlocks(
-        convertSessionBlocksToDraft(updatedSessions[sessionIndex]?.blocks || [])
-      );
-    },
-    [formData.sessions, activeSessionIndex, sessionBlocks, updateField]
-  );
-
   const addBlock = useCallback(
     (type: BlockDraft["type"]) => {
       haptics.buttonTap();
       if (type === "warmup") {
-        setSessionBlocks((prev) => [...prev, { type, seconds: "120" }]);
+        setBlocksDraft((prev) => [...prev, { type, seconds: "120" }]);
       } else if (type === "rest") {
-        setSessionBlocks((prev) => [
+        setBlocksDraft((prev) => [
           ...prev,
           { type, seconds: "90", label: "Rest" }
         ]);
       } else if (type === "exercise") {
         const firstExercise = exercises[0]?.id || "";
-        setSessionBlocks((prev) => [
+        setBlocksDraft((prev) => [
           ...prev,
           {
             type,
@@ -260,12 +190,12 @@ export function ProgramForm({
 
   const removeBlock = useCallback((index: number) => {
     haptics.deleteItem();
-    setSessionBlocks((prev) => prev.filter((_, i) => i !== index));
+    setBlocksDraft((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const moveBlock = useCallback((fromIndex: number, toIndex: number) => {
     haptics.buttonTap();
-    setSessionBlocks((prev) => {
+    setBlocksDraft((prev) => {
       const newBlocks = [...prev];
       const [movedBlock] = newBlocks.splice(fromIndex, 1);
       newBlocks.splice(toIndex, 0, movedBlock);
@@ -281,18 +211,14 @@ export function ProgramForm({
   const handleSave = useCallback(async () => {
     const trimmed = formData.name.trim();
 
-    // Save current session blocks before validation
-    const updatedSessions = [...formData.sessions];
-    updatedSessions[activeSessionIndex] = {
-      ...updatedSessions[activeSessionIndex],
-      blocks: convertDraftToSessionBlocks(sessionBlocks)
-    };
+    // Convert draft blocks to final blocks
+    const finalBlocks = convertDraftToSessionBlocks(blocksDraft);
 
     // Create program object for validation
     const programData = {
       name: trimmed,
       description: formData.description?.trim() || undefined,
-      sessions: updatedSessions
+      blocks: finalBlocks
     };
 
     // Validate using centralized validation
@@ -317,16 +243,14 @@ export function ProgramForm({
 
     // Validate exercise references exist
     const exerciseIds = new Set(exercises.map((ex) => ex.id));
-    for (const session of updatedSessions) {
-      for (const block of session.blocks) {
-        if (block.type === "exercise" && !exerciseIds.has(block.exerciseId)) {
-          haptics.formValidationError();
-          Alert.alert(
-            "Invalid exercise reference",
-            "One or more exercises no longer exist. Please update the program."
-          );
-          return;
-        }
+    for (const block of finalBlocks) {
+      if (block.type === "exercise" && !exerciseIds.has(block.exerciseId)) {
+        haptics.formValidationError();
+        Alert.alert(
+          "Invalid exercise reference",
+          "One or more exercises no longer exist. Please update the program."
+        );
+        return;
       }
     }
 
@@ -335,7 +259,7 @@ export function ProgramForm({
         ...formData,
         name: trimmed,
         description: formData.description?.trim() || undefined,
-        sessions: updatedSessions
+        blocks: finalBlocks
       });
       haptics.formSave();
     } catch (error) {
@@ -345,7 +269,7 @@ export function ProgramForm({
         error instanceof Error ? error.message : String(error)
       );
     }
-  }, [formData, activeSessionIndex, sessionBlocks, exercises, onSave]);
+  }, [formData, blocksDraft, exercises, onSave]);
 
   return (
     <ScrollView
@@ -493,62 +417,14 @@ export function ProgramForm({
         </View>
       </View>
 
-      {/* Sessions */}
+      {/* Blocks */}
       <View style={styles.card}>
         <View style={styles.rowBetween}>
-          <Text style={styles.sectionTitle}>Sessions</Text>
-          <Pressable
-            onPress={addSession}
-            style={({ pressed }) => [
-              styles.smallBtn,
-              pressed && styles.smallBtnPressed
-            ]}
-          >
-            <Ionicons name="add" size={16} color={theme.colors.primary} />
-            <Text style={styles.smallBtnText}>Add Session</Text>
-          </Pressable>
+          <Text style={styles.sectionTitle}>Workout Blocks</Text>
         </View>
-
-        {/* Session Tabs */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.sessionTabs}
-        >
-          {formData.sessions.map((session, index) => (
-            <Pressable
-              key={index}
-              onPress={() => switchSession(index)}
-              style={[
-                styles.sessionTab,
-                index === activeSessionIndex && styles.sessionTabActive
-              ]}
-            >
-              <Text
-                style={[
-                  styles.sessionTabText,
-                  index === activeSessionIndex && styles.sessionTabTextActive
-                ]}
-              >
-                {session.name}
-              </Text>
-              {formData.sessions.length > 1 && (
-                <Pressable
-                  onPress={() => removeSession(index)}
-                  style={styles.sessionTabRemove}
-                >
-                  <Ionicons name="close" size={14} color={theme.colors.muted} />
-                </Pressable>
-              )}
-            </Pressable>
-          ))}
-        </ScrollView>
 
         {/* Block Controls */}
         <View style={styles.blockControls}>
-          <Text style={styles.blockControlsTitle}>
-            {formData.sessions[activeSessionIndex]?.name || "Session"}
-          </Text>
           <View style={styles.blockButtonsRow}>
             <Pressable
               style={({ pressed }) => [
@@ -580,9 +456,9 @@ export function ProgramForm({
           </View>
         </View>
 
-        {/* Session Blocks */}
+        {/* Blocks */}
         <View style={styles.blocksList}>
-          {sessionBlocks.map((block, index) => (
+          {blocksDraft.map((block, index) => (
             <View key={index} style={styles.blockCard}>
               <View style={styles.rowBetween}>
                 <View style={styles.blockTitleRow}>
@@ -622,7 +498,7 @@ export function ProgramForm({
                       />
                     </Pressable>
                   )}
-                  {index < sessionBlocks.length - 1 && (
+                  {index < blocksDraft.length - 1 && (
                     <Pressable
                       onPress={() => moveBlock(index, index + 1)}
                       style={({ pressed }) => [
@@ -660,7 +536,7 @@ export function ProgramForm({
                   <TextInput
                     value={block.seconds}
                     onChangeText={(value) =>
-                      setSessionBlocks((prev) =>
+                      setBlocksDraft((prev) =>
                         prev.map((b, i) =>
                           i === index ? { ...b, seconds: value } : b
                         )
@@ -679,7 +555,7 @@ export function ProgramForm({
                     <TextInput
                       value={block.label || ""}
                       onChangeText={(value) =>
-                        setSessionBlocks((prev) =>
+                        setBlocksDraft((prev) =>
                           prev.map((b, i) =>
                             i === index ? { ...b, label: value } : b
                           )
@@ -693,7 +569,7 @@ export function ProgramForm({
                     <TextInput
                       value={block.seconds}
                       onChangeText={(value) =>
-                        setSessionBlocks((prev) =>
+                        setBlocksDraft((prev) =>
                           prev.map((b, i) =>
                             i === index ? { ...b, seconds: value } : b
                           )
@@ -738,7 +614,7 @@ export function ProgramForm({
                     <TextInput
                       value={block.targetReps || ""}
                       onChangeText={(value) =>
-                        setSessionBlocks((prev) =>
+                        setBlocksDraft((prev) =>
                           prev.map((b, i) =>
                             i === index ? { ...b, targetReps: value } : b
                           )
@@ -755,7 +631,7 @@ export function ProgramForm({
                     <TextInput
                       value={block.durationSeconds || ""}
                       onChangeText={(value) =>
-                        setSessionBlocks((prev) =>
+                        setBlocksDraft((prev) =>
                           prev.map((b, i) =>
                             i === index ? { ...b, durationSeconds: value } : b
                           )
@@ -772,7 +648,7 @@ export function ProgramForm({
                     <TextInput
                       value={block.note || ""}
                       onChangeText={(value) =>
-                        setSessionBlocks((prev) =>
+                        setBlocksDraft((prev) =>
                           prev.map((b, i) =>
                             i === index ? { ...b, note: value } : b
                           )
@@ -841,7 +717,7 @@ export function ProgramForm({
                   onPress={() => {
                     if (pickerTargetIndex === null) return;
                     haptics.buttonTap();
-                    setSessionBlocks((prev) =>
+                    setBlocksDraft((prev) =>
                       prev.map((b, i) =>
                         i === pickerTargetIndex && b.type === "exercise"
                           ? { ...b, exerciseId: exercise.id }

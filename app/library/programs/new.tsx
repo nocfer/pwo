@@ -1,6 +1,6 @@
 import {
-  ProgramForm,
-  type ProgramFormData
+    ProgramForm,
+    type ProgramFormData
 } from "@/components/data/forms/ProgramForm";
 import { useDataActions } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
@@ -21,7 +21,7 @@ export default function NewProgramScreen() {
         id: "",
         name: formData.name,
         description: formData.description,
-        sessions: formData.sessions
+        blocks: [{ type: "warmup", seconds: 180 }] // Start with a warmup
       });
       router.back();
     } catch (e) {

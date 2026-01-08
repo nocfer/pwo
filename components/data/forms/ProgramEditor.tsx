@@ -6,7 +6,7 @@
 import { useDataActions, useDataContext } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
 import { theme } from "@/theme/theme";
-import type { Program, ProgramSession } from "@/types";
+import type { Program, ProgramBlock } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useMemo, useState } from "react";
 import {
@@ -25,7 +25,7 @@ const PROGRAM_TEMPLATES: {
   name: string;
   description: string;
   difficulty: "beginner" | "intermediate" | "advanced";
-  sessions: ProgramSession[];
+  blocks: ProgramBlock[];
   tags: string[];
 }[] = [
   {
@@ -35,60 +35,48 @@ const PROGRAM_TEMPLATES: {
       "Focus on building upper body strength with compound movements",
     difficulty: "intermediate",
     tags: ["strength", "upper-body", "compound"],
-    sessions: [
+    blocks: [
+      { type: "warmup", seconds: 300 },
       {
-        index: 1,
-        name: "Push Day",
-        blocks: [
-          { type: "warmup", seconds: 300 },
-          {
-            type: "exercise",
-            exerciseId: "",
-            targetReps: 8,
-            note: "Bench Press or Push-ups"
-          },
-          { type: "rest", seconds: 120, label: "Rest between exercises" },
-          {
-            type: "exercise",
-            exerciseId: "",
-            targetReps: 10,
-            note: "Overhead Press"
-          },
-          { type: "rest", seconds: 90, label: "Rest" },
-          {
-            type: "exercise",
-            exerciseId: "",
-            targetReps: 12,
-            note: "Tricep Dips"
-          }
-        ]
+        type: "exercise",
+        exerciseId: "",
+        targetReps: 8,
+        note: "Bench Press or Push-ups"
       },
+      { type: "rest", seconds: 120, label: "Rest between exercises" },
       {
-        index: 2,
-        name: "Pull Day",
-        blocks: [
-          { type: "warmup", seconds: 300 },
-          {
-            type: "exercise",
-            exerciseId: "",
-            targetReps: 8,
-            note: "Pull-ups or Rows"
-          },
-          { type: "rest", seconds: 120, label: "Rest between exercises" },
-          {
-            type: "exercise",
-            exerciseId: "",
-            targetReps: 10,
-            note: "Lat Pulldowns"
-          },
-          { type: "rest", seconds: 90, label: "Rest" },
-          {
-            type: "exercise",
-            exerciseId: "",
-            targetReps: 12,
-            note: "Bicep Curls"
-          }
-        ]
+        type: "exercise",
+        exerciseId: "",
+        targetReps: 10,
+        note: "Overhead Press"
+      },
+      { type: "rest", seconds: 90, label: "Rest" },
+      {
+        type: "exercise",
+        exerciseId: "",
+        targetReps: 12,
+        note: "Tricep Dips"
+      },
+      { type: "rest", seconds: 120, label: "Rest between exercises" },
+      {
+        type: "exercise",
+        exerciseId: "",
+        targetReps: 8,
+        note: "Pull-ups or Rows"
+      },
+      { type: "rest", seconds: 120, label: "Rest between exercises" },
+      {
+        type: "exercise",
+        exerciseId: "",
+        targetReps: 10,
+        note: "Lat Pulldowns"
+      },
+      { type: "rest", seconds: 90, label: "Rest" },
+      {
+        type: "exercise",
+        exerciseId: "",
+        targetReps: 12,
+        note: "Bicep Curls"
       }
     ]
   },
@@ -98,36 +86,30 @@ const PROGRAM_TEMPLATES: {
     description: "Complete full-body workout suitable for beginners",
     difficulty: "beginner",
     tags: ["full-body", "beginner", "compound"],
-    sessions: [
+    blocks: [
+      { type: "warmup", seconds: 600 },
       {
-        index: 1,
-        name: "Full Body Workout",
-        blocks: [
-          { type: "warmup", seconds: 600 },
-          {
-            type: "exercise",
-            exerciseId: "",
-            targetReps: 10,
-            note: "Squats or modified squats"
-          },
-          { type: "rest", seconds: 90, label: "Rest" },
-          {
-            type: "exercise",
-            exerciseId: "",
-            targetReps: 8,
-            note: "Push-ups or wall push-ups"
-          },
-          { type: "rest", seconds: 90, label: "Rest" },
-          {
-            type: "exercise",
-            exerciseId: "",
-            targetReps: 30,
-            durationSeconds: 30,
-            note: "Plank hold"
-          },
-          { type: "rest", seconds: 60, label: "Cool down" }
-        ]
-      }
+        type: "exercise",
+        exerciseId: "",
+        targetReps: 10,
+        note: "Squats or modified squats"
+      },
+      { type: "rest", seconds: 90, label: "Rest" },
+      {
+        type: "exercise",
+        exerciseId: "",
+        targetReps: 8,
+        note: "Push-ups or wall push-ups"
+      },
+      { type: "rest", seconds: 90, label: "Rest" },
+      {
+        type: "exercise",
+        exerciseId: "",
+        targetReps: 30,
+        durationSeconds: 30,
+        note: "Plank hold"
+      },
+      { type: "rest", seconds: 60, label: "Cool down" }
     ]
   },
   {
@@ -136,42 +118,36 @@ const PROGRAM_TEMPLATES: {
     description: "High-intensity interval training for cardiovascular fitness",
     difficulty: "intermediate",
     tags: ["cardio", "hiit", "conditioning"],
-    sessions: [
+    blocks: [
+      { type: "warmup", seconds: 300 },
       {
-        index: 1,
-        name: "HIIT Session",
-        blocks: [
-          { type: "warmup", seconds: 300 },
-          {
-            type: "exercise",
-            exerciseId: "",
-            durationSeconds: 30,
-            note: "High knees"
-          },
-          { type: "rest", seconds: 30, label: "Active rest" },
-          {
-            type: "exercise",
-            exerciseId: "",
-            durationSeconds: 30,
-            note: "Burpees"
-          },
-          { type: "rest", seconds: 30, label: "Active rest" },
-          {
-            type: "exercise",
-            exerciseId: "",
-            durationSeconds: 30,
-            note: "Mountain climbers"
-          },
-          { type: "rest", seconds: 30, label: "Active rest" },
-          {
-            type: "exercise",
-            exerciseId: "",
-            durationSeconds: 30,
-            note: "Jump squats"
-          },
-          { type: "rest", seconds: 180, label: "Cool down" }
-        ]
-      }
+        type: "exercise",
+        exerciseId: "",
+        durationSeconds: 30,
+        note: "High knees"
+      },
+      { type: "rest", seconds: 30, label: "Active rest" },
+      {
+        type: "exercise",
+        exerciseId: "",
+        durationSeconds: 30,
+        note: "Burpees"
+      },
+      { type: "rest", seconds: 30, label: "Active rest" },
+      {
+        type: "exercise",
+        exerciseId: "",
+        durationSeconds: 30,
+        note: "Mountain climbers"
+      },
+      { type: "rest", seconds: 30, label: "Active rest" },
+      {
+        type: "exercise",
+        exerciseId: "",
+        durationSeconds: 30,
+        note: "Jump squats"
+      },
+      { type: "rest", seconds: 180, label: "Cool down" }
     ]
   }
 ];
@@ -211,7 +187,7 @@ export function ProgramEditor({
           description: program.description || "",
           difficulty: "intermediate" as const, // Default since not stored in Program type
           tags: [], // Default since not stored in Program type
-          sessions: program.sessions
+          blocks: program.blocks
         };
       }
     }
@@ -234,7 +210,7 @@ export function ProgramEditor({
           id: programId || "",
           name: formData.name,
           description: formData.description,
-          sessions: formData.sessions,
+          blocks: formData.blocks || [],
           challengeConfig: undefined // Regular program, not a challenge
         };
 
@@ -265,23 +241,20 @@ export function ProgramEditor({
         description: template.description,
         difficulty: template.difficulty,
         tags: [...template.tags],
-        sessions: template.sessions.map((session) => ({
-          ...session,
-          blocks: session.blocks.map((block) => {
-            // For exercise blocks, we'll need to map to actual exercise IDs
-            if (block.type === "exercise" && exerciseOptions.length > 0) {
-              // Try to find a matching exercise by name in the note, otherwise use first available
-              const matchingExercise = exerciseOptions.find((ex) =>
-                block.note?.toLowerCase().includes(ex.name.toLowerCase())
-              );
-              return {
-                ...block,
-                exerciseId: matchingExercise?.id || exerciseOptions[0].id
-              };
-            }
-            return block;
-          })
-        }))
+        blocks: template.blocks.map((block) => {
+          // For exercise blocks, we'll need to map to actual exercise IDs
+          if (block.type === "exercise" && exerciseOptions.length > 0) {
+            // Try to find a matching exercise by name in the note, otherwise use first available
+            const matchingExercise = exerciseOptions.find((ex) =>
+              block.note?.toLowerCase().includes(ex.name.toLowerCase())
+            );
+            return {
+              ...block,
+              exerciseId: matchingExercise?.id || exerciseOptions[0].id
+            };
+          }
+          return block;
+        })
       };
 
       setInitialData(templateData);
@@ -383,8 +356,8 @@ export function ProgramEditor({
                         </Text>
                       </View>
                       <Text style={styles.sessionCount}>
-                        {template.sessions.length} session
-                        {template.sessions.length !== 1 ? "s" : ""}
+                        {template.blocks.length} block
+                        {template.blocks.length !== 1 ? "s" : ""}
                       </Text>
                     </View>
                     <View style={styles.templateTags}>
@@ -411,13 +384,7 @@ export function ProgramEditor({
                     description: "",
                     difficulty: "beginner",
                     tags: [],
-                    sessions: [
-                      {
-                        index: 1,
-                        name: "Session 1",
-                        blocks: [{ type: "warmup", seconds: 180 }]
-                      }
-                    ]
+                    blocks: [{ type: "warmup", seconds: 180 }]
                   });
                   setTemplatePickerOpen(false);
                 }}

@@ -75,12 +75,7 @@ describe("DataContext", () => {
           id: "prg_1",
           name: "Beginner",
           description: "For beginners",
-          sessions: [
-            {
-              index: 1,
-              blocks: [{ type: "warmup" as const, seconds: 300 }]
-            }
-          ],
+          blocks: [{ type: "warmup" as const, seconds: 300 }],
           source: "builtin" as const,
           createdAt: "2025-01-01T00:00:00.000Z",
           updatedAt: "2025-01-01T00:00:00.000Z"

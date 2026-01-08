@@ -25,7 +25,7 @@ describe("dataReducer", () => {
       {
         id: "prg_1",
         name: "Test Program",
-        sessions: [{ index: 1, blocks: [] }],
+        blocks: [],
         source: "user" as const,
         createdAt: "2025-01-01T00:00:00.000Z",
         updatedAt: "2025-01-01T00:00:00.000Z"

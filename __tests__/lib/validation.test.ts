@@ -17,8 +17,7 @@ import {
 import type {
   ExerciseCategory,
   Program,
-  ProgramBlock,
-  ProgramSession
+  ProgramBlock
 } from "@/types";
 import type {
   EnhancedExercise,
@@ -113,12 +112,8 @@ const programBlockArb: fc.Arbitrary<ProgramBlock> = fc.oneof(
   })
 );
 
-// Generate program sessions
-const programSessionArb: fc.Arbitrary<ProgramSession> = fc.record({
-  index: fc.integer({ min: 1, max: 100 }),
-  name: fc.option(fc.string({ maxLength: 100 })),
-  blocks: fc.array(programBlockArb, { minLength: 1, maxLength: 20 })
-});
+// Generate program blocks array
+const programBlocksArb: fc.Arbitrary<ProgramBlock[]> = fc.array(programBlockArb, { minLength: 1, maxLength: 20 });
 
 // Generate valid enhanced program
 const validEnhancedProgramArb: fc.Arbitrary<Partial<EnhancedProgram>> =
@@ -129,7 +124,7 @@ const validEnhancedProgramArb: fc.Arbitrary<Partial<EnhancedProgram>> =
       .map((s) => s.trim()),
     name: validNameArb,
     description: fc.option(fc.string({ maxLength: 1000 }), { nil: undefined }),
-    sessions: fc.array(programSessionArb, { minLength: 1, maxLength: 10 }),
+    blocks: programBlocksArb,
     difficulty: fc.option(validDifficultyArb, { nil: undefined }),
     estimatedDuration: fc.option(fc.integer({ min: 1, max: 300 }), {
       nil: undefined
@@ -300,27 +295,19 @@ describe("Validation Infrastructure Property Tests", () => {
       );
     });
 
-    it("should consistently validate program sessions", () => {
+    it("should consistently validate program blocks", () => {
       fc.assert(
         fc.property(
           fc.record({
             name: validNameArb,
-            sessions: fc.array(
-              fc.record({
-                index: fc.integer({ min: -10, max: 0 }), // Invalid index
-                blocks: fc.array(programBlockArb, { minLength: 1 })
-              }),
-              { minLength: 1 }
-            )
+            blocks: fc.array(programBlockArb, { minLength: 1 })
           }),
           (program) => {
             const result = validateProgram(program);
 
-            // Invalid session indices should fail validation
-            expect(result.isValid).toBe(false);
-            expect(result.errors.some((e) => e.field.includes("index"))).toBe(
-              true
-            );
+            // Valid blocks should pass validation
+            expect(result.isValid).toBe(true);
+            expect(result.errors).toHaveLength(0);
           }
         ),
         { numRuns: 100 }
@@ -447,23 +434,21 @@ describe("Validation Infrastructure Property Tests", () => {
               fc.record({
                 id: fc.string({ minLength: 1 }),
                 name: fc.string({ minLength: 1 }),
-                sessions: fc.array(
-                  fc.record({
-                    index: fc.integer({ min: 1 }),
-                    blocks: fc.array(
-                      fc.oneof(
-                        fc.record({
-                          type: fc.constant("exercise" as const),
-                          exerciseId: fc.string({ minLength: 1 })
-                        }),
-                        fc.record({
-                          type: fc.constant("warmup" as const),
-                          seconds: fc.integer({ min: 1 })
-                        })
-                      )
-                    )
-                  })
-                )
+                blocks: fc.array(
+                  fc.oneof(
+                    fc.record({
+                      type: fc.constant("exercise" as const),
+                      exerciseId: fc.string({ minLength: 1 })
+                    }),
+                    fc.record({
+                      type: fc.constant("warmup" as const),
+                      seconds: fc.integer({ min: 1 })
+                    })
+                  )
+                ),
+                createdAt: fc.constant("2024-01-01T00:00:00.000Z"),
+                updatedAt: fc.constant("2024-01-01T00:00:00.000Z"),
+                source: fc.constantFrom("builtin", "user")
               })
             )
           }),
@@ -475,11 +460,9 @@ describe("Validation Infrastructure Property Tests", () => {
 
             // Dependency checking should be consistent
             const hasReferences = programs.some((program) =>
-              program.sessions.some((session) =>
-                session.blocks.some(
-                  (block) =>
-                    block.type === "exercise" && block.exerciseId === exerciseId
-                )
+              program.blocks.some(
+                (block) =>
+                  block.type === "exercise" && block.exerciseId === exerciseId
               )
             );
 
