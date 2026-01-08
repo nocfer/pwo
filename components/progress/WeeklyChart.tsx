@@ -9,12 +9,12 @@ type WeeklyChartProps = {
   title?: string;
 };
 
-const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const ALL_DAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
 export function WeeklyChart({
   data,
   maxValue,
-  title = "Last 7 days"
+  title = "This Week"
 }: WeeklyChartProps) {
   const todayIndex = getTodayIndex();
 
@@ -46,8 +46,8 @@ export function WeeklyChart({
     const animations = shiftedData.map((value, index) => {
       return Animated.timing(animatedValues[index], {
         toValue: value / max,
-        duration: 500,
-        delay: index * 60,
+        duration: 400,
+        delay: index * 50,
         useNativeDriver: false
       });
     });
@@ -59,49 +59,55 @@ export function WeeklyChart({
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
-        <View style={styles.statsRow}>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>{total}</Text>
-            <Text style={styles.statLabel}>workouts</Text>
+        <View style={styles.summaryPills}>
+          <View style={styles.summaryPill}>
+            <Text style={styles.summaryValue}>{total}</Text>
+            <Text style={styles.summaryLabel}>workouts</Text>
           </View>
-          <View style={styles.statDivider} />
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>{activeDays}</Text>
-            <Text style={styles.statLabel}>active days</Text>
+          <View style={styles.summaryPill}>
+            <Text style={styles.summaryValue}>{activeDays}</Text>
+            <Text style={styles.summaryLabel}>days</Text>
           </View>
         </View>
       </View>
 
+      {/* Chart */}
       <View style={styles.chartContainer}>
         {shiftedData.map((value, index) => {
           const height = animatedValues[index].interpolate({
             inputRange: [0, 1],
-            outputRange: ["0%", "100%"]
+            outputRange: ["8%", "100%"]
           });
 
           const isActive = value > 0;
           const isToday = index === 6;
 
           return (
-            <View key={index} style={styles.barContainer}>
+            <View key={index} style={styles.barColumn}>
               <View style={styles.barWrapper}>
-                {isActive ? (
-                  <Animated.View
-                    style={[
-                      styles.bar,
-                      { height, backgroundColor: theme.colors.primary }
-                    ]}
-                  />
-                ) : (
-                  <View style={styles.barEmpty} />
-                )}
+                <Animated.View
+                  style={[
+                    styles.bar,
+                    {
+                      height,
+                      backgroundColor: isActive
+                        ? theme.colors.primary
+                        : theme.colors.borderLight
+                    }
+                  ]}
+                />
               </View>
-              <Text style={[styles.dayLabel, isToday && styles.dayLabelToday]}>
-                {shiftedDays[index]}
-              </Text>
-              {isToday && <View style={styles.todayDot} />}
+              <View style={styles.dayLabelContainer}>
+                <Text
+                  style={[styles.dayLabel, isToday && styles.dayLabelToday]}
+                >
+                  {shiftedDays[index]}
+                </Text>
+                {isToday && <View style={styles.todayIndicator} />}
+              </View>
             </View>
           );
         })}
@@ -129,25 +135,23 @@ export function WeeklyChartCompact({ data }: { data: number[] }) {
   return (
     <View style={styles.compactContainer}>
       {shiftedData.map((value, index) => {
-        const heightPercent = (value / max) * 100;
+        const heightPercent = Math.max((value / max) * 100, 8);
         const isActive = value > 0;
 
         return (
-          <View key={index} style={styles.compactBarContainer}>
+          <View key={index} style={styles.compactBarColumn}>
             <View style={styles.compactBarWrapper}>
-              {isActive ? (
-                <View
-                  style={[
-                    styles.compactBar,
-                    {
-                      height: `${heightPercent}%`,
-                      backgroundColor: theme.colors.success
-                    }
-                  ]}
-                />
-              ) : (
-                <View style={styles.compactBarEmpty} />
-              )}
+              <View
+                style={[
+                  styles.compactBar,
+                  {
+                    height: `${heightPercent}%`,
+                    backgroundColor: isActive
+                      ? theme.colors.success
+                      : theme.colors.borderLight
+                  }
+                ]}
+              />
             </View>
           </View>
         );
@@ -164,73 +168,76 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: theme.spacing.lg
   },
   title: {
     ...theme.typography.h3,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm
+    color: theme.colors.text
   },
-  statsRow: {
+  summaryPills: {
     flexDirection: "row",
-    alignItems: "center"
+    gap: theme.spacing.sm
   },
-  stat: {
-    alignItems: "center"
+  summaryPill: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: theme.spacing.xs,
+    backgroundColor: theme.colors.background,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radius.full
   },
-  statValue: {
-    ...theme.typography.h2,
+  summaryValue: {
+    ...theme.typography.bodyBold,
     color: theme.colors.primary
   },
-  statLabel: {
-    ...theme.typography.caption,
+  summaryLabel: {
+    ...theme.typography.small,
     color: theme.colors.muted
-  },
-  statDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: theme.colors.borderLight,
-    marginHorizontal: theme.spacing.lg
   },
   chartContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    height: 100
+    height: 80,
+    gap: theme.spacing.sm
   },
-  barContainer: {
+  barColumn: {
     flex: 1,
-    alignItems: "center"
+    alignItems: "center",
+    height: "100%"
   },
   barWrapper: {
-    width: 20,
-    height: 70,
+    flex: 1,
+    width: "100%",
+    maxWidth: 28,
     backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.xs,
+    borderRadius: theme.radius.sm,
     overflow: "hidden",
     justifyContent: "flex-end"
   },
   bar: {
     width: "100%",
-    borderRadius: theme.radius.xs
+    borderRadius: theme.radius.sm,
+    minHeight: 4
   },
-  barEmpty: {
-    width: "100%",
-    height: 4,
-    backgroundColor: theme.colors.border,
-    borderRadius: 2
+  dayLabelContainer: {
+    alignItems: "center",
+    marginTop: theme.spacing.sm,
+    height: 20
   },
   dayLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    marginTop: theme.spacing.xs,
-    fontSize: 10
+    ...theme.typography.small,
+    color: theme.colors.muted
   },
   dayLabelToday: {
     color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold
+    fontFamily: theme.fonts.bold
   },
-  todayDot: {
+  todayIndicator: {
     width: 4,
     height: 4,
     borderRadius: 2,
@@ -240,30 +247,24 @@ const styles = StyleSheet.create({
   compactContainer: {
     flexDirection: "row",
     alignItems: "flex-end",
-    height: 36,
+    height: 32,
     gap: 3
   },
-  compactBarContainer: {
+  compactBarColumn: {
     flex: 1,
     height: "100%"
   },
   compactBarWrapper: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    borderRadius: 3,
+    borderRadius: 4,
     overflow: "hidden",
     justifyContent: "flex-end"
   },
   compactBar: {
     width: "100%",
-    borderRadius: 3,
+    borderRadius: 4,
     minHeight: 4
-  },
-  compactBarEmpty: {
-    width: "100%",
-    height: 4,
-    backgroundColor: theme.colors.border,
-    borderRadius: 2
   }
 });
 

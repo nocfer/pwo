@@ -18,13 +18,15 @@ type Props = {
   onChangeText: (text: string) => void;
   placeholder?: string;
   style?: ViewStyle;
+  autoFocus?: boolean;
 };
 
 export function SearchInput({
   value,
   onChangeText,
   placeholder = "Search...",
-  style
+  style,
+  autoFocus = false
 }: Props) {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -33,7 +35,7 @@ export function SearchInput({
       style={[styles.container, isFocused && styles.containerFocused, style]}
     >
       <Ionicons
-        name="search-outline"
+        name="search"
         size={18}
         color={isFocused ? theme.colors.primary : theme.colors.muted}
         style={styles.icon}
@@ -46,6 +48,10 @@ export function SearchInput({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         style={styles.input}
+        autoFocus={autoFocus}
+        returnKeyType="search"
+        autoCapitalize="none"
+        autoCorrect={false}
       />
       {value.length > 0 && (
         <Pressable
@@ -67,15 +73,16 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing.md,
     height: 44
   },
   containerFocused: {
-    borderColor: theme.colors.primary
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.md - 1
   },
   icon: {
     marginRight: theme.spacing.sm
@@ -87,10 +94,11 @@ const styles = StyleSheet.create({
     paddingVertical: 0
   },
   clearButton: {
-    padding: theme.spacing.xs
+    padding: theme.spacing.xs,
+    marginLeft: theme.spacing.xs
   },
   clearButtonPressed: {
-    opacity: 0.7
+    opacity: 0.6
   }
 });
 

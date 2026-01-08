@@ -9,14 +9,7 @@ import type { DataType, SearchState } from "@/types/enhanced";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  ViewStyle
-} from "react-native";
+import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { SearchInput } from "../common/SearchInput";
 import DataList from "./DataList";
 import FilterControls from "./FilterControls";
@@ -44,8 +37,8 @@ const TABS: TabInfo[] = [
   {
     key: "programs",
     label: "Programs",
-    icon: "list-outline",
-    iconFocused: "list"
+    icon: "barbell-outline",
+    iconFocused: "barbell"
   },
   {
     key: "challenges",
@@ -81,6 +74,19 @@ export function UnifiedDataManager({
         return state.programs.filter((p) => Boolean(p.challengeConfig));
       default:
         return [];
+    }
+  };
+
+  const getDataCount = (tab: DataType) => {
+    switch (tab) {
+      case "exercises":
+        return state.exercises.length;
+      case "programs":
+        return state.programs.filter((p) => !p.challengeConfig).length;
+      case "challenges":
+        return state.programs.filter((p) => Boolean(p.challengeConfig)).length;
+      default:
+        return 0;
     }
   };
 
@@ -134,30 +140,30 @@ export function UnifiedDataManager({
     setShowFilters(!showFilters);
   };
 
-  const handleItemPress = (item: any) => {
+  const handleItemPress = (item: { id: string }) => {
     haptics.itemSelection();
     switch (activeTab) {
       case "exercises":
-        router.push(`/library/exercises/${item.id}/edit` as any);
+        router.push(`/library/exercises/${item.id}/edit`);
         break;
       case "programs":
       case "challenges":
-        router.push(`/programs/${item.id}` as any);
+        router.push(`/programs/${item.id}`);
         break;
     }
   };
 
-  const handleItemEdit = (item: any) => {
+  const handleItemEdit = (item: { id: string }) => {
     haptics.itemSelection();
     switch (activeTab) {
       case "exercises":
-        router.push(`/library/exercises/${item.id}/edit` as any);
+        router.push(`/library/exercises/${item.id}/edit`);
         break;
       case "programs":
-        router.push(`/library/programs/${item.id}/edit` as any);
+        router.push(`/library/programs/${item.id}/edit`);
         break;
       case "challenges":
-        router.push(`/library/challenges/${item.id}/edit` as any);
+        router.push(`/library/challenges/${item.id}/edit`);
         break;
     }
   };
@@ -167,42 +173,50 @@ export function UnifiedDataManager({
     (activeTab === "exercises" && state.exercisesLoading) ||
     (activeTab !== "exercises" && state.programsLoading);
 
+  const hasActiveFilters =
+    (searchState.filters.category && searchState.filters.category.length > 0) ||
+    (searchState.filters.source && searchState.filters.source.length > 0);
+
   return (
     <View style={[styles.container, style]}>
       {/* Tabs */}
-      <View style={styles.header}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabsContainer}
-        >
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.key;
-            return (
-              <Pressable
-                key={tab.key}
-                style={({ pressed }) => [
-                  styles.tab,
-                  isActive && styles.tabActive,
-                  pressed && styles.tabPressed
-                ]}
-                onPress={() => handleTabChange(tab.key)}
+      <View style={styles.tabsContainer}>
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.key;
+          const count = getDataCount(tab.key);
+          return (
+            <Pressable
+              key={tab.key}
+              style={[styles.tab, isActive && styles.tabActive]}
+              onPress={() => handleTabChange(tab.key)}
+            >
+              <Ionicons
+                name={isActive ? tab.iconFocused : tab.icon}
+                size={20}
+                color={isActive ? theme.colors.primary : theme.colors.muted}
+              />
+              <Text
+                style={[styles.tabLabel, isActive && styles.tabLabelActive]}
               >
-                <Ionicons
-                  name={isActive ? tab.iconFocused : tab.icon}
-                  size={18}
-                  color={isActive ? theme.colors.primary : theme.colors.muted}
-                  style={styles.tabIcon}
-                />
-                <Text
-                  style={[styles.tabLabel, isActive && styles.tabLabelActive]}
+                {tab.label}
+              </Text>
+              {count > 0 && (
+                <View
+                  style={[styles.tabBadge, isActive && styles.tabBadgeActive]}
                 >
-                  {tab.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+                  <Text
+                    style={[
+                      styles.tabBadgeText,
+                      isActive && styles.tabBadgeTextActive
+                    ]}
+                  >
+                    {count}
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
       </View>
 
       {/* Search and Filters */}
@@ -211,22 +225,29 @@ export function UnifiedDataManager({
           <SearchInput
             value={searchState.query}
             onChangeText={handleSearchChange}
-            placeholder={`Search ${TABS.find((t) => t.key === activeTab)?.label.toLowerCase()}...`}
+            placeholder={`Search ${activeTab}...`}
             style={styles.searchInput}
           />
           <Pressable
             style={({ pressed }) => [
               styles.filterButton,
-              showFilters && styles.filterButtonActive,
+              (showFilters || hasActiveFilters) && styles.filterButtonActive,
               pressed && styles.filterButtonPressed
             ]}
             onPress={handleToggleFilters}
           >
             <Ionicons
-              name={showFilters ? "options" : "options-outline"}
-              size={18}
-              color={showFilters ? theme.colors.primary : theme.colors.muted}
+              name="options-outline"
+              size={20}
+              color={
+                showFilters || hasActiveFilters
+                  ? theme.colors.primary
+                  : theme.colors.muted
+              }
             />
+            {hasActiveFilters && !showFilters && (
+              <View style={styles.filterDot} />
+            )}
           </Pressable>
         </View>
 
@@ -243,12 +264,11 @@ export function UnifiedDataManager({
         )}
       </View>
 
-      {/* Selection Info */}
+      {/* Selection Bar */}
       {selectedItems.length > 0 && (
-        <View style={styles.selectionInfo}>
+        <View style={styles.selectionBar}>
           <Text style={styles.selectionText}>
-            {selectedItems.length} item{selectedItems.length !== 1 ? "s" : ""}{" "}
-            selected
+            {selectedItems.length} selected
           </Text>
           <Pressable
             style={styles.clearSelectionButton}
@@ -283,48 +303,55 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   },
-  header: {
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderLight
-  },
   tabsContainer: {
+    flexDirection: "row",
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm
+    paddingBottom: theme.spacing.md,
+    gap: theme.spacing.sm
   },
   tab: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.md,
+    justifyContent: "center",
+    gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
-    marginRight: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
     borderRadius: theme.radius.md,
-    backgroundColor: "transparent"
+    backgroundColor: theme.colors.surface
   },
   tabActive: {
     backgroundColor: theme.colors.primaryLight
   },
-  tabPressed: {
-    opacity: 0.7
-  },
-  tabIcon: {
-    marginRight: theme.spacing.xs
-  },
   tabLabel: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.muted,
-    fontSize: 14
+    ...theme.typography.captionBold,
+    color: theme.colors.muted
   },
   tabLabelActive: {
     color: theme.colors.primary
   },
+  tabBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: theme.spacing.xs
+  },
+  tabBadgeActive: {
+    backgroundColor: theme.colors.primary
+  },
+  tabBadgeText: {
+    ...theme.typography.small,
+    color: theme.colors.muted
+  },
+  tabBadgeTextActive: {
+    color: theme.colors.primaryTextOn
+  },
   controls: {
-    backgroundColor: theme.colors.surface,
     paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderLight
+    paddingBottom: theme.spacing.md
   },
   searchRow: {
     flexDirection: "row",
@@ -338,40 +365,51 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.surface,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    position: "relative"
   },
   filterButtonActive: {
     backgroundColor: theme.colors.primaryLight
   },
   filterButtonPressed: {
-    opacity: 0.7
+    transform: [{ scale: 0.95 }]
+  },
+  filterDot: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.primary
   },
   filterControls: {
     marginTop: theme.spacing.md
   },
-  selectionInfo: {
+  selectionBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: theme.colors.primaryLight,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm
+    marginHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.md
   },
   selectionText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.primary,
-    fontSize: 14
+    ...theme.typography.captionBold,
+    color: theme.colors.primary
   },
   clearSelectionButton: {
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs
   },
   clearSelectionText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.primary,
-    fontSize: 14
+    ...theme.typography.captionBold,
+    color: theme.colors.primary
   },
   dataList: {
     flex: 1
