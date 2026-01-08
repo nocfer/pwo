@@ -11,7 +11,6 @@ type FocusCardProps = {
   subTitle: string;
   icon: string;
   current?: WorkoutStep;
-  sessionTimer?: number;
   timerEnabled?: boolean;
 };
 
@@ -23,82 +22,90 @@ export function FocusCard({
   title,
   icon,
   current,
-  sessionTimer,
   timerEnabled = false
 }: FocusCardProps) {
+  const isExercise = current?.type === "exercise";
+  const hasMultipleSets =
+    isExercise &&
+    current.totalSets != null &&
+    current.totalSets > 1 &&
+    current.setNumber != null;
+
   return (
-    <View
-      style={[
-        styles.container,
-        { borderColor: phaseAccent, backgroundColor: phaseBg }
-      ]}
-    >
-      {/* Header */}
-      <View style={styles.topRow}>
-        <View style={styles.headerGroup}>
+    <View style={styles.container}>
+      {/* Colored accent bar at top */}
+      <View style={[styles.accentBar, { backgroundColor: phaseAccent }]} />
+
+      <View style={styles.content}>
+        {/* Header row */}
+        <View style={styles.headerRow}>
           <View
-            style={[styles.iconSmall, { backgroundColor: `${phaseAccent}20` }]}
+            style={[styles.phaseChip, { backgroundColor: `${phaseAccent}15` }]}
           >
-            <Ionicons name={icon as any} size={18} color={phaseAccent} />
+            <Ionicons name={icon as any} size={14} color={phaseAccent} />
+            <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
+              {phaseChipText}
+            </Text>
           </View>
-          <Text style={[styles.phaseChipText, { color: phaseAccent }]}>
-            {phaseChipText}
-          </Text>
+
+          {hasMultipleSets && (
+            <View style={[styles.setBadge, { backgroundColor: phaseAccent }]}>
+              <Text style={styles.setBadgeText}>
+                {current.setNumber}/{current.totalSets}
+              </Text>
+            </View>
+          )}
         </View>
+
+        {/* Main title */}
+        <Text style={timerEnabled ? styles.timerHero : styles.title}>
+          {title}
+        </Text>
+        <Text style={styles.subtitle}>{subTitle}</Text>
+
+        {/* Exercise metrics */}
+        {isExercise &&
+          (current.targetReps != null || current.durationSeconds != null) && (
+            <View style={styles.metricsRow}>
+              {current.targetReps != null && (
+                <View style={styles.metricChip}>
+                  <Ionicons
+                    name="fitness"
+                    size={14}
+                    color={theme.colors.text}
+                  />
+                  <Text style={styles.metricText}>
+                    {current.targetReps} reps
+                  </Text>
+                </View>
+              )}
+              {current.durationSeconds != null && (
+                <View style={styles.metricChip}>
+                  <Ionicons
+                    name="timer-outline"
+                    size={14}
+                    color={theme.colors.text}
+                  />
+                  <Text style={styles.metricText}>
+                    {current.durationSeconds}s
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+        {/* Note */}
+        {isExercise && current.note && (
+          <View style={styles.noteBox}>
+            <Ionicons
+              name="information-circle"
+              size={16}
+              color={theme.colors.primary}
+            />
+            <Text style={styles.noteText}>{current.note}</Text>
+          </View>
+        )}
       </View>
-
-      <Text style={timerEnabled ? styles.timerHero : styles.title}>
-        {title}
-      </Text>
-      <Text style={styles.subtitle}>{subTitle}</Text>
-
-      {current?.type === "exercise" && (
-        <View style={styles.metrics}>
-          {current.setNumber != null &&
-            current.totalSets != null &&
-            current.totalSets > 1 && (
-              <View style={styles.metric}>
-                <Ionicons
-                  name="layers"
-                  size={14}
-                  color={theme.colors.primary}
-                />
-                <Text
-                  style={[styles.metricText, { color: theme.colors.primary }]}
-                >
-                  Set {current.setNumber} of {current.totalSets}
-                </Text>
-              </View>
-            )}
-          {current.targetReps != null && (
-            <View style={styles.metric}>
-              <Ionicons name="repeat" size={14} color={theme.colors.muted} />
-              <Text style={styles.metricText}>{current.targetReps} reps</Text>
-            </View>
-          )}
-          {current.durationSeconds != null && (
-            <View style={styles.metric}>
-              <Ionicons
-                name="time-outline"
-                size={14}
-                color={theme.colors.muted}
-              />
-              <Text style={styles.metricText}>{current.durationSeconds}s</Text>
-            </View>
-          )}
-        </View>
-      )}
-
-      {current?.type === "exercise" && current.note && (
-        <View style={styles.noteContainer}>
-          <Ionicons
-            name="information-circle-outline"
-            size={14}
-            color={theme.colors.subtext}
-          />
-          <Text style={styles.note}>{current.note}</Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -106,88 +113,101 @@ export function FocusCard({
 const styles = StyleSheet.create({
   container: {
     marginTop: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    paddingVertical: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.lg,
-    ...theme.shadows.sm
+    overflow: "hidden",
+    ...theme.shadows.md
   },
-  topRow: {
-    width: "100%",
+  accentBar: {
+    height: 4,
+    width: "100%"
+  },
+  content: {
+    padding: theme.spacing.lg
+  },
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.md
+    justifyContent: "space-between",
+    marginBottom: theme.spacing.lg
   },
-  headerGroup: {
+  phaseChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs
-  },
-  iconSmall: {
-    width: 28,
-    height: 28,
-    borderRadius: theme.radius.xs,
-    alignItems: "center",
-    justifyContent: "center"
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.radius.full
   },
   phaseChipText: {
-    ...theme.typography.caption,
+    ...theme.typography.small,
     fontFamily: theme.fonts.semiBold,
     textTransform: "uppercase",
+    letterSpacing: 0.8
+  },
+  setBadge: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.radius.full
+  },
+  setBadgeText: {
+    ...theme.typography.captionBold,
+    color: theme.colors.primaryTextOn,
     letterSpacing: 0.5
   },
   title: {
-    ...theme.typography.h2,
+    ...theme.typography.h1,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-    textAlign: "center"
+    textAlign: "center",
+    marginBottom: theme.spacing.xs
   },
   subtitle: {
     ...theme.typography.body,
-    color: theme.colors.muted,
+    color: theme.colors.subtext,
     textAlign: "center"
   },
-  metrics: {
-    flexDirection: "row",
-    gap: theme.spacing.lg,
-    marginTop: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    justifyContent: "center"
+  timerHero: {
+    fontSize: 56,
+    fontFamily: theme.fonts.bold,
+    fontVariant: ["tabular-nums"],
+    color: theme.colors.text,
+    textAlign: "center",
+    marginBottom: theme.spacing.xs,
+    letterSpacing: -1
   },
-  metric: {
+  metricsRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.lg
+  },
+  metricChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs
+    gap: theme.spacing.xs,
+    backgroundColor: theme.colors.background,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.md
   },
   metricText: {
-    ...theme.typography.body,
-    color: theme.colors.text,
-    fontFamily: theme.fonts.semiBold,
-    fontSize: 14
+    ...theme.typography.captionBold,
+    color: theme.colors.text
   },
-  noteContainer: {
+  noteBox: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: theme.spacing.xs,
-    marginTop: theme.spacing.md,
-    paddingTop: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.borderLight
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.lg,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.primaryLight,
+    borderRadius: theme.radius.md
   },
-  note: {
+  noteText: {
     ...theme.typography.caption,
-    color: theme.colors.subtext,
+    color: theme.colors.text,
     flex: 1,
     lineHeight: 18
-  },
-  timerHero: {
-    fontSize: 42,
-    fontWeight: "500",
-    fontVariant: ["tabular-nums"],
-    marginBottom: theme.spacing.sm,
-    textAlign: "center",
-    color: theme.colors.text
   }
 });
 

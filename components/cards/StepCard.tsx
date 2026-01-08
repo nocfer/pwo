@@ -28,36 +28,44 @@ export function StepCard({
   phaseBg,
   delayMultiplier = 0
 }: StepCardProps) {
-  const containerStyles = [
-    styles.card,
-    active && {
-      ...styles.cardActive,
-      backgroundColor: phaseBg,
-      borderColor: phaseAccent
-    },
-    done && styles.cardDone,
-    locked && {
-      ...styles.cardLocked,
-      backgroundColor: phaseBg,
-      borderColor: phaseAccent
-    },
-    style
-  ];
+  // Determine card state styling
+  const getContainerStyle = () => {
+    if (done) {
+      return [styles.card, styles.cardDone, style];
+    }
+    if (active) {
+      return [
+        styles.card,
+        styles.cardActive,
+        { borderLeftColor: phaseAccent },
+        style
+      ];
+    }
+    if (locked) {
+      return [styles.card, styles.cardLocked, style];
+    }
+    return [styles.card, style];
+  };
 
-  const titleStyles = [
-    styles.cardTitle,
-    done && styles.cardTitleDone,
-    locked && styles.cardTitleLocked
-  ];
+  const getTitleStyle = () => {
+    if (done) return [styles.cardTitle, styles.cardTitleDone];
+    if (locked) return [styles.cardTitle, styles.cardTitleLocked];
+    if (active) return [styles.cardTitle, styles.cardTitleActive];
+    return [styles.cardTitle];
+  };
 
   return (
-    <AnimatedCard delay={80 * delayMultiplier}>
-      <View style={containerStyles}>
+    <AnimatedCard delay={60 * delayMultiplier}>
+      <View style={getContainerStyle()}>
         <View style={styles.rowBetween}>
-          <Text style={titleStyles}>{title}</Text>
-          {right}
+          <View style={styles.titleContainer}>
+            <Text style={getTitleStyle()} numberOfLines={1}>
+              {title}
+            </Text>
+          </View>
+          {right && <View style={styles.rightContainer}>{right}</View>}
         </View>
-        {children}
+        {children && <View style={styles.childrenContainer}>{children}</View>}
       </View>
     </AnimatedCard>
   );
@@ -66,29 +74,34 @@ export function StepCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    ...theme.shadows.sm
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: "transparent"
   },
   cardActive: {
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primaryLight
+    backgroundColor: theme.colors.surface,
+    borderLeftWidth: 3,
+    ...theme.shadows.sm
   },
   cardDone: {
-    backgroundColor: theme.colors.successLight,
-    opacity: 0.5
+    backgroundColor: theme.colors.background,
+    opacity: 0.7
   },
   cardLocked: {
+    backgroundColor: theme.colors.background,
     opacity: 0.5
   },
   cardTitle: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs
+    color: theme.colors.text
+  },
+  cardTitleActive: {
+    color: theme.colors.text
   },
   cardTitleDone: {
-    color: theme.colors.success
+    color: theme.colors.success,
+    textDecorationLine: "line-through"
   },
   cardTitleLocked: {
     color: theme.colors.muted
@@ -97,6 +110,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between"
+  },
+  titleContainer: {
+    flex: 1,
+    marginRight: theme.spacing.sm
+  },
+  rightContainer: {
+    flexShrink: 0
+  },
+  childrenContainer: {
+    marginTop: theme.spacing.xs
   }
 });
 
