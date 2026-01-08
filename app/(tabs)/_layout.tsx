@@ -137,13 +137,7 @@ export default function TabLayout() {
           }
         }}
       />
-      {/* Hide challenges tab - functionality moved to library */}
-      <Tabs.Screen
-        name="challenges"
-        options={{
-          href: null // This hides the tab
-        }}
-      />
+
     </Tabs>
   );
 }

@@ -79,7 +79,7 @@ export function ConfettiCelebration({
   if (!isVisible) return null;
 
   return (
-    <View style={styles.container} pointerEvents="none">
+    <View style={[styles.container, { pointerEvents: "none" }]}>
       {/* Confetti cannons from both sides */}
       <ConfettiCannon
         ref={confettiRef}

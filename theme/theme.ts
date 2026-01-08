@@ -87,28 +87,32 @@ const shadows = {
     shadowOpacity: 0,
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 0,
-    elevation: 0
+    elevation: 0,
+    boxShadow: "none"
   },
   sm: {
     shadowColor: "#0F172A",
     shadowOpacity: 0.04,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 3,
-    elevation: 1
+    elevation: 1,
+    boxShadow: "0 1px 3px rgba(15, 23, 42, 0.04)"
   },
   md: {
     shadowColor: "#0F172A",
     shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
-    elevation: 2
+    elevation: 2,
+    boxShadow: "0 2px 6px rgba(15, 23, 42, 0.06)"
   },
   lg: {
     shadowColor: "#0F172A",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 12,
-    elevation: 4
+    elevation: 4,
+    boxShadow: "0 4px 12px rgba(15, 23, 42, 0.08)"
   }
 };
 
