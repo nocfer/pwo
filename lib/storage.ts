@@ -6,20 +6,20 @@
  */
 
 import type {
-    ChallengeProgress,
-    EventRecord,
-    Exercise,
-    ExerciseProgress,
-    HistoryEntry,
-    HistoryFile,
-    PersonalRecord,
-    PRHistory,
-    Program,
-    ProgramProgress,
-    ProgressHistory,
-    SessionState,
-    StreakEntry,
-    WeeklyStats
+  ChallengeProgress,
+  EventRecord,
+  Exercise,
+  ExerciseProgress,
+  HistoryEntry,
+  HistoryFile,
+  PersonalRecord,
+  PRHistory,
+  Program,
+  ProgramProgress,
+  ProgressHistory,
+  SessionState,
+  StreakEntry,
+  WeeklyStats
 } from "@/types";
 import * as FileSystem from "expo-file-system/legacy";
 import { Platform } from "react-native";
@@ -27,11 +27,11 @@ import { getMondayBasedDayIndex, normalizeStreak } from "./utils/date";
 
 // Re-export types for backwards compatibility
 export type {
-    EventRecord,
-    HistoryEntry,
-    HistoryFile,
-    SessionState,
-    StreakEntry
+  EventRecord,
+  HistoryEntry,
+  HistoryFile,
+  SessionState,
+  StreakEntry
 } from "@/types";
 
 // ============================================================================

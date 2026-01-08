@@ -5,7 +5,6 @@ import { useDataActions } from "@/context/DataContext";
 import { usePrograms } from "@/hooks/data";
 import { useWorkoutSteps } from "@/hooks/session/useWorkoutSteps";
 import { useWorkoutTimer } from "@/hooks/session/useWorkoutTimer";
-import { getPhaseInfo } from "@/lib/utils/colors";
 import { theme } from "@/theme/theme";
 import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
@@ -42,11 +41,8 @@ export default function ProgramSessionRunner() {
     return <ErrorScreen message="Session unavailable." />;
   }
 
-  const current = timer.currentStep;
-  const { phaseBg } = getPhaseInfo(timer.phase, current?.type);
-
   return (
-    <View style={[styles.container, { backgroundColor: phaseBg }]}>
+    <View style={styles.container}>
       <ConfettiCelebration
         show={timer.showConfetti}
         onComplete={() => timer.setShowConfetti(false)}
