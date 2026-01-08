@@ -1,12 +1,12 @@
 import {
-  ExerciseForm,
-  type ExerciseFormData
+    ExerciseForm,
+    type ExerciseFormData
 } from "@/components/data/forms/ExerciseForm";
 import { useDataActions } from "@/context/DataContext";
+import { theme } from "@/theme/theme";
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
 
 export default function NewExerciseScreen() {
   const actions = useDataActions();
@@ -23,7 +23,7 @@ export default function NewExerciseScreen() {
       });
       router.back();
     } catch (e) {
-      throw e; // Let the form handle the error display
+      throw e;
     } finally {
       setSaving(false);
     }
@@ -34,19 +34,20 @@ export default function NewExerciseScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ExerciseForm
         mode="create"
         onSave={handleSave}
         onCancel={handleCancel}
         saving={saving}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
+    backgroundColor: theme.colors.background
   }
 });
