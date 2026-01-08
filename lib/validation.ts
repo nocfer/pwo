@@ -4,20 +4,20 @@
  */
 
 import type {
-  ChallengeConfig,
-  Exercise,
-  ExerciseCategory,
-  Program
+    ChallengeConfig,
+    Exercise,
+    ExerciseCategory,
+    Program
 } from "@/types";
 import type {
-  DependencyResult,
-  EnhancedChallenge,
-  EnhancedExercise,
-  EnhancedProgram,
-  FieldValidation,
-  ValidationError,
-  ValidationResult,
-  ValidationSchema
+    DependencyResult,
+    EnhancedChallenge,
+    EnhancedExercise,
+    EnhancedProgram,
+    FieldValidation,
+    ValidationError,
+    ValidationResult,
+    ValidationSchema
 } from "@/types/enhanced";
 import { ValidationErrorCode } from "@/types/enhanced";
 
@@ -390,7 +390,7 @@ export const programValidationSchema: ValidationSchema<EnhancedProgram> = {
       required: true,
       minLength: 1,
       maxLength: 100,
-      pattern: /^[a-zA-Z0-9\s\-_()]+$/
+      pattern: /^[a-zA-Z0-9\s\-_().,!?'&:]+$/
     },
     {
       field: "description",
@@ -522,6 +522,42 @@ export function validateProgramBlock(
             createValidationError(
               `${fieldPath}.durationSeconds`,
               "Duration seconds must be a positive number",
+              ValidationErrorCode.INVALID_RANGE
+            )
+          );
+        }
+      }
+
+      // Validate sets (must be a positive integer)
+      if (block.sets !== undefined && block.sets !== null) {
+        if (
+          typeof block.sets !== "number" ||
+          block.sets < 1 ||
+          !Number.isInteger(block.sets)
+        ) {
+          errors.push(
+            createValidationError(
+              `${fieldPath}.sets`,
+              "Sets must be at least 1",
+              ValidationErrorCode.INVALID_RANGE
+            )
+          );
+        }
+      }
+
+      // Validate restBetweenSets (must be non-negative)
+      if (
+        block.restBetweenSets !== undefined &&
+        block.restBetweenSets !== null
+      ) {
+        if (
+          typeof block.restBetweenSets !== "number" ||
+          block.restBetweenSets < 0
+        ) {
+          errors.push(
+            createValidationError(
+              `${fieldPath}.restBetweenSets`,
+              "Rest duration must be 0 or greater",
               ValidationErrorCode.INVALID_RANGE
             )
           );

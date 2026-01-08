@@ -1,6 +1,6 @@
 import {
-    ChallengeForm,
-    type ChallengeFormData
+  ChallengeForm,
+  type ChallengeFormData
 } from "@/components/data/forms/ChallengeForm";
 import { useDataActions, useDataContext } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";

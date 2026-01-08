@@ -36,7 +36,9 @@ export function ProgramEditor({
       if (program) {
         return {
           name: program.name,
-          blocks: program.blocks
+          blocks: program.blocks,
+          initialWarmup: program.initialWarmup,
+          defaultRestBetweenExercises: program.defaultRestBetweenExercises
         };
       }
     }
@@ -59,7 +61,9 @@ export function ProgramEditor({
           id: programId || "",
           name: formData.name,
           blocks: formData.blocks || [],
-          challengeConfig: undefined
+          challengeConfig: undefined,
+          initialWarmup: formData.initialWarmup,
+          defaultRestBetweenExercises: formData.defaultRestBetweenExercises
         };
 
         const savedProgram = await actions.upsertProgram(programData);

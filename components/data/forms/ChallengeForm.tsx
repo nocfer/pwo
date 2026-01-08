@@ -54,12 +54,14 @@ export function ChallengeForm({
   const [formData, setFormData] = useState<ChallengeFormData>({
     name: initialData?.name || "",
     challengeConfig: {
-      exerciseId: initialData?.challengeConfig?.exerciseId || exercises[0]?.id || "",
+      exerciseId:
+        initialData?.challengeConfig?.exerciseId || exercises[0]?.id || "",
       sets: initialData?.challengeConfig?.sets || 5,
       targetReps: initialData?.challengeConfig?.targetReps || 100,
       warmUpSeconds: initialData?.challengeConfig?.warmUpSeconds || 180,
       breakSeconds: initialData?.challengeConfig?.breakSeconds || 90,
-      sessionIncreasePercent: initialData?.challengeConfig?.sessionIncreasePercent || 10,
+      sessionIncreasePercent:
+        initialData?.challengeConfig?.sessionIncreasePercent || 10,
       duration: initialData?.challengeConfig?.duration || 30
     }
   });

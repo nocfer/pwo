@@ -1,6 +1,6 @@
 import {
-    ExerciseForm,
-    type ExerciseFormData
+  ExerciseForm,
+  type ExerciseFormData
 } from "@/components/data/forms/ExerciseForm";
 import { useDataActions } from "@/context/DataContext";
 import { theme } from "@/theme/theme";

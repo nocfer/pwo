@@ -54,6 +54,22 @@ export function FocusCard({
 
       {current?.type === "exercise" && (
         <View style={styles.metrics}>
+          {current.setNumber != null &&
+            current.totalSets != null &&
+            current.totalSets > 1 && (
+              <View style={styles.metric}>
+                <Ionicons
+                  name="layers"
+                  size={14}
+                  color={theme.colors.primary}
+                />
+                <Text
+                  style={[styles.metricText, { color: theme.colors.primary }]}
+                >
+                  Set {current.setNumber} of {current.totalSets}
+                </Text>
+              </View>
+            )}
           {current.targetReps != null && (
             <View style={styles.metric}>
               <Ionicons name="repeat" size={14} color={theme.colors.muted} />
