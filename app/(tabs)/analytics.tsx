@@ -1,11 +1,5 @@
 /**
- * Analytics Tab - Dedicated Progress Visualization Dashboard
- *
- * Provides comprehensive analytics organized by data type:
- * 1. Data type navigation (Programs, Challenges, Exercises)
- * 2. Filtering and customization options
- * 3. Enhanced visualizations with export capabilities
- * 4. Detailed progress metrics and trends
+ * Analytics Tab - Progress Visualization Dashboard
  */
 
 import { Button } from "@/components/common";
@@ -43,52 +37,31 @@ interface FilterState {
   sortBy: "name" | "recent" | "performance";
 }
 
-// Helper function to generate CSV content from progress data
 function generateProgressCSV(progressData: any): string {
   const headers = [
     "Date",
     "Type",
     "Activity",
-    "Workouts Completed",
-    "Total Reps",
-    "Time Spent (minutes)",
-    "Current Streak"
+    "Workouts",
+    "Reps",
+    "Time (min)",
+    "Streak"
   ];
-
   const rows = [
     headers.join(","),
     [
       new Date().toISOString().split("T")[0],
       "Summary",
-      "Overall Progress",
+      "Overall",
       progressData.totalWorkoutsCompleted || 0,
       progressData.totalRepsCompleted || 0,
       Math.round((progressData.totalTimeSpentSeconds || 0) / 60),
       progressData.currentStreak || 0
     ].join(",")
   ];
-
-  // Add recent activity
-  if (progressData.recentActivity) {
-    progressData.recentActivity.forEach((activity: any) => {
-      rows.push(
-        [
-          activity.date.split("T")[0],
-          activity.type,
-          `Session ${activity.sessionIndex}`,
-          1,
-          "",
-          "",
-          ""
-        ].join(",")
-      );
-    });
-  }
-
   return rows.join("\n");
 }
 
-// Helper function to generate progress report
 function generateProgressReport(progressData: any): string {
   const totalMinutes = Math.round(
     (progressData.totalTimeSpentSeconds || 0) / 60
@@ -99,13 +72,10 @@ function generateProgressReport(progressData: any): string {
   return `🏋️ Fitness Progress Report
 
 📊 Overall Stats:
-• Workouts Completed: ${progressData.totalWorkoutsCompleted || 0}
+• Workouts: ${progressData.totalWorkoutsCompleted || 0}
 • Total Reps: ${progressData.totalRepsCompleted || 0}
-• Time Spent: ${hours}h ${minutes}m
-• Current Streak: ${progressData.currentStreak || 0} days
-
-🎯 Active Programs: ${progressData.activePrograms || 0}
-🏆 Active Challenges: ${progressData.activeChallenges || 0}
+• Time: ${hours}h ${minutes}m
+• Streak: ${progressData.currentStreak || 0} days
 
 Generated on ${new Date().toLocaleDateString()}`;
 }
@@ -121,47 +91,30 @@ export default function AnalyticsScreen() {
 
   const { data: allProgress, loading } = useAllProgress();
 
-  // CSV Export functionality
   const handleExportCSV = useCallback(async () => {
     try {
       await haptics.exportData();
-
       if (!allProgress) {
         Alert.alert("No Data", "No progress data available to export.");
         return;
       }
-
-      // Generate CSV content
       const csvContent = generateProgressCSV(allProgress);
-
-      // Share the CSV content
-      await Share.share({
-        message: csvContent,
-        title: "Progress Data Export"
-      });
-    } catch (error) {
+      await Share.share({ message: csvContent, title: "Progress Data Export" });
+    } catch {
       Alert.alert("Export Failed", "Could not export progress data.");
     }
   }, [allProgress]);
 
-  // Report Sharing functionality
   const handleShareReport = useCallback(async () => {
     try {
       await haptics.shareData();
-
       if (!allProgress) {
         Alert.alert("No Data", "No progress data available to share.");
         return;
       }
-
-      // Generate report summary
       const report = generateProgressReport(allProgress);
-
-      await Share.share({
-        message: report,
-        title: "Progress Report"
-      });
-    } catch (error) {
+      await Share.share({ message: report, title: "Progress Report" });
+    } catch {
       Alert.alert("Share Failed", "Could not share progress report.");
     }
   }, [allProgress]);
@@ -169,7 +122,7 @@ export default function AnalyticsScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     void haptics.refresh();
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 400));
     setRefreshing(false);
   }, []);
 
@@ -208,10 +161,11 @@ export default function AnalyticsScreen() {
       key={tab}
       style={[styles.tabButton, activeTab === tab && styles.tabButtonActive]}
       onPress={() => handleTabChange(tab)}
+      activeOpacity={0.7}
     >
       <Ionicons
         name={icon as any}
-        size={20}
+        size={18}
         color={activeTab === tab ? theme.colors.primary : theme.colors.muted}
       />
       <Text
@@ -237,6 +191,7 @@ export default function AnalyticsScreen() {
               filters.timeRange === range && styles.filterChipActive
             ]}
             onPress={() => handleFilterChange("timeRange", range)}
+            activeOpacity={0.7}
           >
             <Text
               style={[
@@ -265,12 +220,10 @@ export default function AnalyticsScreen() {
           <Text style={styles.metricValue}>
             {allProgress?.totalWorkoutsCompleted || 0}
           </Text>
-          <Text style={styles.metricLabel}>Sessions Completed</Text>
+          <Text style={styles.metricLabel}>Sessions</Text>
         </View>
       </View>
-
       <SessionsCompletedChart days={getDaysFromTimeRange(filters.timeRange)} />
-
       <PersonalRecordsCard limit={5} />
     </View>
   );
@@ -291,11 +244,9 @@ export default function AnalyticsScreen() {
           <Text style={styles.metricLabel}>Total Reps</Text>
         </View>
       </View>
-
       <RepsProgressionChart days={getDaysFromTimeRange(filters.timeRange)} />
-
       <View style={styles.streakCard}>
-        <Ionicons name="flame" size={24} color={theme.colors.warning} />
+        <Ionicons name="flame" size={22} color={theme.colors.accent} />
         <Text style={styles.streakValue}>
           {allProgress?.currentStreak || 0}
         </Text>
@@ -327,7 +278,7 @@ export default function AnalyticsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
       <ScrollView
-        style={styles.container}
+        style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -345,7 +296,7 @@ export default function AnalyticsScreen() {
           <Text style={styles.subtitle}>Detailed progress insights</Text>
         </View>
 
-        {/* Data Type Navigation */}
+        {/* Tab Navigation */}
         <View style={styles.tabContainer}>
           {renderTabButton("programs", "Programs", "fitness-outline")}
           {renderTabButton("challenges", "Challenges", "barbell-outline")}
@@ -353,35 +304,9 @@ export default function AnalyticsScreen() {
         </View>
 
         {/* Filters */}
-        <View style={styles.filtersContainer}>
-          {renderTimeRangeFilter()}
+        <View style={styles.filtersContainer}>{renderTimeRangeFilter()}</View>
 
-          <View style={styles.filterSection}>
-            <Text style={styles.filterLabel}>Options</Text>
-            <View style={styles.filterRow}>
-              <TouchableOpacity
-                style={[
-                  styles.filterToggle,
-                  filters.showOnlyActive && styles.filterToggleActive
-                ]}
-                onPress={() =>
-                  handleFilterChange("showOnlyActive", !filters.showOnlyActive)
-                }
-              >
-                <Text
-                  style={[
-                    styles.filterToggleText,
-                    filters.showOnlyActive && styles.filterToggleTextActive
-                  ]}
-                >
-                  Active Only
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        {/* Analytics Content */}
+        {/* Content */}
         {loading ? (
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>Loading analytics...</Text>
@@ -390,18 +315,20 @@ export default function AnalyticsScreen() {
           renderAnalyticsContent()
         )}
 
-        {/* Export Options */}
+        {/* Export */}
         <View style={styles.exportSection}>
           <Text style={styles.sectionTitle}>Export Data</Text>
           <View style={styles.exportButtons}>
             <Button
               label="Export CSV"
               variant="secondary"
+              size="sm"
               onPress={handleExportCSV}
             />
             <Button
               label="Share Report"
               variant="secondary"
+              size="sm"
               onPress={handleShareReport}
             />
           </View>
@@ -416,12 +343,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   },
+  scrollView: {
+    flex: 1
+  },
   content: {
-    padding: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.xxl * 2
   },
   header: {
-    marginBottom: theme.spacing.lg
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.md
   },
   title: {
     ...theme.typography.h1,
@@ -435,9 +366,9 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: "row",
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     padding: theme.spacing.xs,
-    marginBottom: theme.spacing.lg,
+    marginTop: theme.spacing.md,
     ...theme.shadows.sm
   },
   tabButton: {
@@ -446,15 +377,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radius.sm,
     gap: theme.spacing.xs
   },
   tabButtonActive: {
     backgroundColor: theme.colors.primaryLight
   },
   tabButtonText: {
-    ...theme.typography.body,
+    ...theme.typography.caption,
     color: theme.colors.muted,
     fontFamily: theme.fonts.medium
   },
@@ -464,13 +395,13 @@ const styles = StyleSheet.create({
   },
   filtersContainer: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    marginTop: theme.spacing.md,
     ...theme.shadows.sm
   },
   filterSection: {
-    marginBottom: theme.spacing.md
+    marginBottom: theme.spacing.xs
   },
   filterLabel: {
     ...theme.typography.caption,
@@ -487,14 +418,11 @@ const styles = StyleSheet.create({
   filterChip: {
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
-    borderColor: theme.colors.border
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.background
   },
   filterChipActive: {
-    backgroundColor: theme.colors.primaryLight,
-    borderColor: theme.colors.primary
+    backgroundColor: theme.colors.primaryLight
   },
   filterChipText: {
     ...theme.typography.caption,
@@ -505,29 +433,9 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontFamily: theme.fonts.semiBold
   },
-  filterToggle: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  filterToggleActive: {
-    backgroundColor: theme.colors.primaryLight,
-    borderColor: theme.colors.primary
-  },
-  filterToggleText: {
-    ...theme.typography.body,
-    color: theme.colors.muted,
-    fontFamily: theme.fonts.medium
-  },
-  filterToggleTextActive: {
-    color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold
-  },
   analyticsContent: {
-    gap: theme.spacing.lg
+    gap: theme.spacing.lg,
+    marginTop: theme.spacing.lg
   },
   metricsGrid: {
     flexDirection: "row",
@@ -536,7 +444,7 @@ const styles = StyleSheet.create({
   metricCard: {
     flex: 1,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     padding: theme.spacing.md,
     alignItems: "center",
     ...theme.shadows.sm
@@ -554,7 +462,7 @@ const styles = StyleSheet.create({
   },
   streakCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     padding: theme.spacing.lg,
     alignItems: "center",
     gap: theme.spacing.sm,
@@ -562,7 +470,7 @@ const styles = StyleSheet.create({
   },
   streakValue: {
     ...theme.typography.h1,
-    color: theme.colors.warning,
+    color: theme.colors.accent,
     fontFamily: theme.fonts.bold
   },
   streakLabel: {
@@ -580,7 +488,7 @@ const styles = StyleSheet.create({
   exportSection: {
     marginTop: theme.spacing.xl,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     padding: theme.spacing.md,
     ...theme.shadows.sm
   },

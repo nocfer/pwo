@@ -1,5 +1,5 @@
 /**
- * IconButton - Reusable icon button component with consistent styling
+ * IconButton - Reusable icon button component
  */
 
 import { theme } from "@/theme/theme";
@@ -28,9 +28,9 @@ export default function IconButton({
   const iconColor =
     color ??
     (variant === "danger"
-      ? (theme.colors.danger ?? theme.colors.text)
+      ? theme.colors.danger
       : variant === "primary"
-        ? theme.colors.primary
+        ? theme.colors.primaryTextOn
         : theme.colors.text);
 
   return (
@@ -53,25 +53,22 @@ export default function IconButton({
 
 const styles = StyleSheet.create({
   button: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: theme.colors.surface
   },
   buttonPrimary: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary
+    backgroundColor: theme.colors.primary
   },
   buttonDanger: {
-    borderColor: theme.colors.danger ?? theme.colors.border
+    backgroundColor: theme.colors.dangerLight
   },
   buttonPressed: {
-    backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }]
+    backgroundColor: theme.colors.background,
+    transform: [{ scale: 0.96 }]
   },
   buttonDisabled: {
     opacity: 0.5

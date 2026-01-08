@@ -1,13 +1,17 @@
 /**
  * SearchInput - Reusable search input component
- *
- * Consolidates the duplicate search input UI from challenges.tsx and library.tsx
  */
 
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
-import { StyleSheet, TextInput, View, ViewStyle } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  ViewStyle
+} from "react-native";
 
 type Props = {
   value: string;
@@ -30,7 +34,7 @@ export function SearchInput({
     >
       <Ionicons
         name="search-outline"
-        size={20}
+        size={18}
         color={isFocused ? theme.colors.primary : theme.colors.muted}
         style={styles.icon}
       />
@@ -44,12 +48,16 @@ export function SearchInput({
         style={styles.input}
       />
       {value.length > 0 && (
-        <Ionicons
-          name="close-circle"
-          size={20}
-          color={theme.colors.muted}
+        <Pressable
           onPress={() => onChangeText("")}
-        />
+          style={({ pressed }) => [
+            styles.clearButton,
+            pressed && styles.clearButtonPressed
+          ]}
+          hitSlop={8}
+        >
+          <Ionicons name="close-circle" size={18} color={theme.colors.muted} />
+        </Pressable>
       )}
     </View>
   );
@@ -62,14 +70,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    ...theme.shadows.sm
+    height: 44
   },
   containerFocused: {
-    borderColor: theme.colors.primary,
-    ...theme.shadows.md
+    borderColor: theme.colors.primary
   },
   icon: {
     marginRight: theme.spacing.sm
@@ -78,7 +84,13 @@ const styles = StyleSheet.create({
     flex: 1,
     ...theme.typography.body,
     color: theme.colors.text,
-    paddingVertical: theme.spacing.xs
+    paddingVertical: 0
+  },
+  clearButton: {
+    padding: theme.spacing.xs
+  },
+  clearButtonPressed: {
+    opacity: 0.7
   }
 });
 

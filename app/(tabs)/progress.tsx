@@ -1,11 +1,5 @@
 /**
- * Progress Tab - Redesigned
- *
- * Shows key fitness metrics:
- * 1. Weekly Summary (hero card with ring chart)
- * 2. Consistency Heatmap (12-week activity grid)
- * 3. Personal Records (recent PRs with badges)
- * 4. Exercise Progression (line chart with selector)
+ * Progress Tab - Shows key fitness metrics
  */
 
 import {
@@ -33,39 +27,36 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function ProgressScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
-  // Staggered animation refs for sections
   const section1Anim = useRef(new Animated.Value(0)).current;
   const section2Anim = useRef(new Animated.Value(0)).current;
   const section3Anim = useRef(new Animated.Value(0)).current;
   const section4Anim = useRef(new Animated.Value(0)).current;
 
-  // Run staggered entrance animation
   const animateSections = useCallback(() => {
-    Animated.stagger(100, [
+    Animated.stagger(80, [
       Animated.timing(section1Anim, {
         toValue: 1,
-        duration: 300,
+        duration: 250,
         useNativeDriver: true
       }),
       Animated.timing(section2Anim, {
         toValue: 1,
-        duration: 300,
+        duration: 250,
         useNativeDriver: true
       }),
       Animated.timing(section3Anim, {
         toValue: 1,
-        duration: 300,
+        duration: 250,
         useNativeDriver: true
       }),
       Animated.timing(section4Anim, {
         toValue: 1,
-        duration: 300,
+        duration: 250,
         useNativeDriver: true
       })
     ]).start();
   }, [section1Anim, section2Anim, section3Anim, section4Anim]);
 
-  // Trigger animation on mount
   useState(() => {
     animateSections();
   });
@@ -74,13 +65,12 @@ export default function ProgressScreen() {
     setRefreshing(true);
     void haptics.refresh();
 
-    // Reset animations
     section1Anim.setValue(0);
     section2Anim.setValue(0);
     section3Anim.setValue(0);
     section4Anim.setValue(0);
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 400));
 
     setRefreshing(false);
     animateSections();
@@ -94,10 +84,22 @@ export default function ProgressScreen() {
     router.push("/(tabs)/analytics");
   }, []);
 
+  const createAnimatedStyle = (anim: Animated.Value) => ({
+    opacity: anim,
+    transform: [
+      {
+        translateY: anim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [16, 0]
+        })
+      }
+    ]
+  });
+
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
       <ScrollView
-        style={styles.container}
+        style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -112,7 +114,7 @@ export default function ProgressScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            <View style={{ flex: 1 }}>
+            <View style={styles.headerText}>
               <Text style={styles.title}>Progress</Text>
               <Text style={styles.subtitle}>Your fitness journey</Text>
             </View>
@@ -125,7 +127,7 @@ export default function ProgressScreen() {
             >
               <Ionicons
                 name="analytics-outline"
-                size={20}
+                size={18}
                 color={theme.colors.primary}
               />
               <Text style={styles.analyticsButtonText}>Analytics</Text>
@@ -133,82 +135,30 @@ export default function ProgressScreen() {
           </View>
         </View>
 
-        {/* Section 1: Weekly Summary */}
+        {/* Weekly Summary */}
         <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: section1Anim,
-              transform: [
-                {
-                  translateY: section1Anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0]
-                  })
-                }
-              ]
-            }
-          ]}
+          style={[styles.section, createAnimatedStyle(section1Anim)]}
         >
           <WeeklySummaryCard onStartWorkout={handleStartWorkout} />
         </Animated.View>
 
-        {/* Section 2: Consistency Heatmap */}
+        {/* Consistency Heatmap */}
         <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: section2Anim,
-              transform: [
-                {
-                  translateY: section2Anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0]
-                  })
-                }
-              ]
-            }
-          ]}
+          style={[styles.section, createAnimatedStyle(section2Anim)]}
         >
           <ConsistencyHeatmap weeks={8} />
         </Animated.View>
 
-        {/* Section 3: Personal Records */}
+        {/* Personal Records */}
         <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: section3Anim,
-              transform: [
-                {
-                  translateY: section3Anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0]
-                  })
-                }
-              ]
-            }
-          ]}
+          style={[styles.section, createAnimatedStyle(section3Anim)]}
         >
           <PersonalRecordsCard limit={3} onViewAll={handleViewAllPRs} />
         </Animated.View>
 
-        {/* Section 4: Exercise Progression */}
+        {/* Exercise Progression */}
         <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: section4Anim,
-              transform: [
-                {
-                  translateY: section4Anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0]
-                  })
-                }
-              ]
-            }
-          ]}
+          style={[styles.section, createAnimatedStyle(section4Anim)]}
         >
           <ExerciseProgressionChart />
         </Animated.View>
@@ -222,17 +172,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   },
+  scrollView: {
+    flex: 1
+  },
   content: {
-    padding: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.xxl * 2
   },
   header: {
-    marginBottom: theme.spacing.lg
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.md
   },
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between"
+  },
+  headerText: {
+    flex: 1
   },
   title: {
     ...theme.typography.h1,
@@ -250,20 +207,18 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    ...theme.shadows.sm
+    borderRadius: theme.radius.md
   },
   analyticsButtonPressed: {
     opacity: 0.8,
-    transform: [{ scale: 0.95 }]
+    transform: [{ scale: 0.98 }]
   },
   analyticsButtonText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primary
+    color: theme.colors.primary,
+    fontSize: 14
   },
   section: {
-    marginBottom: theme.spacing.lg
+    marginTop: theme.spacing.lg
   }
 });

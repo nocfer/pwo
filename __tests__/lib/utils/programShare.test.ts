@@ -169,9 +169,7 @@ describe("Program Share Utilities", () => {
     it("should reject invalid blocks", () => {
       const invalidBlocks = {
         name: "Test",
-        blocks: [
-          { type: "invalid" }
-        ]
+        blocks: [{ type: "invalid" }]
       };
       expect(validateProgramData(invalidBlocks)).toBe(false);
     });

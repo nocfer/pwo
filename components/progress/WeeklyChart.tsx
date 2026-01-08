@@ -1,11 +1,10 @@
 import { getTodayIndex } from "@/lib/utils/date";
 import { theme } from "@/theme/theme";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useMemo, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 
 type WeeklyChartProps = {
-  data: number[]; // 7 values representing each day (0-1 scale or counts)
+  data: number[];
   maxValue?: number;
   title?: string;
 };
@@ -17,17 +16,14 @@ export function WeeklyChart({
   maxValue,
   title = "Last 7 days"
 }: WeeklyChartProps) {
-  const todayIndex = getTodayIndex(); // 0=Mon, 6=Sun
+  const todayIndex = getTodayIndex();
 
-  // Shift data and labels so today is rightmost (position 6)
   const { shiftedData, shiftedDays } = useMemo(() => {
-    // Pad data to 7 if needed
     const paddedData = [...data];
     while (paddedData.length < 7) {
       paddedData.unshift(0);
     }
 
-    // For position i, the day index is (todayIndex + i + 1) % 7
     const days = Array.from({ length: 7 }, (_, i) => {
       const dayIndex = (todayIndex + i + 1) % 7;
       return ALL_DAYS[dayIndex];
@@ -44,25 +40,20 @@ export function WeeklyChart({
   const animatedValues = useRef(
     shiftedData.map(() => new Animated.Value(0))
   ).current;
-
-  // Calculate max value for scaling
   const max = maxValue || Math.max(...shiftedData, 1);
 
   useEffect(() => {
-    // Animate bars on mount
     const animations = shiftedData.map((value, index) => {
       return Animated.timing(animatedValues[index], {
         toValue: value / max,
-        duration: 600,
-        delay: index * 80,
+        duration: 500,
+        delay: index * 60,
         useNativeDriver: false
       });
     });
-
     Animated.parallel(animations).start();
   }, [shiftedData, max, animatedValues]);
 
-  // Calculate total and average
   const total = shiftedData.reduce((sum, val) => sum + val, 0);
   const activeDays = shiftedData.filter((v) => v > 0).length;
 
@@ -91,23 +82,18 @@ export function WeeklyChart({
           });
 
           const isActive = value > 0;
-          const isToday = index === 6; // Rightmost position is always today
+          const isToday = index === 6;
 
           return (
             <View key={index} style={styles.barContainer}>
               <View style={styles.barWrapper}>
                 {isActive ? (
-                  <Animated.View style={[styles.bar, { height }]}>
-                    <LinearGradient
-                      colors={[
-                        theme.colors.gradient.primaryStart,
-                        theme.colors.gradient.primaryEnd
-                      ]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 0, y: 1 }}
-                      style={styles.barGradient}
-                    />
-                  </Animated.View>
+                  <Animated.View
+                    style={[
+                      styles.bar,
+                      { height, backgroundColor: theme.colors.primary }
+                    ]}
+                  />
                 ) : (
                   <View style={styles.barEmpty} />
                 )}
@@ -124,11 +110,9 @@ export function WeeklyChart({
   );
 }
 
-// Compact version for smaller spaces
 export function WeeklyChartCompact({ data }: { data: number[] }) {
   const todayIndex = getTodayIndex();
 
-  // Shift data so today is rightmost
   const shiftedData = useMemo(() => {
     const paddedData = [...data];
     while (paddedData.length < 7) {
@@ -152,17 +136,17 @@ export function WeeklyChartCompact({ data }: { data: number[] }) {
           <View key={index} style={styles.compactBarContainer}>
             <View style={styles.compactBarWrapper}>
               {isActive ? (
-                <LinearGradient
-                  colors={[
-                    theme.colors.gradient.successStart,
-                    theme.colors.gradient.successEnd
+                <View
+                  style={[
+                    styles.compactBar,
+                    {
+                      height: `${heightPercent}%`,
+                      backgroundColor: theme.colors.success
+                    }
                   ]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                  style={[styles.compactBar, { height: `${heightPercent}%` }]}
                 />
               ) : (
-                <View style={[styles.compactBarEmpty]} />
+                <View style={styles.compactBarEmpty} />
               )}
             </View>
           </View>
@@ -176,10 +160,8 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     padding: theme.spacing.lg,
-    ...theme.shadows.md
+    ...theme.shadows.sm
   },
   header: {
     marginBottom: theme.spacing.lg
@@ -206,35 +188,31 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-    height: 30,
-    backgroundColor: theme.colors.border,
+    height: 28,
+    backgroundColor: theme.colors.borderLight,
     marginHorizontal: theme.spacing.lg
   },
   chartContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    height: 120
+    height: 100
   },
   barContainer: {
     flex: 1,
     alignItems: "center"
   },
   barWrapper: {
-    width: 24,
-    height: 80,
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.radius.sm,
+    width: 20,
+    height: 70,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.xs,
     overflow: "hidden",
     justifyContent: "flex-end"
   },
   bar: {
     width: "100%",
-    borderRadius: theme.radius.sm,
-    overflow: "hidden"
-  },
-  barGradient: {
-    flex: 1
+    borderRadius: theme.radius.xs
   },
   barEmpty: {
     width: "100%",
@@ -246,7 +224,7 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.muted,
     marginTop: theme.spacing.xs,
-    fontSize: 11
+    fontSize: 10
   },
   dayLabelToday: {
     color: theme.colors.primary,
@@ -259,12 +237,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     marginTop: 2
   },
-  // Compact styles
   compactContainer: {
     flexDirection: "row",
     alignItems: "flex-end",
-    height: 40,
-    gap: 4
+    height: 36,
+    gap: 3
   },
   compactBarContainer: {
     flex: 1,
@@ -272,14 +249,14 @@ const styles = StyleSheet.create({
   },
   compactBarWrapper: {
     flex: 1,
-    backgroundColor: theme.colors.card,
-    borderRadius: 4,
+    backgroundColor: theme.colors.background,
+    borderRadius: 3,
     overflow: "hidden",
     justifyContent: "flex-end"
   },
   compactBar: {
     width: "100%",
-    borderRadius: 4,
+    borderRadius: 3,
     minHeight: 4
   },
   compactBarEmpty: {

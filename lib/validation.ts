@@ -4,20 +4,20 @@
  */
 
 import type {
-    ChallengeConfig,
-    Exercise,
-    ExerciseCategory,
-    Program
+  ChallengeConfig,
+  Exercise,
+  ExerciseCategory,
+  Program
 } from "@/types";
 import type {
-    DependencyResult,
-    EnhancedChallenge,
-    EnhancedExercise,
-    EnhancedProgram,
-    FieldValidation,
-    ValidationError,
-    ValidationResult,
-    ValidationSchema
+  DependencyResult,
+  EnhancedChallenge,
+  EnhancedExercise,
+  EnhancedProgram,
+  FieldValidation,
+  ValidationError,
+  ValidationResult,
+  ValidationSchema
 } from "@/types/enhanced";
 import { ValidationErrorCode } from "@/types/enhanced";
 

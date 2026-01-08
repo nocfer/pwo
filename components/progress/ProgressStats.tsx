@@ -28,9 +28,9 @@ export default function ProgressStats({ stats, columns = 2 }: Props) {
             <View style={styles.iconRow}>
               <Ionicons
                 name={stat.icon as any}
-                size={18}
+                size={16}
                 color={theme.colors.primary}
-                style={{ marginRight: theme.spacing.xs }}
+                style={styles.icon}
               />
               <Text style={styles.label}>{stat.label}</Text>
             </View>
@@ -47,18 +47,15 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.md
+    gap: theme.spacing.sm
   },
   statItem: {
     flex: 1,
     minWidth: "45%",
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderWidth: 1,
-    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.md,
     padding: theme.spacing.md,
-    alignItems: "center",
-    ...theme.shadows.sm
+    alignItems: "center"
   },
   statItemThreeColumns: {
     minWidth: "30%"
@@ -67,6 +64,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: theme.spacing.xs
+  },
+  icon: {
+    marginRight: theme.spacing.xs
   },
   value: {
     ...theme.typography.h2,

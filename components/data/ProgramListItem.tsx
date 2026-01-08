@@ -1,9 +1,5 @@
 /**
- * ProgramListItem - Specialized list item component for programs with inline Start/Edit actions
- *
- * Provides inline action buttons for starting and editing programs while maintaining
- * consistent styling with the existing design system
- * Requirements: 2.1, 4.2
+ * ProgramListItem - Specialized list item for programs with inline actions
  */
 
 import { theme } from "@/theme/theme";
@@ -32,39 +28,14 @@ export function ProgramListItem({
 }: ProgramListItemProps) {
   const isChallenge = Boolean(program.challengeConfig);
 
-  const handleItemPress = () => {
-    // Primary action is to start the program
-    onStart(program);
-  };
-
-  const handleEditPress = () => {
-    onEdit(program);
-  };
-
-  const handleSelectionPress = () => {
-    onSelectionChange?.(!selected);
-  };
-
-  const formatDate = (dateString?: string): string => {
-    if (!dateString) return "Unknown";
-
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric"
-      });
-    } catch {
-      return "Unknown";
-    }
-  };
+  const handleItemPress = () => onStart(program);
+  const handleEditPress = () => onEdit(program);
+  const handleSelectionPress = () => onSelectionChange?.(!selected);
 
   return (
     <View
       style={[styles.container, selected && styles.containerSelected, style]}
     >
-      {/* Selection indicator (if selection mode is active) */}
       {onSelectionChange && (
         <Pressable
           style={styles.selectionIndicator}
@@ -72,31 +43,29 @@ export function ProgramListItem({
         >
           <Ionicons
             name={selected ? "checkmark-circle" : "ellipse-outline"}
-            size={24}
+            size={22}
             color={selected ? theme.colors.primary : theme.colors.muted}
           />
         </Pressable>
       )}
 
-      {/* Program icon */}
       <View
         style={[
           styles.programIcon,
           {
             backgroundColor: isChallenge
-              ? theme.colors.warningLight
-              : theme.colors.card
+              ? theme.colors.accentLight
+              : theme.colors.primaryLight
           }
         ]}
       >
         <Ionicons
           name={isChallenge ? "trophy-outline" : "list-outline"}
-          size={20}
-          color={isChallenge ? theme.colors.warning : theme.colors.muted}
+          size={18}
+          color={isChallenge ? theme.colors.accent : theme.colors.primary}
         />
       </View>
 
-      {/* Main content area - tappable to start program */}
       <Pressable
         style={({ pressed }) => [
           styles.contentArea,
@@ -122,31 +91,21 @@ export function ProgramListItem({
             </Text>
           )}
 
-          {/* Metadata */}
           {showMetadata && (
             <View style={styles.metadata}>
               <Text style={styles.metadataText}>
-                Created: {formatDate(program.createdAt)}
+                {program.blocks.length} block
+                {program.blocks.length !== 1 ? "s" : ""}
               </Text>
-              {program.updatedAt && program.updatedAt !== program.createdAt && (
-                <Text style={styles.metadataText}>
-                  • Updated: {formatDate(program.updatedAt)}
-                </Text>
-              )}
               {isChallenge && (
-                <Text style={styles.metadataText}>• Challenge</Text>
+                <Text style={styles.metadataText}> • Challenge</Text>
               )}
-              <Text style={styles.metadataText}>
-                • {program.blocks.length} block{program.blocks.length !== 1 ? "s" : ""}
-              </Text>
             </View>
           )}
         </View>
       </Pressable>
 
-      {/* Action buttons */}
       <View style={styles.actionButtons}>
-        {/* Start button */}
         <Pressable
           style={({ pressed }) => [
             styles.actionButton,
@@ -155,11 +114,9 @@ export function ProgramListItem({
           ]}
           onPress={handleItemPress}
         >
-          <Ionicons name="play" size={16} color={theme.colors.primaryTextOn} />
-          <Text style={styles.startButtonText}>Start</Text>
+          <Ionicons name="play" size={14} color={theme.colors.primaryTextOn} />
         </Pressable>
 
-        {/* Edit button */}
         <Pressable
           style={({ pressed }) => [
             styles.actionButton,
@@ -168,8 +125,7 @@ export function ProgramListItem({
           ]}
           onPress={handleEditPress}
         >
-          <Ionicons name="create-outline" size={16} color={theme.colors.text} />
-          <Text style={styles.editButtonText}>Edit</Text>
+          <Ionicons name="create-outline" size={14} color={theme.colors.text} />
         </Pressable>
       </View>
     </View>
@@ -181,15 +137,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
     ...theme.shadows.sm
   },
   containerSelected: {
-    borderColor: theme.colors.primary,
     backgroundColor: theme.colors.primaryLight
   },
   selectionIndicator: {
@@ -197,16 +150,16 @@ const styles = StyleSheet.create({
     padding: theme.spacing.xs
   },
   programIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.md,
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.sm,
     alignItems: "center",
     justifyContent: "center",
     marginRight: theme.spacing.md
   },
   contentArea: {
     flex: 1,
-    marginRight: theme.spacing.md
+    marginRight: theme.spacing.sm
   },
   contentAreaPressed: {
     opacity: 0.7
@@ -225,22 +178,19 @@ const styles = StyleSheet.create({
     flex: 1
   },
   builtinBadge: {
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.xs,
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 2,
     marginLeft: theme.spacing.sm
   },
   builtinBadgeText: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    fontSize: 11
+    ...theme.typography.small,
+    color: theme.colors.muted
   },
   programDescription: {
-    ...theme.typography.body,
-    color: theme.colors.subtext,
+    ...theme.typography.caption,
+    color: theme.colors.muted,
     marginBottom: theme.spacing.xs
   },
   metadata: {
@@ -249,52 +199,33 @@ const styles = StyleSheet.create({
   },
   metadataText: {
     ...theme.typography.caption,
-    color: theme.colors.muted
+    color: theme.colors.muted,
+    fontSize: 11
   },
   actionButtons: {
-    flexDirection: "column",
-    gap: theme.spacing.sm
-  },
-  actionButton: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    minWidth: 60,
     gap: theme.spacing.xs
   },
+  actionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: theme.radius.sm,
+    alignItems: "center",
+    justifyContent: "center"
+  },
   startButton: {
-    backgroundColor: theme.colors.primary,
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-    ...theme.shadows.sm
+    backgroundColor: theme.colors.primary
   },
   startButtonPressed: {
     opacity: 0.9,
-    transform: [{ scale: 0.98 }]
-  },
-  startButtonText: {
-    ...theme.typography.caption,
-    fontFamily: theme.fonts.semiBold,
-    color: theme.colors.primaryTextOn,
-    fontSize: 12
+    transform: [{ scale: 0.96 }]
   },
   editButton: {
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border
+    backgroundColor: theme.colors.background
   },
   editButtonPressed: {
-    backgroundColor: theme.colors.card,
-    transform: [{ scale: 0.98 }]
-  },
-  editButtonText: {
-    ...theme.typography.caption,
-    fontFamily: theme.fonts.semiBold,
-    color: theme.colors.text,
-    fontSize: 12
+    backgroundColor: theme.colors.border,
+    transform: [{ scale: 0.96 }]
   }
 });
 

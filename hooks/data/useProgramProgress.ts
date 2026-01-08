@@ -9,9 +9,9 @@ import { useRefreshVersions } from "@/context/DataContext";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { storage } from "@/lib/storage";
 import {
-    calculateCompletionPercentage,
-    calculateStreak,
-    findNextSessionIndex
+  calculateCompletionPercentage,
+  calculateStreak,
+  findNextSessionIndex
 } from "@/lib/utils/progress";
 import type { Program, ProgramProgress } from "@/types";
 import { useCallback, useMemo } from "react";
@@ -156,7 +156,8 @@ export function useProgramProgress(program: Program | null | undefined): {
       currentRunIndex: workouts.length > 0 ? 1 : null,
       currentRunSessionsCompleted,
       currentRunCompletionPercentage,
-      currentRunStartedAt: workouts.length > 0 ? workouts[0]?.completedAt ?? null : null,
+      currentRunStartedAt:
+        workouts.length > 0 ? (workouts[0]?.completedAt ?? null) : null,
       currentRunCompletedAt: null,
       lifetimeSessionsCompleted,
       lifetimeTimeSpentSeconds,

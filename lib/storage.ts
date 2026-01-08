@@ -163,8 +163,7 @@ function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
     const lifetimeWorkoutsCompleted = completedWorkouts.length;
     const lifetimeTimeSpentSeconds = completedWorkouts.reduce(
       (sum: number, w: any) =>
-        sum +
-        (typeof w.timeSpentSeconds === "number" ? w.timeSpentSeconds : 0),
+        sum + (typeof w.timeSpentSeconds === "number" ? w.timeSpentSeconds : 0),
       0
     );
     const lastActivityAt = (completedWorkouts as any[]).reduce<string | null>(

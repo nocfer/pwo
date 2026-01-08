@@ -1,8 +1,5 @@
 /**
  * UnifiedDataManager - Central component for managing exercises, programs, and challenges
- *
- * Provides a tabbed interface with search, filter, and bulk operations
- * Requirements: 1.1, 1.2, 1.3
  */
 
 import { useDataContext } from "@/context/DataContext";
@@ -74,7 +71,6 @@ export function UnifiedDataManager({
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Get data for current tab
   const getCurrentData = () => {
     switch (activeTab) {
       case "exercises":
@@ -91,8 +87,8 @@ export function UnifiedDataManager({
   const handleTabChange = (tab: DataType) => {
     haptics.dataTabSwitch();
     setActiveTab(tab);
-    setSelectedItems([]); // Clear selection when switching tabs
-    setShowFilters(false); // Hide filters when switching tabs
+    setSelectedItems([]);
+    setShowFilters(false);
   };
 
   const handleSearchChange = (query: string) => {
@@ -117,14 +113,12 @@ export function UnifiedDataManager({
 
   const handleSelectionChange = (itemIds: string[]) => {
     if (itemIds.length > selectedItems.length) {
-      // Items were added to selection
       if (itemIds.length > 1 && selectedItems.length === 0) {
-        haptics.bulkSelection(); // First bulk selection
+        haptics.bulkSelection();
       } else {
-        haptics.itemSelection(); // Single item selection
+        haptics.itemSelection();
       }
     } else if (itemIds.length < selectedItems.length) {
-      // Items were removed from selection
       haptics.itemSelection();
     }
     setSelectedItems(itemIds);
@@ -142,14 +136,11 @@ export function UnifiedDataManager({
 
   const handleItemPress = (item: any) => {
     haptics.itemSelection();
-    // Navigate based on data type - programs go to detail screen, exercises go to edit
     switch (activeTab) {
       case "exercises":
         router.push(`/library/exercises/${item.id}/edit` as any);
         break;
       case "programs":
-        router.push(`/programs/${item.id}` as any);
-        break;
       case "challenges":
         router.push(`/programs/${item.id}` as any);
         break;
@@ -158,7 +149,6 @@ export function UnifiedDataManager({
 
   const handleItemEdit = (item: any) => {
     haptics.itemSelection();
-    // Navigate to edit form based on data type
     switch (activeTab) {
       case "exercises":
         router.push(`/library/exercises/${item.id}/edit` as any);
@@ -179,7 +169,7 @@ export function UnifiedDataManager({
 
   return (
     <View style={[styles.container, style]}>
-      {/* Header with tabs */}
+      {/* Tabs */}
       <View style={styles.header}>
         <ScrollView
           horizontal
@@ -200,7 +190,7 @@ export function UnifiedDataManager({
               >
                 <Ionicons
                   name={isActive ? tab.iconFocused : tab.icon}
-                  size={20}
+                  size={18}
                   color={isActive ? theme.colors.primary : theme.colors.muted}
                   style={styles.tabIcon}
                 />
@@ -215,7 +205,7 @@ export function UnifiedDataManager({
         </ScrollView>
       </View>
 
-      {/* Search and filter controls */}
+      {/* Search and Filters */}
       <View style={styles.controls}>
         <View style={styles.searchRow}>
           <SearchInput
@@ -234,13 +224,12 @@ export function UnifiedDataManager({
           >
             <Ionicons
               name={showFilters ? "options" : "options-outline"}
-              size={20}
+              size={18}
               color={showFilters ? theme.colors.primary : theme.colors.muted}
             />
           </Pressable>
         </View>
 
-        {/* Filter controls */}
         {showFilters && (
           <FilterControls
             dataType={activeTab}
@@ -254,7 +243,7 @@ export function UnifiedDataManager({
         )}
       </View>
 
-      {/* Bulk selection info */}
+      {/* Selection Info */}
       {selectedItems.length > 0 && (
         <View style={styles.selectionInfo}>
           <Text style={styles.selectionText}>
@@ -270,7 +259,7 @@ export function UnifiedDataManager({
         </View>
       )}
 
-      {/* Data list */}
+      {/* Data List */}
       <DataList
         dataType={activeTab}
         data={currentData}
@@ -297,20 +286,19 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    ...theme.shadows.sm
+    borderBottomColor: theme.colors.borderLight
   },
   tabsContainer: {
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md
+    paddingVertical: theme.spacing.sm
   },
   tab: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    marginRight: theme.spacing.sm,
-    borderRadius: theme.radius.lg,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    marginRight: theme.spacing.xs,
+    borderRadius: theme.radius.md,
     backgroundColor: "transparent"
   },
   tabActive: {
@@ -320,11 +308,12 @@ const styles = StyleSheet.create({
     opacity: 0.7
   },
   tabIcon: {
-    marginRight: theme.spacing.sm
+    marginRight: theme.spacing.xs
   },
   tabLabel: {
     ...theme.typography.bodyBold,
-    color: theme.colors.muted
+    color: theme.colors.muted,
+    fontSize: 14
   },
   tabLabelActive: {
     color: theme.colors.primary
@@ -332,15 +321,15 @@ const styles = StyleSheet.create({
   controls: {
     backgroundColor: theme.colors.surface,
     paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
+    borderBottomColor: theme.colors.borderLight
   },
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md
+    gap: theme.spacing.sm
   },
   searchInput: {
     flex: 1
@@ -348,16 +337,13 @@ const styles = StyleSheet.create({
   filterButton: {
     width: 44,
     height: 44,
-    borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.background,
     alignItems: "center",
     justifyContent: "center"
   },
   filterButtonActive: {
-    backgroundColor: theme.colors.primaryLight,
-    borderColor: theme.colors.primary
+    backgroundColor: theme.colors.primaryLight
   },
   filterButtonPressed: {
     opacity: 0.7
@@ -371,21 +357,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: theme.colors.primaryLight,
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border
+    paddingVertical: theme.spacing.sm
   },
   selectionText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primary
+    color: theme.colors.primary,
+    fontSize: 14
   },
   clearSelectionButton: {
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm
+    paddingVertical: theme.spacing.xs
   },
   clearSelectionText: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primary
+    color: theme.colors.primary,
+    fontSize: 14
   },
   dataList: {
     flex: 1
