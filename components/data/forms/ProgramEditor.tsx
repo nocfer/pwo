@@ -239,8 +239,6 @@ export function ProgramEditor({
       const templateData: Partial<ProgramFormData> = {
         name: template.name,
         description: template.description,
-        difficulty: template.difficulty,
-        tags: [...template.tags],
         blocks: template.blocks.map((block) => {
           // For exercise blocks, we'll need to map to actual exercise IDs
           if (block.type === "exercise" && exerciseOptions.length > 0) {
@@ -382,8 +380,6 @@ export function ProgramEditor({
                   setInitialData({
                     name: "",
                     description: "",
-                    difficulty: "beginner",
-                    tags: [],
                     blocks: [{ type: "warmup", seconds: 180 }]
                   });
                   setTemplatePickerOpen(false);

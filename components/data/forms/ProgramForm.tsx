@@ -1,7 +1,7 @@
 /**
- * Enhanced Program Form Component
- * Supports enhanced program properties including difficulty, estimated duration,
- * tags, and advanced session building with drag-and-drop support
+ * Program Form Component
+ * Supports creating and editing workout programs with exercise blocks,
+ * rest periods, and warmups
  */
 
 import haptics from "@/lib/haptics";
@@ -35,9 +35,6 @@ type BlockDraft =
 export type ProgramFormData = {
   name: string;
   description?: string;
-  difficulty?: "beginner" | "intermediate" | "advanced";
-  estimatedDuration?: number; // minutes
-  tags?: string[];
   blocks: ProgramBlock[];
 };
 
@@ -61,9 +58,6 @@ export function ProgramForm({
   const [formData, setFormData] = useState<ProgramFormData>({
     name: initialData?.name || "",
     description: initialData?.description || "",
-    difficulty: initialData?.difficulty || "beginner",
-    estimatedDuration: initialData?.estimatedDuration || undefined,
-    tags: initialData?.tags || [],
     blocks: initialData?.blocks || [{ type: "warmup", seconds: 180 }]
   });
 
@@ -75,7 +69,6 @@ export function ProgramForm({
   const [pickerTargetIndex, setPickerTargetIndex] = useState<number | null>(
     null
   );
-  const [newTag, setNewTag] = useState("");
 
   // Convert ProgramBlock[] to BlockDraft[] for editing
   function convertSessionBlocksToDraft(blocks: ProgramBlock[]): BlockDraft[] {
@@ -131,35 +124,12 @@ export function ProgramForm({
 
   const updateField = useCallback(
     <K extends keyof ProgramFormData>(field: K, value: ProgramFormData[K]) => {
-      if (field === "difficulty") {
-        haptics.buttonTap();
-      }
       setFormData((prev) => ({ ...prev, [field]: value }));
     },
     []
   );
 
-  const addTag = useCallback(() => {
-    if (!newTag.trim()) return;
-    const currentTags = formData.tags || [];
-    if (!currentTags.includes(newTag.trim())) {
-      haptics.buttonTap();
-      updateField("tags", [...currentTags, newTag.trim()]);
-    }
-    setNewTag("");
-  }, [formData.tags, newTag, updateField]);
 
-  const removeTag = useCallback(
-    (index: number) => {
-      haptics.buttonTap();
-      const currentTags = formData.tags || [];
-      updateField(
-        "tags",
-        currentTags.filter((_, i) => i !== index)
-      );
-    },
-    [formData.tags, updateField]
-  );
 
   const addBlock = useCallback(
     (type: BlockDraft["type"]) => {
@@ -328,93 +298,6 @@ export function ProgramForm({
           multiline
           numberOfLines={3}
         />
-
-        <View style={{ height: theme.spacing.md }} />
-
-        <Text style={styles.label}>Difficulty</Text>
-        <View style={styles.segmented}>
-          {(["beginner", "intermediate", "advanced"] as const).map(
-            (difficulty) => (
-              <Pressable
-                key={difficulty}
-                onPress={() => updateField("difficulty", difficulty)}
-                style={[
-                  styles.segment,
-                  formData.difficulty === difficulty && styles.segmentActive
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.segmentText,
-                    formData.difficulty === difficulty &&
-                      styles.segmentTextActive
-                  ]}
-                >
-                  {difficulty}
-                </Text>
-              </Pressable>
-            )
-          )}
-        </View>
-
-        <View style={{ height: theme.spacing.md }} />
-
-        <Text style={styles.label}>Estimated Duration (minutes)</Text>
-        <TextInput
-          value={
-            formData.estimatedDuration ? String(formData.estimatedDuration) : ""
-          }
-          onChangeText={(value) => {
-            const num = Number(value);
-            updateField(
-              "estimatedDuration",
-              Number.isFinite(num) && num > 0 ? num : undefined
-            );
-          }}
-          placeholder="e.g. 45"
-          placeholderTextColor={theme.colors.muted}
-          style={styles.input}
-          keyboardType="number-pad"
-        />
-      </View>
-
-      {/* Tags */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Tags</Text>
-
-        <View style={styles.arrayInputContainer}>
-          <TextInput
-            value={newTag}
-            onChangeText={setNewTag}
-            placeholder="Add tag (e.g. strength, hypertrophy)"
-            placeholderTextColor={theme.colors.muted}
-            style={[styles.input, { flex: 1 }]}
-            onSubmitEditing={addTag}
-          />
-          <Pressable
-            onPress={addTag}
-            style={({ pressed }) => [
-              styles.addButton,
-              pressed && styles.addButtonPressed
-            ]}
-          >
-            <Ionicons name="add" size={20} color={theme.colors.primary} />
-          </Pressable>
-        </View>
-
-        <View style={styles.tagContainer}>
-          {formData.tags?.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-              <Pressable
-                onPress={() => removeTag(index)}
-                style={styles.tagRemove}
-              >
-                <Ionicons name="close" size={14} color={theme.colors.muted} />
-              </Pressable>
-            </View>
-          ))}
-        </View>
       </View>
 
       {/* Blocks */}
@@ -808,71 +691,6 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 80,
     textAlignVertical: "top"
-  },
-  segmented: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.sm
-  },
-  segment: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.radius.lg,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md
-  },
-  segmentActive: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primaryLight
-  },
-  segmentText: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    textTransform: "capitalize"
-  },
-  segmentTextActive: {
-    color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold
-  },
-  arrayInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.md
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  addButtonPressed: { opacity: 0.7 },
-  tagContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: theme.spacing.sm
-  },
-  tag: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.primaryLight,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    gap: theme.spacing.xs
-  },
-  tagText: {
-    ...theme.typography.caption,
-    color: theme.colors.primary
-  },
-  tagRemove: {
-    padding: 2
   },
   rowBetween: {
     flexDirection: "row",
