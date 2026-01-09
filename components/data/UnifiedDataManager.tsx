@@ -8,8 +8,8 @@ import { theme } from "@/theme/theme";
 import type { DataType, SearchState } from "@/types/enhanced";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { useCallback, useState } from "react";
+import { Pressable, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from "react-native";
 import { SearchInput } from "../common/SearchInput";
 import DataList from "./DataList";
 import FilterControls from "./FilterControls";
@@ -20,36 +20,8 @@ type Props = {
   style?: ViewStyle;
 };
 
-type TabInfo = {
-  key: DataType;
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  iconFocused: keyof typeof Ionicons.glyphMap;
-};
-
-const TABS: TabInfo[] = [
-  {
-    key: "exercises",
-    label: "Exercises",
-    icon: "fitness-outline",
-    iconFocused: "fitness"
-  },
-  {
-    key: "programs",
-    label: "Programs",
-    icon: "barbell-outline",
-    iconFocused: "barbell"
-  },
-  {
-    key: "challenges",
-    label: "Challenges",
-    icon: "trophy-outline",
-    iconFocused: "trophy"
-  }
-];
-
 export function UnifiedDataManager({
-  initialTab = "exercises",
+  initialTab = "programs",
   searchQuery = "",
   style
 }: Props) {
@@ -77,25 +49,38 @@ export function UnifiedDataManager({
     }
   };
 
-  const getDataCount = (tab: DataType) => {
-    switch (tab) {
-      case "exercises":
-        return state.exercises.length;
-      case "programs":
-        return state.programs.filter((p) => !p.challengeConfig).length;
-      case "challenges":
-        return state.programs.filter((p) => Boolean(p.challengeConfig)).length;
-      default:
-        return 0;
-    }
-  };
-
   const handleTabChange = (tab: DataType) => {
     haptics.dataTabSwitch();
     setActiveTab(tab);
     setSelectedItems([]);
     setShowFilters(false);
   };
+
+  const renderTabButton = useCallback(
+    (tab: DataType, label: string, icon: string) => (
+      <TouchableOpacity
+        key={tab}
+        style={[styles.tabButton, activeTab === tab && styles.tabButtonActive]}
+        onPress={() => handleTabChange(tab)}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name={icon as any}
+          size={18}
+          color={activeTab === tab ? theme.colors.primary : theme.colors.muted}
+        />
+        <Text
+          style={[
+            styles.tabButtonText,
+            activeTab === tab && styles.tabButtonTextActive
+          ]}
+        >
+          {label}
+        </Text>
+      </TouchableOpacity>
+    ),
+    [activeTab]
+  );
 
   const handleSearchChange = (query: string) => {
     if (query !== searchState.query) {
@@ -179,44 +164,11 @@ export function UnifiedDataManager({
 
   return (
     <View style={[styles.container, style]}>
-      {/* Tabs */}
-      <View style={styles.tabsContainer}>
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.key;
-          const count = getDataCount(tab.key);
-          return (
-            <Pressable
-              key={tab.key}
-              style={[styles.tab, isActive && styles.tabActive]}
-              onPress={() => handleTabChange(tab.key)}
-            >
-              <Ionicons
-                name={isActive ? tab.iconFocused : tab.icon}
-                size={20}
-                color={isActive ? theme.colors.primary : theme.colors.muted}
-              />
-              <Text
-                style={[styles.tabLabel, isActive && styles.tabLabelActive]}
-              >
-                {tab.label}
-              </Text>
-              {count > 0 && (
-                <View
-                  style={[styles.tabBadge, isActive && styles.tabBadgeActive]}
-                >
-                  <Text
-                    style={[
-                      styles.tabBadgeText,
-                      isActive && styles.tabBadgeTextActive
-                    ]}
-                  >
-                    {count}
-                  </Text>
-                </View>
-              )}
-            </Pressable>
-          );
-        })}
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        {renderTabButton("programs", "Programs", "barbell")}
+        {renderTabButton("challenges", "Challenges", "trophy")}
+        {renderTabButton("exercises", "Exercises", "fitness")}
       </View>
 
       {/* Search and Filters */}
@@ -303,51 +255,37 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   },
-  tabsContainer: {
+  tabContainer: {
     flexDirection: "row",
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    gap: theme.spacing.sm
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.xs,
+    marginHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    ...theme.shadows.sm
   },
-  tab: {
+  tabButton: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.surface
+    borderRadius: theme.radius.sm,
+    gap: theme.spacing.xs
   },
-  tabActive: {
+  tabButtonActive: {
     backgroundColor: theme.colors.primaryLight
   },
-  tabLabel: {
-    ...theme.typography.captionBold,
-    color: theme.colors.muted
+  tabButtonText: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    fontFamily: theme.fonts.medium
   },
-  tabLabelActive: {
-    color: theme.colors.primary
-  },
-  tabBadge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: theme.spacing.xs
-  },
-  tabBadgeActive: {
-    backgroundColor: theme.colors.primary
-  },
-  tabBadgeText: {
-    ...theme.typography.small,
-    color: theme.colors.muted
-  },
-  tabBadgeTextActive: {
-    color: theme.colors.primaryTextOn
+  tabButtonTextActive: {
+    color: theme.colors.primary,
+    fontFamily: theme.fonts.semiBold
   },
   controls: {
     paddingHorizontal: theme.spacing.lg,
