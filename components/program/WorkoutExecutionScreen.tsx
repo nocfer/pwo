@@ -4,8 +4,9 @@ import { theme } from "@/theme/theme";
 import { Program, ProgramSession } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -54,6 +55,54 @@ export function WorkoutExecutionScreen({
     null
   );
 
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  // Animate on mount and step change
+  useEffect(() => {
+    fadeAnim.setValue(0);
+    scaleAnim.setValue(0.95);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true
+      })
+    ]).start();
+  }, [current?.key]);
+
+  // Pulse animation for timer
+  useEffect(() => {
+    if (timer.phase === "timed" && !timer.isPaused) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.02,
+            duration: 1000,
+            useNativeDriver: true
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true
+          })
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [timer.phase, timer.isPaused]);
+
   // Initialize current reps when step changes
   useEffect(() => {
     if (current?.type === "exercise" && current.targetReps) {
@@ -75,6 +124,21 @@ export function WorkoutExecutionScreen({
     },
     [exerciseNameById]
   );
+
+  // Get phase color based on current step
+  const getPhaseColor = useCallback(() => {
+    if (timer.phase === "done") return theme.colors.phases.done;
+    if (current?.type === "warmup") return theme.colors.phases.warmup;
+    if (current?.type === "rest") return theme.colors.phases.break;
+    return theme.colors.phases.working;
+  }, [timer.phase, current?.type]);
+
+  const getPhaseBgColor = useCallback(() => {
+    if (timer.phase === "done") return theme.colors.phases.doneBg;
+    if (current?.type === "warmup") return theme.colors.phases.warmupBg;
+    if (current?.type === "rest") return theme.colors.phases.breakBg;
+    return theme.colors.phases.workingBg;
+  }, [timer.phase, current?.type]);
 
   // Handle completing a set with actual reps
   const handleCompleteSet = useCallback(() => {
@@ -116,7 +180,7 @@ export function WorkoutExecutionScreen({
       if (step.type === "exercise") {
         const setInfo =
           step.totalSets && step.totalSets > 1
-            ? `Set ${step.setNumber} of ${step.totalSets}`
+            ? `Set ${step.setNumber}/${step.totalSets}`
             : "";
         const repsInfo = step.targetReps ? `${step.targetReps} reps` : "";
         const durationInfo = step.durationSeconds
@@ -124,7 +188,7 @@ export function WorkoutExecutionScreen({
           : "";
         detail = [setInfo, repsInfo || durationInfo]
           .filter(Boolean)
-          .join(" • ");
+          .join(" · ");
       } else if (step.type === "warmup") {
         detail = formatTime(step.seconds);
       } else if (step.type === "rest") {
@@ -144,64 +208,44 @@ export function WorkoutExecutionScreen({
   // Get next step info
   const nextStep = steps[currentStepIndex + 1] ?? null;
   const nextLabel = getStepLabel(nextStep);
-  const nextDetail = useMemo(() => {
-    if (!nextStep) return "";
-    if (nextStep.type === "exercise") {
-      const setInfo =
-        nextStep.totalSets && nextStep.totalSets > 1
-          ? `Set ${nextStep.setNumber} of ${nextStep.totalSets}`
-          : "";
-      const repsInfo = nextStep.targetReps ? `${nextStep.targetReps} reps` : "";
-      return [setInfo, repsInfo].filter(Boolean).join(" • ");
-    }
-    if (nextStep.type === "rest") {
-      return `${nextStep.seconds}s rest`;
-    }
-    return "";
-  }, [nextStep]);
 
   // Render content based on current state
   const renderContent = () => {
-    // Completed state
-    if (timer.phase === "done") {
-      return renderCompletedState();
-    }
-
-    // Timer running (warmup, rest, or timed exercise)
-    if (timer.phase === "timed") {
-      return renderTimerState();
-    }
-
-    // Exercise input state
-    if (current?.type === "exercise") {
-      return renderExerciseState();
-    }
-
-    // Warmup ready state
-    if (current?.type === "warmup") {
-      return renderWarmupState();
-    }
-
-    // Rest ready state
-    if (current?.type === "rest") {
-      return renderRestReadyState();
-    }
-
+    if (timer.phase === "done") return renderCompletedState();
+    if (timer.phase === "timed") return renderTimerState();
+    if (current?.type === "exercise") return renderExerciseState();
+    if (current?.type === "warmup") return renderWarmupState();
+    if (current?.type === "rest") return renderRestReadyState();
     return null;
   };
 
   const renderCompletedState = () => (
-    <View style={styles.completedContainer}>
-      <View style={styles.completedIcon}>
-        <Ionicons name="checkmark" size={48} color={theme.colors.success} />
+    <View style={styles.stateContainer}>
+      <View
+        style={[
+          styles.stateIcon,
+          { backgroundColor: theme.colors.successLight }
+        ]}
+      >
+        <Ionicons name="trophy" size={36} color={theme.colors.success} />
       </View>
-      <Text style={styles.completedTitle}>Workout Complete!</Text>
-      <Text style={styles.completedSubtitle}>
+      <Text style={styles.stateTitle}>Workout Complete!</Text>
+      <Text style={styles.stateSubtitle}>
         Great job finishing {program.name}
       </Text>
-      <Text style={styles.completedTime}>
-        Total time: {formatTime(timer.sessionElapsedSeconds)}
-      </Text>
+      <View style={styles.completedStats}>
+        <View style={styles.completedStatItem}>
+          <Text style={styles.completedStatValue}>
+            {formatTime(timer.sessionElapsedSeconds)}
+          </Text>
+          <Text style={styles.completedStatLabel}>Total Time</Text>
+        </View>
+        <View style={styles.completedStatDivider} />
+        <View style={styles.completedStatItem}>
+          <Text style={styles.completedStatValue}>{steps.length}</Text>
+          <Text style={styles.completedStatLabel}>Steps Done</Text>
+        </View>
+      </View>
     </View>
   );
 
@@ -209,45 +253,100 @@ export function WorkoutExecutionScreen({
     const isWarmup = current?.type === "warmup";
     const isRest = current?.type === "rest";
     const label = isWarmup ? "Warmup" : isRest ? "Rest" : getStepLabel(current);
+    const phaseColor = getPhaseColor();
 
     return (
-      <View style={styles.timerContainer}>
+      <View style={styles.stateContainer}>
+        <View
+          style={[styles.phaseChip, { backgroundColor: getPhaseBgColor() }]}
+        >
+          <Ionicons
+            name={isWarmup ? "flame" : isRest ? "hourglass" : "barbell"}
+            size={14}
+            color={phaseColor}
+          />
+          <Text style={[styles.phaseChipText, { color: phaseColor }]}>
+            {isWarmup ? "Warmup" : isRest ? "Rest" : "Exercise"}
+          </Text>
+        </View>
         <Text style={styles.timerLabel}>{label}</Text>
-        <Text style={styles.timerDisplay}>{formatTime(timer.timer)}</Text>
-        <Text style={styles.timerSubtitle}>
-          {isRest && nextLabel ? `Next: ${nextLabel}` : ""}
-          {isWarmup ? "Prepare your body" : ""}
-        </Text>
+        <Animated.Text
+          style={[
+            styles.timerDisplay,
+            { color: phaseColor, transform: [{ scale: pulseAnim }] }
+          ]}
+        >
+          {formatTime(timer.timer)}
+        </Animated.Text>
+        {isRest && nextLabel && (
+          <Text style={styles.timerNext}>Next: {nextLabel}</Text>
+        )}
+        {isWarmup && <Text style={styles.timerNext}>Prepare your body</Text>}
       </View>
     );
   };
 
   const renderWarmupState = () => (
-    <View style={styles.warmupContainer}>
-      <View style={styles.warmupIcon}>
-        <Ionicons name="flame" size={40} color={theme.colors.phases.warmup} />
+    <View style={styles.stateContainer}>
+      <View
+        style={[
+          styles.stateIcon,
+          { backgroundColor: theme.colors.phases.warmupBg }
+        ]}
+      >
+        <Ionicons name="flame" size={32} color={theme.colors.phases.warmup} />
       </View>
-      <Text style={styles.warmupTitle}>Warmup</Text>
+      <View
+        style={[
+          styles.phaseChip,
+          { backgroundColor: theme.colors.phases.warmupBg }
+        ]}
+      >
+        <Text
+          style={[styles.phaseChipText, { color: theme.colors.phases.warmup }]}
+        >
+          Warmup
+        </Text>
+      </View>
       <Text style={styles.warmupDuration}>
         {current?.type === "warmup" ? formatTime(current.seconds) : ""}
       </Text>
-      <Text style={styles.warmupSubtitle}>Prepare your body</Text>
+      <Text style={styles.stateSubtitle}>
+        Prepare your body for the workout
+      </Text>
     </View>
   );
 
   const renderRestReadyState = () => (
-    <View style={styles.restContainer}>
-      <View style={styles.restIcon}>
+    <View style={styles.stateContainer}>
+      <View
+        style={[
+          styles.stateIcon,
+          { backgroundColor: theme.colors.phases.breakBg }
+        ]}
+      >
         <Ionicons
           name="hourglass-outline"
-          size={40}
+          size={32}
           color={theme.colors.phases.break}
         />
       </View>
-      <Text style={styles.restTitle}>Rest</Text>
+      <View
+        style={[
+          styles.phaseChip,
+          { backgroundColor: theme.colors.phases.breakBg }
+        ]}
+      >
+        <Text
+          style={[styles.phaseChipText, { color: theme.colors.phases.break }]}
+        >
+          Rest
+        </Text>
+      </View>
       <Text style={styles.restDuration}>
         {current?.type === "rest" ? `${current.seconds}s` : ""}
       </Text>
+      {nextLabel && <Text style={styles.stateSubtitle}>Next: {nextLabel}</Text>}
     </View>
   );
 
@@ -258,19 +357,41 @@ export function WorkoutExecutionScreen({
     const hasMultipleSets = current.totalSets && current.totalSets > 1;
 
     return (
-      <View style={styles.exerciseContainer}>
-        {/* Exercise header */}
-        <Text style={styles.exerciseName}>{exerciseName}</Text>
-        {hasMultipleSets && (
-          <Text style={styles.setInfo}>
-            Set {current.setNumber} of {current.totalSets}
+      <View style={styles.stateContainer}>
+        <View
+          style={[
+            styles.phaseChip,
+            { backgroundColor: theme.colors.phases.workingBg }
+          ]}
+        >
+          <Ionicons
+            name="barbell"
+            size={14}
+            color={theme.colors.phases.working}
+          />
+          <Text
+            style={[
+              styles.phaseChipText,
+              { color: theme.colors.phases.working }
+            ]}
+          >
+            Exercise
           </Text>
+        </View>
+
+        <Text style={styles.exerciseName}>{exerciseName}</Text>
+
+        {hasMultipleSets && (
+          <View style={styles.setIndicator}>
+            <Text style={styles.setIndicatorText}>
+              Set {current.setNumber} of {current.totalSets}
+            </Text>
+          </View>
         )}
 
         {/* Rep counter */}
         {current.targetReps && (
           <View style={styles.repCounter}>
-            <Text style={styles.repLabel}>Reps</Text>
             <View style={styles.repInputRow}>
               <Pressable
                 style={({ pressed }) => [
@@ -279,21 +400,24 @@ export function WorkoutExecutionScreen({
                 ]}
                 onPress={() => adjustReps(-1)}
               >
-                <Ionicons name="remove" size={28} color={theme.colors.text} />
+                <Ionicons name="remove" size={24} color={theme.colors.text} />
               </Pressable>
 
-              <TextInput
-                style={styles.repInput}
-                value={String(currentReps ?? 0)}
-                onChangeText={(text) => {
-                  const num = parseInt(text, 10);
-                  if (!isNaN(num) && num >= 0) {
-                    setCurrentReps(num);
-                  }
-                }}
-                keyboardType="number-pad"
-                selectTextOnFocus
-              />
+              <View style={styles.repInputContainer}>
+                <TextInput
+                  style={styles.repInput}
+                  value={String(currentReps ?? 0)}
+                  onChangeText={(text) => {
+                    const num = parseInt(text, 10);
+                    if (!isNaN(num) && num >= 0) {
+                      setCurrentReps(num);
+                    }
+                  }}
+                  keyboardType="number-pad"
+                  selectTextOnFocus
+                />
+                <Text style={styles.repInputLabel}>reps</Text>
+              </View>
 
               <Pressable
                 style={({ pressed }) => [
@@ -302,7 +426,7 @@ export function WorkoutExecutionScreen({
                 ]}
                 onPress={() => adjustReps(1)}
               >
-                <Ionicons name="add" size={28} color={theme.colors.text} />
+                <Ionicons name="add" size={24} color={theme.colors.text} />
               </Pressable>
             </View>
             <Text style={styles.targetReps}>
@@ -323,9 +447,9 @@ export function WorkoutExecutionScreen({
         {current.note && (
           <View style={styles.noteContainer}>
             <Ionicons
-              name="information-circle-outline"
+              name="information-circle"
               size={16}
-              color={theme.colors.muted}
+              color={theme.colors.primary}
             />
             <Text style={styles.noteText}>{current.note}</Text>
           </View>
@@ -334,6 +458,9 @@ export function WorkoutExecutionScreen({
     );
   };
 
+  // Progress percentage
+  const progressPercent = Math.round(timer.progress * 100);
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header */}
@@ -341,21 +468,27 @@ export function WorkoutExecutionScreen({
         <Pressable
           onPress={() => router.back()}
           style={({ pressed }) => [
-            styles.backButton,
+            styles.headerButton,
             pressed && styles.buttonPressed
           ]}
         >
-          <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
+          <Ionicons name="close" size={22} color={theme.colors.text} />
         </Pressable>
 
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle} numberOfLines={1}>
-            {program.name}
+            {title}
           </Text>
-          <Text style={styles.headerSubtitle}>{title}</Text>
+          <Text style={styles.headerSubtitle}>{program.name}</Text>
         </View>
 
         <View style={styles.headerTimer}>
+          <Ionicons
+            name="time-outline"
+            size={14}
+            color={theme.colors.muted}
+            style={{ marginRight: 4 }}
+          />
           <Text style={styles.headerTimerText}>
             {formatTime(timer.sessionElapsedSeconds)}
           </Text>
@@ -363,10 +496,19 @@ export function WorkoutExecutionScreen({
       </View>
 
       {/* Progress bar */}
-      <View style={styles.progressBar}>
-        <View
-          style={[styles.progressFill, { width: `${timer.progress * 100}%` }]}
-        />
+      <View style={styles.progressContainer}>
+        <View style={styles.progressBar}>
+          <Animated.View
+            style={[
+              styles.progressFill,
+              {
+                width: `${progressPercent}%`,
+                backgroundColor: getPhaseColor()
+              }
+            ]}
+          />
+        </View>
+        <Text style={styles.progressText}>{progressPercent}%</Text>
       </View>
 
       <ScrollView
@@ -375,30 +517,66 @@ export function WorkoutExecutionScreen({
         showsVerticalScrollIndicator={false}
       >
         {/* Main content card */}
-        <View style={styles.mainCard}>{renderContent()}</View>
+        <Animated.View
+          style={[
+            styles.mainCard,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+              borderColor: getPhaseColor()
+            }
+          ]}
+        >
+          {renderContent()}
+        </Animated.View>
 
         {/* Up Next section */}
         {nextStep && timer.phase !== "done" && (
           <View style={styles.upNextSection}>
             <Text style={styles.sectionLabel}>Up Next</Text>
             <View style={styles.upNextCard}>
-              <Ionicons
-                name={
-                  nextStep.type === "exercise"
-                    ? "barbell-outline"
-                    : nextStep.type === "warmup"
-                      ? "flame-outline"
-                      : "time-outline"
-                }
-                size={20}
-                color={theme.colors.muted}
-              />
-              <View style={styles.upNextContent}>
-                <Text style={styles.upNextName}>{nextLabel}</Text>
-                {nextDetail && (
-                  <Text style={styles.upNextDetail}>{nextDetail}</Text>
-                )}
+              <View
+                style={[
+                  styles.upNextIcon,
+                  {
+                    backgroundColor:
+                      nextStep.type === "warmup"
+                        ? theme.colors.phases.warmupBg
+                        : nextStep.type === "rest"
+                          ? theme.colors.phases.breakBg
+                          : theme.colors.phases.workingBg
+                  }
+                ]}
+              >
+                <Ionicons
+                  name={
+                    nextStep.type === "exercise"
+                      ? "barbell-outline"
+                      : nextStep.type === "warmup"
+                        ? "flame-outline"
+                        : "time-outline"
+                  }
+                  size={16}
+                  color={
+                    nextStep.type === "warmup"
+                      ? theme.colors.phases.warmup
+                      : nextStep.type === "rest"
+                        ? theme.colors.phases.break
+                        : theme.colors.phases.working
+                  }
+                />
               </View>
+              <Text style={styles.upNextName} numberOfLines={1}>
+                {nextLabel}
+              </Text>
+              {nextStep.type === "exercise" && nextStep.targetReps && (
+                <Text style={styles.upNextDetail}>
+                  {nextStep.targetReps} reps
+                </Text>
+              )}
+              {nextStep.type === "rest" && (
+                <Text style={styles.upNextDetail}>{nextStep.seconds}s</Text>
+              )}
             </View>
           </View>
         )}
@@ -406,54 +584,66 @@ export function WorkoutExecutionScreen({
         {/* Workout Plan */}
         {timer.phase !== "done" && (
           <View style={styles.planSection}>
-            <Text style={styles.sectionLabel}>Workout</Text>
-            {workoutPlanItems.slice(0, 8).map((item) => (
-              <View
-                key={item.step.key}
-                style={[
-                  styles.planItem,
-                  item.isCurrent && styles.planItemCurrent
-                ]}
-              >
-                {/* Status indicator */}
-                <View style={styles.planItemStatus}>
-                  {item.isDone ? (
-                    <Ionicons
-                      name="checkmark"
-                      size={16}
-                      color={theme.colors.success}
-                    />
-                  ) : item.isCurrent ? (
-                    <Ionicons
-                      name="arrow-forward"
-                      size={16}
-                      color={theme.colors.primary}
-                    />
-                  ) : (
-                    <View style={styles.planItemDot} />
-                  )}
-                </View>
-
-                {/* Content */}
-                <View style={styles.planItemContent}>
-                  <Text
+            <Text style={styles.sectionLabel}>
+              Workout · {currentStepIndex + 1}/{steps.length}
+            </Text>
+            <View style={styles.planList}>
+              {workoutPlanItems.slice(0, 6).map((item, index) => (
+                <View
+                  key={item.step.key}
+                  style={[
+                    styles.planItem,
+                    item.isCurrent && styles.planItemCurrent,
+                    index === 0 && styles.planItemFirst,
+                    index === Math.min(5, workoutPlanItems.length - 1) &&
+                      styles.planItemLast
+                  ]}
+                >
+                  <View
                     style={[
-                      styles.planItemLabel,
-                      item.isDone && styles.planItemLabelDone,
-                      item.isCurrent && styles.planItemLabelCurrent
+                      styles.planItemIndicator,
+                      item.isDone && styles.planItemIndicatorDone,
+                      item.isCurrent && styles.planItemIndicatorCurrent
                     ]}
                   >
-                    {item.label}
-                  </Text>
-                  {item.detail && (
-                    <Text style={styles.planItemDetail}>{item.detail}</Text>
-                  )}
+                    {item.isDone ? (
+                      <Ionicons
+                        name="checkmark"
+                        size={12}
+                        color={theme.colors.primaryTextOn}
+                      />
+                    ) : (
+                      <Text
+                        style={[
+                          styles.planItemNumber,
+                          item.isCurrent && styles.planItemNumberCurrent
+                        ]}
+                      >
+                        {item.idx + 1}
+                      </Text>
+                    )}
+                  </View>
+                  <View style={styles.planItemContent}>
+                    <Text
+                      style={[
+                        styles.planItemLabel,
+                        item.isDone && styles.planItemLabelDone,
+                        item.isCurrent && styles.planItemLabelCurrent
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {item.label}
+                    </Text>
+                    {item.detail && (
+                      <Text style={styles.planItemDetail}>{item.detail}</Text>
+                    )}
+                  </View>
                 </View>
-              </View>
-            ))}
-            {workoutPlanItems.length > 8 && (
+              ))}
+            </View>
+            {workoutPlanItems.length > 6 && (
               <Text style={styles.moreItems}>
-                +{workoutPlanItems.length - 8} more
+                +{workoutPlanItems.length - 6} more steps
               </Text>
             )}
           </View>
@@ -461,118 +651,134 @@ export function WorkoutExecutionScreen({
       </ScrollView>
 
       {/* Footer actions */}
-      <SafeAreaView style={styles.footer} edges={["bottom"]}>
-        <View style={styles.footerContent}>
-          {timer.phase === "done" ? (
-            // Completed state - show Done button
-            <Pressable
-              style={({ pressed }) => [
-                styles.primaryButton,
-                styles.primaryButtonFull,
-                pressed && styles.primaryButtonPressed
-              ]}
-              onPress={() => router.back()}
-            >
-              <Ionicons
-                name="checkmark"
-                size={22}
-                color={theme.colors.primaryTextOn}
-              />
-              <Text style={styles.primaryButtonText}>Done</Text>
-            </Pressable>
-          ) : timer.phase === "timed" ? (
-            // Timer running - skip on left, pause/resume on right
-            <>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.skipTextButton,
-                  pressed && styles.buttonPressed
-                ]}
-                onPress={timer.handleSkip}
-              >
-                <Text style={styles.skipText}>Skip</Text>
-              </Pressable>
+      <View style={styles.footer}>
+        <SafeAreaView edges={["bottom"]} style={styles.footerSafeArea}>
+          <View style={styles.footerContent}>
+            {timer.phase === "done" ? (
               <Pressable
                 style={({ pressed }) => [
                   styles.primaryButton,
-                  styles.primaryButtonFlex,
+                  styles.successButton,
                   pressed && styles.primaryButtonPressed
                 ]}
-                onPress={timer.handlePauseResume}
+                onPress={() => router.back()}
               >
                 <Ionicons
-                  name={timer.isPaused ? "play" : "pause"}
-                  size={24}
+                  name="checkmark-circle"
+                  size={20}
                   color={theme.colors.primaryTextOn}
                 />
-                <Text style={styles.primaryButtonText}>
-                  {timer.isPaused ? "Resume" : "Pause"}
-                </Text>
+                <Text style={styles.primaryButtonText}>Done</Text>
               </Pressable>
-            </>
-          ) : (
-            // Ready state - skip on left, main action on right
-            <>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.skipTextButton,
-                  pressed && styles.buttonPressed
-                ]}
-                onPress={timer.handleSkip}
-              >
-                <Text style={styles.skipText}>Skip</Text>
-              </Pressable>
-
-              <Pressable
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  styles.primaryButtonFlex,
-                  pressed && styles.primaryButtonPressed
-                ]}
-                onPress={
-                  current?.type === "exercise"
-                    ? handleCompleteSet
-                    : timer.handleComplete
-                }
-              >
-                <Ionicons
-                  name={
-                    current?.type === "exercise" && !current.durationSeconds
-                      ? "checkmark"
-                      : "play"
+            ) : timer.phase === "timed" ? (
+              <>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.secondaryButton,
+                    pressed && styles.secondaryButtonPressed
+                  ]}
+                  onPress={timer.handleSkip}
+                >
+                  <Ionicons
+                    name="play-skip-forward"
+                    size={18}
+                    color={theme.colors.text}
+                  />
+                  <Text style={styles.secondaryButtonText}>Skip</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.primaryButton,
+                    pressed && styles.primaryButtonPressed
+                  ]}
+                  onPress={timer.handlePauseResume}
+                >
+                  <Ionicons
+                    name={timer.isPaused ? "play" : "pause"}
+                    size={20}
+                    color={theme.colors.primaryTextOn}
+                  />
+                  <Text style={styles.primaryButtonText}>
+                    {timer.isPaused ? "Resume" : "Pause"}
+                  </Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.secondaryButton,
+                    pressed && styles.secondaryButtonPressed
+                  ]}
+                  onPress={timer.handleSkip}
+                >
+                  <Ionicons
+                    name="play-skip-forward"
+                    size={18}
+                    color={theme.colors.text}
+                  />
+                  <Text style={styles.secondaryButtonText}>Skip</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.primaryButton,
+                    pressed && styles.primaryButtonPressed
+                  ]}
+                  onPress={
+                    current?.type === "exercise"
+                      ? handleCompleteSet
+                      : timer.handleComplete
                   }
-                  size={22}
-                  color={theme.colors.primaryTextOn}
-                />
-                <Text style={styles.primaryButtonText}>
-                  {current?.type === "warmup"
-                    ? "Start Warmup"
-                    : current?.type === "rest"
-                      ? "Start Rest"
-                      : current?.type === "exercise"
-                        ? current.durationSeconds
-                          ? "Start Timer"
-                          : "Complete Set"
-                        : "Continue"}
-                </Text>
-              </Pressable>
-            </>
-          )}
-        </View>
-      </SafeAreaView>
+                >
+                  <Ionicons
+                    name={
+                      current?.type === "exercise" && !current.durationSeconds
+                        ? "checkmark-circle"
+                        : "play"
+                    }
+                    size={20}
+                    color={theme.colors.primaryTextOn}
+                  />
+                  <Text style={styles.primaryButtonText}>
+                    {current?.type === "warmup"
+                      ? "Start"
+                      : current?.type === "rest"
+                        ? "Start"
+                        : current?.type === "exercise"
+                          ? current.durationSeconds
+                            ? "Start"
+                            : "Complete"
+                          : "Continue"}
+                  </Text>
+                </Pressable>
+              </>
+            )}
+          </View>
+        </SafeAreaView>
+      </View>
 
       {/* Update prompt modal */}
       {showUpdatePrompt && lastCompletion && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
+            <View style={styles.modalIcon}>
+              <Ionicons
+                name="sync-circle"
+                size={32}
+                color={theme.colors.primary}
+              />
+            </View>
             <Text style={styles.modalTitle}>Update Program?</Text>
             <Text style={styles.modalText}>
-              You did {lastCompletion.actualReps} reps instead of{" "}
-              {lastCompletion.targetReps}.
+              You completed{" "}
+              <Text style={styles.modalHighlight}>
+                {lastCompletion.actualReps} reps
+              </Text>{" "}
+              instead of {lastCompletion.targetReps}.
             </Text>
             <Text style={styles.modalSubtext}>
-              Would you like to update this program to use{" "}
-              {lastCompletion.actualReps} reps for future workouts?
+              Update this exercise to {lastCompletion.actualReps} reps for
+              future workouts?
             </Text>
             <View style={styles.modalButtons}>
               <Pressable
@@ -582,9 +788,7 @@ export function WorkoutExecutionScreen({
                 ]}
                 onPress={() => setShowUpdatePrompt(false)}
               >
-                <Text style={styles.modalButtonSecondaryText}>
-                  Keep Original
-                </Text>
+                <Text style={styles.modalButtonSecondaryText}>Keep</Text>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [
@@ -597,7 +801,6 @@ export function WorkoutExecutionScreen({
                     return;
                   }
 
-                  // Find the block that needs updating
                   const blockIndex = program.blocks.findIndex(
                     (block) =>
                       block.type === "exercise" &&
@@ -610,7 +813,6 @@ export function WorkoutExecutionScreen({
                     return;
                   }
 
-                  // Create updated program with new reps
                   const updatedBlocks = [...program.blocks];
                   const block = updatedBlocks[blockIndex];
                   if (block.type === "exercise") {
@@ -656,14 +858,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.surface
+    backgroundColor: theme.colors.surface,
+    gap: theme.spacing.sm
   },
-  backButton: {
-    width: 40,
-    height: 40,
+  headerButton: {
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: theme.radius.md
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.background
   },
   headerCenter: {
     flex: 1,
@@ -674,15 +878,17 @@ const styles = StyleSheet.create({
     color: theme.colors.text
   },
   headerSubtitle: {
-    ...theme.typography.caption,
+    ...theme.typography.small,
     color: theme.colors.muted,
-    marginTop: 2
+    marginTop: 1
   },
   headerTimer: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
     backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.sm
+    borderRadius: theme.radius.full
   },
   headerTimerText: {
     ...theme.typography.captionBold,
@@ -690,14 +896,31 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"]
   },
 
-  // Progress bar
+  // Progress
+  progressContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.surface,
+    gap: theme.spacing.sm
+  },
   progressBar: {
-    height: 3,
-    backgroundColor: theme.colors.border
+    flex: 1,
+    height: 4,
+    backgroundColor: theme.colors.border,
+    borderRadius: theme.radius.full,
+    overflow: "hidden"
   },
   progressFill: {
     height: "100%",
-    backgroundColor: theme.colors.primary
+    borderRadius: theme.radius.full
+  },
+  progressText: {
+    ...theme.typography.small,
+    color: theme.colors.muted,
+    width: 32,
+    textAlign: "right"
   },
 
   // Scroll
@@ -706,7 +929,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: theme.spacing.lg,
-    paddingBottom: 160
+    paddingBottom: 140
   },
 
   // Main card
@@ -715,139 +938,80 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xl,
     padding: theme.spacing.xl,
     marginBottom: theme.spacing.lg,
+    borderWidth: 2,
     ...theme.shadows.md
   },
 
-  // Completed state
-  completedContainer: {
+  // State container (shared)
+  stateContainer: {
     alignItems: "center",
-    paddingVertical: theme.spacing.xl
+    paddingVertical: theme.spacing.md
   },
-  completedIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: theme.colors.successLight,
+  stateIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: theme.spacing.lg
   },
-  completedTitle: {
+  stateTitle: {
     ...theme.typography.h1,
     color: theme.colors.text,
+    textAlign: "center",
     marginBottom: theme.spacing.xs
   },
-  completedSubtitle: {
+  stateSubtitle: {
     ...theme.typography.body,
-    color: theme.colors.subtext,
-    marginBottom: theme.spacing.sm
-  },
-  completedTime: {
-    ...theme.typography.caption,
     color: theme.colors.muted,
-    marginBottom: theme.spacing.xl
+    textAlign: "center"
   },
-  doneButton: {
-    backgroundColor: theme.colors.success,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.xxl,
-    borderRadius: theme.radius.lg
+
+  // Phase chip
+  phaseChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.radius.full,
+    marginBottom: theme.spacing.md
   },
-  doneButtonText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn
+  phaseChipText: {
+    ...theme.typography.small,
+    fontFamily: theme.fonts.semiBold,
+    textTransform: "uppercase",
+    letterSpacing: 0.5
   },
 
   // Timer state
-  timerContainer: {
-    alignItems: "center",
-    paddingVertical: theme.spacing.lg
-  },
   timerLabel: {
-    ...theme.typography.captionBold,
-    color: theme.colors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: theme.spacing.md
+    ...theme.typography.h3,
+    color: theme.colors.text,
+    textAlign: "center",
+    marginBottom: theme.spacing.sm
   },
   timerDisplay: {
-    fontSize: 72,
+    fontSize: 64,
     fontFamily: theme.fonts.bold,
-    color: theme.colors.text,
     fontVariant: ["tabular-nums"],
     letterSpacing: -2
   },
-  timerSubtitle: {
-    ...theme.typography.body,
+  timerNext: {
+    ...theme.typography.caption,
     color: theme.colors.muted,
-    marginTop: theme.spacing.sm
-  },
-  timerControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.xl,
-    marginTop: theme.spacing.xl
-  },
-  timerButton: {
-    width: 52,
-    height: 52,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    alignItems: "center",
-    justifyContent: "center"
+    marginTop: theme.spacing.md
   },
 
   // Warmup state
-  warmupContainer: {
-    alignItems: "center",
-    paddingVertical: theme.spacing.lg
-  },
-  warmupIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: theme.colors.phases.warmupBg,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: theme.spacing.md
-  },
-  warmupTitle: {
-    ...theme.typography.h2,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs
-  },
   warmupDuration: {
     fontSize: 48,
     fontFamily: theme.fonts.bold,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs
   },
-  warmupSubtitle: {
-    ...theme.typography.body,
-    color: theme.colors.muted
-  },
 
   // Rest state
-  restContainer: {
-    alignItems: "center",
-    paddingVertical: theme.spacing.lg
-  },
-  restIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: theme.colors.phases.breakBg,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: theme.spacing.md
-  },
-  restTitle: {
-    ...theme.typography.h2,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs
-  },
   restDuration: {
     fontSize: 48,
     fontFamily: theme.fonts.bold,
@@ -856,31 +1020,26 @@ const styles = StyleSheet.create({
   },
 
   // Exercise state
-  exerciseContainer: {
-    alignItems: "center",
-    paddingVertical: theme.spacing.md
-  },
   exerciseName: {
     ...theme.typography.h1,
     color: theme.colors.text,
     textAlign: "center",
-    marginBottom: theme.spacing.xs
+    marginBottom: theme.spacing.sm
   },
-  setInfo: {
-    ...theme.typography.body,
-    color: theme.colors.muted,
+  setIndicator: {
+    backgroundColor: theme.colors.primaryLight,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.radius.full,
     marginBottom: theme.spacing.xl
+  },
+  setIndicatorText: {
+    ...theme.typography.captionBold,
+    color: theme.colors.primary
   },
   repCounter: {
     alignItems: "center",
-    marginBottom: theme.spacing.lg
-  },
-  repLabel: {
-    ...theme.typography.captionBold,
-    color: theme.colors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: theme.spacing.md
+    width: "100%"
   },
   repInputRow: {
     flexDirection: "row",
@@ -888,9 +1047,9 @@ const styles = StyleSheet.create({
     gap: theme.spacing.lg
   },
   repButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: theme.colors.background,
     alignItems: "center",
     justifyContent: "center",
@@ -898,15 +1057,24 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border
   },
   repButtonPressed: {
-    backgroundColor: theme.colors.border
+    backgroundColor: theme.colors.border,
+    transform: [{ scale: 0.95 }]
+  },
+  repInputContainer: {
+    alignItems: "center"
   },
   repInput: {
-    fontSize: 56,
+    fontSize: 52,
     fontFamily: theme.fonts.bold,
     color: theme.colors.text,
     textAlign: "center",
-    minWidth: 100,
+    minWidth: 80,
     fontVariant: ["tabular-nums"]
+  },
+  repInputLabel: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    marginTop: -4
   },
   targetReps: {
     ...theme.typography.caption,
@@ -914,7 +1082,8 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md
   },
   durationDisplay: {
-    alignItems: "center"
+    alignItems: "center",
+    marginTop: theme.spacing.lg
   },
   durationValue: {
     fontSize: 48,
@@ -930,16 +1099,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: theme.spacing.sm,
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing.xl,
     padding: theme.spacing.md,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.primaryLight,
     borderRadius: theme.radius.md,
-    maxWidth: "100%"
+    width: "100%"
   },
   noteText: {
     ...theme.typography.caption,
-    color: theme.colors.subtext,
+    color: theme.colors.text,
     flex: 1
+  },
+
+  // Completed stats
+  completedStats: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border
+  },
+  completedStatItem: {
+    flex: 1,
+    alignItems: "center"
+  },
+  completedStatValue: {
+    ...theme.typography.h2,
+    color: theme.colors.text
+  },
+  completedStatLabel: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    marginTop: 2
+  },
+  completedStatDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: theme.colors.border
   },
 
   // Up Next section
@@ -951,55 +1148,88 @@ const styles = StyleSheet.create({
     color: theme.colors.muted,
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginBottom: theme.spacing.sm
+    marginBottom: theme.spacing.sm,
+    marginLeft: theme.spacing.xs
   },
   upNextCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.md,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
     ...theme.shadows.sm
   },
-  upNextContent: {
-    flex: 1
+  upNextIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.sm,
+    alignItems: "center",
+    justifyContent: "center"
   },
   upNextName: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text
+    color: theme.colors.text,
+    flex: 1
   },
   upNextDetail: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
-    marginTop: 2
+    color: theme.colors.muted
   },
 
   // Plan section
   planSection: {
     marginBottom: theme.spacing.lg
   },
+  planList: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    overflow: "hidden",
+    ...theme.shadows.sm
+  },
   planItem: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.radius.sm,
-    marginBottom: 2
+    paddingHorizontal: theme.spacing.md,
+    gap: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderLight
+  },
+  planItemFirst: {
+    paddingTop: theme.spacing.md
+  },
+  planItemLast: {
+    borderBottomWidth: 0,
+    paddingBottom: theme.spacing.md
   },
   planItemCurrent: {
     backgroundColor: theme.colors.primaryLight
   },
-  planItemStatus: {
+  planItemIndicator: {
     width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: theme.colors.background,
     alignItems: "center",
-    paddingTop: 2
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: theme.colors.border
   },
-  planItemDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: theme.colors.border
+  planItemIndicatorDone: {
+    backgroundColor: theme.colors.success,
+    borderColor: theme.colors.success
+  },
+  planItemIndicatorCurrent: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary
+  },
+  planItemNumber: {
+    ...theme.typography.small,
+    color: theme.colors.muted
+  },
+  planItemNumberCurrent: {
+    color: theme.colors.primaryTextOn
   },
   planItemContent: {
     flex: 1
@@ -1009,17 +1239,16 @@ const styles = StyleSheet.create({
     color: theme.colors.text
   },
   planItemLabelDone: {
-    color: theme.colors.success,
-    textDecorationLine: "line-through"
+    color: theme.colors.success
   },
   planItemLabelCurrent: {
     ...theme.typography.bodyBold,
     color: theme.colors.primary
   },
   planItemDetail: {
-    ...theme.typography.caption,
+    ...theme.typography.small,
     color: theme.colors.muted,
-    marginTop: 2
+    marginTop: 1
   },
   moreItems: {
     ...theme.typography.caption,
@@ -1038,6 +1267,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.colors.border
   },
+  footerSafeArea: {
+    width: "100%"
+  },
   footerContent: {
     flexDirection: "row",
     alignItems: "center",
@@ -1046,30 +1278,38 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.sm
   },
-  skipTextButton: {
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    height: 52,
-    justifyContent: "center"
+  secondaryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.xs,
+    height: 48,
+    paddingHorizontal: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border
   },
-  skipText: {
-    ...theme.typography.body,
-    color: theme.colors.muted
+  secondaryButtonPressed: {
+    backgroundColor: theme.colors.border,
+    transform: [{ scale: 0.98 }]
+  },
+  secondaryButtonText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text
   },
   primaryButton: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: theme.spacing.sm,
-    height: 52,
+    height: 48,
     backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.lg
+    borderRadius: theme.radius.md
   },
-  primaryButtonFull: {
-    flex: 1
-  },
-  primaryButtonFlex: {
-    flex: 1
+  successButton: {
+    backgroundColor: theme.colors.success
   },
   primaryButtonPressed: {
     opacity: 0.9,
@@ -1097,29 +1337,44 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xl,
     padding: theme.spacing.xl,
     width: "100%",
-    maxWidth: 340
+    maxWidth: 320,
+    alignItems: "center"
+  },
+  modalIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: theme.colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: theme.spacing.lg
   },
   modalTitle: {
     ...theme.typography.h2,
     color: theme.colors.text,
     textAlign: "center",
-    marginBottom: theme.spacing.md
+    marginBottom: theme.spacing.sm
   },
   modalText: {
     ...theme.typography.body,
-    color: theme.colors.text,
-    textAlign: "center",
-    marginBottom: theme.spacing.xs
+    color: theme.colors.subtext,
+    textAlign: "center"
+  },
+  modalHighlight: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primary
   },
   modalSubtext: {
     ...theme.typography.caption,
     color: theme.colors.muted,
     textAlign: "center",
+    marginTop: theme.spacing.xs,
     marginBottom: theme.spacing.xl
   },
   modalButtons: {
     flexDirection: "row",
-    gap: theme.spacing.md
+    gap: theme.spacing.md,
+    width: "100%"
   },
   modalButtonSecondary: {
     flex: 1,
