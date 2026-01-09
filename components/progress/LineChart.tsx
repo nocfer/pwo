@@ -5,13 +5,13 @@
 import { theme } from "@/theme/theme";
 import { StyleSheet, Text, View } from "react-native";
 import Svg, {
-    Circle,
-    Defs,
-    Line,
-    LinearGradient,
-    Path,
-    Stop,
-    Text as SvgText
+  Circle,
+  Defs,
+  Line,
+  LinearGradient,
+  Path,
+  Stop,
+  Text as SvgText
 } from "react-native-svg";
 
 export type DataPoint = {

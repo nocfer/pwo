@@ -57,10 +57,11 @@ const colors = {
 } as const;
 
 const fonts = {
-  regular: "DMSans_400Regular",
-  medium: "DMSans_500Medium",
-  semiBold: "DMSans_600SemiBold",
-  bold: "DMSans_700Bold"
+  regular: "Manrope_400Regular",
+  medium: "Manrope_500Medium",
+  semiBold: "Manrope_600SemiBold",
+  bold: "Manrope_700Bold",
+  extraBold: "Manrope_800ExtraBold"
 } as const;
 
 const spacing = {
@@ -119,44 +120,44 @@ const shadows = {
 const typography = {
   h1: {
     fontSize: 26,
-    fontFamily: "DMSans_700Bold",
+    fontFamily: "Manrope_700Bold",
     lineHeight: 32,
     letterSpacing: -0.5
   },
   h2: {
     fontSize: 20,
-    fontFamily: "DMSans_600SemiBold",
+    fontFamily: "Manrope_600SemiBold",
     lineHeight: 26,
     letterSpacing: -0.3
   },
   h3: {
     fontSize: 17,
-    fontFamily: "DMSans_600SemiBold",
+    fontFamily: "Manrope_600SemiBold",
     lineHeight: 22
   },
   body: {
     fontSize: 15,
-    fontFamily: "DMSans_400Regular",
+    fontFamily: "Manrope_400Regular",
     lineHeight: 22
   },
   bodyBold: {
     fontSize: 15,
-    fontFamily: "DMSans_600SemiBold",
+    fontFamily: "Manrope_600SemiBold",
     lineHeight: 22
   },
   caption: {
     fontSize: 13,
-    fontFamily: "DMSans_400Regular",
+    fontFamily: "Manrope_400Regular",
     lineHeight: 18
   },
   captionBold: {
     fontSize: 13,
-    fontFamily: "DMSans_600SemiBold",
+    fontFamily: "Manrope_600SemiBold",
     lineHeight: 18
   },
   small: {
     fontSize: 11,
-    fontFamily: "DMSans_500Medium",
+    fontFamily: "Manrope_500Medium",
     lineHeight: 14
   }
 } as const;
