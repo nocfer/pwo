@@ -85,6 +85,44 @@ export function ChallengeForm({
     []
   );
 
+  // Convert seconds to mm:ss format
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Parse mm:ss or m:ss format back to seconds
+  const parseTime = (input: string): number | null => {
+    const trimmed = input.trim();
+    if (!trimmed) return null;
+
+    // Handle just numbers (assume seconds if no colon)
+    if (!trimmed.includes(":")) {
+      const num = Number(trimmed);
+      return Number.isFinite(num) && num >= 0 ? num : null;
+    }
+
+    // Handle mm:ss format
+    const parts = trimmed.split(":");
+    if (parts.length !== 2) return null;
+
+    const mins = Number(parts[0]);
+    const secs = Number(parts[1]);
+
+    if (
+      !Number.isFinite(mins) ||
+      !Number.isFinite(secs) ||
+      mins < 0 ||
+      secs < 0 ||
+      secs > 59
+    ) {
+      return null;
+    }
+
+    return mins * 60 + secs;
+  };
+
   const selectedExercise = exercises.find(
     (ex) => ex.id === formData.challengeConfig.exerciseId
   );
@@ -146,13 +184,6 @@ export function ChallengeForm({
     haptics.formCancel();
     onCancel();
   }, [onCancel]);
-
-  // Format seconds to mm:ss display
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
 
   return (
     <KeyboardAvoidingView
@@ -368,6 +399,7 @@ export function ChallengeForm({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Timing</Text>
           <View style={styles.card}>
+            {/* Warm-up */}
             <View style={styles.inlineField}>
               <View style={styles.inlineFieldLeft}>
                 <View
@@ -384,13 +416,52 @@ export function ChallengeForm({
                 </View>
                 <Text style={styles.inlineFieldLabel}>Warm-up</Text>
               </View>
-              <Text style={styles.timeDisplay}>
-                {formatTime(formData.challengeConfig.warmUpSeconds)}
-              </Text>
+              <View style={styles.timeInputGroup}>
+                <View style={styles.timeInputWrapper}>
+                  <TextInput
+                    value={String(
+                      Math.floor(formData.challengeConfig.warmUpSeconds / 60)
+                    )}
+                    onChangeText={(value) => {
+                      const mins = value === "" ? 0 : Number(value);
+                      if (Number.isFinite(mins) && mins >= 0) {
+                        const secs = formData.challengeConfig.warmUpSeconds % 60;
+                        updateConfig("warmUpSeconds", mins * 60 + secs);
+                      }
+                    }}
+                    keyboardType="number-pad"
+                    style={styles.timeInput}
+                    placeholder="0"
+                    maxLength={3}
+                  />
+                  <Text style={styles.timeUnit}>min</Text>
+                </View>
+                <View style={styles.timeInputWrapper}>
+                  <TextInput
+                    value={String(formData.challengeConfig.warmUpSeconds % 60)}
+                    onChangeText={(value) => {
+                      let secs = value === "" ? 0 : Number(value);
+                      if (Number.isFinite(secs) && secs >= 0) {
+                        if (secs > 59) secs = 59;
+                        const mins = Math.floor(
+                          formData.challengeConfig.warmUpSeconds / 60
+                        );
+                        updateConfig("warmUpSeconds", mins * 60 + secs);
+                      }
+                    }}
+                    keyboardType="number-pad"
+                    style={styles.timeInput}
+                    placeholder="0"
+                    maxLength={2}
+                  />
+                  <Text style={styles.timeUnit}>sec</Text>
+                </View>
+              </View>
             </View>
 
             <View style={styles.divider} />
 
+            {/* Rest Between Sets */}
             <View style={styles.inlineField}>
               <View style={styles.inlineFieldLeft}>
                 <View
@@ -407,12 +478,49 @@ export function ChallengeForm({
                 </View>
                 <Text style={styles.inlineFieldLabel}>Rest Between Sets</Text>
               </View>
-              <Text style={styles.timeDisplay}>
-                {formatTime(formData.challengeConfig.breakSeconds)}
-              </Text>
+              <View style={styles.timeInputGroup}>
+                <View style={styles.timeInputWrapper}>
+                  <TextInput
+                    value={String(
+                      Math.floor(formData.challengeConfig.breakSeconds / 60)
+                    )}
+                    onChangeText={(value) => {
+                      const mins = value === "" ? 0 : Number(value);
+                      if (Number.isFinite(mins) && mins >= 0) {
+                        const secs = formData.challengeConfig.breakSeconds % 60;
+                        updateConfig("breakSeconds", mins * 60 + secs);
+                      }
+                    }}
+                    keyboardType="number-pad"
+                    style={styles.timeInput}
+                    placeholder="0"
+                    maxLength={3}
+                  />
+                  <Text style={styles.timeUnit}>min</Text>
+                </View>
+                <View style={styles.timeInputWrapper}>
+                  <TextInput
+                    value={String(formData.challengeConfig.breakSeconds % 60)}
+                    onChangeText={(value) => {
+                      let secs = value === "" ? 0 : Number(value);
+                      if (Number.isFinite(secs) && secs >= 0) {
+                        if (secs > 59) secs = 59;
+                        const mins = Math.floor(
+                          formData.challengeConfig.breakSeconds / 60
+                        );
+                        updateConfig("breakSeconds", mins * 60 + secs);
+                      }
+                    }}
+                    keyboardType="number-pad"
+                    style={styles.timeInput}
+                    placeholder="0"
+                    maxLength={2}
+                  />
+                  <Text style={styles.timeUnit}>sec</Text>
+                </View>
+              </View>
             </View>
           </View>
-          <Text style={styles.hint}>Tap to edit timing values in seconds</Text>
         </View>
       </ScrollView>
 
@@ -639,6 +747,38 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.muted,
     marginLeft: 2
+  },
+  timeInputGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.md
+  },
+  timeInputWrapper: {
+    flexDirection: "column",
+    alignItems: "center",
+    gap: theme.spacing.xs
+  },
+  timeInput: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primary,
+    textAlign: "center",
+    minWidth: 50,
+    padding: 0
+  },
+  timeUnit: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    fontFamily: theme.fonts.medium
+  },
+  timeLabel: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    fontFamily: theme.fonts.medium
+  },
+  timeSeparator: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text,
+    marginHorizontal: 2
   },
   timeDisplay: {
     ...theme.typography.bodyBold,
