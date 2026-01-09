@@ -18,71 +18,66 @@ export default function ProgressCard({
   variant = "program"
 }: Props) {
   const percentage = Math.round(completionPercentage);
+  const isChallenge = variant === "challenge";
+  const primaryColor = isChallenge
+    ? theme.colors.success
+    : theme.colors.primary;
 
   return (
     <View style={styles.container}>
+      {/* Header with icon and title */}
       <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <View
-            style={[
-              styles.iconBadge,
-              {
-                backgroundColor:
-                  variant === "challenge"
-                    ? theme.colors.successLight
-                    : theme.colors.primaryLight
-              }
-            ]}
-          >
-            <Ionicons
-              name={variant === "challenge" ? "trophy" : "barbell"}
-              size={18}
-              color={
-                variant === "challenge"
-                  ? theme.colors.success
-                  : theme.colors.primary
-              }
-            />
-          </View>
-          <Text style={styles.title} numberOfLines={1}>
-            {title}
+        <View
+          style={[
+            styles.iconContainer,
+            {
+              backgroundColor: isChallenge
+                ? theme.colors.successLight
+                : theme.colors.primaryLight
+            }
+          ]}
+        >
+          <Ionicons
+            name={isChallenge ? "trophy" : "barbell"}
+            size={20}
+            color={primaryColor}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.subtitle}>
+            {sessionsCompleted} of {totalSessions} sessions
           </Text>
         </View>
-        <View style={styles.percentagePill}>
-          <Ionicons
-            name="sparkles"
-            size={14}
-            color={theme.colors.primaryTextOn}
-            style={{ marginRight: theme.spacing.xs }}
-          />
-          <Text style={styles.percentage}>{percentage}%</Text>
-        </View>
       </View>
+
+      {/* Progress bar */}
       <View style={styles.progressBarContainer}>
         <View
           style={[
             styles.progressBar,
             {
               width: `${percentage}%`,
-              backgroundColor:
-                variant === "challenge"
-                  ? theme.colors.success
-                  : theme.colors.primary
+              backgroundColor: primaryColor
             }
           ]}
         />
       </View>
-      <View style={styles.captionRow}>
-        <Text style={styles.caption}>
-          {sessionsCompleted} of {totalSessions} sessions
-        </Text>
-        <Text style={styles.captionMuted}>
+
+      {/* Footer with percentage and status */}
+      <View style={styles.footer}>
+        <Text style={styles.statusText}>
           {sessionsCompleted === 0
-            ? "Let’s get started"
+            ? "Let's get started"
             : percentage >= 100
               ? "Run complete"
               : "Keep going"}
         </Text>
+        <View
+          style={[styles.percentageBadge, { backgroundColor: primaryColor }]}
+        >
+          <Text style={styles.percentage}>{percentage}%</Text>
+        </View>
       </View>
     </View>
   );
@@ -99,65 +94,57 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing.sm,
-    gap: theme.spacing.sm
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md
   },
-  titleRow: {
-    flexDirection: "row",
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.full,
     alignItems: "center",
-    flex: 1,
-    gap: theme.spacing.sm
+    justifyContent: "center",
+    flexShrink: 0
   },
   title: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
-    flex: 1
+    marginBottom: theme.spacing.xs
   },
-  iconBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: theme.radius.full,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  percentagePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.primary
-  },
-  percentage: {
-    ...theme.typography.h3,
-    color: theme.colors.primaryTextOn,
-    fontFamily: theme.fonts.bold
+  subtitle: {
+    ...theme.typography.caption,
+    color: theme.colors.muted
   },
   progressBarContainer: {
     height: 8,
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.border,
     borderRadius: theme.radius.sm,
     overflow: "hidden",
-    marginBottom: theme.spacing.xs
+    marginBottom: theme.spacing.md
   },
   progressBar: {
     height: "100%",
     borderRadius: theme.radius.sm
   },
-  captionRow: {
+  footer: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginTop: theme.spacing.xs
+    justifyContent: "space-between"
   },
-  caption: {
+  statusText: {
     ...theme.typography.caption,
     color: theme.colors.muted
   },
-  captionMuted: {
-    ...theme.typography.caption,
-    color: theme.colors.subtext
+  percentageBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.full,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  percentage: {
+    ...theme.typography.h3,
+    color: theme.colors.primaryTextOn,
+    fontFamily: theme.fonts.bold
   }
 });

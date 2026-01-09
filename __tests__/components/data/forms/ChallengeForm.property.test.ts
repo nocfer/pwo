@@ -19,7 +19,7 @@ describe("Challenge Configuration Property Tests", () => {
     targetReps: fc.integer({ min: 1, max: 1000 }),
     warmUpSeconds: fc.integer({ min: 0, max: 1800 }), // 0 to 30 minutes
     breakSeconds: fc.integer({ min: 0, max: 600 }), // 0 to 10 minutes
-    sessionIncreasePercent: fc.integer({ min: 1, max: 100 })
+    weeklyIncreasePercent: fc.integer({ min: 1, max: 100 })
   });
 
   // Generator for invalid challenge configuration (with invalid ranges)
@@ -49,7 +49,7 @@ describe("Challenge Configuration Property Tests", () => {
       fc.constant(null as any),
       fc.constant("invalid" as any)
     ),
-    sessionIncreasePercent: fc.oneof(
+    weeklyIncreasePercent: fc.oneof(
       fc.integer({ min: -10, max: 0 }), // Invalid: <= 0
       fc.integer({ min: 101, max: 200 }), // Invalid: > 100
       fc.constant(null as any),
@@ -74,8 +74,8 @@ describe("Challenge Configuration Property Tests", () => {
         expect(config.targetReps).toBeGreaterThan(0);
         expect(config.warmUpSeconds).toBeGreaterThanOrEqual(0);
         expect(config.breakSeconds).toBeGreaterThanOrEqual(0);
-        expect(config.sessionIncreasePercent).toBeGreaterThan(0);
-        expect(config.sessionIncreasePercent).toBeLessThanOrEqual(100);
+        expect(config.weeklyIncreasePercent).toBeGreaterThan(0);
+        expect(config.weeklyIncreasePercent).toBeLessThanOrEqual(100);
       }),
       { numRuns: 100 }
     );
@@ -180,14 +180,14 @@ describe("Challenge Configuration Property Tests", () => {
         (baseConfig, invalidPercentage) => {
           const config = {
             ...baseConfig,
-            sessionIncreasePercent: invalidPercentage
+            weeklyIncreasePercent: invalidPercentage
           };
           const result = validateChallengeConfig(config);
 
           expect(result.isValid).toBe(false);
 
           const percentageErrors = result.errors.filter(
-            (error) => error.field === "sessionIncreasePercent"
+            (error) => error.field === "weeklyIncreasePercent"
           );
           expect(percentageErrors.length).toBeGreaterThan(0);
         }
@@ -248,7 +248,7 @@ describe("Challenge Configuration Property Tests", () => {
             targetReps: 1, // Minimum
             warmUpSeconds: 0, // Minimum
             breakSeconds: 0, // Minimum
-            sessionIncreasePercent: 1 // Minimum
+            weeklyIncreasePercent: 1 // Minimum
           };
 
           const result = validateChallengeConfig(minimalConfig);
@@ -272,7 +272,7 @@ describe("Challenge Configuration Property Tests", () => {
             targetReps: 1000, // High but reasonable
             warmUpSeconds: 1800, // 30 minutes
             breakSeconds: 600, // 10 minutes
-            sessionIncreasePercent: 100 // Maximum
+            weeklyIncreasePercent: 100 // Maximum
           };
 
           const result = validateChallengeConfig(maximalConfig);
@@ -305,7 +305,7 @@ describe("Challenge Configuration Property Tests", () => {
         validChallengeConfigArb,
         fc.constantFrom(1, 50, 100), // Boundary and middle values
         (baseConfig, percentage) => {
-          const config = { ...baseConfig, sessionIncreasePercent: percentage };
+          const config = { ...baseConfig, weeklyIncreasePercent: percentage };
           const result = validateChallengeConfig(config);
 
           expect(result.isValid).toBe(true);
@@ -323,8 +323,7 @@ describe("Challenge Configuration Property Tests", () => {
         (baseConfig, legacyPercentage) => {
           const configWithLegacyField = {
             ...baseConfig,
-            weeklyIncreasePercent: legacyPercentage,
-            sessionIncreasePercent: undefined as any
+            weeklyIncreasePercent: legacyPercentage
           };
 
           const result = validateChallengeConfig(configWithLegacyField);
@@ -352,8 +351,8 @@ describe("Challenge Configuration Property Tests", () => {
           expect(config.targetReps).toBeGreaterThan(0);
 
           // Session increase should be reasonable for the target
-          expect(config.sessionIncreasePercent).toBeGreaterThan(0);
-          expect(config.sessionIncreasePercent).toBeLessThanOrEqual(100);
+          expect(config.weeklyIncreasePercent).toBeGreaterThan(0);
+          expect(config.weeklyIncreasePercent).toBeLessThanOrEqual(100);
 
           // Timing values should be reasonable
           expect(config.warmUpSeconds).toBeGreaterThanOrEqual(0);

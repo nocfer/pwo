@@ -1,12 +1,13 @@
 import {
-    ExerciseForm,
-    type ExerciseFormData
+  ExerciseForm,
+  type ExerciseFormData
 } from "@/components/data/forms/ExerciseForm";
 import { useDataActions } from "@/context/DataContext";
 import { theme } from "@/theme/theme";
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NewExerciseScreen() {
   const actions = useDataActions();
@@ -34,14 +35,14 @@ export default function NewExerciseScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ExerciseForm
         mode="create"
         onSave={handleSave}
         onCancel={handleCancel}
         saving={saving}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

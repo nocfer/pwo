@@ -4,10 +4,15 @@
  */
 
 import {
+  autoAdjustChallengeConfig,
+  calculateMaxTargetReps,
+  calculateMinimumDuration,
+  calculateSessionsToTarget,
   checkExerciseDependencies,
   VALID_DIFFICULTIES,
   VALID_EXERCISE_CATEGORIES,
   VALID_EXERCISE_ICONS,
+  validateChallengeInterdependencies,
   validateExercise,
   validateField,
   validateModificationPermissions,
@@ -517,6 +522,443 @@ describe("Validation Infrastructure Property Tests", () => {
         ),
         { numRuns: 100 }
       );
+    });
+  });
+});
+
+
+// ============================================================================
+// Challenge Interdependency Tests
+// ============================================================================
+
+describe("Challenge Interdependency Validation", () => {
+  describe("calculateSessionsToTarget", () => {
+    it("should return 1 session when initial reps equals target reps", () => {
+      const sessions = calculateSessionsToTarget(100, 100, 10);
+      expect(sessions).toBe(1);
+    });
+
+    it("should return 1 session when initial reps exceeds target reps", () => {
+      const sessions = calculateSessionsToTarget(150, 100, 10);
+      expect(sessions).toBe(1);
+    });
+
+    it("should calculate correct sessions for basic progression", () => {
+      // Starting at 20 reps, target 100 reps, 10% weekly increase
+      // Week 1 (sessions 1-7): 20 reps
+      // Week 2 (sessions 8-14): 22 reps (20 * 1.1)
+      // Week 3 (sessions 15-21): 24.2 reps
+      // Week 4 (sessions 22-28): 26.62 reps
+      // Week 5 (sessions 29-35): 29.28 reps
+      // Week 6 (sessions 36-42): 32.21 reps
+      // Week 7 (sessions 43-49): 35.43 reps
+      // Week 8 (sessions 50-56): 38.97 reps
+      // Week 9 (sessions 57-63): 42.87 reps
+      // Week 10 (sessions 64-70): 47.15 reps
+      // Week 11 (sessions 71-77): 51.87 reps
+      // Week 12 (sessions 78-84): 57.05 reps
+      // Week 13 (sessions 85-91): 62.76 reps
+      // Week 14 (sessions 92-98): 69.03 reps
+      // Week 15 (sessions 99-105): 75.93 reps
+      // Week 16 (sessions 106-112): 83.53 reps
+      // Week 17 (sessions 113-119): 91.88 reps
+      // Week 18 (sessions 120-126): 101.07 reps (exceeds 100)
+      const sessions = calculateSessionsToTarget(20, 100, 10);
+      expect(sessions).toBeGreaterThan(100);
+      expect(sessions).toBeLessThan(130);
+    });
+
+    it("should handle 0% weekly increase (no progression)", () => {
+      // With 0% increase, reps never progress, so it returns Infinity
+      const sessions = calculateSessionsToTarget(20, 100, 0);
+      expect(sessions).toBe(Infinity);
+    });
+
+    it("should handle high weekly increase percentage", () => {
+      // 50% weekly increase should reach target much faster
+      const sessions50 = calculateSessionsToTarget(20, 100, 50);
+      const sessions10 = calculateSessionsToTarget(20, 100, 10);
+      expect(sessions50).toBeLessThan(sessions10);
+    });
+
+    it("should handle small initial reps and large target", () => {
+      const sessions = calculateSessionsToTarget(1, 1000, 10);
+      expect(sessions).toBeGreaterThan(0);
+    });
+
+    it("should handle large initial reps and small target difference", () => {
+      const sessions = calculateSessionsToTarget(95, 100, 10);
+      expect(sessions).toBeGreaterThan(0);
+    });
+  });
+
+  describe("calculateMinimumDuration", () => {
+    it("should return same value as calculateSessionsToTarget", () => {
+      const duration = calculateMinimumDuration(20, 100, 10);
+      const sessions = calculateSessionsToTarget(20, 100, 10);
+      expect(duration).toBe(sessions);
+    });
+
+    it("should return 1 day when initial equals target", () => {
+      const duration = calculateMinimumDuration(100, 100, 10);
+      expect(duration).toBe(1);
+    });
+
+    it("should increase with higher target reps", () => {
+      const duration100 = calculateMinimumDuration(20, 100, 10);
+      const duration200 = calculateMinimumDuration(20, 200, 10);
+      expect(duration200).toBeGreaterThan(duration100);
+    });
+
+    it("should decrease with higher weekly increase percentage", () => {
+      const duration10 = calculateMinimumDuration(20, 100, 10);
+      const duration50 = calculateMinimumDuration(20, 100, 50);
+      expect(duration50).toBeLessThan(duration10);
+    });
+  });
+
+  describe("calculateMaxTargetReps", () => {
+    it("should return initial reps for 1 day duration", () => {
+      const maxReps = calculateMaxTargetReps(20, 1, 10);
+      expect(maxReps).toBe(20);
+    });
+
+    it("should return initial reps for 7 days (no increase yet)", () => {
+      const maxReps = calculateMaxTargetReps(20, 7, 10);
+      expect(maxReps).toBe(20);
+    });
+
+    it("should increase after 7 days (first weekly increase)", () => {
+      const maxReps7 = calculateMaxTargetReps(20, 7, 10);
+      const maxReps8 = calculateMaxTargetReps(20, 8, 10);
+      expect(maxReps8).toBeGreaterThan(maxReps7);
+    });
+
+    it("should calculate correct progression over multiple weeks", () => {
+      // After 7 days: still at 20 (increase happens at end of day 7)
+      const maxReps7 = calculateMaxTargetReps(20, 7, 10);
+      expect(maxReps7).toBe(20);
+      
+      // After 8 days: increase happened, now at 22
+      const maxReps8 = calculateMaxTargetReps(20, 8, 10);
+      expect(maxReps8).toBe(22);
+      
+      // After 14 days: still at 22 (second increase happens at end of day 14)
+      const maxReps14 = calculateMaxTargetReps(20, 14, 10);
+      expect(maxReps14).toBe(22);
+      
+      // After 15 days: second increase happened, now at 24.2
+      const maxReps15 = calculateMaxTargetReps(20, 15, 10);
+      expect(maxReps15).toBe(24);
+    });
+
+    it("should increase with higher weekly increase percentage", () => {
+      const maxReps10 = calculateMaxTargetReps(20, 30, 10);
+      const maxReps50 = calculateMaxTargetReps(20, 30, 50);
+      expect(maxReps50).toBeGreaterThan(maxReps10);
+    });
+
+    it("should handle long durations", () => {
+      const maxReps = calculateMaxTargetReps(20, 365, 10);
+      expect(maxReps).toBeGreaterThan(1000);
+    });
+  });
+
+  describe("validateChallengeInterdependencies", () => {
+    it("should be valid for reasonable configuration", () => {
+      // Use a duration that's actually sufficient
+      const result = validateChallengeInterdependencies(20, 100, 150, 10);
+      expect(result.isValid).toBe(true);
+      expect(result.issues).toHaveLength(0);
+    });
+
+    it("should reject when initial reps > target reps", () => {
+      const result = validateChallengeInterdependencies(150, 100, 30, 10);
+      expect(result.isValid).toBe(false);
+      expect(result.issues.length).toBeGreaterThan(0);
+      expect(result.issues[0]).toContain("cannot be greater");
+    });
+
+    it("should warn when initial reps = target reps", () => {
+      const result = validateChallengeInterdependencies(100, 100, 30, 10);
+      expect(result.isValid).toBe(false);
+      expect(result.issues.length).toBeGreaterThan(0);
+      expect(result.issues[0]).toContain("should be less");
+    });
+
+    it("should reject when duration is too short", () => {
+      // 20 -> 100 with 10% increase needs ~120 days minimum
+      const result = validateChallengeInterdependencies(20, 100, 30, 10);
+      expect(result.isValid).toBe(false);
+      expect(result.issues.length).toBeGreaterThan(0);
+      expect(result.issues[0]).toContain("too short");
+    });
+
+    it("should provide minimum duration suggestion", () => {
+      const result = validateChallengeInterdependencies(20, 100, 30, 10);
+      expect(result.suggestions.minDuration).toBeDefined();
+      expect(result.suggestions.minDuration).toBeGreaterThan(30);
+    });
+
+    it("should provide max target reps suggestion for given duration", () => {
+      const result = validateChallengeInterdependencies(20, 100, 30, 10);
+      expect(result.suggestions.maxTargetReps).toBeDefined();
+      expect(result.suggestions.maxTargetReps).toBeLessThan(100);
+    });
+
+    it("should be valid when duration is sufficient", () => {
+      // Calculate minimum duration first
+      const minDuration = calculateMinimumDuration(20, 100, 10);
+      const result = validateChallengeInterdependencies(
+        20,
+        100,
+        minDuration,
+        10
+      );
+      expect(result.isValid).toBe(true);
+      expect(result.issues).toHaveLength(0);
+    });
+
+    it("should be valid when duration is more than sufficient", () => {
+      const result = validateChallengeInterdependencies(20, 100, 200, 10);
+      expect(result.isValid).toBe(true);
+      expect(result.issues).toHaveLength(0);
+    });
+
+    it("should handle undefined duration (optional field)", () => {
+      const result = validateChallengeInterdependencies(20, 100, undefined, 10);
+      expect(result.isValid).toBe(true);
+      expect(result.issues).toHaveLength(0);
+      expect(result.suggestions.minDuration).toBeDefined();
+    });
+
+    it("should handle 0% weekly increase", () => {
+      // With 0% increase, reps never progress, so it's invalid
+      const result = validateChallengeInterdependencies(20, 100, 30, 0);
+      expect(result.isValid).toBe(false);
+    });
+
+    it("should handle very high weekly increase", () => {
+      // 100% weekly increase should reach target quickly
+      const result = validateChallengeInterdependencies(20, 100, 30, 100);
+      expect(result.isValid).toBe(true);
+    });
+
+    it("should handle edge case: 1 rep initial, 1000 reps target", () => {
+      const result = validateChallengeInterdependencies(1, 1000, 100, 10);
+      expect(result.suggestions.minDuration).toBeDefined();
+      if (result.isValid === false) {
+        expect(result.issues.length).toBeGreaterThan(0);
+      }
+    });
+
+    it("should handle edge case: very close initial and target", () => {
+      const result = validateChallengeInterdependencies(99, 100, 30, 10);
+      expect(result.isValid).toBe(true);
+    });
+
+    it("should provide consistent suggestions across multiple calls", () => {
+      const result1 = validateChallengeInterdependencies(20, 100, 30, 10);
+      const result2 = validateChallengeInterdependencies(20, 100, 30, 10);
+      expect(result1.suggestions.minDuration).toBe(result2.suggestions.minDuration);
+      expect(result1.suggestions.maxTargetReps).toBe(result2.suggestions.maxTargetReps);
+    });
+
+    it("should handle realistic challenge scenarios", () => {
+      // Scenario 1: Push-ups challenge
+      const pushups = validateChallengeInterdependencies(10, 50, 60, 5);
+      expect(pushups.suggestions.minDuration).toBeDefined();
+
+      // Scenario 2: Running challenge
+      const running = validateChallengeInterdependencies(1, 10, 90, 15);
+      expect(running.suggestions.minDuration).toBeDefined();
+
+      // Scenario 3: Strength challenge
+      const strength = validateChallengeInterdependencies(5, 100, 120, 20);
+      expect(strength.suggestions.minDuration).toBeDefined();
+    });
+  });
+
+  describe("Edge cases and boundary conditions", () => {
+    it("should handle minimum valid values", () => {
+      // 10 -> 11 with 10% increase needs 15 days minimum
+      const result = validateChallengeInterdependencies(10, 11, 15, 10);
+      expect(result.isValid).toBe(true);
+    });
+
+    it("should handle maximum reasonable values", () => {
+      const result = validateChallengeInterdependencies(1, 10000, 1000, 100);
+      expect(result.isValid).toBe(true);
+    });
+
+    it("should handle fractional weekly increases", () => {
+      const result = validateChallengeInterdependencies(20, 100, 150, 5.5);
+      expect(result.suggestions.minDuration).toBeDefined();
+    });
+
+    it("should maintain consistency between functions", () => {
+      const initialReps = 20;
+      const targetReps = 100;
+      const weeklyIncrease = 10;
+
+      const minDuration = calculateMinimumDuration(
+        initialReps,
+        targetReps,
+        weeklyIncrease
+      );
+      const maxReps = calculateMaxTargetReps(
+        initialReps,
+        minDuration,
+        weeklyIncrease
+      );
+
+      // Max reps at minimum duration should be >= target reps
+      expect(maxReps).toBeGreaterThanOrEqual(targetReps);
+    });
+
+    it("should handle rapid progression scenarios", () => {
+      // User wants to go from 20 to 100 reps in just 14 days
+      const result = validateChallengeInterdependencies(20, 100, 14, 10);
+      expect(result.isValid).toBe(false);
+      expect(result.suggestions.minDuration).toBeGreaterThan(14);
+    });
+
+    it("should handle conservative progression scenarios", () => {
+      // User wants to go from 20 to 100 reps over 365 days
+      const result = validateChallengeInterdependencies(20, 100, 365, 10);
+      expect(result.isValid).toBe(true);
+    });
+  });
+});
+
+
+// ============================================================================
+// Auto-Adjustment Tests
+// ============================================================================
+
+describe("Challenge Auto-Adjustment", () => {
+  describe("autoAdjustChallengeConfig", () => {
+    const baseConfig = {
+      initialReps: 20,
+      targetReps: 100,
+      weeklyIncreasePercent: 10,
+      duration: 150
+    };
+
+    it("should adjust target reps when initial reps exceed target", () => {
+      const result = autoAdjustChallengeConfig("initialReps", 150, baseConfig);
+      expect(result.targetReps).toBeGreaterThan(150);
+      expect(result.targetReps).toBe(Math.ceil(150 * 1.5));
+    });
+
+    it("should adjust target reps when target reps <= initial reps", () => {
+      const config = { ...baseConfig, initialReps: 100, targetReps: 100 };
+      const result = autoAdjustChallengeConfig("targetReps", 100, config);
+      expect(result.targetReps).toBeGreaterThan(100);
+    });
+
+    it("should increase duration when initial reps change and duration becomes insufficient", () => {
+      const config = { ...baseConfig, initialReps: 20, duration: 30 };
+      const result = autoAdjustChallengeConfig("initialReps", 50, config);
+      expect(result.duration).toBeGreaterThan(30);
+    });
+
+    it("should increase duration when target reps increase and duration becomes insufficient", () => {
+      const config = { ...baseConfig, targetReps: 100, duration: 30 };
+      const result = autoAdjustChallengeConfig("targetReps", 200, config);
+      expect(result.duration).toBeGreaterThan(30);
+    });
+
+    it("should set minimum 1% when weekly increase is 0 or negative", () => {
+      const result = autoAdjustChallengeConfig(
+        "weeklyIncreasePercent",
+        0,
+        baseConfig
+      );
+      expect(result.weeklyIncreasePercent).toBe(1);
+    });
+
+    it("should increase duration when weekly increase percentage decreases", () => {
+      const config = { ...baseConfig, weeklyIncreasePercent: 10, duration: 120 };
+      const result = autoAdjustChallengeConfig("weeklyIncreasePercent", 5, config);
+      expect(result.duration).toBeGreaterThan(120);
+    });
+
+    it("should decrease target reps when duration is too short", () => {
+      const config = { ...baseConfig, targetReps: 100, duration: 30 };
+      const result = autoAdjustChallengeConfig("duration", 20, config);
+      expect(result.targetReps).toBeLessThan(100);
+      expect(result.targetReps).toBeGreaterThan(config.initialReps);
+    });
+
+    it("should maintain valid configuration after initial reps adjustment", () => {
+      const result = autoAdjustChallengeConfig("initialReps", 50, baseConfig);
+      expect(result.initialReps).toBe(50);
+      expect(result.targetReps).toBeGreaterThan(result.initialReps);
+      expect(result.duration).toBeGreaterThan(0);
+    });
+
+    it("should maintain valid configuration after target reps adjustment", () => {
+      const result = autoAdjustChallengeConfig("targetReps", 200, baseConfig);
+      expect(result.targetReps).toBe(200);
+      expect(result.targetReps).toBeGreaterThan(result.initialReps);
+      expect(result.duration).toBeGreaterThan(0);
+    });
+
+    it("should maintain valid configuration after weekly increase adjustment", () => {
+      const result = autoAdjustChallengeConfig(
+        "weeklyIncreasePercent",
+        20,
+        baseConfig
+      );
+      expect(result.weeklyIncreasePercent).toBe(20);
+      expect(result.targetReps).toBeGreaterThan(result.initialReps);
+    });
+
+    it("should maintain valid configuration after duration adjustment", () => {
+      const result = autoAdjustChallengeConfig("duration", 200, baseConfig);
+      expect(result.duration).toBe(200);
+      expect(result.targetReps).toBeGreaterThan(result.initialReps);
+    });
+
+    it("should handle undefined duration gracefully", () => {
+      const config = { ...baseConfig, duration: undefined };
+      const result = autoAdjustChallengeConfig("initialReps", 50, config);
+      expect(result.initialReps).toBe(50);
+      expect(result.targetReps).toBeGreaterThan(50);
+    });
+
+    it("should not modify fields that don't need adjustment", () => {
+      const result = autoAdjustChallengeConfig("initialReps", 25, baseConfig);
+      expect(result.weeklyIncreasePercent).toBe(baseConfig.weeklyIncreasePercent);
+    });
+
+    it("should handle realistic user scenario: increasing initial reps", () => {
+      // User starts with 20 reps, then changes to 30
+      const result = autoAdjustChallengeConfig("initialReps", 30, baseConfig);
+      expect(result.initialReps).toBe(30);
+      expect(result.targetReps).toBeGreaterThan(30);
+      expect(result.duration).toBeGreaterThanOrEqual(baseConfig.duration);
+    });
+
+    it("should handle realistic user scenario: decreasing duration", () => {
+      // User wants to complete challenge faster
+      const result = autoAdjustChallengeConfig("duration", 60, baseConfig);
+      expect(result.duration).toBe(60);
+      expect(result.targetReps).toBeLessThan(baseConfig.targetReps);
+      expect(result.targetReps).toBeGreaterThan(result.initialReps);
+    });
+
+    it("should handle realistic user scenario: increasing weekly increase", () => {
+      // User wants faster progression
+      const result = autoAdjustChallengeConfig(
+        "weeklyIncreasePercent",
+        25,
+        baseConfig
+      );
+      expect(result.weeklyIncreasePercent).toBe(25);
+      // Duration might decrease since progression is faster
+      expect(result.duration).toBeLessThanOrEqual(baseConfig.duration);
     });
   });
 });

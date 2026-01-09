@@ -28,13 +28,27 @@ export function ProgramListItem({
 }: ProgramListItemProps) {
   const isChallenge = Boolean(program.challengeConfig);
 
+  // Calculate stats
+  const exerciseCount = program.blocks.filter(
+    (b) => b.type === "exercise"
+  ).length;
+  const totalSets = program.blocks
+    .filter((b) => b.type === "exercise")
+    .reduce((sum, b) => sum + (b.sets ?? 1), 0);
+
   const handleItemPress = () => onStart(program);
   const handleEditPress = () => onEdit(program);
   const handleSelectionPress = () => onSelectionChange?.(!selected);
 
   return (
-    <View
-      style={[styles.container, selected && styles.containerSelected, style]}
+    <Pressable
+      style={({ pressed }) => [
+        styles.container,
+        selected && styles.containerSelected,
+        pressed && styles.containerPressed,
+        style
+      ]}
+      onPress={handleItemPress}
     >
       {onSelectionChange && (
         <Pressable
@@ -51,7 +65,7 @@ export function ProgramListItem({
 
       <View
         style={[
-          styles.programIcon,
+          styles.iconContainer,
           {
             backgroundColor: isChallenge
               ? theme.colors.accentLight
@@ -60,75 +74,70 @@ export function ProgramListItem({
         ]}
       >
         <Ionicons
-          name={isChallenge ? "trophy-outline" : "list-outline"}
-          size={18}
+          name={isChallenge ? "trophy" : "barbell"}
+          size={20}
           color={isChallenge ? theme.colors.accent : theme.colors.primary}
         />
       </View>
 
-      <Pressable
-        style={({ pressed }) => [
-          styles.contentArea,
-          pressed && styles.contentAreaPressed
-        ]}
-        onPress={handleItemPress}
-      >
-        <View style={styles.programContent}>
-          <View style={styles.programHeader}>
-            <Text style={styles.programName} numberOfLines={1}>
-              {program.name}
-            </Text>
-            {program.source === "builtin" && (
-              <View style={styles.builtinBadge}>
-                <Text style={styles.builtinBadgeText}>Built-in</Text>
-              </View>
-            )}
-          </View>
-
-          {program.description && (
-            <Text style={styles.programDescription} numberOfLines={2}>
-              {program.description}
-            </Text>
-          )}
-
-          {showMetadata && (
-            <View style={styles.metadata}>
-              <Text style={styles.metadataText}>
-                {program.blocks.length} block
-                {program.blocks.length !== 1 ? "s" : ""}
-              </Text>
-              {isChallenge && (
-                <Text style={styles.metadataText}> • Challenge</Text>
-              )}
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.name} numberOfLines={1}>
+            {program.name}
+          </Text>
+          {program.source === "builtin" && (
+            <View style={styles.builtinBadge}>
+              <Text style={styles.builtinBadgeText}>Built-in</Text>
             </View>
           )}
         </View>
-      </Pressable>
 
-      <View style={styles.actionButtons}>
+        {program.description && (
+          <Text style={styles.description} numberOfLines={1}>
+            {program.description}
+          </Text>
+        )}
+
+        {showMetadata && (
+          <View style={styles.stats}>
+            <View style={styles.stat}>
+              <Ionicons
+                name="fitness-outline"
+                size={12}
+                color={theme.colors.muted}
+              />
+              <Text style={styles.statText}>{exerciseCount}</Text>
+            </View>
+            <View style={styles.stat}>
+              <Ionicons
+                name="repeat-outline"
+                size={12}
+                color={theme.colors.muted}
+              />
+              <Text style={styles.statText}>{totalSets} sets</Text>
+            </View>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.actions}>
         <Pressable
           style={({ pressed }) => [
-            styles.actionButton,
-            styles.startButton,
-            pressed && styles.startButtonPressed
-          ]}
-          onPress={handleItemPress}
-        >
-          <Ionicons name="play" size={14} color={theme.colors.primaryTextOn} />
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.actionButton,
             styles.editButton,
             pressed && styles.editButtonPressed
           ]}
           onPress={handleEditPress}
+          hitSlop={8}
         >
-          <Ionicons name="create-outline" size={14} color={theme.colors.text} />
+          <Ionicons
+            name="create-outline"
+            size={18}
+            color={theme.colors.muted}
+          />
         </Pressable>
+        <Ionicons name="chevron-forward" size={18} color={theme.colors.muted} />
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -137,7 +146,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.sm,
     ...theme.shadows.sm
@@ -145,87 +154,79 @@ const styles = StyleSheet.create({
   containerSelected: {
     backgroundColor: theme.colors.primaryLight
   },
+  containerPressed: {
+    transform: [{ scale: 0.98 }]
+  },
   selectionIndicator: {
     marginRight: theme.spacing.md,
     padding: theme.spacing.xs
   },
-  programIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.sm,
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.md,
     alignItems: "center",
     justifyContent: "center",
     marginRight: theme.spacing.md
   },
-  contentArea: {
+  content: {
     flex: 1,
-    marginRight: theme.spacing.sm
+    gap: 4
   },
-  contentAreaPressed: {
-    opacity: 0.7
-  },
-  programContent: {
-    flex: 1
-  },
-  programHeader: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: theme.spacing.xs
+    gap: theme.spacing.sm
   },
-  programName: {
+  name: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
     flex: 1
   },
   builtinBadge: {
     backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.xs,
+    borderRadius: theme.radius.full,
     paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 2,
-    marginLeft: theme.spacing.sm
+    paddingVertical: 2
   },
   builtinBadgeText: {
     ...theme.typography.small,
     color: theme.colors.muted
   },
-  programDescription: {
+  description: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
-    marginBottom: theme.spacing.xs
+    color: theme.colors.muted
   },
-  metadata: {
+  stats: {
     flexDirection: "row",
-    flexWrap: "wrap"
+    gap: theme.spacing.md,
+    marginTop: 2
   },
-  metadataText: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    fontSize: 11
-  },
-  actionButtons: {
+  stat: {
     flexDirection: "row",
-    gap: theme.spacing.xs
+    alignItems: "center",
+    gap: 4
   },
-  actionButton: {
+  statText: {
+    ...theme.typography.small,
+    color: theme.colors.muted
+  },
+  actions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    marginLeft: theme.spacing.sm
+  },
+  editButton: {
     width: 32,
     height: 32,
     borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.background,
     alignItems: "center",
     justifyContent: "center"
   },
-  startButton: {
-    backgroundColor: theme.colors.primary
-  },
-  startButtonPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.96 }]
-  },
-  editButton: {
-    backgroundColor: theme.colors.background
-  },
   editButtonPressed: {
-    backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.96 }]
+    backgroundColor: theme.colors.border
   }
 });
 

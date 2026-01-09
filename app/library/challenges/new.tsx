@@ -1,13 +1,14 @@
 import {
-    ChallengeForm,
-    type ChallengeFormData
+  ChallengeForm,
+  type ChallengeFormData
 } from "@/components/data/forms/ChallengeForm";
 import { useDataActions } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NewChallengeScreen() {
   const actions = useDataActions();
@@ -36,7 +37,7 @@ export default function NewChallengeScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ChallengeForm
         mode="create"
         onSave={handleSave}
@@ -44,7 +45,7 @@ export default function NewChallengeScreen() {
         saving={saving}
         exercises={exercises || []}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

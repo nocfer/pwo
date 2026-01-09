@@ -3,7 +3,7 @@
  */
 
 export { daysBetween, formatDate, normalizeStreak } from "./date";
-export { formatReps, formatTime } from "./format";
+export { formatCount, formatDuration, formatReps, formatTime } from "./format";
 export {
   getTopPriorityPrograms,
   groupProgramsByUsage,

@@ -46,7 +46,7 @@ describe("Program Share Utilities", () => {
       targetReps: 100,
       warmUpSeconds: 300,
       breakSeconds: 60,
-      sessionIncreasePercent: 5
+      weeklyIncreasePercent: 5
     },
     source: "user",
     createdAt: "2024-01-01T00:00:00.000Z",

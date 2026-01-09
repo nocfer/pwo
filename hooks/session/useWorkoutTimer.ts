@@ -235,10 +235,18 @@ export function useWorkoutTimer(opts: {
       const saved = await loadSessionState(slug, sessionIndex);
       if (!active || !saved) return;
 
+      // If session was already completed, start fresh instead of loading done state
+      if (saved.phase === "done") {
+        setCurrentIndex(0);
+        setPhase("working");
+        setStepTimer(0);
+        setIsPaused(false);
+        setInitialElapsedSeconds(0);
+        return;
+      }
+
       setCurrentIndex(Math.max(0, saved.currentSet - 1));
-      setPhase(
-        saved.phase === "done" ? "done" : saved.timer > 0 ? "timed" : "working"
-      );
+      setPhase(saved.timer > 0 ? "timed" : "working");
       setStepTimer(saved.timer);
       setIsPaused(saved.isPaused);
       setInitialElapsedSeconds(saved.sessionElapsedSeconds ?? 0);
@@ -320,6 +328,18 @@ export function useWorkoutTimer(opts: {
     setIsPaused(false);
     setPhase("working");
   }, [currentStep, phase, stepTimer]);
+
+  // Auto-start rest timers when advancing to a rest step
+  useEffect(() => {
+    if (
+      !currentStep ||
+      currentStep.type !== "rest" ||
+      phase !== "working" ||
+      stepTimer > 0
+    )
+      return;
+    startStepTimer(currentStep.seconds);
+  }, [currentStep, phase, stepTimer, startStepTimer]);
 
   // Play tick sound for last 3 seconds
   useEffect(() => {

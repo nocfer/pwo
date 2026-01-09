@@ -1,10 +1,10 @@
 /**
  * Challenge Form Component
- * Simplified MVP version with essential fields only
+ * Clean, professional form for creating and editing challenges
  */
 
 import { haptics } from "@/lib/haptics";
-import { validateChallenge } from "@/lib/validation";
+import { autoAdjustChallengeConfig } from "@/lib/validation";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
@@ -27,9 +27,10 @@ export type ChallengeFormData = {
     exerciseId: string;
     sets: number;
     targetReps: number;
+    initialReps: number;
     warmUpSeconds: number;
     breakSeconds: number;
-    sessionIncreasePercent: number;
+    weeklyIncreasePercent: number;
     duration?: number;
   };
 };
@@ -54,12 +55,15 @@ export function ChallengeForm({
   const [formData, setFormData] = useState<ChallengeFormData>({
     name: initialData?.name || "",
     challengeConfig: {
-      exerciseId: initialData?.challengeConfig?.exerciseId || exercises[0]?.id || "",
+      exerciseId:
+        initialData?.challengeConfig?.exerciseId || exercises[0]?.id || "",
       sets: initialData?.challengeConfig?.sets || 5,
       targetReps: initialData?.challengeConfig?.targetReps || 100,
+      initialReps: initialData?.challengeConfig?.initialReps || 20,
       warmUpSeconds: initialData?.challengeConfig?.warmUpSeconds || 180,
       breakSeconds: initialData?.challengeConfig?.breakSeconds || 90,
-      sessionIncreasePercent: initialData?.challengeConfig?.sessionIncreasePercent || 10,
+      weeklyIncreasePercent:
+        initialData?.challengeConfig?.weeklyIncreasePercent || 10,
       duration: initialData?.challengeConfig?.duration || 30
     }
   });
@@ -75,10 +79,19 @@ export function ChallengeForm({
       field: K,
       value: ChallengeFormData["challengeConfig"][K]
     ) => {
-      setFormData((prev) => ({
-        ...prev,
-        challengeConfig: { ...prev.challengeConfig, [field]: value }
-      }));
+      setFormData((prev) => {
+        // Auto-adjust related fields to maintain valid configuration
+        const adjustedConfig = autoAdjustChallengeConfig(
+          field,
+          value as number,
+          prev.challengeConfig
+        );
+
+        return {
+          ...prev,
+          challengeConfig: adjustedConfig as ChallengeFormData["challengeConfig"]
+        };
+      });
     },
     []
   );
@@ -90,17 +103,9 @@ export function ChallengeForm({
   const handleSave = useCallback(async () => {
     const trimmed = formData.name.trim();
 
-    const challengeData = {
-      name: trimmed,
-      challengeConfig: formData.challengeConfig
-    };
-
-    const validationResult = validateChallenge(challengeData as any);
-
-    if (!validationResult.isValid) {
+    if (!trimmed) {
       haptics.formValidationError();
-      const firstError = validationResult.errors[0];
-      Alert.alert("Validation Error", firstError.message);
+      Alert.alert("Validation Error", "Please enter a challenge name.");
       return;
     }
 
@@ -122,6 +127,25 @@ export function ChallengeForm({
         "Invalid exercise",
         "Please select an exercise for this challenge."
       );
+      return;
+    }
+
+    // Basic validation for required numeric fields
+    if (formData.challengeConfig.initialReps <= 0) {
+      haptics.formValidationError();
+      Alert.alert("Validation Error", "Initial reps must be greater than 0.");
+      return;
+    }
+
+    if (formData.challengeConfig.targetReps <= formData.challengeConfig.initialReps) {
+      haptics.formValidationError();
+      Alert.alert("Validation Error", "Target reps must be greater than initial reps.");
+      return;
+    }
+
+    if (formData.challengeConfig.sets <= 0) {
+      haptics.formValidationError();
+      Alert.alert("Validation Error", "Sets must be greater than 0.");
       return;
     }
 
@@ -154,19 +178,34 @@ export function ChallengeForm({
       <View style={styles.header}>
         <Pressable
           onPress={handleCancel}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
           style={({ pressed }) => [
-            styles.headerBackBtn,
-            pressed && styles.headerBackBtnPressed
+            styles.backButton,
+            pressed && styles.backButtonPressed
           ]}
         >
-          <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
+          <Ionicons name="close" size={24} color={theme.colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>
           {mode === "create" ? "New Challenge" : "Edit Challenge"}
         </Text>
-        <View style={styles.headerSpacer} />
+        <Pressable
+          onPress={handleSave}
+          disabled={saving || !formData.name.trim()}
+          style={({ pressed }) => [
+            styles.saveButton,
+            pressed && !saving && styles.saveButtonPressed,
+            (saving || !formData.name.trim()) && styles.saveButtonDisabled
+          ]}
+        >
+          <Text
+            style={[
+              styles.saveButtonText,
+              (saving || !formData.name.trim()) && styles.saveButtonTextDisabled
+            ]}
+          >
+            {saving ? "Saving..." : "Save"}
+          </Text>
+        </Pressable>
       </View>
 
       {/* Form Content */}
@@ -176,177 +215,357 @@ export function ChallengeForm({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Name Card */}
-        <View style={styles.card}>
-          <View style={styles.field}>
-            <Text style={styles.label}>Challenge Name</Text>
-            <TextInput
-              value={formData.name}
-              onChangeText={updateName}
-              placeholder="e.g. 100 Push-ups Challenge"
-              placeholderTextColor={theme.colors.muted}
-              style={styles.input}
-              autoFocus={mode === "create"}
-            />
-          </View>
+        {/* Basic Info */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Basic Info</Text>
+          <View style={styles.card}>
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Challenge Name</Text>
+              <TextInput
+                value={formData.name}
+                onChangeText={updateName}
+                placeholder="e.g. 100 Push-ups Challenge"
+                placeholderTextColor={theme.colors.muted}
+                style={styles.textInput}
+                autoFocus={mode === "create"}
+              />
+            </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Exercise</Text>
+            <View style={styles.divider} />
+
             <Pressable
               onPress={() => {
                 haptics.buttonTap();
                 setExercisePickerOpen(true);
               }}
               style={({ pressed }) => [
-                styles.picker,
-                pressed && styles.pickerPressed
+                styles.pickerRow,
+                pressed && styles.pickerRowPressed
               ]}
             >
-              <Text
-                style={[
-                  styles.pickerText,
-                  !selectedExercise && styles.pickerPlaceholder
-                ]}
-              >
-                {selectedExercise?.name || "Select exercise"}
-              </Text>
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={theme.colors.muted}
-              />
+              <Text style={styles.fieldLabel}>Exercise</Text>
+              <View style={styles.pickerValue}>
+                <Text
+                  style={[
+                    styles.pickerValueText,
+                    !selectedExercise && styles.pickerPlaceholder
+                  ]}
+                >
+                  {selectedExercise?.name || "Select exercise"}
+                </Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={theme.colors.muted}
+                />
+              </View>
             </Pressable>
           </View>
         </View>
 
-        {/* Configuration Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Configuration</Text>
+        {/* Goal */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Goal</Text>
+          <View style={styles.card}>
+            <View style={styles.inlineField}>
+              <View style={styles.inlineFieldLeft}>
+                <View
+                  style={[
+                    styles.fieldIcon,
+                    { backgroundColor: theme.colors.successLight }
+                  ]}
+                >
+                  <Ionicons
+                    name="flag"
+                    size={18}
+                    color={theme.colors.success}
+                  />
+                </View>
+                <Text style={styles.inlineFieldLabel}>Target Reps</Text>
+              </View>
+              <TextInput
+                value={String(formData.challengeConfig.targetReps)}
+                onChangeText={(value) => {
+                  const num = Number(value);
+                  if (Number.isFinite(num) && num >= 0) {
+                    updateConfig("targetReps", num);
+                  }
+                }}
+                keyboardType="number-pad"
+                style={styles.inlineInput}
+              />
+            </View>
 
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldRowLabel}>Target Reps</Text>
-            <TextInput
-              value={String(formData.challengeConfig.targetReps)}
-              onChangeText={(value) => {
-                const num = Number(value);
-                if (Number.isFinite(num) && num >= 0) {
-                  updateConfig("targetReps", num);
+            <View style={styles.divider} />
+
+            <View style={styles.inlineField}>
+              <View style={styles.inlineFieldLeft}>
+                <View
+                  style={[
+                    styles.fieldIcon,
+                    { backgroundColor: theme.colors.primaryLight }
+                  ]}
+                >
+                  <Ionicons
+                    name="calendar"
+                    size={18}
+                    color={theme.colors.primary}
+                  />
+                </View>
+                <Text style={styles.inlineFieldLabel}>Duration (days)</Text>
+              </View>
+              <TextInput
+                value={
+                  formData.challengeConfig.duration
+                    ? String(formData.challengeConfig.duration)
+                    : ""
                 }
-              }}
-              keyboardType="number-pad"
-              style={styles.fieldRowInput}
-            />
+                onChangeText={(value) => {
+                  const num = Number(value);
+                  updateConfig(
+                    "duration",
+                    Number.isFinite(num) && num > 0 ? num : undefined
+                  );
+                }}
+                keyboardType="number-pad"
+                style={styles.inlineInput}
+                placeholder="30"
+                placeholderTextColor={theme.colors.muted}
+              />
+            </View>
           </View>
+        </View>
 
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldRowLabel}>Sets per Session</Text>
-            <TextInput
-              value={String(formData.challengeConfig.sets)}
-              onChangeText={(value) => {
-                const num = Number(value);
-                if (Number.isFinite(num) && num >= 0) {
-                  updateConfig("sets", num);
-                }
-              }}
-              keyboardType="number-pad"
-              style={styles.fieldRowInput}
-            />
+        {/* Session Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Session Settings</Text>
+          <View style={styles.card}>
+            <View style={styles.inlineField}>
+              <View style={styles.inlineFieldLeft}>
+                <View
+                  style={[
+                    styles.fieldIcon,
+                    { backgroundColor: theme.colors.successLight }
+                  ]}
+                >
+                  <Ionicons
+                    name="layers"
+                    size={18}
+                    color={theme.colors.success}
+                  />
+                </View>
+                <Text style={styles.inlineFieldLabel}>Sets per Session</Text>
+              </View>
+              <TextInput
+                value={String(formData.challengeConfig.sets)}
+                onChangeText={(value) => {
+                  const num = Number(value);
+                  if (Number.isFinite(num) && num >= 0) {
+                    updateConfig("sets", num);
+                  }
+                }}
+                keyboardType="number-pad"
+                style={styles.inlineInput}
+              />
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.inlineField}>
+              <View style={styles.inlineFieldLeft}>
+                <View
+                  style={[
+                    styles.fieldIcon,
+                    { backgroundColor: theme.colors.accentLight }
+                  ]}
+                >
+                  <Ionicons
+                    name="play-circle"
+                    size={18}
+                    color={theme.colors.accent}
+                  />
+                </View>
+                <Text style={styles.inlineFieldLabel}>Initial Reps per Set</Text>
+              </View>
+              <TextInput
+                value={String(formData.challengeConfig.initialReps)}
+                onChangeText={(value) => {
+                  const num = Number(value);
+                  if (Number.isFinite(num) && num >= 0) {
+                    updateConfig("initialReps", num);
+                  }
+                }}
+                keyboardType="number-pad"
+                style={styles.inlineInput}
+              />
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.inlineField}>
+              <View style={styles.inlineFieldLeft}>
+                <View
+                  style={[
+                    styles.fieldIcon,
+                    { backgroundColor: theme.colors.primaryLight }
+                  ]}
+                >
+                  <Ionicons
+                    name="trending-up"
+                    size={18}
+                    color={theme.colors.primary}
+                  />
+                </View>
+                <Text style={styles.inlineFieldLabel}>Weekly Increase</Text>
+              </View>
+              <View style={styles.inlineInputWrapper}>
+                <TextInput
+                  value={String(
+                    formData.challengeConfig.weeklyIncreasePercent
+                  )}
+                  onChangeText={(value) => {
+                    const num = Number(value);
+                    if (Number.isFinite(num) && num >= 0 && num <= 100) {
+                      updateConfig("weeklyIncreasePercent", num);
+                    }
+                  }}
+                  keyboardType="number-pad"
+                  style={styles.inlineInput}
+                />
+                <Text style={styles.inputSuffix}>%</Text>
+              </View>
+            </View>
           </View>
+        </View>
 
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldRowLabel}>Warm-up (seconds)</Text>
-            <TextInput
-              value={String(formData.challengeConfig.warmUpSeconds)}
-              onChangeText={(value) => {
-                const num = Number(value);
-                if (Number.isFinite(num) && num >= 0) {
-                  updateConfig("warmUpSeconds", num);
-                }
-              }}
-              keyboardType="number-pad"
-              style={styles.fieldRowInput}
-            />
-          </View>
+        {/* Timing */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Timing</Text>
+          <View style={styles.card}>
+            {/* Warm-up */}
+            <View style={styles.inlineField}>
+              <View style={styles.inlineFieldLeft}>
+                <View
+                  style={[
+                    styles.fieldIcon,
+                    { backgroundColor: theme.colors.phases.warmupBg }
+                  ]}
+                >
+                  <Ionicons
+                    name="flame"
+                    size={18}
+                    color={theme.colors.phases.warmup}
+                  />
+                </View>
+                <Text style={styles.inlineFieldLabel}>Warm-up</Text>
+              </View>
+              <View style={styles.timeInputGroup}>
+                <View style={styles.timeInputWrapper}>
+                  <TextInput
+                    value={String(
+                      Math.floor(formData.challengeConfig.warmUpSeconds / 60)
+                    )}
+                    onChangeText={(value) => {
+                      const mins = value === "" ? 0 : Number(value);
+                      if (Number.isFinite(mins) && mins >= 0) {
+                        const secs = formData.challengeConfig.warmUpSeconds % 60;
+                        updateConfig("warmUpSeconds", mins * 60 + secs);
+                      }
+                    }}
+                    keyboardType="number-pad"
+                    style={styles.timeInput}
+                    placeholder="0"
+                    maxLength={3}
+                  />
+                  <Text style={styles.timeUnit}>min</Text>
+                </View>
+                <View style={styles.timeInputWrapper}>
+                  <TextInput
+                    value={String(formData.challengeConfig.warmUpSeconds % 60)}
+                    onChangeText={(value) => {
+                      let secs = value === "" ? 0 : Number(value);
+                      if (Number.isFinite(secs) && secs >= 0) {
+                        if (secs > 59) secs = 59;
+                        const mins = Math.floor(
+                          formData.challengeConfig.warmUpSeconds / 60
+                        );
+                        updateConfig("warmUpSeconds", mins * 60 + secs);
+                      }
+                    }}
+                    keyboardType="number-pad"
+                    style={styles.timeInput}
+                    placeholder="0"
+                    maxLength={2}
+                  />
+                  <Text style={styles.timeUnit}>sec</Text>
+                </View>
+              </View>
+            </View>
 
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldRowLabel}>Break (seconds)</Text>
-            <TextInput
-              value={String(formData.challengeConfig.breakSeconds)}
-              onChangeText={(value) => {
-                const num = Number(value);
-                if (Number.isFinite(num) && num >= 0) {
-                  updateConfig("breakSeconds", num);
-                }
-              }}
-              keyboardType="number-pad"
-              style={styles.fieldRowInput}
-            />
-          </View>
+            <View style={styles.divider} />
 
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldRowLabel}>Daily Increase (%)</Text>
-            <TextInput
-              value={String(formData.challengeConfig.sessionIncreasePercent)}
-              onChangeText={(value) => {
-                const num = Number(value);
-                if (Number.isFinite(num) && num >= 0 && num <= 100) {
-                  updateConfig("sessionIncreasePercent", num);
-                }
-              }}
-              keyboardType="number-pad"
-              style={styles.fieldRowInput}
-            />
-          </View>
-
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldRowLabel}>Duration (days)</Text>
-            <TextInput
-              value={
-                formData.challengeConfig.duration
-                  ? String(formData.challengeConfig.duration)
-                  : ""
-              }
-              onChangeText={(value) => {
-                const num = Number(value);
-                updateConfig(
-                  "duration",
-                  Number.isFinite(num) && num > 0 ? num : undefined
-                );
-              }}
-              keyboardType="number-pad"
-              style={styles.fieldRowInput}
-              placeholder="30"
-              placeholderTextColor={theme.colors.muted}
-            />
+            {/* Rest Between Sets */}
+            <View style={styles.inlineField}>
+              <View style={styles.inlineFieldLeft}>
+                <View
+                  style={[
+                    styles.fieldIcon,
+                    { backgroundColor: theme.colors.phases.breakBg }
+                  ]}
+                >
+                  <Ionicons
+                    name="pause"
+                    size={18}
+                    color={theme.colors.phases.break}
+                  />
+                </View>
+                <Text style={styles.inlineFieldLabel}>Rest Between Sets</Text>
+              </View>
+              <View style={styles.timeInputGroup}>
+                <View style={styles.timeInputWrapper}>
+                  <TextInput
+                    value={String(
+                      Math.floor(formData.challengeConfig.breakSeconds / 60)
+                    )}
+                    onChangeText={(value) => {
+                      const mins = value === "" ? 0 : Number(value);
+                      if (Number.isFinite(mins) && mins >= 0) {
+                        const secs = formData.challengeConfig.breakSeconds % 60;
+                        updateConfig("breakSeconds", mins * 60 + secs);
+                      }
+                    }}
+                    keyboardType="number-pad"
+                    style={styles.timeInput}
+                    placeholder="0"
+                    maxLength={3}
+                  />
+                  <Text style={styles.timeUnit}>min</Text>
+                </View>
+                <View style={styles.timeInputWrapper}>
+                  <TextInput
+                    value={String(formData.challengeConfig.breakSeconds % 60)}
+                    onChangeText={(value) => {
+                      let secs = value === "" ? 0 : Number(value);
+                      if (Number.isFinite(secs) && secs >= 0) {
+                        if (secs > 59) secs = 59;
+                        const mins = Math.floor(
+                          formData.challengeConfig.breakSeconds / 60
+                        );
+                        updateConfig("breakSeconds", mins * 60 + secs);
+                      }
+                    }}
+                    keyboardType="number-pad"
+                    style={styles.timeInput}
+                    placeholder="0"
+                    maxLength={2}
+                  />
+                  <Text style={styles.timeUnit}>sec</Text>
+                </View>
+              </View>
+            </View>
           </View>
         </View>
       </ScrollView>
-
-      {/* Fixed Footer */}
-      <View style={styles.footer}>
-        <Pressable
-          onPress={handleCancel}
-          style={({ pressed }) => [
-            styles.cancelBtn,
-            pressed && styles.cancelBtnPressed
-          ]}
-        >
-          <Text style={styles.cancelBtnText}>Cancel</Text>
-        </Pressable>
-        <Pressable
-          onPress={handleSave}
-          disabled={saving}
-          style={({ pressed }) => [
-            styles.saveBtn,
-            pressed && !saving && styles.saveBtnPressed,
-            saving && styles.saveBtnDisabled
-          ]}
-        >
-          <Text style={styles.saveBtnText}>
-            {saving ? "Saving..." : "Save"}
-          </Text>
-        </Pressable>
-      </View>
 
       {/* Exercise Picker Modal */}
       <Modal
@@ -355,65 +574,72 @@ export function ChallengeForm({
         animationType="slide"
         onRequestClose={() => setExercisePickerOpen(false)}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setExercisePickerOpen(false)}
+        >
+          <View
+            style={styles.modalContent}
+            onStartShouldSetResponder={() => true}
+          >
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Exercise</Text>
-              <Pressable
-                onPress={() => setExercisePickerOpen(false)}
-                style={({ pressed }) => [
-                  styles.modalCloseBtn,
-                  pressed && styles.modalCloseBtnPressed
-                ]}
-              >
-                <Ionicons name="close" size={18} color={theme.colors.text} />
-              </Pressable>
             </View>
             <ScrollView
               style={styles.exerciseList}
               showsVerticalScrollIndicator={false}
             >
-              {exercises.map((exercise) => (
-                <Pressable
-                  key={exercise.id}
-                  onPress={() => {
-                    haptics.buttonTap();
-                    updateConfig("exerciseId", exercise.id);
-                    setExercisePickerOpen(false);
-                  }}
-                  style={({ pressed }) => [
-                    styles.exerciseItem,
-                    formData.challengeConfig.exerciseId === exercise.id &&
-                      styles.exerciseItemSelected,
-                    pressed && styles.exerciseItemPressed
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.exerciseItemText,
-                      formData.challengeConfig.exerciseId === exercise.id &&
-                        styles.exerciseItemTextSelected
+              {exercises.map((exercise) => {
+                const isSelected =
+                  formData.challengeConfig.exerciseId === exercise.id;
+                return (
+                  <Pressable
+                    key={exercise.id}
+                    onPress={() => {
+                      haptics.buttonTap();
+                      updateConfig("exerciseId", exercise.id);
+                      setExercisePickerOpen(false);
+                    }}
+                    style={({ pressed }) => [
+                      styles.exerciseItem,
+                      isSelected && styles.exerciseItemSelected,
+                      pressed && styles.exerciseItemPressed
                     ]}
                   >
-                    {exercise.name}
-                  </Text>
-                  {formData.challengeConfig.exerciseId === exercise.id && (
-                    <Ionicons
-                      name="checkmark"
-                      size={18}
-                      color={theme.colors.primary}
-                    />
-                  )}
-                </Pressable>
-              ))}
+                    <Text
+                      style={[
+                        styles.exerciseItemText,
+                        isSelected && styles.exerciseItemTextSelected
+                      ]}
+                    >
+                      {exercise.name}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={22}
+                        color={theme.colors.primary}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })}
               {exercises.length === 0 && (
-                <Text style={styles.emptyText}>
-                  No exercises available. Create an exercise first.
-                </Text>
+                <View style={styles.emptyState}>
+                  <Ionicons
+                    name="fitness-outline"
+                    size={32}
+                    color={theme.colors.muted}
+                  />
+                  <Text style={styles.emptyText}>
+                    No exercises available.{"\n"}Create an exercise first.
+                  </Text>
+                </View>
               )}
             </ScrollView>
           </View>
-        </View>
+        </Pressable>
       </Modal>
     </KeyboardAvoidingView>
   );
@@ -428,195 +654,221 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.surface
-  },
-  headerBackBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
     backgroundColor: theme.colors.background
   },
-  headerBackBtnPressed: {
-    backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.96 }]
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.full,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  backButtonPressed: {
+    backgroundColor: theme.colors.surface
   },
   headerTitle: {
     ...theme.typography.h3,
     color: theme.colors.text
   },
-  headerSpacer: {
-    width: 36
+  saveButton: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primary
+  },
+  saveButtonPressed: {
+    opacity: 0.9
+  },
+  saveButtonDisabled: {
+    backgroundColor: theme.colors.border
+  },
+  saveButtonText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primaryTextOn
+  },
+  saveButtonTextDisabled: {
+    color: theme.colors.muted
   },
   scrollView: {
     flex: 1
   },
   content: {
     padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
-    gap: theme.spacing.lg
+    paddingBottom: theme.spacing.xxl * 2,
+    gap: theme.spacing.xl
+  },
+  section: {
+    gap: theme.spacing.sm
+  },
+  sectionTitle: {
+    ...theme.typography.small,
+    color: theme.colors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginLeft: theme.spacing.xs
   },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
     ...theme.shadows.sm
   },
-  cardTitle: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.text,
-    marginBottom: -theme.spacing.sm
-  },
   field: {
+    padding: theme.spacing.lg,
     gap: theme.spacing.sm
   },
-  label: {
+  fieldLabel: {
     ...theme.typography.caption,
-    color: theme.colors.subtext,
-    fontFamily: theme.fonts.semiBold
+    color: theme.colors.muted
   },
-  input: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.surface,
+  textInput: {
+    ...theme.typography.body,
     color: theme.colors.text,
-    ...theme.typography.body
+    padding: 0
   },
-  picker: {
+  divider: {
+    height: 1,
+    backgroundColor: theme.colors.borderLight,
+    marginHorizontal: theme.spacing.lg
+  },
+  pickerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.surface
+    padding: theme.spacing.lg
   },
-  pickerPressed: {
+  pickerRowPressed: {
     backgroundColor: theme.colors.background
   },
-  pickerText: {
+  pickerValue: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs
+  },
+  pickerValueText: {
     ...theme.typography.body,
     color: theme.colors.text
   },
   pickerPlaceholder: {
     color: theme.colors.muted
   },
-  fieldRow: {
+  inlineField: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    padding: theme.spacing.lg
+  },
+  inlineFieldLeft: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.md
   },
-  fieldRowLabel: {
-    ...theme.typography.body,
-    color: theme.colors.subtext,
-    flex: 1
+  fieldIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.sm,
+    alignItems: "center",
+    justifyContent: "center"
   },
-  fieldRowInput: {
-    width: 100,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
-    color: theme.colors.text,
+  inlineFieldLabel: {
     ...theme.typography.body,
-    textAlign: "center"
+    color: theme.colors.text
   },
-  footer: {
+  inlineInput: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primary,
+    textAlign: "right",
+    minWidth: 60,
+    padding: 0
+  },
+  inlineInputWrapper: {
     flexDirection: "row",
-    gap: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    backgroundColor: theme.colors.surface
-  },
-  cancelBtn: {
-    flex: 1,
     alignItems: "center",
-    justifyContent: "center",
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border
+    gap: 0
   },
-  cancelBtnPressed: {
-    backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.98 }]
+  inputSuffix: {
+    ...theme.typography.body,
+    color: theme.colors.muted,
+    marginLeft: theme.spacing.xs
   },
-  cancelBtnText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.subtext
-  },
-  saveBtn: {
-    flex: 2,
+  timeInputGroup: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.md
+    gap: theme.spacing.md
   },
-  saveBtnPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }]
+  timeInputWrapper: {
+    flexDirection: "column",
+    alignItems: "center",
+    gap: theme.spacing.xs
   },
-  saveBtnDisabled: {
-    opacity: 0.5
-  },
-  saveBtnText: {
+  timeInput: {
     ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn
+    color: theme.colors.primary,
+    textAlign: "center",
+    minWidth: 50,
+    padding: 0
+  },
+  timeUnit: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    fontFamily: theme.fonts.medium
+  },
+  timeLabel: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    fontFamily: theme.fonts.medium
+  },
+  timeSeparator: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text,
+    marginHorizontal: 2
+  },
+  timeDisplay: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primary
+  },
+  hint: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    marginLeft: theme.spacing.xs,
+    marginTop: theme.spacing.xs
   },
   modalBackdrop: {
     flex: 1,
     backgroundColor: theme.colors.overlay,
     justifyContent: "flex-end"
   },
-  modalCard: {
+  modalContent: {
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    padding: theme.spacing.lg,
-    maxHeight: "60%"
+    maxHeight: "60%",
+    paddingBottom: theme.spacing.xxl
+  },
+  modalHandle: {
+    width: 36,
+    height: 4,
+    backgroundColor: theme.colors.border,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing.lg
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderLight
   },
   modalTitle: {
     ...theme.typography.h3,
-    color: theme.colors.text
-  },
-  modalCloseBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background
-  },
-  modalCloseBtnPressed: {
-    backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.96 }]
+    color: theme.colors.text,
+    textAlign: "center"
   },
   exerciseList: {
-    maxHeight: 350
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md
   },
   exerciseItem: {
     flexDirection: "row",
@@ -638,13 +890,17 @@ const styles = StyleSheet.create({
     color: theme.colors.text
   },
   exerciseItemTextSelected: {
-    color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold
+    ...theme.typography.bodyBold,
+    color: theme.colors.primary
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: theme.spacing.xxl,
+    gap: theme.spacing.md
   },
   emptyText: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center",
-    padding: theme.spacing.xl
+    textAlign: "center"
   }
 });

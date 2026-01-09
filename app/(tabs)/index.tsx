@@ -1,5 +1,5 @@
-import { ProgressStats, WeeklyChart } from "@/components";
-import { EmptyState } from "@/components/common";
+import { WeeklyChart } from "@/components";
+import { AnimatedCard, EmptyState } from "@/components/common";
 import { useAllProgress, usePrograms, useWeeklyActivity } from "@/hooks/data";
 import {
   prioritizePrograms,
@@ -54,14 +54,6 @@ export default function Index() {
   const { data: weeklyData } = useWeeklyActivity();
   const { data: aggregated } = useAllProgress();
 
-  const progressStats = useMemo(() => {
-    if (!aggregated) return [];
-    return [
-      { label: "Total Workouts", value: aggregated.totalWorkoutsCompleted },
-      { label: "Current Streak", value: `${aggregated.currentStreak} days` }
-    ];
-  }, [aggregated]);
-
   const handleProgramSelect = (program: Program | ProgramWithPriority) => {
     setProgramSelectorOpen(false);
     router.navigate({ pathname: "/programs/[id]", params: { id: program.id } });
@@ -74,6 +66,8 @@ export default function Index() {
       setProgramSelectorOpen(true);
     }
   };
+
+  const hasProgress = aggregated && aggregated.totalWorkoutsCompleted > 0;
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
@@ -88,104 +82,147 @@ export default function Index() {
         </View>
 
         <View style={styles.content}>
-          {/* Progress Summary */}
-          {aggregated && progressStats.length > 0 && (
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <View style={styles.cardIconContainer}>
-                  <Ionicons
-                    name="stats-chart"
-                    size={18}
-                    color={theme.colors.primary}
-                  />
-                </View>
-                <Text style={styles.cardTitle}>Your Progress</Text>
-              </View>
-              <ProgressStats stats={progressStats} columns={2} />
+          {/* Quick Start Hero */}
+          {allPrograms.length > 0 && (
+            <AnimatedCard>
               <Pressable
+                onPress={handleQuickStart}
                 style={({ pressed }) => [
-                  styles.viewProgressButton,
-                  pressed && styles.viewProgressButtonPressed
+                  styles.heroCard,
+                  pressed && styles.heroCardPressed
                 ]}
-                onPress={() => router.navigate("/(tabs)/progress")}
               >
-                <Text style={styles.viewProgressText}>View Full Progress</Text>
+                <View style={styles.heroContent}>
+                  <View style={styles.heroIconContainer}>
+                    <Ionicons
+                      name="play"
+                      size={28}
+                      color={theme.colors.primaryTextOn}
+                    />
+                  </View>
+                  <View style={styles.heroTextContainer}>
+                    <Text style={styles.heroTitle}>
+                      {allPrograms.length === 1
+                        ? "Start Workout"
+                        : "Quick Start"}
+                    </Text>
+                    <Text style={styles.heroSubtitle}>
+                      {allPrograms.length === 1
+                        ? allPrograms[0].name
+                        : `${allPrograms.length} programs available`}
+                    </Text>
+                  </View>
+                </View>
                 <Ionicons
                   name="chevron-forward"
-                  size={16}
-                  color={theme.colors.primary}
+                  size={22}
+                  color={theme.colors.primaryTextOn}
                 />
               </Pressable>
-            </View>
+            </AnimatedCard>
           )}
 
-          {/* Weekly Activity Chart */}
-          <WeeklyChart data={weeklyData} title="Last 7 days" />
+          {/* Stats Row */}
+          {hasProgress && (
+            <AnimatedCard delay={50}>
+              <View style={styles.statsRow}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.statCard,
+                    pressed && styles.statCardPressed
+                  ]}
+                  onPress={() => router.navigate("/(tabs)/progress")}
+                >
+                  <View style={styles.statIconContainer}>
+                    <Ionicons
+                      name="fitness"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                  </View>
+                  <Text style={styles.statValue}>
+                    {aggregated.totalWorkoutsCompleted}
+                  </Text>
+                  <Text style={styles.statLabel}>workouts</Text>
+                </Pressable>
 
-          {/* Action Buttons */}
-          <View style={styles.actionsRow}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.statCard,
+                    pressed && styles.statCardPressed
+                  ]}
+                  onPress={() => router.navigate("/(tabs)/progress")}
+                >
+                  <View
+                    style={[
+                      styles.statIconContainer,
+                      { backgroundColor: theme.colors.accentLight }
+                    ]}
+                  >
+                    <Ionicons
+                      name="flame"
+                      size={20}
+                      color={theme.colors.accent}
+                    />
+                  </View>
+                  <Text style={styles.statValue}>
+                    {aggregated.currentStreak}
+                  </Text>
+                  <Text style={styles.statLabel}>day streak</Text>
+                </Pressable>
+              </View>
+            </AnimatedCard>
+          )}
+
+          {/* Weekly Activity */}
+          <AnimatedCard delay={100}>
+            <WeeklyChart data={weeklyData} title="This Week" />
+          </AnimatedCard>
+
+          {/* Browse Programs */}
+          <AnimatedCard delay={150}>
             <Pressable
               style={({ pressed }) => [
-                styles.actionButton,
-                pressed && styles.actionPressed
+                styles.browseCard,
+                pressed && styles.browseCardPressed
               ]}
               onPress={() => router.navigate("/(tabs)/library")}
             >
-              <View style={styles.actionIconContainer}>
-                <Ionicons
-                  name="list-outline"
-                  size={20}
-                  color={theme.colors.text}
-                />
+              <View style={styles.browseContent}>
+                <View style={styles.browseIconContainer}>
+                  <Ionicons
+                    name="grid-outline"
+                    size={22}
+                    color={theme.colors.primary}
+                  />
+                </View>
+                <View style={styles.browseTextContainer}>
+                  <Text style={styles.browseTitle}>Browse Library</Text>
+                  <Text style={styles.browseSubtitle}>
+                    Programs, challenges & exercises
+                  </Text>
+                </View>
               </View>
-              <Text style={styles.actionText}>All Programs</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.muted}
+              />
             </Pressable>
-
-            {allPrograms.length > 0 ? (
-              <Pressable
-                style={({ pressed }) => [
-                  styles.actionButtonPrimary,
-                  pressed && styles.actionPrimaryPressed
-                ]}
-                onPress={handleQuickStart}
-              >
-                <View style={styles.actionIconContainerPrimary}>
-                  <Ionicons
-                    name="play"
-                    size={20}
-                    color={theme.colors.primaryTextOn}
-                  />
-                </View>
-                <Text style={styles.actionPrimaryText}>
-                  {allPrograms.length === 1
-                    ? "Quick Start"
-                    : `Start (${allPrograms.length})`}
-                </Text>
-              </Pressable>
-            ) : (
-              <View style={[styles.actionButtonPrimary, styles.actionDisabled]}>
-                <View style={styles.actionIconContainerPrimary}>
-                  <Ionicons
-                    name="add"
-                    size={20}
-                    color={theme.colors.primaryTextOn}
-                  />
-                </View>
-                <Text style={styles.actionPrimaryText}>No Programs</Text>
-              </View>
-            )}
-          </View>
+          </AnimatedCard>
 
           {/* Empty State */}
           {allPrograms.length === 0 && (
-            <EmptyState
-              variant="default"
-              icon="barbell-outline"
-              title="No programs yet"
-              description="Create your first program or challenge to get started"
-              actionLabel="Go to Library"
-              onAction={() => router.navigate("/(tabs)/library")}
-            />
+            <AnimatedCard delay={150}>
+              <EmptyState
+                variant="default"
+                icon="barbell-outline"
+                title="No programs yet"
+                description="Create your first program or challenge to get started"
+                actionLabel="Go to Library"
+                onAction={() => router.navigate("/(tabs)/library")}
+              />
+            </AnimatedCard>
           )}
         </View>
       </ScrollView>
@@ -197,19 +234,17 @@ export default function Index() {
         animationType="slide"
         onRequestClose={() => setProgramSelectorOpen(false)}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setProgramSelectorOpen(false)}
+        >
+          <Pressable
+            style={styles.modalContent}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Choose Program</Text>
-              <Pressable
-                onPress={() => setProgramSelectorOpen(false)}
-                style={({ pressed }) => [
-                  styles.modalCloseButton,
-                  pressed && styles.modalCloseButtonPressed
-                ]}
-              >
-                <Ionicons name="close" size={22} color={theme.colors.text} />
-              </Pressable>
             </View>
 
             <ScrollView
@@ -217,8 +252,8 @@ export default function Index() {
               showsVerticalScrollIndicator={false}
             >
               {challenges.length > 0 && (
-                <>
-                  <Text style={styles.sectionTitle}>Challenges</Text>
+                <View style={styles.programSection}>
+                  <Text style={styles.sectionLabel}>Challenges</Text>
                   {challenges.map((program) => (
                     <Pressable
                       key={program.id}
@@ -228,30 +263,30 @@ export default function Index() {
                         pressed && styles.programItemPressed
                       ]}
                     >
-                      <View style={styles.programItemContent}>
-                        <View
-                          style={[
-                            styles.programIconContainer,
-                            { backgroundColor: theme.colors.accentLight }
-                          ]}
-                        >
-                          <Ionicons
-                            name="trophy-outline"
-                            size={18}
-                            color={theme.colors.accent}
-                          />
-                        </View>
-                        <View style={styles.programInfo}>
-                          <Text style={styles.programName}>{program.name}</Text>
-                          {program.description && (
-                            <Text
-                              style={styles.programDescription}
-                              numberOfLines={1}
-                            >
-                              {program.description}
-                            </Text>
-                          )}
-                        </View>
+                      <View
+                        style={[
+                          styles.programIcon,
+                          { backgroundColor: theme.colors.successLight }
+                        ]}
+                      >
+                        <Ionicons
+                          name="trophy"
+                          size={18}
+                          color={theme.colors.success}
+                        />
+                      </View>
+                      <View style={styles.programInfo}>
+                        <Text style={styles.programName} numberOfLines={1}>
+                          {program.name}
+                        </Text>
+                        {program.description && (
+                          <Text
+                            style={styles.programDescription}
+                            numberOfLines={1}
+                          >
+                            {program.description}
+                          </Text>
+                        )}
                       </View>
                       <Ionicons
                         name="chevron-forward"
@@ -260,14 +295,12 @@ export default function Index() {
                       />
                     </Pressable>
                   ))}
-                </>
+                </View>
               )}
 
               {regularPrograms.length > 0 && (
-                <>
-                  <Text style={styles.sectionTitle}>
-                    {challenges.length > 0 ? "Programs" : "Programs"}
-                  </Text>
+                <View style={styles.programSection}>
+                  <Text style={styles.sectionLabel}>Programs</Text>
                   {regularPrograms.map((program) => (
                     <Pressable
                       key={program.id}
@@ -277,30 +310,30 @@ export default function Index() {
                         pressed && styles.programItemPressed
                       ]}
                     >
-                      <View style={styles.programItemContent}>
-                        <View
-                          style={[
-                            styles.programIconContainer,
-                            { backgroundColor: theme.colors.primaryLight }
-                          ]}
-                        >
-                          <Ionicons
-                            name="barbell-outline"
-                            size={18}
-                            color={theme.colors.primary}
-                          />
-                        </View>
-                        <View style={styles.programInfo}>
-                          <Text style={styles.programName}>{program.name}</Text>
-                          {program.description && (
-                            <Text
-                              style={styles.programDescription}
-                              numberOfLines={1}
-                            >
-                              {program.description}
-                            </Text>
-                          )}
-                        </View>
+                      <View
+                        style={[
+                          styles.programIcon,
+                          { backgroundColor: theme.colors.primaryLight }
+                        ]}
+                      >
+                        <Ionicons
+                          name="barbell"
+                          size={18}
+                          color={theme.colors.primary}
+                        />
+                      </View>
+                      <View style={styles.programInfo}>
+                        <Text style={styles.programName} numberOfLines={1}>
+                          {program.name}
+                        </Text>
+                        {program.description && (
+                          <Text
+                            style={styles.programDescription}
+                            numberOfLines={1}
+                          >
+                            {program.description}
+                          </Text>
+                        )}
                       </View>
                       <Ionicons
                         name="chevron-forward"
@@ -309,11 +342,11 @@ export default function Index() {
                       />
                     </Pressable>
                   ))}
-                </>
+                </View>
               )}
             </ScrollView>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </SafeAreaView>
   );
@@ -344,106 +377,119 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.xxl * 2,
-    gap: theme.spacing.lg
+    gap: theme.spacing.md
   },
-  card: {
+  heroCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.lg,
+    ...theme.shadows.md
+  },
+  heroCardPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }]
+  },
+  heroContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.md,
+    flex: 1
+  },
+  heroIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: theme.radius.full,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  heroTextContainer: {
+    flex: 1,
+    gap: theme.spacing.xs
+  },
+  heroTitle: {
+    ...theme.typography.h2,
+    color: theme.colors.primaryTextOn
+  },
+  heroSubtitle: {
+    ...theme.typography.caption,
+    color: theme.colors.primaryTextOn,
+    opacity: 0.85
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: theme.spacing.md
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.lg,
+    alignItems: "center",
+    ...theme.shadows.sm
+  },
+  statCardPressed: {
+    transform: [{ scale: 0.98 }]
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: theme.spacing.sm
+  },
+  statValue: {
+    ...theme.typography.h1,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs
+  },
+  statLabel: {
+    ...theme.typography.caption,
+    color: theme.colors.muted
+  },
+  browseCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
     ...theme.shadows.sm
   },
-  cardHeader: {
+  browseCardPressed: {
+    backgroundColor: theme.colors.background,
+    transform: [{ scale: 0.98 }]
+  },
+  browseContent: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: theme.spacing.md
+    gap: theme.spacing.md,
+    flex: 1
   },
-  cardIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: theme.radius.sm,
+  browseIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.md,
     backgroundColor: theme.colors.primaryLight,
     alignItems: "center",
-    justifyContent: "center",
-    marginRight: theme.spacing.sm
+    justifyContent: "center"
   },
-  cardTitle: {
-    ...theme.typography.h3,
-    color: theme.colors.text
-  },
-  viewProgressButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    gap: theme.spacing.xs
-  },
-  viewProgressButtonPressed: {
-    opacity: 0.7
-  },
-  viewProgressText: {
-    ...theme.typography.body,
-    color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold
-  },
-  actionsRow: {
-    flexDirection: "row",
-    gap: theme.spacing.md
-  },
-  actionButton: {
+  browseTextContainer: {
     flex: 1,
-    borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.surface,
-    paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.md,
-    alignItems: "center",
-    ...theme.shadows.sm
+    gap: 2
   },
-  actionPressed: {
-    backgroundColor: theme.colors.background,
-    transform: [{ scale: 0.98 }]
-  },
-  actionIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: theme.spacing.sm
-  },
-  actionText: {
+  browseTitle: {
     ...theme.typography.bodyBold,
     color: theme.colors.text
   },
-  actionButtonPrimary: {
-    flex: 1,
-    borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.md,
-    alignItems: "center",
-    ...theme.shadows.sm
-  },
-  actionPrimaryPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }]
-  },
-  actionIconContainerPrimary: {
-    width: 44,
-    height: 44,
-    borderRadius: theme.radius.md,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: theme.spacing.sm
-  },
-  actionPrimaryText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn
-  },
-  actionDisabled: {
-    opacity: 0.5
+  browseSubtitle: {
+    ...theme.typography.caption,
+    color: theme.colors.muted
   },
   modalBackdrop: {
     flex: 1,
@@ -454,70 +500,64 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    maxHeight: "75%",
-    paddingBottom: theme.spacing.xl
+    maxHeight: "70%",
+    paddingBottom: theme.spacing.xxl
+  },
+  modalHandle: {
+    width: 36,
+    height: 4,
+    backgroundColor: theme.colors.border,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.borderLight
   },
   modalTitle: {
     ...theme.typography.h3,
-    color: theme.colors.text
-  },
-  modalCloseButton: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.sm,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  modalCloseButtonPressed: {
-    backgroundColor: theme.colors.background
+    color: theme.colors.text,
+    textAlign: "center"
   },
   programList: {
     paddingHorizontal: theme.spacing.lg
   },
-  sectionTitle: {
-    ...theme.typography.captionBold,
+  programSection: {
+    marginTop: theme.spacing.lg
+  },
+  sectionLabel: {
+    ...theme.typography.small,
     color: theme.colors.muted,
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm
+    marginBottom: theme.spacing.sm,
+    marginLeft: theme.spacing.xs
   },
   programItem: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: theme.spacing.md,
     paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    marginBottom: theme.spacing.xs,
-    backgroundColor: theme.colors.surface
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radius.md
   },
   programItemPressed: {
     backgroundColor: theme.colors.background
   },
-  programItemContent: {
-    flexDirection: "row",
+  programIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.md,
     alignItems: "center",
-    flex: 1
-  },
-  programIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.sm,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: theme.spacing.md
+    justifyContent: "center"
   },
   programInfo: {
-    flex: 1
+    flex: 1,
+    gap: 2
   },
   programName: {
     ...theme.typography.bodyBold,
@@ -525,7 +565,6 @@ const styles = StyleSheet.create({
   },
   programDescription: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
-    marginTop: 2
+    color: theme.colors.muted
   }
 });

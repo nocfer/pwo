@@ -81,9 +81,9 @@ inclusion: always
 ## Typography System
 
 ### Font Families
-- Primary font: DM Sans
-- Weights: Regular (400), Medium (500), SemiBold (600), Bold (700)
-- Access via `theme.fonts.regular`, `theme.fonts.medium`, `theme.fonts.semiBold`, `theme.fonts.bold`
+- Primary font: Manrope (modern geometric sans-serif)
+- Weights: Regular (400), Medium (500), SemiBold (600), Bold (700), ExtraBold (800)
+- Access via `theme.fonts.regular`, `theme.fonts.medium`, `theme.fonts.semiBold`, `theme.fonts.bold`, `theme.fonts.extraBold`
 
 ### Typography Scale
 ```

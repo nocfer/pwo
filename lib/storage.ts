@@ -361,7 +361,10 @@ export const storage = {
       challengeConfig: input.challengeConfig,
       source: input.source,
       createdAt,
-      updatedAt: input.updatedAt ?? now
+      updatedAt: input.updatedAt ?? now,
+      // Include new configuration fields for sets and rest timers
+      initialWarmup: input.initialWarmup,
+      defaultRestBetweenExercises: input.defaultRestBetweenExercises
     };
     if (idx >= 0) arr[idx] = next;
     else arr.push(next);

@@ -36,13 +36,8 @@ export default function LibraryScreen() {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.headerText}>
-              <Text style={styles.title}>Library</Text>
-              <Text style={styles.subtitle}>
-                Exercises, programs & challenges
-              </Text>
-            </View>
+          <View style={styles.headerTop}>
+            <Text style={styles.title}>Library</Text>
             <View style={styles.headerActions}>
               <Pressable
                 style={({ pressed }) => [
@@ -52,8 +47,8 @@ export default function LibraryScreen() {
                 onPress={handleScanQR}
               >
                 <Ionicons
-                  name="qr-code-outline"
-                  size={20}
+                  name="scan-outline"
+                  size={22}
                   color={theme.colors.text}
                 />
               </Pressable>
@@ -69,10 +64,9 @@ export default function LibraryScreen() {
               >
                 <Ionicons
                   name="add"
-                  size={20}
+                  size={22}
                   color={theme.colors.primaryTextOn}
                 />
-                <Text style={styles.addButtonText}>New</Text>
               </Pressable>
             </View>
           </View>
@@ -89,107 +83,124 @@ export default function LibraryScreen() {
           onRequestClose={() => setShowCreateMenu(false)}
         >
           <Pressable
-            style={styles.modalOverlay}
+            style={styles.modalBackdrop}
             onPress={() => setShowCreateMenu(false)}
           >
-            <View style={styles.createMenu}>
-              <Text style={styles.createMenuTitle}>Create New</Text>
-
-              <Pressable
-                style={({ pressed }) => [
-                  styles.createMenuItem,
-                  pressed && styles.createMenuItemPressed
-                ]}
-                onPress={() => handleCreateNew("exercise")}
-              >
-                <View
-                  style={[
-                    styles.menuItemIcon,
-                    { backgroundColor: theme.colors.primaryLight }
+            <View
+              style={styles.createMenu}
+              onStartShouldSetResponder={() => true}
+            >
+              <View style={styles.createMenuHeader}>
+                <Text style={styles.createMenuTitle}>Create New</Text>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.closeButton,
+                    pressed && styles.closeButtonPressed
                   ]}
+                  onPress={() => setShowCreateMenu(false)}
                 >
-                  <Ionicons
-                    name="fitness-outline"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                </View>
-                <View style={styles.createMenuItemText}>
-                  <Text style={styles.createMenuItemTitle}>Exercise</Text>
-                  <Text style={styles.createMenuItemSubtitle}>
-                    Add a new exercise
-                  </Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={theme.colors.muted}
-                />
-              </Pressable>
+                  <Ionicons name="close" size={22} color={theme.colors.muted} />
+                </Pressable>
+              </View>
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.createMenuItem,
-                  pressed && styles.createMenuItemPressed
-                ]}
-                onPress={() => handleCreateNew("program")}
-              >
-                <View
-                  style={[
-                    styles.menuItemIcon,
-                    { backgroundColor: theme.colors.successLight }
+              <View style={styles.createMenuItems}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.createMenuItem,
+                    pressed && styles.createMenuItemPressed
                   ]}
+                  onPress={() => handleCreateNew("exercise")}
                 >
+                  <View
+                    style={[
+                      styles.menuItemIcon,
+                      { backgroundColor: theme.colors.primaryLight }
+                    ]}
+                  >
+                    <Ionicons
+                      name="fitness"
+                      size={22}
+                      color={theme.colors.primary}
+                    />
+                  </View>
+                  <View style={styles.menuItemText}>
+                    <Text style={styles.menuItemTitle}>Exercise</Text>
+                    <Text style={styles.menuItemSubtitle}>
+                      Add a custom exercise
+                    </Text>
+                  </View>
                   <Ionicons
-                    name="list-outline"
+                    name="chevron-forward"
                     size={20}
-                    color={theme.colors.success}
+                    color={theme.colors.muted}
                   />
-                </View>
-                <View style={styles.createMenuItemText}>
-                  <Text style={styles.createMenuItemTitle}>Program</Text>
-                  <Text style={styles.createMenuItemSubtitle}>
-                    Create a workout program
-                  </Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={theme.colors.muted}
-                />
-              </Pressable>
+                </Pressable>
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.createMenuItem,
-                  pressed && styles.createMenuItemPressed
-                ]}
-                onPress={() => handleCreateNew("challenge")}
-              >
-                <View
-                  style={[
-                    styles.menuItemIcon,
-                    { backgroundColor: theme.colors.accentLight }
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.createMenuItem,
+                    pressed && styles.createMenuItemPressed
                   ]}
+                  onPress={() => handleCreateNew("program")}
                 >
+                  <View
+                    style={[
+                      styles.menuItemIcon,
+                      { backgroundColor: theme.colors.successLight }
+                    ]}
+                  >
+                    <Ionicons
+                      name="barbell"
+                      size={22}
+                      color={theme.colors.success}
+                    />
+                  </View>
+                  <View style={styles.menuItemText}>
+                    <Text style={styles.menuItemTitle}>Program</Text>
+                    <Text style={styles.menuItemSubtitle}>
+                      Build a workout routine
+                    </Text>
+                  </View>
                   <Ionicons
-                    name="trophy-outline"
+                    name="chevron-forward"
                     size={20}
-                    color={theme.colors.accent}
+                    color={theme.colors.muted}
                   />
-                </View>
-                <View style={styles.createMenuItemText}>
-                  <Text style={styles.createMenuItemTitle}>Challenge</Text>
-                  <Text style={styles.createMenuItemSubtitle}>
-                    Set up a fitness challenge
-                  </Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={theme.colors.muted}
-                />
-              </Pressable>
+                </Pressable>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.createMenuItem,
+                    styles.createMenuItemLast,
+                    pressed && styles.createMenuItemPressed
+                  ]}
+                  onPress={() => handleCreateNew("challenge")}
+                >
+                  <View
+                    style={[
+                      styles.menuItemIcon,
+                      { backgroundColor: theme.colors.accentLight }
+                    ]}
+                  >
+                    <Ionicons
+                      name="trophy"
+                      size={22}
+                      color={theme.colors.accent}
+                    />
+                  </View>
+                  <View style={styles.menuItemText}>
+                    <Text style={styles.menuItemTitle}>Challenge</Text>
+                    <Text style={styles.menuItemSubtitle}>
+                      Set a progressive goal
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.colors.muted}
+                  />
+                </Pressable>
+              </View>
             </View>
           </Pressable>
         </Modal>
@@ -204,28 +215,19 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   },
   header: {
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderLight
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
+    backgroundColor: theme.colors.background
   },
-  headerContent: {
+  headerTop: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.lg
-  },
-  headerText: {
-    flex: 1
+    justifyContent: "space-between"
   },
   title: {
     ...theme.typography.h1,
     color: theme.colors.text
-  },
-  subtitle: {
-    ...theme.typography.body,
-    color: theme.colors.muted,
-    marginTop: theme.spacing.xs
   },
   headerActions: {
     flexDirection: "row",
@@ -233,39 +235,33 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.background,
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.surface,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    ...theme.shadows.sm
   },
   iconButtonPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.96 }]
+    transform: [{ scale: 0.95 }]
   },
   addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.xs,
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.md
+    alignItems: "center",
+    justifyContent: "center",
+    ...theme.shadows.sm
   },
   addButtonPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }]
-  },
-  addButtonText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn,
-    fontSize: 14
+    transform: [{ scale: 0.95 }]
   },
   dataManager: {
     flex: 1
   },
-  modalOverlay: {
+  modalBackdrop: {
     flex: 1,
     backgroundColor: theme.colors.overlay,
     justifyContent: "center",
@@ -274,45 +270,67 @@ const styles = StyleSheet.create({
   },
   createMenu: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
+    borderRadius: theme.radius.xl,
     width: "100%",
-    maxWidth: 340
+    maxWidth: 360,
+    ...theme.shadows.lg
+  },
+  createMenuHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: theme.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderLight
   },
   createMenuTitle: {
     ...theme.typography.h3,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.lg,
-    textAlign: "center"
+    color: theme.colors.text
+  },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.full,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  closeButtonPressed: {
+    backgroundColor: theme.colors.background
+  },
+  createMenuItems: {
+    padding: theme.spacing.md
   },
   createMenuItem: {
     flexDirection: "row",
     alignItems: "center",
     padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    marginBottom: theme.spacing.sm
+    borderRadius: theme.radius.lg,
+    marginBottom: theme.spacing.xs
+  },
+  createMenuItemLast: {
+    marginBottom: 0
   },
   createMenuItemPressed: {
     backgroundColor: theme.colors.background
   },
   menuItemIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.sm,
+    width: 48,
+    height: 48,
+    borderRadius: theme.radius.md,
     alignItems: "center",
     justifyContent: "center",
     marginRight: theme.spacing.md
   },
-  createMenuItemText: {
-    flex: 1
+  menuItemText: {
+    flex: 1,
+    gap: 2
   },
-  createMenuItemTitle: {
+  menuItemTitle: {
     ...theme.typography.bodyBold,
     color: theme.colors.text
   },
-  createMenuItemSubtitle: {
+  menuItemSubtitle: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
-    marginTop: 2
+    color: theme.colors.muted
   }
 });
