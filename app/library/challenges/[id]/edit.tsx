@@ -8,6 +8,7 @@ import { theme } from "@/theme/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditChallengeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -29,8 +30,9 @@ export default function EditChallengeScreen() {
         exerciseId: challenge.challengeConfig.exerciseId,
         sets: challenge.challengeConfig.sets,
         targetReps: challenge.challengeConfig.targetReps,
-        sessionIncreasePercent:
-          challenge.challengeConfig.sessionIncreasePercent || 10,
+        initialReps: challenge.challengeConfig.initialReps || 20,
+        weeklyIncreasePercent:
+          challenge.challengeConfig.weeklyIncreasePercent || 10,
         warmUpSeconds: challenge.challengeConfig.warmUpSeconds,
         breakSeconds: challenge.challengeConfig.breakSeconds
       }
@@ -61,7 +63,7 @@ export default function EditChallengeScreen() {
 
   if (!challenge || !initialData) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.errorCard}>
           <Text style={styles.errorText}>Challenge not found.</Text>
           <Pressable
@@ -74,12 +76,12 @@ export default function EditChallengeScreen() {
             <Text style={styles.backBtnText}>Go Back</Text>
           </Pressable>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ChallengeForm
         mode="edit"
         initialData={initialData}
@@ -88,7 +90,7 @@ export default function EditChallengeScreen() {
         saving={saving}
         exercises={exercises || []}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

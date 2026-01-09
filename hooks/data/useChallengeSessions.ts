@@ -13,8 +13,8 @@ function distributeIntoSets(total: number, sets: number): number[] {
 
 /**
  * Generates progressive ProgramSession[] from challenge config.
- * Sessions progress from 20 reps to targetReps, with configurable
- * percentage increase per session (default: 10%).
+ * Sessions progress from initialReps to targetReps, with configurable
+ * percentage increase per week (7 sessions, default: 10%).
  */
 export function generateChallengeSessions(
   config: ChallengeConfig
@@ -22,16 +22,17 @@ export function generateChallengeSessions(
   const {
     exerciseId,
     sets,
+    initialReps = 20,
     targetReps,
     warmUpSeconds,
     breakSeconds,
-    sessionIncreasePercent,
-    weeklyIncreasePercent // Backward compatibility
+    weeklyIncreasePercent
   } = config;
-  const increasePercent = sessionIncreasePercent ?? weeklyIncreasePercent ?? 10;
+  const increasePercent = weeklyIncreasePercent ?? 10;
   const result: ProgramSession[] = [];
-  let total = 20;
+  let total = initialReps;
   let i = 1;
+  let sessionInWeek = 0; // Track sessions within current week
 
   while (total <= targetReps) {
     const rounded = Math.max(1, Math.round(total));
@@ -73,7 +74,13 @@ export function generateChallengeSessions(
     });
 
     i += 1;
-    total += (total * increasePercent) / 100;
+    sessionInWeek += 1;
+
+    // Increase reps every 7 sessions (weekly)
+    if (sessionInWeek >= 7) {
+      total += (total * increasePercent) / 100;
+      sessionInWeek = 0;
+    }
   }
 
   // Ensure last session is exactly targetReps if we overshot slightly
@@ -127,18 +134,26 @@ export function generateChallengeSessions(
 /**
  * Calculate the total number of challenge sessions without generating them all.
  * This is useful for displaying session counts before generation.
+ * Increases happen every 7 sessions (weekly).
  */
 export function calculateChallengeSessionCount(
   config: ChallengeConfig
 ): number {
-  const increasePercent =
-    config.sessionIncreasePercent ?? config.weeklyIncreasePercent ?? 10;
-  let total = 20;
+  const increasePercent = config.weeklyIncreasePercent ?? 10;
+  const initialReps = config.initialReps ?? 20;
+  let total = initialReps;
   let count = 0;
+  let sessionInWeek = 0;
 
   while (total <= config.targetReps) {
     count += 1;
-    total += (total * increasePercent) / 100;
+    sessionInWeek += 1;
+
+    // Increase reps every 7 sessions (weekly)
+    if (sessionInWeek >= 7) {
+      total += (total * increasePercent) / 100;
+      sessionInWeek = 0;
+    }
   }
 
   // Add one more for the final session that reaches exactly targetReps

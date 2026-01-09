@@ -8,6 +8,7 @@ import { theme } from "@/theme/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditProgramScreen() {
   const params = useLocalSearchParams();
@@ -48,7 +49,7 @@ export default function EditProgramScreen() {
 
   if (!program) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.errorCard}>
           <Text style={styles.errorText}>Program not found.</Text>
           <Pressable
@@ -61,13 +62,13 @@ export default function EditProgramScreen() {
             <Text style={styles.backBtnText}>Go Back</Text>
           </Pressable>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (program.source === "builtin") {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.errorCard}>
           <Text style={styles.errorText}>
             Built-in programs cannot be edited.
@@ -82,7 +83,7 @@ export default function EditProgramScreen() {
             <Text style={styles.backBtnText}>Go Back</Text>
           </Pressable>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -94,7 +95,7 @@ export default function EditProgramScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ProgramForm
         mode="edit"
         initialData={initialData}
@@ -103,7 +104,7 @@ export default function EditProgramScreen() {
         saving={saving}
         exercises={exercises || []}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

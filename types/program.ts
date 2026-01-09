@@ -55,20 +55,15 @@ export type ProgramSession = {
 export type ChallengeConfig = {
   exerciseId: string;
   sets: number;
+  initialReps?: number;
   targetReps: number;
   warmUpSeconds: number;
   breakSeconds: number;
   /**
-   * Session increase percentage for rep progression (default: 10%).
-   * Each session increases total reps by this percentage.
-   * @deprecated Use sessionIncreasePercent instead. This field is kept for backward compatibility.
+   * Weekly increase percentage for rep progression (default: 10%).
+   * Each week increases total reps by this percentage.
    */
   weeklyIncreasePercent?: number;
-  /**
-   * Session increase percentage for rep progression (default: 10%).
-   * Each session increases total reps by this percentage.
-   */
-  sessionIncreasePercent?: number;
 };
 
 export type Program = {

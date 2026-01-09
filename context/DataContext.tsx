@@ -10,43 +10,43 @@ import { canSafelyDelete } from "@/lib/dependencyChecker";
 import { dataEvents } from "@/lib/events";
 import { storage } from "@/lib/storage";
 import {
-  validateExercise,
-  validateModificationPermissions,
-  validateUniqueName
+    validateExercise,
+    validateModificationPermissions,
+    validateUniqueName
 } from "@/lib/validation";
 import type {
-  AuditLogEntry,
-  ChallengeProgress,
-  DataAction,
-  DataEvent,
-  DataState,
-  DataType,
-  DependencyCheck,
-  EnhancedDataActions,
-  EnhancedDataState,
-  EventRecord,
-  Exercise,
-  ExerciseProgress,
-  ExportData,
-  HistoryEntry,
-  ImportData,
-  ImportResult,
-  LegacyProgram,
-  Program,
-  ProgramProgress,
-  SearchFacets,
-  SearchQuery,
-  SessionState,
-  UsageStats,
-  WorkoutProgress
+    AuditLogEntry,
+    ChallengeProgress,
+    DataAction,
+    DataEvent,
+    DataState,
+    DataType,
+    DependencyCheck,
+    EnhancedDataActions,
+    EnhancedDataState,
+    EventRecord,
+    Exercise,
+    ExerciseProgress,
+    ExportData,
+    HistoryEntry,
+    ImportData,
+    ImportResult,
+    LegacyProgram,
+    Program,
+    ProgramProgress,
+    SearchFacets,
+    SearchQuery,
+    SessionState,
+    UsageStats,
+    WorkoutProgress
 } from "@/types";
 import React, {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useReducer
+    createContext,
+    ReactNode,
+    useCallback,
+    useContext,
+    useEffect,
+    useReducer
 } from "react";
 
 type DataContextValue = {
@@ -211,12 +211,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
           typeof config.warmUpSeconds === "number" ? config.warmUpSeconds : 180,
         breakSeconds:
           typeof config.breakSeconds === "number" ? config.breakSeconds : 90,
-        sessionIncreasePercent:
-          typeof config.sessionIncreasePercent === "number"
-            ? config.sessionIncreasePercent
-            : typeof config.weeklyIncreasePercent === "number"
-              ? config.weeklyIncreasePercent
-              : 10
+        weeklyIncreasePercent:
+          typeof config.weeklyIncreasePercent === "number"
+            ? config.weeklyIncreasePercent
+            : 10
       };
     }
 
