@@ -1,36 +1,59 @@
 /**
- * Progress Tab - Shows key fitness metrics
+ * Statistics Tab - Unified progress and analytics dashboard
+ * Consolidates progress tracking, consistency, PRs, and exercise progression
  */
 
 import {
-  ConsistencyHeatmap,
-  ExerciseProgressionChart,
-  PersonalRecordsCard,
-  WeeklySummaryCard
+    ConsistencyHeatmap,
+    EnhancedExerciseProgressionChart,
+    PersonalRecordsCard,
+    WeeklySummaryCard
 } from "@/components";
+import { Button } from "@/components/common";
+import { useAllProgress } from "@/hooks/data";
 import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useRef, useState } from "react";
 import {
-  Animated,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View
+    Animated,
+    RefreshControl,
+    ScrollView,
+    Share,
+    StyleSheet,
+    Text,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function ProgressScreen() {
+function generateProgressReport(progressData: any): string {
+  const totalMinutes = Math.round(
+    (progressData.totalTimeSpentSeconds || 0) / 60
+  );
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `🏋️ Fitness Progress Report
+
+📊 Overall Stats:
+• Workouts: ${progressData.totalWorkoutsCompleted || 0}
+• Total Reps: ${progressData.totalRepsCompleted || 0}
+• Time: ${hours}h ${minutes}m
+• Streak: ${progressData.currentStreak || 0} days
+
+Generated on ${new Date().toLocaleDateString()}`;
+}
+
+export default function StatisticsScreen() {
   const [refreshing, setRefreshing] = useState(false);
+
+  const { data: allProgress } = useAllProgress();
 
   const section1Anim = useRef(new Animated.Value(0)).current;
   const section2Anim = useRef(new Animated.Value(0)).current;
   const section3Anim = useRef(new Animated.Value(0)).current;
   const section4Anim = useRef(new Animated.Value(0)).current;
+  const section5Anim = useRef(new Animated.Value(0)).current;
 
   const animateSections = useCallback(() => {
     Animated.stagger(80, [
@@ -53,9 +76,14 @@ export default function ProgressScreen() {
         toValue: 1,
         duration: 250,
         useNativeDriver: true
+      }),
+      Animated.timing(section5Anim, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true
       })
     ]).start();
-  }, [section1Anim, section2Anim, section3Anim, section4Anim]);
+  }, [section1Anim, section2Anim, section3Anim, section4Anim, section5Anim]);
 
   useState(() => {
     animateSections();
@@ -69,20 +97,24 @@ export default function ProgressScreen() {
     section2Anim.setValue(0);
     section3Anim.setValue(0);
     section4Anim.setValue(0);
+    section5Anim.setValue(0);
 
     await new Promise((resolve) => setTimeout(resolve, 400));
 
     setRefreshing(false);
     animateSections();
-  }, [animateSections, section1Anim, section2Anim, section3Anim, section4Anim]);
+  }, [animateSections, section1Anim, section2Anim, section3Anim, section4Anim, section5Anim]);
 
-  const handleStartWorkout = useCallback(() => {
-    router.push("/(tabs)");
-  }, []);
-
-  const handleViewAllPRs = useCallback(() => {
-    router.push("/(tabs)/analytics");
-  }, []);
+  const handleShareReport = useCallback(async () => {
+    try {
+      void haptics.shareData();
+      if (!allProgress) return;
+      const report = generateProgressReport(allProgress);
+      await Share.share({ message: report, title: "Progress Report" });
+    } catch {
+      // Share cancelled or failed
+    }
+  }, [allProgress]);
 
   const createAnimatedStyle = (anim: Animated.Value) => ({
     opacity: anim,
@@ -113,57 +145,110 @@ export default function ProgressScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.headerText}>
-              <Text style={styles.title}>Progress</Text>
-              <Text style={styles.subtitle}>Your fitness journey</Text>
-            </View>
-            <Pressable
-              style={({ pressed }) => [
-                styles.analyticsButton,
-                pressed && styles.analyticsButtonPressed
-              ]}
-              onPress={() => router.push("/(tabs)/analytics")}
-            >
-              <Ionicons
-                name="analytics-outline"
-                size={18}
-                color={theme.colors.primary}
-              />
-              <Text style={styles.analyticsButtonText}>Analytics</Text>
-            </Pressable>
-          </View>
+          <Text style={styles.title}>Statistics</Text>
+          <Text style={styles.subtitle}>Your fitness insights</Text>
         </View>
 
         {/* Weekly Summary */}
         <Animated.View
           style={[styles.section, createAnimatedStyle(section1Anim)]}
         >
-          <WeeklySummaryCard onStartWorkout={handleStartWorkout} />
+          <WeeklySummaryCard />
+        </Animated.View>
+
+        {/* Overall Stats */}
+        <Animated.View
+          style={[styles.section, createAnimatedStyle(section2Anim)]}
+        >
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Overall Progress</Text>
+            <View style={styles.statsGrid}>
+              <StatCard
+                icon="fitness"
+                label="Total Workouts"
+                value={allProgress?.totalWorkoutsCompleted || 0}
+                color={theme.colors.primary}
+              />
+              <StatCard
+                icon="flame"
+                label="Current Streak"
+                value={allProgress?.currentStreak || 0}
+                color={theme.colors.accent}
+              />
+              <StatCard
+                icon="barbell"
+                label="Total Reps"
+                value={allProgress?.totalRepsCompleted || 0}
+                color={theme.colors.phases.working}
+              />
+              <StatCard
+                icon="time"
+                label="Active Programs"
+                value={allProgress?.activePrograms || 0}
+                color={theme.colors.success}
+              />
+            </View>
+          </View>
         </Animated.View>
 
         {/* Consistency Heatmap */}
         <Animated.View
-          style={[styles.section, createAnimatedStyle(section2Anim)]}
+          style={[styles.section, createAnimatedStyle(section3Anim)]}
         >
-          <ConsistencyHeatmap weeks={8} />
+          <ConsistencyHeatmap weeks={12} />
         </Animated.View>
 
         {/* Personal Records */}
         <Animated.View
-          style={[styles.section, createAnimatedStyle(section3Anim)]}
+          style={[styles.section, createAnimatedStyle(section4Anim)]}
         >
-          <PersonalRecordsCard limit={3} onViewAll={handleViewAllPRs} />
+          <PersonalRecordsCard limit={5} />
         </Animated.View>
 
         {/* Exercise Progression */}
         <Animated.View
-          style={[styles.section, createAnimatedStyle(section4Anim)]}
+          style={[styles.section, createAnimatedStyle(section5Anim)]}
         >
-          <ExerciseProgressionChart />
+          <EnhancedExerciseProgressionChart />
         </Animated.View>
+
+        {/* Export Section */}
+        <View style={styles.section}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Share Progress</Text>
+            <Button
+              label="Share Report"
+              variant="secondary"
+              size="md"
+              onPress={handleShareReport}
+              icon="share-social"
+            />
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+  color
+}: {
+  icon: string;
+  label: string;
+  value: number;
+  color: string;
+}) {
+  return (
+    <View style={styles.statCard}>
+      <View style={[styles.statIcon, { backgroundColor: `${color}15` }]}>
+        <Ionicons name={icon as any} size={20} color={color} />
+      </View>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
   );
 }
 
@@ -183,14 +268,6 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.lg,
     paddingBottom: theme.spacing.md
   },
-  headerContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between"
-  },
-  headerText: {
-    flex: 1
-  },
   title: {
     ...theme.typography.h1,
     color: theme.colors.text,
@@ -200,25 +277,48 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.muted
   },
-  analyticsButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.xs,
-    backgroundColor: theme.colors.surface,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.md
-  },
-  analyticsButtonPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }]
-  },
-  analyticsButtonText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.primary,
-    fontSize: 14
-  },
   section: {
     marginTop: theme.spacing.lg
+  },
+  card: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.lg,
+    ...theme.shadows.sm
+  },
+  cardTitle: {
+    ...theme.typography.h3,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.md
+  },
+  statsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.spacing.md
+  },
+  statCard: {
+    flex: 1,
+    minWidth: "45%",
+    alignItems: "center",
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm
+  },
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: theme.spacing.sm
+  },
+  statValue: {
+    ...theme.typography.h2,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs
+  },
+  statLabel: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    textAlign: "center"
   }
 });
