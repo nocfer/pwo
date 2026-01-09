@@ -61,6 +61,243 @@ export const VALID_EXERCISE_ICONS = [
 ];
 
 // ============================================================================
+// Challenge Interdependency Calculations
+// ============================================================================
+
+/**
+ * Calculates the number of sessions needed to reach target reps
+ * given initial reps, sets, and weekly increase percentage
+ */
+export function calculateSessionsToTarget(
+  initialReps: number,
+  targetReps: number,
+  weeklyIncreasePercent: number
+): number {
+  if (initialReps >= targetReps) return 1;
+
+  // If no increase percentage, can never reach target
+  if (weeklyIncreasePercent <= 0) return Infinity;
+
+  let total = initialReps;
+  let count = 0;
+  let sessionInWeek = 0;
+
+  while (total <= targetReps) {
+    count += 1;
+    sessionInWeek += 1;
+
+    if (sessionInWeek >= 7) {
+      total += (total * weeklyIncreasePercent) / 100;
+      sessionInWeek = 0;
+    }
+  }
+
+  return count + 1;
+}
+
+/**
+ * Calculates the minimum duration (in days) needed to complete a challenge
+ * Assumes 1 session per day
+ */
+export function calculateMinimumDuration(
+  initialReps: number,
+  targetReps: number,
+  weeklyIncreasePercent: number
+): number {
+  return calculateSessionsToTarget(initialReps, targetReps, weeklyIncreasePercent);
+}
+
+/**
+ * Calculates the maximum target reps achievable in a given duration
+ * with the specified initial reps and weekly increase
+ */
+export function calculateMaxTargetReps(
+  initialReps: number,
+  durationDays: number,
+  weeklyIncreasePercent: number
+): number {
+  let total = initialReps;
+  let sessionInWeek = 0;
+
+  for (let i = 1; i < durationDays; i++) {
+    sessionInWeek += 1;
+
+    if (sessionInWeek >= 7) {
+      total += (total * weeklyIncreasePercent) / 100;
+      sessionInWeek = 0;
+    }
+  }
+
+  return Math.round(total);
+}
+
+/**
+ * Validates challenge interdependencies and returns suggested corrections
+ * Returns null if everything is valid, or an object with issues and suggestions
+ */
+export function validateChallengeInterdependencies(
+  initialReps: number,
+  targetReps: number,
+  durationDays: number | undefined,
+  weeklyIncreasePercent: number
+): {
+  isValid: boolean;
+  issues: string[];
+  suggestions: {
+    minDuration?: number;
+    maxTargetReps?: number;
+    recommendedDuration?: number;
+  };
+} {
+  const issues: string[] = [];
+  const suggestions: {
+    minDuration?: number;
+    maxTargetReps?: number;
+    recommendedDuration?: number;
+  } = {};
+
+  // Check if initial reps is greater than target reps
+  if (initialReps > targetReps) {
+    issues.push(
+      `Initial reps (${initialReps}) cannot be greater than target reps (${targetReps})`
+    );
+  }
+
+  // Check if initial reps equals target reps
+  if (initialReps === targetReps) {
+    issues.push(
+      `Initial reps (${initialReps}) should be less than target reps (${targetReps}) to have a meaningful progression`
+    );
+  }
+
+  // Calculate minimum duration needed
+  const minDuration = calculateMinimumDuration(
+    initialReps,
+    targetReps,
+    weeklyIncreasePercent
+  );
+  suggestions.minDuration = minDuration;
+
+  // If duration is specified, validate it
+  if (durationDays !== undefined && durationDays > 0) {
+    if (durationDays < minDuration) {
+      issues.push(
+        `Duration (${durationDays} days) is too short to reach target reps (${targetReps}) from initial reps (${initialReps}) with ${weeklyIncreasePercent}% weekly increase`
+      );
+      suggestions.recommendedDuration = minDuration;
+    }
+
+    // Calculate what target reps could be achieved in the given duration
+    const maxAchievable = calculateMaxTargetReps(
+      initialReps,
+      durationDays,
+      weeklyIncreasePercent
+    );
+    suggestions.maxTargetReps = maxAchievable;
+  }
+
+  return {
+    isValid: issues.length === 0,
+    issues,
+    suggestions
+  };
+}
+
+/**
+ * Auto-adjusts challenge configuration to maintain valid interdependencies
+ * When one field is edited, adjusts others to keep the configuration valid
+ */
+export function autoAdjustChallengeConfig(
+  field: string,
+  newValue: number,
+  currentConfig: {
+    initialReps: number;
+    targetReps: number;
+    weeklyIncreasePercent: number;
+    duration?: number;
+  }
+): {
+  initialReps: number;
+  targetReps: number;
+  weeklyIncreasePercent: number;
+  duration?: number;
+} {
+  const config = { ...currentConfig, [field]: newValue };
+
+  // If user changed initial reps
+  if (field === "initialReps") {
+    // If initial reps now >= target reps, increase target reps
+    if (config.initialReps >= config.targetReps) {
+      config.targetReps = Math.ceil(config.initialReps * 1.5);
+    }
+    // Recalculate minimum duration needed
+    const minDuration = calculateMinimumDuration(
+      config.initialReps,
+      config.targetReps,
+      config.weeklyIncreasePercent
+    );
+    if (config.duration && config.duration < minDuration) {
+      config.duration = minDuration;
+    }
+  }
+
+  // If user changed target reps
+  if (field === "targetReps") {
+    // If target reps now <= initial reps, increase target reps
+    if (config.targetReps <= config.initialReps) {
+      config.targetReps = Math.ceil(config.initialReps * 1.5);
+    }
+    // Recalculate minimum duration needed
+    const minDuration = calculateMinimumDuration(
+      config.initialReps,
+      config.targetReps,
+      config.weeklyIncreasePercent
+    );
+    if (config.duration && config.duration < minDuration) {
+      config.duration = minDuration;
+    }
+  }
+
+  // If user changed weekly increase percentage
+  if (field === "weeklyIncreasePercent") {
+    // If percentage is 0 or negative, set to minimum 1%
+    if (config.weeklyIncreasePercent <= 0) {
+      config.weeklyIncreasePercent = 1;
+    }
+    // Recalculate minimum duration needed
+    const minDuration = calculateMinimumDuration(
+      config.initialReps,
+      config.targetReps,
+      config.weeklyIncreasePercent
+    );
+    if (config.duration && config.duration < minDuration) {
+      config.duration = minDuration;
+    }
+  }
+
+  // If user changed duration
+  if (field === "duration") {
+    // If duration is now too short, adjust target reps down
+    if (config.duration && config.duration > 0) {
+      const maxAchievable = calculateMaxTargetReps(
+        config.initialReps,
+        config.duration,
+        config.weeklyIncreasePercent
+      );
+      // If target is unreachable, lower it to what's achievable
+      if (config.targetReps > maxAchievable) {
+        config.targetReps = Math.max(
+          config.initialReps + 1,
+          Math.floor(maxAchievable * 0.9)
+        );
+      }
+    }
+  }
+
+  return config;
+}
+
+// ============================================================================
 // Core Validation Functions
 // ============================================================================
 
@@ -401,7 +638,12 @@ export const programValidationSchema: ValidationSchema<EnhancedProgram> = {
     (program) => {
       const errors: ValidationError[] = [];
 
-      // Validate blocks array
+      // Challenges don't need blocks (they're generated from challengeConfig)
+      if (program.challengeConfig) {
+        return { isValid: errors.length === 0, errors };
+      }
+
+      // Validate blocks array for non-challenge programs
       if (!program.blocks || !Array.isArray(program.blocks)) {
         errors.push(
           createValidationError(
@@ -413,8 +655,8 @@ export const programValidationSchema: ValidationSchema<EnhancedProgram> = {
         return { isValid: false, errors };
       }
 
-      // For non-challenge programs, must have at least one block
-      if (!program.challengeConfig && program.blocks.length === 0) {
+      // Non-challenge programs must have at least one block
+      if (program.blocks.length === 0) {
         errors.push(
           createValidationError(
             "blocks",
@@ -663,32 +905,31 @@ export function validateChallengeConfig(
     );
   }
 
-  // Validate session increase percentage
-  const sessionIncreasePercent =
-    config.sessionIncreasePercent ?? config.weeklyIncreasePercent;
+  // Validate weekly increase percentage
+  const weeklyIncreasePercent = config.weeklyIncreasePercent;
   if (
-    sessionIncreasePercent !== undefined &&
-    sessionIncreasePercent !== null &&
-    (typeof sessionIncreasePercent !== "number" ||
-      sessionIncreasePercent <= 0 ||
-      sessionIncreasePercent > 100 ||
-      !Number.isInteger(sessionIncreasePercent))
+    weeklyIncreasePercent !== undefined &&
+    weeklyIncreasePercent !== null &&
+    (typeof weeklyIncreasePercent !== "number" ||
+      weeklyIncreasePercent <= 0 ||
+      weeklyIncreasePercent > 100 ||
+      !Number.isInteger(weeklyIncreasePercent))
   ) {
     errors.push(
       createValidationError(
-        "sessionIncreasePercent",
-        "Session increase percent must be between 1 and 100",
+        "weeklyIncreasePercent",
+        "Weekly increase percent must be between 1 and 100",
         ValidationErrorCode.INVALID_RANGE
       )
     );
   }
 
-  // Handle explicit null values for sessionIncreasePercent
-  if (config.sessionIncreasePercent === null) {
+  // Handle explicit null values for weeklyIncreasePercent
+  if (config.weeklyIncreasePercent === null) {
     errors.push(
       createValidationError(
-        "sessionIncreasePercent",
-        "Session increase percent must be between 1 and 100",
+        "weeklyIncreasePercent",
+        "Weekly increase percent must be between 1 and 100",
         ValidationErrorCode.INVALID_RANGE
       )
     );

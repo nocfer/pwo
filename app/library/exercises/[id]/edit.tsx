@@ -8,6 +8,7 @@ import { theme } from "@/theme/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditExerciseScreen() {
   const params = useLocalSearchParams();
@@ -44,7 +45,7 @@ export default function EditExerciseScreen() {
 
   if (!exercise) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.errorCard}>
           <Text style={styles.errorText}>Exercise not found.</Text>
           <Pressable
@@ -57,13 +58,13 @@ export default function EditExerciseScreen() {
             <Text style={styles.backBtnText}>Go Back</Text>
           </Pressable>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (exercise.source === "builtin") {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.errorCard}>
           <Text style={styles.errorText}>
             Built-in exercises cannot be edited.
@@ -78,7 +79,7 @@ export default function EditExerciseScreen() {
             <Text style={styles.backBtnText}>Go Back</Text>
           </Pressable>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -89,7 +90,7 @@ export default function EditExerciseScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ExerciseForm
         mode="edit"
         initialData={initialData}
@@ -97,7 +98,7 @@ export default function EditExerciseScreen() {
         onCancel={handleCancel}
         saving={saving}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

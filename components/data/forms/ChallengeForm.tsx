@@ -4,7 +4,7 @@
  */
 
 import { haptics } from "@/lib/haptics";
-import { validateChallenge } from "@/lib/validation";
+import { autoAdjustChallengeConfig } from "@/lib/validation";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
@@ -27,9 +27,10 @@ export type ChallengeFormData = {
     exerciseId: string;
     sets: number;
     targetReps: number;
+    initialReps: number;
     warmUpSeconds: number;
     breakSeconds: number;
-    sessionIncreasePercent: number;
+    weeklyIncreasePercent: number;
     duration?: number;
   };
 };
@@ -58,10 +59,11 @@ export function ChallengeForm({
         initialData?.challengeConfig?.exerciseId || exercises[0]?.id || "",
       sets: initialData?.challengeConfig?.sets || 5,
       targetReps: initialData?.challengeConfig?.targetReps || 100,
+      initialReps: initialData?.challengeConfig?.initialReps || 20,
       warmUpSeconds: initialData?.challengeConfig?.warmUpSeconds || 180,
       breakSeconds: initialData?.challengeConfig?.breakSeconds || 90,
-      sessionIncreasePercent:
-        initialData?.challengeConfig?.sessionIncreasePercent || 10,
+      weeklyIncreasePercent:
+        initialData?.challengeConfig?.weeklyIncreasePercent || 10,
       duration: initialData?.challengeConfig?.duration || 30
     }
   });
@@ -77,51 +79,22 @@ export function ChallengeForm({
       field: K,
       value: ChallengeFormData["challengeConfig"][K]
     ) => {
-      setFormData((prev) => ({
-        ...prev,
-        challengeConfig: { ...prev.challengeConfig, [field]: value }
-      }));
+      setFormData((prev) => {
+        // Auto-adjust related fields to maintain valid configuration
+        const adjustedConfig = autoAdjustChallengeConfig(
+          field,
+          value as number,
+          prev.challengeConfig
+        );
+
+        return {
+          ...prev,
+          challengeConfig: adjustedConfig as ChallengeFormData["challengeConfig"]
+        };
+      });
     },
     []
   );
-
-  // Convert seconds to mm:ss format
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  // Parse mm:ss or m:ss format back to seconds
-  const parseTime = (input: string): number | null => {
-    const trimmed = input.trim();
-    if (!trimmed) return null;
-
-    // Handle just numbers (assume seconds if no colon)
-    if (!trimmed.includes(":")) {
-      const num = Number(trimmed);
-      return Number.isFinite(num) && num >= 0 ? num : null;
-    }
-
-    // Handle mm:ss format
-    const parts = trimmed.split(":");
-    if (parts.length !== 2) return null;
-
-    const mins = Number(parts[0]);
-    const secs = Number(parts[1]);
-
-    if (
-      !Number.isFinite(mins) ||
-      !Number.isFinite(secs) ||
-      mins < 0 ||
-      secs < 0 ||
-      secs > 59
-    ) {
-      return null;
-    }
-
-    return mins * 60 + secs;
-  };
 
   const selectedExercise = exercises.find(
     (ex) => ex.id === formData.challengeConfig.exerciseId
@@ -130,17 +103,9 @@ export function ChallengeForm({
   const handleSave = useCallback(async () => {
     const trimmed = formData.name.trim();
 
-    const challengeData = {
-      name: trimmed,
-      challengeConfig: formData.challengeConfig
-    };
-
-    const validationResult = validateChallenge(challengeData as never);
-
-    if (!validationResult.isValid) {
+    if (!trimmed) {
       haptics.formValidationError();
-      const firstError = validationResult.errors[0];
-      Alert.alert("Validation Error", firstError.message);
+      Alert.alert("Validation Error", "Please enter a challenge name.");
       return;
     }
 
@@ -162,6 +127,25 @@ export function ChallengeForm({
         "Invalid exercise",
         "Please select an exercise for this challenge."
       );
+      return;
+    }
+
+    // Basic validation for required numeric fields
+    if (formData.challengeConfig.initialReps <= 0) {
+      haptics.formValidationError();
+      Alert.alert("Validation Error", "Initial reps must be greater than 0.");
+      return;
+    }
+
+    if (formData.challengeConfig.targetReps <= formData.challengeConfig.initialReps) {
+      haptics.formValidationError();
+      Alert.alert("Validation Error", "Target reps must be greater than initial reps.");
+      return;
+    }
+
+    if (formData.challengeConfig.sets <= 0) {
+      haptics.formValidationError();
+      Alert.alert("Validation Error", "Sets must be greater than 0.");
       return;
     }
 
@@ -357,7 +341,21 @@ export function ChallengeForm({
           <Text style={styles.sectionTitle}>Session Settings</Text>
           <View style={styles.card}>
             <View style={styles.inlineField}>
-              <Text style={styles.inlineFieldLabel}>Sets per Session</Text>
+              <View style={styles.inlineFieldLeft}>
+                <View
+                  style={[
+                    styles.fieldIcon,
+                    { backgroundColor: theme.colors.successLight }
+                  ]}
+                >
+                  <Ionicons
+                    name="layers"
+                    size={18}
+                    color={theme.colors.success}
+                  />
+                </View>
+                <Text style={styles.inlineFieldLabel}>Sets per Session</Text>
+              </View>
               <TextInput
                 value={String(formData.challengeConfig.sets)}
                 onChangeText={(value) => {
@@ -374,16 +372,61 @@ export function ChallengeForm({
             <View style={styles.divider} />
 
             <View style={styles.inlineField}>
-              <Text style={styles.inlineFieldLabel}>Daily Increase</Text>
+              <View style={styles.inlineFieldLeft}>
+                <View
+                  style={[
+                    styles.fieldIcon,
+                    { backgroundColor: theme.colors.accentLight }
+                  ]}
+                >
+                  <Ionicons
+                    name="play-circle"
+                    size={18}
+                    color={theme.colors.accent}
+                  />
+                </View>
+                <Text style={styles.inlineFieldLabel}>Initial Reps per Set</Text>
+              </View>
+              <TextInput
+                value={String(formData.challengeConfig.initialReps)}
+                onChangeText={(value) => {
+                  const num = Number(value);
+                  if (Number.isFinite(num) && num >= 0) {
+                    updateConfig("initialReps", num);
+                  }
+                }}
+                keyboardType="number-pad"
+                style={styles.inlineInput}
+              />
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.inlineField}>
+              <View style={styles.inlineFieldLeft}>
+                <View
+                  style={[
+                    styles.fieldIcon,
+                    { backgroundColor: theme.colors.primaryLight }
+                  ]}
+                >
+                  <Ionicons
+                    name="trending-up"
+                    size={18}
+                    color={theme.colors.primary}
+                  />
+                </View>
+                <Text style={styles.inlineFieldLabel}>Weekly Increase</Text>
+              </View>
               <View style={styles.inlineInputWrapper}>
                 <TextInput
                   value={String(
-                    formData.challengeConfig.sessionIncreasePercent
+                    formData.challengeConfig.weeklyIncreasePercent
                   )}
                   onChangeText={(value) => {
                     const num = Number(value);
                     if (Number.isFinite(num) && num >= 0 && num <= 100) {
-                      updateConfig("sessionIncreasePercent", num);
+                      updateConfig("weeklyIncreasePercent", num);
                     }
                   }}
                   keyboardType="number-pad"
@@ -741,12 +784,13 @@ const styles = StyleSheet.create({
   },
   inlineInputWrapper: {
     flexDirection: "row",
-    alignItems: "center"
+    alignItems: "center",
+    gap: 0
   },
   inputSuffix: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    marginLeft: 2
+    marginLeft: theme.spacing.xs
   },
   timeInputGroup: {
     flexDirection: "row",
