@@ -6,14 +6,39 @@ type StatItem = {
   label: string;
   value: string | number;
   icon?: string;
+  color?: string;
 };
 
 type Props = {
   stats: StatItem[];
   columns?: 2 | 3;
+  compact?: boolean;
 };
 
-export default function ProgressStats({ stats, columns = 2 }: Props) {
+export default function ProgressStats({
+  stats,
+  columns = 2,
+  compact = false
+}: Props) {
+  if (compact) {
+    return (
+      <View style={styles.compactContainer}>
+        {stats.map((stat, index) => (
+          <View
+            key={index}
+            style={[
+              styles.compactItem,
+              index < stats.length - 1 && styles.compactItemBorder
+            ]}
+          >
+            <Text style={styles.compactValue}>{stat.value}</Text>
+            <Text style={styles.compactLabel}>{stat.label}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {stats.map((stat, index) => (
@@ -25,18 +50,21 @@ export default function ProgressStats({ stats, columns = 2 }: Props) {
           ]}
         >
           {stat.icon && (
-            <View style={styles.iconRow}>
+            <View
+              style={[
+                styles.iconContainer,
+                stat.color && { backgroundColor: `${stat.color}15` }
+              ]}
+            >
               <Ionicons
-                name={stat.icon as any}
-                size={16}
-                color={theme.colors.primary}
-                style={styles.icon}
+                name={stat.icon as keyof typeof Ionicons.glyphMap}
+                size={18}
+                color={stat.color || theme.colors.primary}
               />
-              <Text style={styles.label}>{stat.label}</Text>
             </View>
           )}
-          {!stat.icon && <Text style={styles.label}>{stat.label}</Text>}
           <Text style={styles.value}>{stat.value}</Text>
+          <Text style={styles.label}>{stat.label}</Text>
         </View>
       ))}
     </View>
@@ -60,23 +88,47 @@ const styles = StyleSheet.create({
   statItemThreeColumns: {
     minWidth: "30%"
   },
-  iconRow: {
-    flexDirection: "row",
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primaryLight,
     alignItems: "center",
-    marginBottom: theme.spacing.xs
-  },
-  icon: {
-    marginRight: theme.spacing.xs
+    justifyContent: "center",
+    marginBottom: theme.spacing.sm
   },
   value: {
     ...theme.typography.h2,
-    color: theme.colors.primary,
-    fontFamily: theme.fonts.bold,
+    color: theme.colors.text,
     marginBottom: theme.spacing.xs
   },
   label: {
     ...theme.typography.caption,
     color: theme.colors.muted,
     textAlign: "center"
+  },
+  compactContainer: {
+    flexDirection: "row",
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.sm
+  },
+  compactItem: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: theme.spacing.xs
+  },
+  compactItemBorder: {
+    borderRightWidth: 1,
+    borderRightColor: theme.colors.borderLight
+  },
+  compactValue: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text,
+    marginBottom: 2
+  },
+  compactLabel: {
+    ...theme.typography.small,
+    color: theme.colors.muted
   }
 });

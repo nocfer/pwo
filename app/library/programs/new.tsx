@@ -1,13 +1,14 @@
 import {
-    ProgramForm,
-    type ProgramFormData
+  ProgramForm,
+  type ProgramFormData
 } from "@/components/data/forms/ProgramForm";
 import { useDataActions } from "@/context/DataContext";
 import { useExercises } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NewProgramScreen() {
   const actions = useDataActions();
@@ -20,7 +21,9 @@ export default function NewProgramScreen() {
       await actions.upsertProgram({
         id: "",
         name: formData.name,
-        blocks: formData.blocks
+        blocks: formData.blocks,
+        initialWarmup: formData.initialWarmup,
+        defaultRestBetweenExercises: formData.defaultRestBetweenExercises
       });
       router.back();
     } catch (e) {
@@ -35,7 +38,7 @@ export default function NewProgramScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ProgramForm
         mode="create"
         onSave={handleSave}
@@ -43,7 +46,7 @@ export default function NewProgramScreen() {
         saving={saving}
         exercises={exercises || []}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

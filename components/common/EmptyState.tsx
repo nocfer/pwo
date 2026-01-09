@@ -11,6 +11,7 @@ type EmptyStateProps = {
   onAction?: () => void;
   variant?: "default" | "search" | "progress" | "history";
   style?: ViewStyle;
+  compact?: boolean;
 };
 
 const variantConfig = {
@@ -43,15 +44,48 @@ export function EmptyState({
   actionLabel,
   onAction,
   variant = "default",
-  style
+  style,
+  compact = false
 }: EmptyStateProps) {
   const config = variantConfig[variant];
   const iconName = icon || config.icon;
 
+  if (compact) {
+    return (
+      <View style={[styles.compactContainer, style]}>
+        <View
+          style={[
+            styles.compactIconContainer,
+            { backgroundColor: config.iconBg }
+          ]}
+        >
+          <Ionicons name={iconName} size={20} color={config.iconColor} />
+        </View>
+        <View style={styles.compactTextContainer}>
+          <Text style={styles.compactTitle}>{title}</Text>
+          {description && (
+            <Text style={styles.compactDescription}>{description}</Text>
+          )}
+        </View>
+        {actionLabel && onAction && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.compactButton,
+              pressed && styles.buttonPressed
+            ]}
+            onPress={onAction}
+          >
+            <Text style={styles.compactButtonText}>{actionLabel}</Text>
+          </Pressable>
+        )}
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, style]}>
       <View style={[styles.iconContainer, { backgroundColor: config.iconBg }]}>
-        <Ionicons name={iconName} size={28} color={config.iconColor} />
+        <Ionicons name={iconName} size={32} color={config.iconColor} />
       </View>
 
       <Text style={styles.title}>{title}</Text>
@@ -79,7 +113,8 @@ export function NoSearchResultsEmpty({ query }: { query: string }) {
     <EmptyState
       variant="search"
       title="No results found"
-      description={`We couldn't find anything matching "${query}". Try a different search term.`}
+      description={`Nothing matches "${query}"`}
+      compact
     />
   );
 }
@@ -90,7 +125,7 @@ export function NoProgressEmpty() {
       variant="progress"
       icon="flame-outline"
       title="No progress yet"
-      description="Complete your first workout to start building your streak"
+      description="Complete your first workout to start tracking"
     />
   );
 }
@@ -100,7 +135,7 @@ export function NoHistoryEmpty() {
     <EmptyState
       variant="history"
       title="No history yet"
-      description="Your workout history will appear here after you complete sessions"
+      description="Your workout history will appear here"
     />
   );
 }
@@ -112,9 +147,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xl
   },
   iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: theme.radius.lg,
+    width: 72,
+    height: 72,
+    borderRadius: theme.radius.xl,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: theme.spacing.lg
@@ -123,13 +158,13 @@ const styles = StyleSheet.create({
     ...theme.typography.h3,
     color: theme.colors.text,
     textAlign: "center",
-    marginBottom: theme.spacing.xs
+    marginBottom: theme.spacing.sm
   },
   description: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textAlign: "center",
-    maxWidth: 280,
+    maxWidth: 260,
     lineHeight: 22
   },
   button: {
@@ -146,6 +181,43 @@ const styles = StyleSheet.create({
   buttonText: {
     ...theme.typography.bodyBold,
     color: theme.colors.primaryTextOn
+  },
+  compactContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.md,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg
+  },
+  compactIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.md,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  compactTextContainer: {
+    flex: 1,
+    gap: 2
+  },
+  compactTitle: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text
+  },
+  compactDescription: {
+    ...theme.typography.caption,
+    color: theme.colors.muted
+  },
+  compactButton: {
+    backgroundColor: theme.colors.primaryLight,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.md
+  },
+  compactButtonText: {
+    ...theme.typography.captionBold,
+    color: theme.colors.primary
   }
 });
 

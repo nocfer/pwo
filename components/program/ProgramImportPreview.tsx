@@ -683,15 +683,11 @@ function ChallengeConfigPreview({
             value={`${challengeConfig.breakSeconds} seconds`}
           />
 
-          {(challengeConfig.sessionIncreasePercent ??
-            challengeConfig.weeklyIncreasePercent) && (
+          {challengeConfig.weeklyIncreasePercent && (
             <ChallengeConfigRow
               icon="stats-chart-outline"
-              label="Session Increase"
-              value={`${
-                challengeConfig.sessionIncreasePercent ??
-                challengeConfig.weeklyIncreasePercent
-              }%`}
+              label="Weekly Increase"
+              value={`${challengeConfig.weeklyIncreasePercent}%`}
             />
           )}
         </View>

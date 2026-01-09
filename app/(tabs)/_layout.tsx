@@ -82,29 +82,10 @@ export default function TabLayout() {
         name="progress"
         options={{
           headerShown: false,
-          title: "Progress",
+          title: "Statistics",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "stats-chart" : "stats-chart-outline"}
-              color={color}
-              size={26}
-            />
-          )
-        }}
-        listeners={{
-          tabPress: () => {
-            haptics.tabSwitch();
-          }
-        }}
-      />
-      <Tabs.Screen
-        name="analytics"
-        options={{
-          headerShown: false,
-          title: "Analytics",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "analytics" : "analytics-outline"}
               color={color}
               size={26}
             />
@@ -135,13 +116,6 @@ export default function TabLayout() {
           tabPress: () => {
             haptics.tabSwitch();
           }
-        }}
-      />
-      {/* Hide challenges tab - functionality moved to library */}
-      <Tabs.Screen
-        name="challenges"
-        options={{
-          href: null // This hides the tab
         }}
       />
     </Tabs>

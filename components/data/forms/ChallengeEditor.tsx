@@ -40,10 +40,11 @@ export function ChallengeEditor({
             exerciseId: challenge.challengeConfig.exerciseId,
             sets: challenge.challengeConfig.sets,
             targetReps: challenge.challengeConfig.targetReps,
+            initialReps: challenge.challengeConfig.initialReps || 20,
             warmUpSeconds: challenge.challengeConfig.warmUpSeconds,
             breakSeconds: challenge.challengeConfig.breakSeconds,
-            sessionIncreasePercent:
-              challenge.challengeConfig.sessionIncreasePercent || 10
+            weeklyIncreasePercent:
+              challenge.challengeConfig.weeklyIncreasePercent || 10
           }
         };
       }
@@ -71,10 +72,11 @@ export function ChallengeEditor({
             exerciseId: formData.challengeConfig.exerciseId,
             sets: formData.challengeConfig.sets,
             targetReps: formData.challengeConfig.targetReps,
+            initialReps: formData.challengeConfig.initialReps,
             warmUpSeconds: formData.challengeConfig.warmUpSeconds,
             breakSeconds: formData.challengeConfig.breakSeconds,
-            sessionIncreasePercent:
-              formData.challengeConfig.sessionIncreasePercent
+            weeklyIncreasePercent:
+              formData.challengeConfig.weeklyIncreasePercent
           }
         };
 

@@ -1,29 +1,29 @@
 /**
  * Exercise Form Component
- * Simplified MVP version with essential fields only
+ * Clean, professional form for creating and editing exercises
  */
 
 import haptics from "@/lib/haptics";
 import {
-    VALID_EXERCISE_CATEGORIES,
-    VALID_EXERCISE_ICONS,
-    validateExercise
+  VALID_EXERCISE_CATEGORIES,
+  VALID_EXERCISE_ICONS,
+  validateExercise
 } from "@/lib/validation";
 import { theme } from "@/theme/theme";
 import type { ExerciseCategory } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useState } from "react";
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
 } from "react-native";
 
 export type ExerciseFormData = {
@@ -77,7 +77,7 @@ export function ExerciseForm({
       icon: formData.icon
     };
 
-    const validationResult = validateExercise(exerciseData as any);
+    const validationResult = validateExercise(exerciseData as never);
 
     if (!validationResult.isValid) {
       haptics.formValidationError();
@@ -115,19 +115,34 @@ export function ExerciseForm({
       <View style={styles.header}>
         <Pressable
           onPress={handleCancel}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
           style={({ pressed }) => [
-            styles.headerBackBtn,
-            pressed && styles.headerBackBtnPressed
+            styles.backButton,
+            pressed && styles.backButtonPressed
           ]}
         >
-          <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
+          <Ionicons name="close" size={24} color={theme.colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>
           {mode === "create" ? "New Exercise" : "Edit Exercise"}
         </Text>
-        <View style={styles.headerSpacer} />
+        <Pressable
+          onPress={handleSave}
+          disabled={saving || !formData.name.trim()}
+          style={({ pressed }) => [
+            styles.saveButton,
+            pressed && !saving && styles.saveButtonPressed,
+            (saving || !formData.name.trim()) && styles.saveButtonDisabled
+          ]}
+        >
+          <Text
+            style={[
+              styles.saveButtonText,
+              (saving || !formData.name.trim()) && styles.saveButtonTextDisabled
+            ]}
+          >
+            {saving ? "Saving..." : "Save"}
+          </Text>
+        </Pressable>
       </View>
 
       {/* Form Content */}
@@ -137,104 +152,79 @@ export function ExerciseForm({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.card}>
-          {/* Name Field */}
-          <View style={styles.field}>
-            <Text style={styles.label}>Name</Text>
-            <TextInput
-              value={formData.name}
-              onChangeText={(value) => updateField("name", value)}
-              placeholder="e.g. Bench Press"
-              placeholderTextColor={theme.colors.muted}
-              style={styles.input}
-              autoFocus={mode === "create"}
-            />
-          </View>
+        {/* Name Field */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Name</Text>
+          <TextInput
+            value={formData.name}
+            onChangeText={(value) => updateField("name", value)}
+            placeholder="e.g. Bench Press"
+            placeholderTextColor={theme.colors.muted}
+            style={styles.textInput}
+            autoFocus={mode === "create"}
+          />
+        </View>
 
-          {/* Category Field */}
-          <View style={styles.field}>
-            <Text style={styles.label}>Category</Text>
-            <View style={styles.chipGroup}>
-              {VALID_EXERCISE_CATEGORIES.map((category) => (
+        {/* Category Field */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Category</Text>
+          <View style={styles.categoryGrid}>
+            {VALID_EXERCISE_CATEGORIES.map((category) => {
+              const isSelected = formData.category === category;
+              return (
                 <Pressable
                   key={category}
                   onPress={() => updateField("category", category)}
                   style={[
-                    styles.chip,
-                    formData.category === category && styles.chipActive
+                    styles.categoryOption,
+                    isSelected && styles.categoryOptionSelected
                   ]}
                 >
                   <Text
                     style={[
-                      styles.chipText,
-                      formData.category === category && styles.chipTextActive
+                      styles.categoryText,
+                      isSelected && styles.categoryTextSelected
                     ]}
                   >
-                    {category}
+                    {category.charAt(0).toUpperCase() + category.slice(1)}
                   </Text>
                 </Pressable>
-              ))}
-            </View>
-          </View>
-
-          {/* Icon Field */}
-          <View style={styles.field}>
-            <Text style={styles.label}>Icon</Text>
-            <Pressable
-              onPress={() => {
-                haptics.buttonTap();
-                setIconPickerOpen(true);
-              }}
-              style={({ pressed }) => [
-                styles.iconSelector,
-                pressed && styles.iconSelectorPressed
-              ]}
-            >
-              <View style={styles.iconPreview}>
-                <View style={styles.iconPreviewCircle}>
-                  <Ionicons
-                    name={(formData.icon as any) || "help"}
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                </View>
-                <Text style={styles.iconPreviewText}>{formData.icon}</Text>
-              </View>
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={theme.colors.muted}
-              />
-            </Pressable>
+              );
+            })}
           </View>
         </View>
-      </ScrollView>
 
-      {/* Fixed Footer */}
-      <View style={styles.footer}>
-        <Pressable
-          onPress={handleCancel}
-          style={({ pressed }) => [
-            styles.cancelBtn,
-            pressed && styles.cancelBtnPressed
-          ]}
-        >
-          <Text style={styles.cancelBtnText}>Cancel</Text>
-        </Pressable>
-        <Pressable
-          onPress={handleSave}
-          disabled={saving}
-          style={({ pressed }) => [
-            styles.saveBtn,
-            pressed && !saving && styles.saveBtnPressed,
-            saving && styles.saveBtnDisabled
-          ]}
-        >
-          <Text style={styles.saveBtnText}>
-            {saving ? "Saving..." : "Save"}
-          </Text>
-        </Pressable>
-      </View>
+        {/* Icon Field */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Icon</Text>
+          <Pressable
+            onPress={() => {
+              haptics.buttonTap();
+              setIconPickerOpen(true);
+            }}
+            style={({ pressed }) => [
+              styles.iconSelector,
+              pressed && styles.iconSelectorPressed
+            ]}
+          >
+            <View style={styles.iconPreview}>
+              <View style={styles.iconCircle}>
+                <Ionicons
+                  name={
+                    (formData.icon as keyof typeof Ionicons.glyphMap) || "help"
+                  }
+                  size={24}
+                  color={theme.colors.primary}
+                />
+              </View>
+              <Text style={styles.iconName}>{formData.icon}</Text>
+            </View>
+            <View style={styles.changeButton}>
+              <Text style={styles.changeButtonText}>Change</Text>
+            </View>
+          </Pressable>
+        </View>
+      </ScrollView>
 
       {/* Icon Picker Modal */}
       <Modal
@@ -243,26 +233,26 @@ export function ExerciseForm({
         animationType="slide"
         onRequestClose={() => setIconPickerOpen(false)}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setIconPickerOpen(false)}
+        >
+          <View
+            style={styles.modalContent}
+            onStartShouldSetResponder={() => true}
+          >
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Choose Icon</Text>
-              <Pressable
-                onPress={() => setIconPickerOpen(false)}
-                style={({ pressed }) => [
-                  styles.modalCloseBtn,
-                  pressed && styles.modalCloseBtnPressed
-                ]}
-              >
-                <Ionicons name="close" size={18} color={theme.colors.text} />
-              </Pressable>
             </View>
             <ScrollView
               style={styles.iconGrid}
               showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.iconGridContent}
             >
-              <View style={styles.iconGridContainer}>
-                {VALID_EXERCISE_ICONS.map((iconName) => (
+              {VALID_EXERCISE_ICONS.map((iconName) => {
+                const isSelected = formData.icon === iconName;
+                return (
                   <Pressable
                     key={iconName}
                     onPress={() => {
@@ -270,27 +260,24 @@ export function ExerciseForm({
                       updateField("icon", iconName);
                       setIconPickerOpen(false);
                     }}
-                    style={({ pressed }) => [
+                    style={[
                       styles.iconOption,
-                      formData.icon === iconName && styles.iconOptionSelected,
-                      pressed && styles.iconOptionPressed
+                      isSelected && styles.iconOptionSelected
                     ]}
                   >
                     <Ionicons
-                      name={iconName as any}
-                      size={22}
+                      name={iconName as keyof typeof Ionicons.glyphMap}
+                      size={24}
                       color={
-                        formData.icon === iconName
-                          ? theme.colors.primary
-                          : theme.colors.subtext
+                        isSelected ? theme.colors.primary : theme.colors.subtext
                       }
                     />
                   </Pressable>
-                ))}
-              </View>
+                );
+              })}
             </ScrollView>
           </View>
-        </View>
+        </Pressable>
       </Modal>
     </KeyboardAvoidingView>
   );
@@ -305,224 +292,180 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.surface
-  },
-  headerBackBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
     backgroundColor: theme.colors.background
   },
-  headerBackBtnPressed: {
-    backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.96 }]
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.full,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  backButtonPressed: {
+    backgroundColor: theme.colors.surface
   },
   headerTitle: {
     ...theme.typography.h3,
     color: theme.colors.text
   },
-  headerSpacer: {
-    width: 36
+  saveButton: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primary
+  },
+  saveButtonPressed: {
+    opacity: 0.9
+  },
+  saveButtonDisabled: {
+    backgroundColor: theme.colors.border
+  },
+  saveButtonText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primaryTextOn
+  },
+  saveButtonTextDisabled: {
+    color: theme.colors.muted
   },
   scrollView: {
     flex: 1
   },
   content: {
     padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl
+    gap: theme.spacing.xl
   },
-  card: {
+  section: {
+    gap: theme.spacing.md
+  },
+  sectionTitle: {
+    ...theme.typography.small,
+    color: theme.colors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginLeft: theme.spacing.xs
+  },
+  textInput: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.lg,
+    color: theme.colors.text,
+    ...theme.typography.body,
     ...theme.shadows.sm
   },
-  field: {
-    gap: theme.spacing.sm
-  },
-  label: {
-    ...theme.typography.caption,
-    color: theme.colors.subtext,
-    fontFamily: theme.fonts.semiBold
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.surface,
-    color: theme.colors.text,
-    ...theme.typography.body
-  },
-  chipGroup: {
+  categoryGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: theme.spacing.sm
   },
-  chip: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+  categoryOption: {
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md
+    ...theme.shadows.sm
   },
-  chipActive: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primaryLight
+  categoryOptionSelected: {
+    backgroundColor: theme.colors.primary
   },
-  chipText: {
-    ...theme.typography.caption,
-    color: theme.colors.subtext,
-    textTransform: "capitalize"
+  categoryText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.subtext
   },
-  chipTextActive: {
-    color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold
+  categoryTextSelected: {
+    color: theme.colors.primaryTextOn
   },
   iconSelector: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.surface
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.md,
+    ...theme.shadows.sm
   },
   iconSelectorPressed: {
-    backgroundColor: theme.colors.background
+    transform: [{ scale: 0.98 }]
   },
   iconPreview: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.spacing.md
   },
-  iconPreviewCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.sm,
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primaryLight,
     alignItems: "center",
     justifyContent: "center"
   },
-  iconPreviewText: {
+  iconName: {
     ...theme.typography.body,
     color: theme.colors.text
   },
-  footer: {
-    flexDirection: "row",
-    gap: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    backgroundColor: theme.colors.surface
+  changeButton: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.background
   },
-  cancelBtn: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  cancelBtnPressed: {
-    backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.98 }]
-  },
-  cancelBtnText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.subtext
-  },
-  saveBtn: {
-    flex: 2,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.md
-  },
-  saveBtnPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }]
-  },
-  saveBtnDisabled: {
-    opacity: 0.5
-  },
-  saveBtnText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn
+  changeButtonText: {
+    ...theme.typography.captionBold,
+    color: theme.colors.primary
   },
   modalBackdrop: {
     flex: 1,
     backgroundColor: theme.colors.overlay,
     justifyContent: "flex-end"
   },
-  modalCard: {
+  modalContent: {
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    padding: theme.spacing.lg,
-    maxHeight: "70%"
+    maxHeight: "70%",
+    paddingBottom: theme.spacing.xxl
+  },
+  modalHandle: {
+    width: 36,
+    height: 4,
+    backgroundColor: theme.colors.border,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.sm
   },
   modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing.lg
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderLight
   },
   modalTitle: {
     ...theme.typography.h3,
-    color: theme.colors.text
-  },
-  modalCloseBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.background
-  },
-  modalCloseBtnPressed: {
-    backgroundColor: theme.colors.border,
-    transform: [{ scale: 0.96 }]
+    color: theme.colors.text,
+    textAlign: "center"
   },
   iconGrid: {
-    maxHeight: 350
+    flex: 1
   },
-  iconGridContainer: {
+  iconGridContent: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.sm,
-    paddingBottom: theme.spacing.lg
+    padding: theme.spacing.lg,
+    gap: theme.spacing.sm
   },
   iconOption: {
-    width: 52,
-    height: 52,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    width: 56,
+    height: 56,
     borderRadius: theme.radius.md,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.surface
+    backgroundColor: theme.colors.background
   },
   iconOptionSelected: {
-    borderColor: theme.colors.primary,
     backgroundColor: theme.colors.primaryLight
-  },
-  iconOptionPressed: {
-    backgroundColor: theme.colors.background
   }
 });

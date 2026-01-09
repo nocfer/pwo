@@ -55,12 +55,15 @@ export default function ImportPreviewScreen() {
     setIsImporting(true);
     try {
       // Import the program using DataContext
+      // Pass empty id to let storage layer generate a unique ID
       await actions.upsertProgram({
-        id: `prg_${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
+        id: "",
         name: programData.name,
         description: programData.description,
         blocks: programData.blocks,
-        challengeConfig: programData.challengeConfig
+        challengeConfig: programData.challengeConfig,
+        initialWarmup: programData.initialWarmup,
+        defaultRestBetweenExercises: programData.defaultRestBetweenExercises
       });
 
       // Navigate back to library

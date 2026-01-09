@@ -57,10 +57,10 @@ const colors = {
 } as const;
 
 const fonts = {
-  regular: "DMSans_400Regular",
-  medium: "DMSans_500Medium",
-  semiBold: "DMSans_600SemiBold",
-  bold: "DMSans_700Bold"
+  regular: "Inter_400Regular",
+  medium: "Inter_500Medium",
+  semiBold: "Inter_600SemiBold",
+  bold: "Inter_700Bold"
 } as const;
 
 const spacing = {
@@ -87,72 +87,76 @@ const shadows = {
     shadowOpacity: 0,
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 0,
-    elevation: 0
+    elevation: 0,
+    boxShadow: "none"
   },
   sm: {
     shadowColor: "#0F172A",
     shadowOpacity: 0.04,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 3,
-    elevation: 1
+    elevation: 1,
+    boxShadow: "0 1px 3px rgba(15, 23, 42, 0.04)"
   },
   md: {
     shadowColor: "#0F172A",
     shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
-    elevation: 2
+    elevation: 2,
+    boxShadow: "0 2px 6px rgba(15, 23, 42, 0.06)"
   },
   lg: {
     shadowColor: "#0F172A",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 12,
-    elevation: 4
+    elevation: 4,
+    boxShadow: "0 4px 12px rgba(15, 23, 42, 0.08)"
   }
 };
 
 const typography = {
   h1: {
     fontSize: 26,
-    fontFamily: "DMSans_700Bold",
+    fontFamily: "Inter_700Bold",
     lineHeight: 32,
     letterSpacing: -0.5
   },
   h2: {
     fontSize: 20,
-    fontFamily: "DMSans_600SemiBold",
+    fontFamily: "Inter_600SemiBold",
     lineHeight: 26,
     letterSpacing: -0.3
   },
   h3: {
     fontSize: 17,
-    fontFamily: "DMSans_600SemiBold",
+    fontFamily: "Inter_600SemiBold",
     lineHeight: 22
   },
   body: {
     fontSize: 15,
-    fontFamily: "DMSans_400Regular",
+    fontFamily: "Inter_400Regular",
     lineHeight: 22
   },
   bodyBold: {
     fontSize: 15,
-    fontFamily: "DMSans_600SemiBold",
+    fontFamily: "Inter_600SemiBold",
     lineHeight: 22
   },
   caption: {
     fontSize: 13,
-    fontFamily: "DMSans_400Regular",
+    fontFamily: "Inter_400Regular",
     lineHeight: 18
   },
   captionBold: {
     fontSize: 13,
-    fontFamily: "DMSans_600SemiBold",
+    fontFamily: "Inter_600SemiBold",
     lineHeight: 18
   },
   small: {
     fontSize: 11,
-    fontFamily: "DMSans_500Medium",
+    fontFamily: "Inter_500Medium",
     lineHeight: 14
   }
 } as const;

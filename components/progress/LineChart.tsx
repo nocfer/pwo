@@ -163,7 +163,7 @@ export default function LineChart({
 
         {/* X-axis labels */}
         {showLabels &&
-          xLabelIndices.map((idx) => {
+          xLabelIndices.map((idx, position) => {
             if (!data[idx]) return null;
             const point = data[idx];
             const label =
@@ -174,7 +174,7 @@ export default function LineChart({
               });
             return (
               <SvgText
-                key={`x-label-${idx}`}
+                key={`x-label-${position}-${idx}`}
                 x={getX(idx)}
                 y={height - 8}
                 fontSize={10}
