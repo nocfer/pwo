@@ -69,7 +69,7 @@ export function SearchableList({
   style
 }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectionMode, setSelectionMode] = useState(false);
+  const selectionMode = selectedItems.length > 0;
 
   // Filter data based on search query
   const filteredData = useMemo(() => {
@@ -94,7 +94,7 @@ export function SearchableList({
 
   const handleItemLongPress = (item: ListItem) => {
     if (!selectionMode) {
-      setSelectionMode(true);
+      // Start selection mode by selecting this item
       onSelectionChange?.([item.id]);
     } else {
       onItemLongPress?.(item);
@@ -103,19 +103,11 @@ export function SearchableList({
 
   const handleItemSelection = (itemId: string) => {
     const isSelected = selectedItems.includes(itemId);
-    let newSelection: string[];
-
-    if (isSelected) {
-      newSelection = selectedItems.filter((id) => id !== itemId);
-    } else {
-      newSelection = [...selectedItems, itemId];
-    }
+    const newSelection = isSelected
+      ? selectedItems.filter((id) => id !== itemId)
+      : [...selectedItems, itemId];
 
     onSelectionChange?.(newSelection);
-
-    if (newSelection.length === 0) {
-      setSelectionMode(false);
-    }
   };
 
   const renderItem = ({ item }: { item: ListItem }) => {

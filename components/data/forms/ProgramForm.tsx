@@ -8,7 +8,7 @@ import { validateProgram } from "@/lib/validation";
 import { theme } from "@/theme/theme";
 import type { ProgramBlock } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -145,10 +145,14 @@ export function ProgramForm({
     )
   );
 
-  const exerciseNameById = exercises.reduce((map, ex) => {
-    map.set(ex.id, ex.name);
-    return map;
-  }, new Map<string, string>());
+  const exerciseNameById = useMemo(
+    () =>
+      exercises.reduce((map, ex) => {
+        map.set(ex.id, ex.name);
+        return map;
+      }, new Map<string, string>()),
+    [exercises]
+  );
 
   const addExercise = useCallback(() => {
     haptics.buttonTap();
