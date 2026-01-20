@@ -17,11 +17,6 @@ export default function QRCodeScanner({ onScan, onClose }: Props) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
 
-  // Reset scanned state when component remounts
-  useEffect(() => {
-    setScanned(false);
-  }, []);
-
   useEffect(() => {
     const getCameraPermissions = async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();

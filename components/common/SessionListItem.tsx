@@ -70,7 +70,7 @@ export function SessionListItem({
       <Ionicons
         name={isLocked ? "lock-closed" : "chevron-forward"}
         size={16}
-        color={isLocked ? theme.colors.muted : theme.colors.muted}
+        color={theme.colors.muted}
       />
     </Pressable>
   );

@@ -77,7 +77,7 @@ export function WorkoutExecutionScreen({
         useNativeDriver: true
       })
     ]).start();
-  }, [current?.key]);
+  }, [current?.key, fadeAnim, scaleAnim]);
 
   // Pulse animation for timer
   useEffect(() => {
@@ -101,16 +101,18 @@ export function WorkoutExecutionScreen({
     } else {
       pulseAnim.setValue(1);
     }
-  }, [timer.phase, timer.isPaused]);
+  }, [timer.phase, timer.isPaused, pulseAnim]);
 
   // Initialize current reps when step changes
+  const currentTargetReps =
+    current?.type === "exercise" ? current.targetReps : undefined;
   useEffect(() => {
-    if (current?.type === "exercise" && current.targetReps) {
-      setCurrentReps(current.targetReps);
+    if (current?.type === "exercise" && currentTargetReps) {
+      setCurrentReps(currentTargetReps);
     } else {
       setCurrentReps(null);
     }
-  }, [current?.key]);
+  }, [current?.key, current?.type, currentTargetReps]);
 
   const getStepLabel = useCallback(
     (step: WorkoutStep | null): string => {

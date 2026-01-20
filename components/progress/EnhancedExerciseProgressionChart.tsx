@@ -4,7 +4,6 @@
  * Features:
  * - Interactive exercise selection
  * - PR highlighting
- * - Chart export functionality
  * - Multiple metrics (reps, weight, volume)
  */
 
@@ -18,417 +17,441 @@ import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import { Exercise, PersonalRecord } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
   Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View
 } from "react-native";
+import { CompactEmptyState } from "./ProgressEmptyState";
 
 type MetricType = "reps" | "weight" | "volume";
 type TimeRange = "7d" | "30d" | "90d";
 
+const METRICS: { key: MetricType; label: string }[] = [
+  { key: "reps", label: "Reps" },
+  { key: "weight", label: "Weight" },
+  { key: "volume", label: "Volume" }
+];
+
+const TIME_RANGES: { key: TimeRange; label: string; days: number }[] = [
+  { key: "7d", label: "7D", days: 7 },
+  { key: "30d", label: "30D", days: 30 },
+  { key: "90d", label: "90D", days: 90 }
+];
+
+const CHART_HEIGHT = 140;
+const BAR_MIN_HEIGHT = 4;
+
 interface ChartProps {
   selectedExerciseId?: string;
   onExerciseChange?: (exerciseId: string) => void;
-  showExport?: boolean;
 }
 
 export function EnhancedExerciseProgressionChart({
-  selectedExerciseId,
-  onExerciseChange,
-  showExport = true
+  selectedExerciseId: externalSelectedId,
+  onExerciseChange
 }: ChartProps) {
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(
+    null
+  );
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricType>("reps");
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const { exerciseIds } = useExercisesWithProgression();
-  const { data: exercises } = useExercises();
+  // Use external ID if provided, otherwise use internal state
+  const selectedExerciseId = externalSelectedId ?? internalSelectedId;
+
+  const { exerciseIds, loading: loadingExerciseIds } =
+    useExercisesWithProgression();
+  const { data: exercises, loading: loadingExercises } = useExercises();
+  const days = TIME_RANGES.find((r) => r.key === timeRange)?.days ?? 30;
   const { data: progressionData, loading } = useExerciseProgression(
-    selectedExerciseId || null,
-    timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90
+    selectedExerciseId,
+    days
   );
-  const { prs: exercisePRs } = useExercisePRs(selectedExerciseId || "");
+  const { prs: exercisePRs } = useExercisePRs(selectedExerciseId ?? "");
 
-  const exercisesWithProgression =
-    exercises?.filter((ex) => exerciseIds.includes(ex.id)) || [];
-
-  const selectedExercise = exercises?.find(
-    (ex) => ex.id === selectedExerciseId
+  const exercisesWithProgression = useMemo(
+    () => exercises?.filter((ex) => exerciseIds.includes(ex.id)) ?? [],
+    [exercises, exerciseIds]
   );
+
+  const selectedExercise = useMemo(
+    () => exercises?.find((ex) => ex.id === selectedExerciseId),
+    [exercises, selectedExerciseId]
+  );
+
+  // Auto-select first exercise when available and no selection
+  useEffect(() => {
+    if (
+      !externalSelectedId &&
+      !internalSelectedId &&
+      exercisesWithProgression.length > 0
+    ) {
+      setInternalSelectedId(exercisesWithProgression[0].id);
+    }
+  }, [externalSelectedId, internalSelectedId, exercisesWithProgression]);
+
+  useEffect(() => {
+    if (!loading && !loadingExerciseIds && !loadingExercises) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true
+      }).start();
+    }
+  }, [loading, loadingExerciseIds, loadingExercises, fadeAnim]);
 
   const handleExerciseSelect = useCallback(
     (exercise: Exercise) => {
-      onExerciseChange?.(exercise.id);
+      if (onExerciseChange) {
+        onExerciseChange(exercise.id);
+      } else {
+        setInternalSelectedId(exercise.id);
+      }
       setShowExerciseSelector(false);
-      void haptics.tabSwitch();
+      haptics.tabSwitch();
     },
     [onExerciseChange]
   );
 
   const handleMetricChange = useCallback((metric: MetricType) => {
     setSelectedMetric(metric);
-    void haptics.tabSwitch();
+    haptics.tabSwitch();
   }, []);
 
   const handleTimeRangeChange = useCallback((range: TimeRange) => {
     setTimeRange(range);
-    void haptics.tabSwitch();
+    haptics.tabSwitch();
   }, []);
 
-  const handleExport = useCallback(async () => {
-    if (!selectedExercise || !progressionData) {
-      void haptics.formValidationError();
-      return;
-    }
-
-    try {
-      // Create CSV data
-      const csvHeader = "Date,Reps,Weight,Volume\n";
-      const csvData = progressionData.dataPoints
-        .map(
-          (point) =>
-            `${point.date},${point.reps},${point.maxWeight || ""},${point.volume || ""}`
-        )
-        .join("\n");
-
-      const csvContent = csvHeader + csvData;
-
-      // For now, just log the export (in a real app, this would use sharing APIs)
-      console.log("Exporting chart data:", {
-        exercise: selectedExercise.name,
-        metric: selectedMetric,
-        timeRange,
-        data: csvContent
-      });
-
-      void haptics.exportData();
-    } catch (error) {
-      console.error("Export failed:", error);
-      void haptics.formValidationError();
-    }
-  }, [selectedExercise, progressionData, selectedMetric, timeRange]);
-
-  const renderExerciseSelector = () => (
-    <Modal
-      visible={showExerciseSelector}
-      animationType="slide"
-      presentationStyle="pageSheet"
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Select Exercise</Text>
-          <TouchableOpacity
-            onPress={() => setShowExerciseSelector(false)}
-            style={styles.modalCloseButton}
-          >
-            <Ionicons name="close" size={24} color={theme.colors.text} />
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView style={styles.exerciseList}>
-          {exercisesWithProgression.map((exercise) => (
-            <TouchableOpacity
-              key={exercise.id}
-              style={[
-                styles.exerciseItem,
-                selectedExerciseId === exercise.id &&
-                  styles.exerciseItemSelected
-              ]}
-              onPress={() => handleExerciseSelect(exercise)}
-            >
-              <Text style={styles.exerciseName}>{exercise.name}</Text>
-              <Text style={styles.exerciseCategory}>{exercise.category}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-    </Modal>
-  );
-
-  const renderChart = () => {
-    if (loading) {
-      return (
-        <View style={styles.chartPlaceholder}>
-          <Text style={styles.placeholderText}>Loading chart...</Text>
-        </View>
-      );
-    }
-
-    if (!progressionData || progressionData.dataPoints.length === 0) {
-      return (
-        <View style={styles.chartPlaceholder}>
-          <Ionicons
-            name="bar-chart-outline"
-            size={48}
-            color={theme.colors.muted}
-          />
-          <Text style={styles.placeholderText}>
-            No progression data available
-          </Text>
-          {!selectedExerciseId && (
-            <Text style={styles.placeholderSubtext}>
-              Select an exercise to view progression
-            </Text>
-          )}
-        </View>
-      );
-    }
+  const chartData = useMemo(() => {
+    if (!progressionData?.dataPoints.length) return null;
 
     const { dataPoints, trend } = progressionData;
-    const maxValue = Math.max(
-      ...dataPoints.map((dp) => {
-        switch (selectedMetric) {
-          case "weight":
-            return dp.maxWeight || 0;
-          case "volume":
-            return dp.volume || 0;
-          case "reps":
-          default:
-            return dp.reps;
-        }
-      }),
-      1
-    );
+    const values = dataPoints.map((dp) => {
+      switch (selectedMetric) {
+        case "weight":
+          return dp.maxWeight ?? 0;
+        case "volume":
+          return dp.volume ?? 0;
+        default:
+          return dp.reps;
+      }
+    });
+    const maxValue = Math.max(...values, 1);
 
+    const bars = dataPoints.map((point, index) => {
+      const value = values[index];
+      const heightPercent = (value / maxValue) * 100;
+
+      const isPR = exercisePRs.some((pr: PersonalRecord) => {
+        const prDate = new Date(pr.achievedAt).toISOString().split("T")[0];
+        return (
+          prDate === point.date &&
+          ((selectedMetric === "reps" && pr.type === "max_reps") ||
+            (selectedMetric === "weight" && pr.type === "max_weight") ||
+            (selectedMetric === "volume" && pr.type === "max_volume"))
+        );
+      });
+
+      return { point, value, heightPercent, isPR };
+    });
+
+    return { bars, trend };
+  }, [progressionData, selectedMetric, exercisePRs]);
+
+  // Skeleton loading state - wait for all data to load
+  if (loading || loadingExerciseIds || loadingExercises) {
     return (
-      <View style={styles.chartContainer}>
-        {/* Trend Indicator */}
-        <View style={styles.trendContainer}>
+      <View style={styles.card}>
+        <View style={styles.skeleton} />
+      </View>
+    );
+  }
+
+  // Empty state - no exercises with progression
+  if (exercisesWithProgression.length === 0) {
+    return (
+      <View style={styles.card}>
+        <View style={styles.header}>
+          <View style={styles.titleRow}>
+            <Ionicons
+              name="trending-up"
+              size={18}
+              color={theme.colors.primary}
+              style={styles.titleIcon}
+            />
+            <Text style={styles.title}>Progression</Text>
+          </View>
+        </View>
+        <CompactEmptyState
+          message="Complete workouts to track progression"
+          icon="bar-chart-outline"
+        />
+      </View>
+    );
+  }
+
+  return (
+    <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.titleRow}>
           <Ionicons
-            name={
-              trend.direction === "up"
-                ? "trending-up"
-                : trend.direction === "down"
-                  ? "trending-down"
-                  : "remove"
-            }
-            size={20}
-            color={
-              trend.direction === "up"
-                ? theme.colors.success
-                : trend.direction === "down"
-                  ? theme.colors.danger
-                  : theme.colors.muted
-            }
+            name="trending-up"
+            size={18}
+            color={theme.colors.primary}
+            style={styles.titleIcon}
           />
-          <Text
-            style={[
-              styles.trendText,
-              {
-                color:
-                  trend.direction === "up"
-                    ? theme.colors.success
-                    : trend.direction === "down"
-                      ? theme.colors.danger
-                      : theme.colors.muted
+          <Text style={styles.title}>Progression</Text>
+        </View>
+        {chartData?.trend && (
+          <View style={styles.trendBadge}>
+            <Ionicons
+              name={
+                chartData.trend.direction === "up"
+                  ? "arrow-up"
+                  : chartData.trend.direction === "down"
+                    ? "arrow-down"
+                    : "remove"
               }
-            ]}
-          >
-            {trend.direction === "stable"
-              ? "Stable"
-              : `${trend.direction === "up" ? "+" : ""}${trend.percentChange.toFixed(1)}%`}
-          </Text>
+              size={12}
+              color={
+                chartData.trend.direction === "up"
+                  ? theme.colors.success
+                  : chartData.trend.direction === "down"
+                    ? theme.colors.danger
+                    : theme.colors.muted
+              }
+            />
+            <Text
+              style={[
+                styles.trendText,
+                {
+                  color:
+                    chartData.trend.direction === "up"
+                      ? theme.colors.success
+                      : chartData.trend.direction === "down"
+                        ? theme.colors.danger
+                        : theme.colors.muted
+                }
+              ]}
+            >
+              {chartData.trend.direction === "stable"
+                ? "Stable"
+                : `${chartData.trend.percentChange.toFixed(0)}%`}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* Exercise Selector */}
+      <Pressable
+        style={({ pressed }) => [
+          styles.exerciseSelector,
+          pressed && styles.exerciseSelectorPressed
+        ]}
+        onPress={() => setShowExerciseSelector(true)}
+      >
+        <Text
+          style={[
+            styles.exerciseSelectorText,
+            !selectedExercise && styles.exerciseSelectorPlaceholder
+          ]}
+          numberOfLines={1}
+        >
+          {selectedExercise?.name ?? "Select exercise"}
+        </Text>
+        <Ionicons name="chevron-down" size={16} color={theme.colors.muted} />
+      </Pressable>
+
+      {/* Controls Row - Combined metric and time range */}
+      <View style={styles.controlsRow}>
+        <View style={styles.segmentedControl}>
+          {METRICS.map((m) => {
+            const isDisabled =
+              m.key === "weight" && !progressionData?.hasWeightData;
+            const isActive = selectedMetric === m.key;
+            return (
+              <Pressable
+                key={m.key}
+                style={[
+                  styles.segment,
+                  isActive && styles.segmentActive,
+                  isDisabled && styles.segmentDisabled
+                ]}
+                onPress={() => !isDisabled && handleMetricChange(m.key)}
+                disabled={isDisabled}
+              >
+                <Text
+                  style={[
+                    styles.segmentText,
+                    isActive && styles.segmentTextActive,
+                    isDisabled && styles.segmentTextDisabled
+                  ]}
+                >
+                  {m.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
-        {/* Chart */}
-        <View style={styles.chart}>
-          {dataPoints.map((point, index) => {
-            const value =
-              selectedMetric === "weight"
-                ? point.maxWeight || 0
-                : selectedMetric === "volume"
-                  ? point.volume || 0
-                  : point.reps;
-            const height = (value / maxValue) * 100;
-
-            // Check if this data point represents a PR
-            const isPR = exercisePRs.some((pr: PersonalRecord) => {
-              const prDate = new Date(pr.achievedAt)
-                .toISOString()
-                .split("T")[0];
-              return (
-                prDate === point.date &&
-                ((selectedMetric === "reps" && pr.type === "max_reps") ||
-                  (selectedMetric === "weight" && pr.type === "max_weight") ||
-                  (selectedMetric === "volume" && pr.type === "max_volume"))
-              );
-            });
-
+        <View style={styles.timeRangeControl}>
+          {TIME_RANGES.map((r) => {
+            const isActive = timeRange === r.key;
             return (
-              <View key={index} style={styles.barContainer}>
-                <View style={styles.barWrapper}>
-                  <View
-                    style={[
-                      styles.bar,
-                      {
-                        height: `${height}%`,
-                        backgroundColor: isPR
-                          ? theme.colors.warning
-                          : theme.colors.primary
-                      }
-                    ]}
-                  />
-                  {isPR && (
-                    <View style={styles.prIndicator}>
-                      <Ionicons
-                        name="trophy"
-                        size={12}
-                        color={theme.colors.warning}
-                      />
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.barLabel} numberOfLines={1}>
-                  {new Date(point.date).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric"
-                  })}
+              <Pressable
+                key={r.key}
+                style={[styles.timeChip, isActive && styles.timeChipActive]}
+                onPress={() => handleTimeRangeChange(r.key)}
+              >
+                <Text
+                  style={[
+                    styles.timeChipText,
+                    isActive && styles.timeChipTextActive
+                  ]}
+                >
+                  {r.label}
                 </Text>
-                <Text style={[styles.barValue, isPR && styles.prValue]}>
-                  {value}
-                </Text>
-              </View>
+              </Pressable>
             );
           })}
         </View>
       </View>
-    );
-  };
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Exercise Progression</Text>
-        {showExport && (
-          <TouchableOpacity onPress={handleExport} style={styles.exportButton}>
-            <Ionicons
-              name="share-outline"
-              size={20}
-              color={theme.colors.primary}
-            />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Exercise Selection */}
-      <TouchableOpacity
-        style={styles.exerciseSelector}
-        onPress={() => setShowExerciseSelector(true)}
-      >
-        <Text style={styles.exerciseSelectorText}>
-          {selectedExercise ? selectedExercise.name : "Select Exercise"}
-        </Text>
-        <Ionicons name="chevron-down" size={20} color={theme.colors.muted} />
-      </TouchableOpacity>
-
-      {/* Controls */}
-      <View style={styles.controls}>
-        {/* Metric Selection */}
-        <View style={styles.controlGroup}>
-          <Text style={styles.controlLabel}>Metric</Text>
-          <View style={styles.controlRow}>
-            {(["reps", "weight", "volume"] as MetricType[]).map((metric) => (
-              <TouchableOpacity
-                key={metric}
-                style={[
-                  styles.controlChip,
-                  selectedMetric === metric && styles.controlChipActive,
-                  metric === "weight" &&
-                    !progressionData?.hasWeightData &&
-                    styles.controlChipDisabled
-                ]}
-                onPress={() => handleMetricChange(metric)}
-                disabled={
-                  metric === "weight" && !progressionData?.hasWeightData
-                }
-              >
-                <Text
-                  style={[
-                    styles.controlChipText,
-                    selectedMetric === metric && styles.controlChipTextActive,
-                    metric === "weight" &&
-                      !progressionData?.hasWeightData &&
-                      styles.controlChipTextDisabled
-                  ]}
-                >
-                  {metric.charAt(0).toUpperCase() + metric.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+      {/* Chart Area */}
+      {!selectedExerciseId ? (
+        <CompactEmptyState
+          message="Select an exercise to view chart"
+          icon="bar-chart-outline"
+        />
+      ) : loading ? (
+        <View style={styles.chartLoadingArea}>
+          <View style={styles.chartLoadingSkeleton} />
         </View>
-
-        {/* Time Range Selection */}
-        <View style={styles.controlGroup}>
-          <Text style={styles.controlLabel}>Period</Text>
-          <View style={styles.controlRow}>
-            {(["7d", "30d", "90d"] as TimeRange[]).map((range) => (
-              <TouchableOpacity
-                key={range}
-                style={[
-                  styles.controlChip,
-                  timeRange === range && styles.controlChipActive
-                ]}
-                onPress={() => handleTimeRangeChange(range)}
-              >
-                <Text
-                  style={[
-                    styles.controlChipText,
-                    timeRange === range && styles.controlChipTextActive
-                  ]}
-                >
-                  {range.toUpperCase()}
+      ) : !chartData ? (
+        <CompactEmptyState
+          message="No data for this period"
+          icon="calendar-outline"
+        />
+      ) : (
+        <View style={styles.chartArea}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chartScrollContent}
+          >
+            {chartData.bars.map((bar, index) => (
+              <View key={index} style={styles.barColumn}>
+                <View style={styles.barArea}>
+                  <View
+                    style={[
+                      styles.bar,
+                      {
+                        height: Math.max(
+                          BAR_MIN_HEIGHT,
+                          (bar.heightPercent / 100) * CHART_HEIGHT
+                        ),
+                        backgroundColor: bar.isPR
+                          ? theme.colors.accent
+                          : theme.colors.primary
+                      }
+                    ]}
+                  />
+                  {bar.isPR && (
+                    <View style={styles.prBadge}>
+                      <Ionicons
+                        name="trophy"
+                        size={10}
+                        color={theme.colors.accent}
+                      />
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.barValue}>{bar.value}</Text>
+                <Text style={styles.barDate}>
+                  {new Date(bar.point.date).toLocaleDateString("en-US", {
+                    day: "numeric"
+                  })}
                 </Text>
-              </TouchableOpacity>
+              </View>
             ))}
-          </View>
-        </View>
-      </View>
-
-      {/* Chart */}
-      {renderChart()}
-
-      {/* Legend */}
-      {progressionData && progressionData.dataPoints.length > 0 && (
-        <View style={styles.legend}>
-          <View style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendColor,
-                { backgroundColor: theme.colors.primary }
-              ]}
-            />
-            <Text style={styles.legendText}>Regular</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendColor,
-                { backgroundColor: theme.colors.warning }
-              ]}
-            />
-            <Ionicons name="trophy" size={12} color={theme.colors.warning} />
-            <Text style={styles.legendText}>Personal Record</Text>
-          </View>
+          </ScrollView>
         </View>
       )}
 
       {/* Exercise Selector Modal */}
-      {renderExerciseSelector()}
-    </View>
+      <Modal
+        visible={showExerciseSelector}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Exercise</Text>
+            <Pressable
+              onPress={() => setShowExerciseSelector(false)}
+              style={({ pressed }) => [
+                styles.modalCloseButton,
+                pressed && styles.modalCloseButtonPressed
+              ]}
+            >
+              <Ionicons name="close" size={24} color={theme.colors.text} />
+            </Pressable>
+          </View>
+
+          <ScrollView
+            style={styles.exerciseList}
+            contentContainerStyle={styles.exerciseListContent}
+          >
+            {exercisesWithProgression.map((exercise) => {
+              const isSelected = selectedExerciseId === exercise.id;
+              return (
+                <Pressable
+                  key={exercise.id}
+                  style={({ pressed }) => [
+                    styles.exerciseItem,
+                    isSelected && styles.exerciseItemSelected,
+                    pressed && styles.exerciseItemPressed
+                  ]}
+                  onPress={() => handleExerciseSelect(exercise)}
+                >
+                  <View style={styles.exerciseInfo}>
+                    <Text style={styles.exerciseName}>{exercise.name}</Text>
+                    <Text style={styles.exerciseCategory}>
+                      {exercise.category}
+                    </Text>
+                  </View>
+                  {isSelected && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                  )}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </Modal>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.md,
+    padding: theme.spacing.lg,
     ...theme.shadows.sm
   },
   header: {
@@ -437,151 +460,166 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: theme.spacing.md
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center"
+  },
+  titleIcon: {
+    marginRight: theme.spacing.xs
+  },
   title: {
     ...theme.typography.h3,
     color: theme.colors.text
   },
-  exportButton: {
-    padding: theme.spacing.sm,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primaryLight
-  },
-  exerciseSelector: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    marginBottom: theme.spacing.md
-  },
-  exerciseSelectorText: {
-    ...theme.typography.body,
-    color: theme.colors.text,
-    fontFamily: theme.fonts.medium
-  },
-  controls: {
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.lg
-  },
-  controlGroup: {
-    gap: theme.spacing.sm
-  },
-  controlLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.5
-  },
-  controlRow: {
-    flexDirection: "row",
-    gap: theme.spacing.sm
-  },
-  controlChip: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  controlChipActive: {
-    backgroundColor: theme.colors.primaryLight,
-    borderColor: theme.colors.primary
-  },
-  controlChipDisabled: {
-    opacity: 0.5
-  },
-  controlChipText: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    fontFamily: theme.fonts.medium
-  },
-  controlChipTextActive: {
-    color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold
-  },
-  controlChipTextDisabled: {
-    color: theme.colors.muted
-  },
-  chartContainer: {
-    height: 200
-  },
-  trendContainer: {
+  trendBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
-    marginBottom: theme.spacing.md
+    gap: 2,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.full
   },
   trendText: {
     ...theme.typography.caption,
     fontFamily: theme.fonts.semiBold
   },
-  chart: {
+  exerciseSelector: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    height: "100%",
-    gap: theme.spacing.xs
-  },
-  barContainer: {
-    flex: 1,
+    justifyContent: "space-between",
     alignItems: "center",
-    height: "100%"
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.md,
+    marginBottom: theme.spacing.md
   },
-  barWrapper: {
-    flex: 1,
-    width: "100%",
-    justifyContent: "flex-end",
-    marginBottom: theme.spacing.xs
+  exerciseSelectorPressed: {
+    opacity: 0.7
   },
-  bar: {
-    width: "100%",
-    minHeight: 4,
-    borderRadius: theme.radius.sm
+  exerciseSelectorText: {
+    ...theme.typography.body,
+    color: theme.colors.text,
+    fontFamily: theme.fonts.medium,
+    flex: 1
   },
-  prIndicator: {
-    position: "absolute",
-    top: -16,
-    left: "50%",
-    marginLeft: -6,
-    backgroundColor: theme.colors.warningLight,
+  exerciseSelectorPlaceholder: {
+    color: theme.colors.muted
+  },
+  controlsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: theme.spacing.md,
+    gap: theme.spacing.sm
+  },
+  segmentedControl: {
+    flexDirection: "row",
+    backgroundColor: theme.colors.background,
     borderRadius: theme.radius.sm,
     padding: 2
   },
-  barLabel: {
+  segment: {
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radius.xs
+  },
+  segmentActive: {
+    backgroundColor: theme.colors.surface,
+    ...theme.shadows.sm
+  },
+  segmentDisabled: {
+    opacity: 0.4
+  },
+  segmentText: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    fontSize: 10,
-    textAlign: "center"
+    fontFamily: theme.fonts.medium
+  },
+  segmentTextActive: {
+    color: theme.colors.primary,
+    fontFamily: theme.fonts.semiBold
+  },
+  segmentTextDisabled: {
+    color: theme.colors.muted
+  },
+  timeRangeControl: {
+    flexDirection: "row",
+    gap: theme.spacing.xs
+  },
+  timeChip: {
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm
+  },
+  timeChipActive: {
+    backgroundColor: theme.colors.primaryLight,
+    borderRadius: theme.radius.sm
+  },
+  timeChipText: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    fontFamily: theme.fonts.medium
+  },
+  timeChipTextActive: {
+    color: theme.colors.primary,
+    fontFamily: theme.fonts.semiBold
+  },
+  chartArea: {
+    height: CHART_HEIGHT + 48,
+    marginTop: theme.spacing.sm
+  },
+  chartScrollContent: {
+    alignItems: "flex-end",
+    paddingRight: theme.spacing.sm,
+    gap: theme.spacing.sm
+  },
+  barColumn: {
+    alignItems: "center",
+    width: 36
+  },
+  barArea: {
+    height: CHART_HEIGHT,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    position: "relative"
+  },
+  bar: {
+    width: 20,
+    borderRadius: theme.radius.xs
+  },
+  prBadge: {
+    position: "absolute",
+    top: -14,
+    backgroundColor: theme.colors.accentLight,
+    borderRadius: theme.radius.full,
+    padding: 2
   },
   barValue: {
     ...theme.typography.caption,
     color: theme.colors.text,
     fontFamily: theme.fonts.semiBold,
-    fontSize: 10,
-    marginTop: 2
+    marginTop: theme.spacing.xs
   },
-  prValue: {
-    color: theme.colors.warning,
-    fontFamily: theme.fonts.bold
-  },
-  chartPlaceholder: {
-    height: 200,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: theme.spacing.sm
-  },
-  placeholderText: {
-    ...theme.typography.body,
-    color: theme.colors.muted,
-    textAlign: "center"
-  },
-  placeholderSubtext: {
+  barDate: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    textAlign: "center"
+    fontSize: 11
+  },
+  skeleton: {
+    height: 280,
+    backgroundColor: theme.colors.skeleton,
+    borderRadius: theme.radius.sm
+  },
+  chartLoadingArea: {
+    height: CHART_HEIGHT + 48,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  chartLoadingSkeleton: {
+    width: "100%",
+    height: CHART_HEIGHT,
+    backgroundColor: theme.colors.skeleton,
+    borderRadius: theme.radius.sm
   },
   modalContainer: {
     flex: 1,
@@ -600,17 +638,28 @@ const styles = StyleSheet.create({
     color: theme.colors.text
   },
   modalCloseButton: {
-    padding: theme.spacing.sm
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.md,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  modalCloseButtonPressed: {
+    backgroundColor: theme.colors.background
   },
   exerciseList: {
-    flex: 1,
-    padding: theme.spacing.lg
+    flex: 1
+  },
+  exerciseListContent: {
+    padding: theme.spacing.lg,
+    gap: theme.spacing.sm
   },
   exerciseItem: {
+    flexDirection: "row",
+    alignItems: "center",
     padding: theme.spacing.md,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.surface,
-    marginBottom: theme.spacing.sm,
     borderWidth: 1,
     borderColor: theme.colors.border
   },
@@ -618,38 +667,21 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primaryLight,
     borderColor: theme.colors.primary
   },
+  exerciseItemPressed: {
+    opacity: 0.7
+  },
+  exerciseInfo: {
+    flex: 1
+  },
   exerciseName: {
     ...theme.typography.body,
     color: theme.colors.text,
-    fontFamily: theme.fonts.medium,
-    marginBottom: theme.spacing.xs
+    fontFamily: theme.fonts.medium
   },
   exerciseCategory: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    textTransform: "capitalize"
-  },
-  legend: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: theme.spacing.lg,
-    marginTop: theme.spacing.md,
-    paddingTop: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.xs
-  },
-  legendColor: {
-    width: 12,
-    height: 12,
-    borderRadius: theme.radius.sm
-  },
-  legendText: {
-    ...theme.typography.caption,
-    color: theme.colors.muted
+    textTransform: "capitalize",
+    marginTop: 2
   }
 });

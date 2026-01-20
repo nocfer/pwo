@@ -96,7 +96,6 @@ describe("Program Execution Initialization", () => {
   describe("Multi-Session Navigation (Requirement 1.6)", () => {
     it("should allow navigation to any session index within program bounds", () => {
       const programId = "test-program";
-      const totalSessions = 10;
 
       // Test navigation to various session indices
       const testIndices = [1, 5, 10];

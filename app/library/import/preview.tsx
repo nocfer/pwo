@@ -77,22 +77,10 @@ export default function ImportPreviewScreen() {
     }
   };
 
-  const handleCancel = () => {
-    // Navigate back to scanner screen
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      // Fallback: navigate to scanner if we can't go back
-      router.replace("/library/scan");
-    }
-  };
-
   const handleBack = () => {
-    // Navigate back to scanner screen
     if (router.canGoBack()) {
       router.back();
     } else {
-      // Fallback: navigate to scanner if we can't go back
       router.replace("/library/scan");
     }
   };
@@ -103,7 +91,7 @@ export default function ImportPreviewScreen() {
       <ProgramImportPreview
         programData={programData}
         onConfirm={handleConfirm}
-        onCancel={handleCancel}
+        onCancel={handleBack}
         isImporting={isImporting}
       />
     </SafeAreaView>

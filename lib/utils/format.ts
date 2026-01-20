@@ -15,19 +15,22 @@ export function formatTime(total: number): string {
  * Format seconds into human-readable duration.
  *
  * @param seconds - Total seconds
- * @param style - 'short' for hh:mm format, 'long' for "5 minutes" or "1 hour 30 minutes"
+ * @param style - 'short' for hh:mm format, 'shortWithSuffix' for hh:mmh, 'long' for "5 minutes" or "1 hour 30 minutes"
  * @returns Formatted duration string
  */
 export function formatDuration(
   seconds: number,
-  style: "short" | "long" = "short"
+  style: "short" | "shortWithSuffix" | "long" = "short"
 ): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
 
   if (style === "short") {
-    // hh:mm format
     return `${hours}:${minutes.toString().padStart(2, "0")}`;
+  }
+
+  if (style === "shortWithSuffix") {
+    return `${hours}:${minutes.toString().padStart(2, "0")}h`;
   }
 
   // Long format

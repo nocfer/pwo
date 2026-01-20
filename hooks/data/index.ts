@@ -40,8 +40,4 @@ export {
 export { usePrograms } from "./usePrograms";
 export { useSessionCompletion } from "./useSessionCompletion";
 export { useWeeklyActivity } from "./useWeeklyActivity";
-export {
-  formatDurationShort,
-  useWeeklyCompletion,
-  useWeeklyStats
-} from "./useWeeklyStats";
+export { useWeeklyCompletion, useWeeklyStats } from "./useWeeklyStats";
