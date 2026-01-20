@@ -1,3 +1,4 @@
+import { ErrorScreen } from "@/components/common";
 import {
   ProgramForm,
   type ProgramFormData
@@ -7,12 +8,11 @@ import { useExercises, usePrograms } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditProgramScreen() {
-  const params = useLocalSearchParams();
-  const id = params.id as string;
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { data: programs } = usePrograms();
   const { data: exercises } = useExercises();
   const actions = useDataActions();
@@ -36,73 +36,33 @@ export default function EditProgramScreen() {
         defaultRestBetweenExercises: formData.defaultRestBetweenExercises
       });
       router.back();
-    } catch (e) {
-      throw e;
     } finally {
       setSaving(false);
     }
   }
 
-  function handleCancel() {
-    router.back();
-  }
-
   if (!program) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorCard}>
-          <Text style={styles.errorText}>Program not found.</Text>
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => [
-              styles.backBtn,
-              pressed && styles.backBtnPressed
-            ]}
-          >
-            <Text style={styles.backBtnText}>Go Back</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
+    return <ErrorScreen message="Program not found." />;
   }
 
   if (program.source === "builtin") {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorCard}>
-          <Text style={styles.errorText}>
-            Built-in programs cannot be edited.
-          </Text>
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => [
-              styles.backBtn,
-              pressed && styles.backBtnPressed
-            ]}
-          >
-            <Text style={styles.backBtnText}>Go Back</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
+    return <ErrorScreen message="Built-in programs cannot be edited." />;
   }
-
-  const initialData: Partial<ProgramFormData> = {
-    name: program.name,
-    blocks: program.blocks,
-    initialWarmup: program.initialWarmup,
-    defaultRestBetweenExercises: program.defaultRestBetweenExercises
-  };
 
   return (
     <SafeAreaView style={styles.container}>
       <ProgramForm
         mode="edit"
-        initialData={initialData}
+        initialData={{
+          name: program.name,
+          blocks: program.blocks,
+          initialWarmup: program.initialWarmup,
+          defaultRestBetweenExercises: program.defaultRestBetweenExercises
+        }}
         onSave={handleSave}
-        onCancel={handleCancel}
+        onCancel={router.back}
         saving={saving}
-        exercises={exercises || []}
+        exercises={exercises ?? []}
       />
     </SafeAreaView>
   );
@@ -112,34 +72,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background
-  },
-  errorCard: {
-    margin: theme.spacing.lg,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.xl,
-    alignItems: "center",
-    gap: theme.spacing.lg,
-    ...theme.shadows.sm
-  },
-  errorText: {
-    ...theme.typography.body,
-    color: theme.colors.muted,
-    textAlign: "center"
-  },
-  backBtn: {
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.xl,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  backBtnPressed: {
-    backgroundColor: theme.colors.border
-  },
-  backBtnText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.text
   }
 });

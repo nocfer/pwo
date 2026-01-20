@@ -26,15 +26,9 @@ export default function NewProgramScreen() {
         defaultRestBetweenExercises: formData.defaultRestBetweenExercises
       });
       router.back();
-    } catch (e) {
-      throw e;
     } finally {
       setSaving(false);
     }
-  }
-
-  function handleCancel() {
-    router.back();
   }
 
   return (
@@ -42,9 +36,9 @@ export default function NewProgramScreen() {
       <ProgramForm
         mode="create"
         onSave={handleSave}
-        onCancel={handleCancel}
+        onCancel={router.back}
         saving={saving}
-        exercises={exercises || []}
+        exercises={exercises ?? []}
       />
     </SafeAreaView>
   );

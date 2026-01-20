@@ -1444,11 +1444,6 @@ export function useDataContext() {
 }
 
 // Convenience hooks
-export function useLastCompletedSlug() {
-  const { state } = useDataContext();
-  return state.lastCompletedSlug;
-}
-
 export function useDataActions() {
   const { actions } = useDataContext();
   return actions;
