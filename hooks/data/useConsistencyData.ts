@@ -29,14 +29,23 @@ export type ConsistencyData = {
   maxWorkoutsPerDay: number;
 };
 
-/**
- * Get consistency level based on workout count
- */
+/** Day labels for heatmap header */
+const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
+
+/** Get consistency level based on workout count */
 function getConsistencyLevel(count: number): ConsistencyLevel {
   if (count === 0) return 0;
   if (count === 1) return 1;
   if (count <= 3) return 2;
   return 3;
+}
+
+/** Format date in local timezone to avoid UTC conversion issues */
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function useConsistencyData(weeks: number = 12): {
@@ -51,13 +60,6 @@ export function useConsistencyData(weeks: number = 12): {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    // Format date in local timezone to avoid UTC conversion issues
-    const formatLocalDate = (date: Date): string => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    };
     const todayISO = formatLocalDate(today);
 
     // Get the start of the current week (Monday)
@@ -133,8 +135,8 @@ export function useConsistencyData(weeks: number = 12): {
 /**
  * Get day labels for heatmap header
  */
-export function getDayLabels(): string[] {
-  return ["M", "T", "W", "T", "F", "S", "S"];
+export function getDayLabels(): readonly string[] {
+  return DAY_LABELS;
 }
 
 /**

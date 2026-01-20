@@ -1,3 +1,4 @@
+import { ErrorScreen } from "@/components/common";
 import {
   ExerciseForm,
   type ExerciseFormData
@@ -7,12 +8,11 @@ import { useExercises } from "@/hooks/data";
 import { theme } from "@/theme/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditExerciseScreen() {
-  const params = useLocalSearchParams();
-  const id = params.id as string;
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { data } = useExercises();
   const actions = useDataActions();
   const [saving, setSaving] = useState(false);
@@ -32,70 +32,30 @@ export default function EditExerciseScreen() {
         icon: formData.icon
       });
       router.back();
-    } catch (e) {
-      throw e;
     } finally {
       setSaving(false);
     }
   }
 
-  function handleCancel() {
-    router.back();
-  }
-
   if (!exercise) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorCard}>
-          <Text style={styles.errorText}>Exercise not found.</Text>
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => [
-              styles.backBtn,
-              pressed && styles.backBtnPressed
-            ]}
-          >
-            <Text style={styles.backBtnText}>Go Back</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
+    return <ErrorScreen message="Exercise not found." />;
   }
 
   if (exercise.source === "builtin") {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorCard}>
-          <Text style={styles.errorText}>
-            Built-in exercises cannot be edited.
-          </Text>
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => [
-              styles.backBtn,
-              pressed && styles.backBtnPressed
-            ]}
-          >
-            <Text style={styles.backBtnText}>Go Back</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
+    return <ErrorScreen message="Built-in exercises cannot be edited." />;
   }
-
-  const initialData: Partial<ExerciseFormData> = {
-    name: exercise.name,
-    category: exercise.category,
-    icon: exercise.icon
-  };
 
   return (
     <SafeAreaView style={styles.container}>
       <ExerciseForm
         mode="edit"
-        initialData={initialData}
+        initialData={{
+          name: exercise.name,
+          category: exercise.category,
+          icon: exercise.icon
+        }}
         onSave={handleSave}
-        onCancel={handleCancel}
+        onCancel={router.back}
         saving={saving}
       />
     </SafeAreaView>
@@ -106,34 +66,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background
-  },
-  errorCard: {
-    margin: theme.spacing.lg,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.xl,
-    alignItems: "center",
-    gap: theme.spacing.lg,
-    ...theme.shadows.sm
-  },
-  errorText: {
-    ...theme.typography.body,
-    color: theme.colors.muted,
-    textAlign: "center"
-  },
-  backBtn: {
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.xl,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  backBtnPressed: {
-    backgroundColor: theme.colors.border
-  },
-  backBtnText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.text
   }
 });

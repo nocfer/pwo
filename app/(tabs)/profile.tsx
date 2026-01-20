@@ -1,9 +1,11 @@
+import Button from "@/components/common/Button";
+import { useAuth } from "@/context/AuthContext";
 import { useDataActions } from "@/context/DataContext";
 import { haptics } from "@/lib/haptics";
 import { storage } from "@/lib/storage";
 import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   Platform,
@@ -17,28 +19,79 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const isWeb = Platform.OS === "web";
 
-export default function AboutScreen() {
+function showAlert(title: string, message: string) {
+  if (isWeb) {
+    window.alert(message);
+  } else {
+    Alert.alert(title, message);
+  }
+}
+
+function showConfirm(
+  title: string,
+  message: string,
+  confirmText: string,
+  onConfirm: () => void
+) {
+  if (isWeb) {
+    if (window.confirm(message)) {
+      onConfirm();
+    }
+  } else {
+    Alert.alert(title, message, [
+      { text: "Cancel", style: "cancel" },
+      { text: confirmText, style: "destructive", onPress: onConfirm }
+    ]);
+  }
+}
+
+export default function ProfileScreen() {
+  const { user, isAnonymous, signOut } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
   const [clearing, setClearing] = useState(false);
   const { refreshAll, refreshProgress } = useDataActions();
 
+  const emailLabel = useMemo(() => {
+    if (!user) {
+      return "No account";
+    }
+    if (isAnonymous || !user.email) {
+      return "Guest account";
+    }
+    return user.email;
+  }, [isAnonymous, user]);
+
+  const handleSignOut = useCallback(async () => {
+    setLoggingOut(true);
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+      showAlert("Error", "Failed to sign out. Please try again.");
+    } finally {
+      setLoggingOut(false);
+    }
+  }, [signOut]);
+
+  const confirmSignOut = useCallback(() => {
+    showConfirm(
+      "Log Out",
+      "Are you sure you want to log out?",
+      "Log Out",
+      handleSignOut
+    );
+  }, [handleSignOut]);
+
   const doClearProgressData = useCallback(async () => {
     setClearing(true);
-    void haptics.skipAction();
+    haptics.skipAction();
     try {
       await storage.clearAllProgressData();
       refreshProgress();
-      if (isWeb) {
-        window.alert("All progress data has been cleared.");
-      } else {
-        Alert.alert("Done", "All progress data has been cleared.");
-      }
+      showAlert("Done", "All progress data has been cleared.");
     } catch (error) {
       console.error("Failed to clear progress data:", error);
-      if (isWeb) {
-        window.alert("Failed to clear data. Please try again.");
-      } else {
-        Alert.alert("Error", "Failed to clear data. Please try again.");
-      }
+      showAlert("Error", "Failed to clear data. Please try again.");
     } finally {
       setClearing(false);
     }
@@ -46,63 +99,35 @@ export default function AboutScreen() {
 
   const doClearAllData = useCallback(async () => {
     setClearing(true);
-    void haptics.skipAction();
+    haptics.skipAction();
     try {
       await storage.clearAllData();
       refreshAll();
-      if (isWeb) {
-        window.alert("All data has been cleared.");
-      } else {
-        Alert.alert("Done", "All data has been cleared.");
-      }
+      showAlert("Done", "All data has been cleared.");
     } catch (error) {
       console.error("Failed to clear all data:", error);
-      if (isWeb) {
-        window.alert("Failed to clear data. Please try again.");
-      } else {
-        Alert.alert("Error", "Failed to clear data. Please try again.");
-      }
+      showAlert("Error", "Failed to clear data. Please try again.");
     } finally {
       setClearing(false);
     }
   }, [refreshAll]);
 
   const handleClearProgressData = useCallback(() => {
-    const message =
-      "This will delete all your workout history, streaks, and personal records. Your exercise and program library will be kept. This cannot be undone.";
-    if (isWeb) {
-      if (window.confirm(message + "\n\nContinue?")) {
-        void doClearProgressData();
-      }
-    } else {
-      Alert.alert("Clear Progress Data", message, [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear Progress",
-          style: "destructive",
-          onPress: () => void doClearProgressData()
-        }
-      ]);
-    }
+    showConfirm(
+      "Clear Progress Data",
+      "This will delete all your workout history, streaks, and personal records. Your exercise and program library will be kept. This cannot be undone.",
+      "Clear Progress",
+      doClearProgressData
+    );
   }, [doClearProgressData]);
 
   const handleClearAllData = useCallback(() => {
-    const message =
-      "This will delete ALL your data including exercises, programs, workout history, and personal records. This is a full reset and cannot be undone.";
-    if (isWeb) {
-      if (window.confirm(message + "\n\nContinue?")) {
-        void doClearAllData();
-      }
-    } else {
-      Alert.alert("Clear All Data", message, [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear Everything",
-          style: "destructive",
-          onPress: () => void doClearAllData()
-        }
-      ]);
-    }
+    showConfirm(
+      "Clear All Data",
+      "This will delete ALL your data including exercises, programs, workout history, and personal records. This is a full reset and cannot be undone.",
+      "Clear Everything",
+      doClearAllData
+    );
   }, [doClearAllData]);
 
   return (
@@ -111,17 +136,15 @@ export default function AboutScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* App Info Card */}
         <View style={styles.heroCard}>
           <View style={styles.iconContainer}>
             <Ionicons name="barbell" size={36} color={theme.colors.primary} />
           </View>
-          <Text style={styles.appName}>PWO</Text>
-          <Text style={styles.appSubtitle}>Personal Workout Organizer</Text>
-          <Text style={styles.version}>Version 1.0.0</Text>
+          <Text style={styles.title}>PWO</Text>
+          <Text style={styles.subtitle}>Personal Workout Organizer</Text>
+          <Text style={styles.caption}>Version 1.0.0</Text>
         </View>
 
-        {/* Features Card */}
         <View style={styles.card}>
           <FeatureRow
             icon="fitness-outline"
@@ -145,14 +168,25 @@ export default function AboutScreen() {
           />
         </View>
 
-        {/* Data Management */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Signed in as</Text>
+            <Text style={styles.infoValue}>{emailLabel}</Text>
+          </View>
+          <View style={styles.divider} />
+          <Text style={styles.caption}>
+            {isAnonymous
+              ? "Create an account to keep your data across devices."
+              : "Your account stays synced across devices."}
+          </Text>
+        </View>
+
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Data Management</Text>
-
           <Pressable
             style={({ pressed }) => [
               styles.dangerButton,
-              styles.warningButton,
               pressed && styles.dangerButtonPressed,
               clearing && styles.dangerButtonDisabled
             ]}
@@ -222,6 +256,19 @@ export default function AboutScreen() {
             </View>
           </Pressable>
         </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Session</Text>
+          <Button
+            label={loggingOut ? "Logging out..." : "Log Out"}
+            variant="secondary"
+            size="lg"
+            icon="log-out-outline"
+            onPress={confirmSignOut}
+            disabled={loggingOut}
+            fullWidth
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -277,19 +324,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: theme.spacing.md
   },
-  appName: {
+  title: {
     ...theme.typography.h1,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs
   },
-  appSubtitle: {
+  subtitle: {
     ...theme.typography.body,
     color: theme.colors.muted,
+    textAlign: "center",
     marginBottom: theme.spacing.sm
-  },
-  version: {
-    ...theme.typography.caption,
-    color: theme.colors.muted
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -323,15 +367,35 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.muted
   },
+  sectionTitle: {
+    ...theme.typography.h3,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.md
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: theme.spacing.sm
+  },
+  infoLabel: {
+    ...theme.typography.body,
+    color: theme.colors.muted
+  },
+  infoValue: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text,
+    maxWidth: "65%",
+    textAlign: "right"
+  },
   divider: {
     height: 1,
     backgroundColor: theme.colors.borderLight,
     marginVertical: theme.spacing.sm
   },
-  sectionTitle: {
-    ...theme.typography.h3,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md
+  caption: {
+    ...theme.typography.caption,
+    color: theme.colors.muted
   },
   dangerButton: {
     flexDirection: "row",
@@ -341,7 +405,6 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     backgroundColor: theme.colors.background
   },
-  warningButton: {},
   dangerButtonPressed: {
     opacity: 0.7
   },

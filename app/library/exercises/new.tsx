@@ -23,15 +23,9 @@ export default function NewExerciseScreen() {
         icon: formData.icon
       });
       router.back();
-    } catch (e) {
-      throw e;
     } finally {
       setSaving(false);
     }
-  }
-
-  function handleCancel() {
-    router.back();
   }
 
   return (
@@ -39,7 +33,7 @@ export default function NewExerciseScreen() {
       <ExerciseForm
         mode="create"
         onSave={handleSave}
-        onCancel={handleCancel}
+        onCancel={router.back}
         saving={saving}
       />
     </SafeAreaView>

@@ -46,16 +46,16 @@ export function useProgramProgress(program: Program | null | undefined): {
   const programId = program?.id;
   const isChallenge = Boolean(program?.challengeConfig);
 
-  const fetcher = useCallback(async (): Promise<ProgramProgress | null> => {
-    if (!programId || isChallenge) return null;
-    return storage.loadProgramProgress(programId);
-  }, [programId, isChallenge]);
+  const fetcher = useCallback(async (): Promise<ProgramProgress> => {
+    // programId is guaranteed to exist when fetcher runs (skip handles null case)
+    return storage.loadProgramProgress(programId!);
+  }, [programId]);
 
   const {
     data: progress,
     loading,
     error
-  } = useAsyncData(fetcher, [programId, isChallenge, progressVersion], {
+  } = useAsyncData(fetcher, [programId, progressVersion], {
     skip: !programId || isChallenge
   });
 

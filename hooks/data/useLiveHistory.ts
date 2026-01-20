@@ -16,10 +16,9 @@ export type { HistoryEntry };
 export function useLiveHistory(slug: string | undefined) {
   const { historyVersion } = useRefreshVersions();
 
-  const fetcher = useCallback(async (): Promise<HistoryEntry[] | null> => {
-    if (!slug) return null;
-
-    const history = await storage.loadHistory(slug);
+  const fetcher = useCallback(async (): Promise<HistoryEntry[]> => {
+    // slug is guaranteed to exist when fetcher runs (skip: !slug)
+    const history = await storage.loadHistory(slug!);
     // Sort by date descending
     return history.sort((a, b) =>
       a.date < b.date ? 1 : a.date > b.date ? -1 : 0
@@ -29,9 +28,7 @@ export function useLiveHistory(slug: string | undefined) {
   const { data, loading, error } = useAsyncData(
     fetcher,
     [slug, historyVersion],
-    {
-      skip: !slug
-    }
+    { skip: !slug }
   );
 
   return { data, loading, error } as const;

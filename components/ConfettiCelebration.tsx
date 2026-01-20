@@ -32,7 +32,6 @@ export function ConfettiCelebration({
   const [isVisible, setIsVisible] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const confettiRef = useRef<ConfettiCannon | null>(null);
 
   useEffect(() => {
     if (show) {
@@ -82,7 +81,6 @@ export function ConfettiCelebration({
     <View style={[styles.container, { pointerEvents: "none" }]}>
       {/* Confetti cannons from both sides */}
       <ConfettiCannon
-        ref={confettiRef}
         count={80}
         origin={{ x: 0, y: SCREEN_HEIGHT * 0.3 }}
         autoStart={true}

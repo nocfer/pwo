@@ -10,43 +10,44 @@ import { canSafelyDelete } from "@/lib/dependencyChecker";
 import { dataEvents } from "@/lib/events";
 import { storage } from "@/lib/storage";
 import {
-    validateExercise,
-    validateModificationPermissions,
-    validateUniqueName
+  validateExercise,
+  validateModificationPermissions,
+  validateUniqueName
 } from "@/lib/validation";
 import type {
-    AuditLogEntry,
-    ChallengeProgress,
-    DataAction,
-    DataEvent,
-    DataState,
-    DataType,
-    DependencyCheck,
-    EnhancedDataActions,
-    EnhancedDataState,
-    EventRecord,
-    Exercise,
-    ExerciseProgress,
-    ExportData,
-    HistoryEntry,
-    ImportData,
-    ImportResult,
-    LegacyProgram,
-    Program,
-    ProgramProgress,
-    SearchFacets,
-    SearchQuery,
-    SessionState,
-    UsageStats,
-    WorkoutProgress
+  AuditLogEntry,
+  ChallengeProgress,
+  DataAction,
+  DataEvent,
+  DataState,
+  DataType,
+  DependencyCheck,
+  EnhancedDataActions,
+  EnhancedDataState,
+  EventRecord,
+  Exercise,
+  ExerciseProgress,
+  ExportData,
+  HistoryEntry,
+  ImportData,
+  ImportResult,
+  LegacyProgram,
+  Program,
+  ProgramProgress,
+  SearchFacets,
+  SearchQuery,
+  SessionState,
+  UsageStats,
+  WorkoutProgress
 } from "@/types";
 import React, {
-    createContext,
-    ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useReducer
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useReducer,
+  useRef
 } from "react";
 
 type DataContextValue = {
@@ -174,6 +175,10 @@ const DataContext = createContext<DataContextValue | null>(null);
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(dataReducer, initialState);
+
+  // Use refs for caches that don't need to trigger re-renders
+  const searchCacheRef = useRef<Map<string, any>>(new Map());
+  const auditLogRef = useRef<AuditLogEntry[]>([]);
 
   function migrateProgram(p: LegacyProgram): Program {
     if (!p || typeof p !== "object") return p as Program;
@@ -1010,8 +1015,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       // Create cache key
       const cacheKey = JSON.stringify(query);
 
-      // Check cache first
-      const cached = state.searchCache.get(cacheKey);
+      // Check cache first (using ref to avoid state mutation)
+      const cached = searchCacheRef.current.get(cacheKey);
       if (cached) {
         return cached;
       }
@@ -1146,12 +1151,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         facets
       };
 
-      // Cache the result
-      state.searchCache.set(cacheKey, result);
+      // Cache the result (using ref to avoid state mutation)
+      searchCacheRef.current.set(cacheKey, result);
 
       return result;
     },
-    [state.exercises, state.programs, state.searchCache]
+    [state.exercises, state.programs]
   );
 
   const exportData = useCallback(
@@ -1392,10 +1397,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       };
 
       // In a real implementation, you'd persist this to storage
-      // For now, we'll just add it to the in-memory audit log
-      state.auditLog.push(auditEntry);
+      // For now, we'll just add it to the in-memory audit log (using ref to avoid state mutation)
+      auditLogRef.current.push(auditEntry);
     },
-    [state.auditLog]
+    []
   );
 
   const contextValue: DataContextValue = {
@@ -1444,11 +1449,6 @@ export function useDataContext() {
 }
 
 // Convenience hooks
-export function useLastCompletedSlug() {
-  const { state } = useDataContext();
-  return state.lastCompletedSlug;
-}
-
 export function useDataActions() {
   const { actions } = useDataContext();
   return actions;

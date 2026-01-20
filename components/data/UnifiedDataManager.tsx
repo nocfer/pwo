@@ -8,11 +8,18 @@ import { theme } from "@/theme/theme";
 import type { DataType, SearchState } from "@/types/enhanced";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ViewStyle
+} from "react-native";
 import { SearchInput } from "../common/SearchInput";
-import DataList from "./DataList";
-import FilterControls from "./FilterControls";
+import { DataList } from "./DataList";
+import { FilterControls } from "./FilterControls";
 
 type Props = {
   initialTab?: DataType;
@@ -36,7 +43,7 @@ export function UnifiedDataManager({
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
-  const getCurrentData = () => {
+  const currentData = useMemo(() => {
     switch (activeTab) {
       case "exercises":
         return state.exercises;
@@ -47,7 +54,7 @@ export function UnifiedDataManager({
       default:
         return [];
     }
-  };
+  }, [activeTab, state.exercises, state.programs]);
 
   const handleTabChange = (tab: DataType) => {
     haptics.dataTabSwitch();
@@ -153,7 +160,6 @@ export function UnifiedDataManager({
     }
   };
 
-  const currentData = getCurrentData();
   const isLoading =
     (activeTab === "exercises" && state.exercisesLoading) ||
     (activeTab !== "exercises" && state.programsLoading);
