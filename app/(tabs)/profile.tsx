@@ -60,7 +60,11 @@ export default function ProfileScreen() {
     } else {
       Alert.alert("Log Out", message, [
         { text: "Cancel", style: "cancel" },
-        { text: "Log Out", style: "destructive", onPress: () => void handleSignOut() }
+        {
+          text: "Log Out",
+          style: "destructive",
+          onPress: () => void handleSignOut()
+        }
       ]);
     }
   }, [handleSignOut]);
@@ -452,4 +456,3 @@ const styles = StyleSheet.create({
     color: theme.colors.muted
   }
 });
-

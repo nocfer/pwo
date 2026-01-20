@@ -20,8 +20,8 @@ export { default as LineChart, type DataPoint } from "./LineChart";
 export { default as PersonalRecordsCard } from "./PersonalRecordsCard";
 export { default as PRItem } from "./PRItem";
 export {
-    CompactEmptyState,
-    default as ProgressEmptyState
+  CompactEmptyState,
+  default as ProgressEmptyState
 } from "./ProgressEmptyState";
 export { default as RingChart } from "./RingChart";
 export { default as WeeklySummaryCard } from "./WeeklySummaryCard";

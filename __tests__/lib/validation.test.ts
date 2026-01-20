@@ -526,7 +526,6 @@ describe("Validation Infrastructure Property Tests", () => {
   });
 });
 
-
 // ============================================================================
 // Challenge Interdependency Tests
 // ============================================================================
@@ -638,15 +637,15 @@ describe("Challenge Interdependency Validation", () => {
       // After 7 days: still at 20 (increase happens at end of day 7)
       const maxReps7 = calculateMaxTargetReps(20, 7, 10);
       expect(maxReps7).toBe(20);
-      
+
       // After 8 days: increase happened, now at 22
       const maxReps8 = calculateMaxTargetReps(20, 8, 10);
       expect(maxReps8).toBe(22);
-      
+
       // After 14 days: still at 22 (second increase happens at end of day 14)
       const maxReps14 = calculateMaxTargetReps(20, 14, 10);
       expect(maxReps14).toBe(22);
-      
+
       // After 15 days: second increase happened, now at 24.2
       const maxReps15 = calculateMaxTargetReps(20, 15, 10);
       expect(maxReps15).toBe(24);
@@ -760,8 +759,12 @@ describe("Challenge Interdependency Validation", () => {
     it("should provide consistent suggestions across multiple calls", () => {
       const result1 = validateChallengeInterdependencies(20, 100, 30, 10);
       const result2 = validateChallengeInterdependencies(20, 100, 30, 10);
-      expect(result1.suggestions.minDuration).toBe(result2.suggestions.minDuration);
-      expect(result1.suggestions.maxTargetReps).toBe(result2.suggestions.maxTargetReps);
+      expect(result1.suggestions.minDuration).toBe(
+        result2.suggestions.minDuration
+      );
+      expect(result1.suggestions.maxTargetReps).toBe(
+        result2.suggestions.maxTargetReps
+      );
     });
 
     it("should handle realistic challenge scenarios", () => {
@@ -831,7 +834,6 @@ describe("Challenge Interdependency Validation", () => {
   });
 });
 
-
 // ============================================================================
 // Auto-Adjustment Tests
 // ============================================================================
@@ -879,8 +881,16 @@ describe("Challenge Auto-Adjustment", () => {
     });
 
     it("should increase duration when weekly increase percentage decreases", () => {
-      const config = { ...baseConfig, weeklyIncreasePercent: 10, duration: 120 };
-      const result = autoAdjustChallengeConfig("weeklyIncreasePercent", 5, config);
+      const config = {
+        ...baseConfig,
+        weeklyIncreasePercent: 10,
+        duration: 120
+      };
+      const result = autoAdjustChallengeConfig(
+        "weeklyIncreasePercent",
+        5,
+        config
+      );
       expect(result.duration).toBeGreaterThan(120);
     });
 
@@ -930,7 +940,9 @@ describe("Challenge Auto-Adjustment", () => {
 
     it("should not modify fields that don't need adjustment", () => {
       const result = autoAdjustChallengeConfig("initialReps", 25, baseConfig);
-      expect(result.weeklyIncreasePercent).toBe(baseConfig.weeklyIncreasePercent);
+      expect(result.weeklyIncreasePercent).toBe(
+        baseConfig.weeklyIncreasePercent
+      );
     });
 
     it("should handle realistic user scenario: increasing initial reps", () => {

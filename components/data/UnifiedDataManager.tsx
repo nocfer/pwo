@@ -9,10 +9,17 @@ import type { DataType, SearchState } from "@/types/enhanced";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ViewStyle
+} from "react-native";
 import { SearchInput } from "../common/SearchInput";
-import DataList from "./DataList";
-import FilterControls from "./FilterControls";
+import { DataList } from "./DataList";
+import { FilterControls } from "./FilterControls";
 
 type Props = {
   initialTab?: DataType;

@@ -104,7 +104,11 @@ export function calculateMinimumDuration(
   targetReps: number,
   weeklyIncreasePercent: number
 ): number {
-  return calculateSessionsToTarget(initialReps, targetReps, weeklyIncreasePercent);
+  return calculateSessionsToTarget(
+    initialReps,
+    targetReps,
+    weeklyIncreasePercent
+  );
 }
 
 /**

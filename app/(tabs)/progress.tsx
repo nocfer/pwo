@@ -4,10 +4,10 @@
  */
 
 import {
-    ConsistencyHeatmap,
-    EnhancedExerciseProgressionChart,
-    PersonalRecordsCard,
-    WeeklySummaryCard
+  ConsistencyHeatmap,
+  EnhancedExerciseProgressionChart,
+  PersonalRecordsCard,
+  WeeklySummaryCard
 } from "@/components";
 import { Button } from "@/components/common";
 import { useAllProgress } from "@/hooks/data";
@@ -16,13 +16,13 @@ import { theme } from "@/theme/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useRef, useState } from "react";
 import {
-    Animated,
-    RefreshControl,
-    ScrollView,
-    Share,
-    StyleSheet,
-    Text,
-    View
+  Animated,
+  RefreshControl,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -103,7 +103,14 @@ export default function StatisticsScreen() {
 
     setRefreshing(false);
     animateSections();
-  }, [animateSections, section1Anim, section2Anim, section3Anim, section4Anim, section5Anim]);
+  }, [
+    animateSections,
+    section1Anim,
+    section2Anim,
+    section3Anim,
+    section4Anim,
+    section5Anim
+  ]);
 
   const handleShareReport = useCallback(async () => {
     try {

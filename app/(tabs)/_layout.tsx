@@ -1,4 +1,4 @@
-import LoadingScreen from "@/components/common/LoadingScreen";
+import { LoadingScreen } from "@/components/common/LoadingScreen";
 import { useAuth } from "@/context/AuthContext";
 import { Redirect, Tabs } from "expo-router";
 
@@ -33,6 +33,7 @@ export default function TabLayout() {
           fontFamily: theme.fonts.semiBold,
           fontSize: 17
         },
+        animation: "shift",
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.borderLight,

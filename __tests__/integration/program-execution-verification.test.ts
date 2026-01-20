@@ -187,7 +187,6 @@ describe("Program Execution Verification", () => {
     });
 
     it("should handle programs with no sessions", () => {
-      const programId = "empty_program";
       const totalSessions = 0;
       const completedSessions = new Set<number>();
 
@@ -202,7 +201,6 @@ describe("Program Execution Verification", () => {
     it("should validate session indices are within bounds", () => {
       const totalSessions = 5;
       const validIndices = [1, 2, 3, 4, 5];
-      const invalidIndices = [0, 6, -1, 10];
 
       // Valid indices should be found when not completed
       validIndices.forEach((index) => {
