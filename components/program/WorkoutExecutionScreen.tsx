@@ -4,7 +4,7 @@ import { theme } from "@/theme/theme";
 import { Program, ProgramSession } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Pressable,
@@ -15,6 +15,7 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { WorkoutMatrix } from "./WorkoutMatrix";
 
 // Types for tracking actual reps
 type SetCompletion = {
@@ -170,42 +171,6 @@ export function WorkoutExecutionScreen({
   const adjustReps = useCallback((delta: number) => {
     setCurrentReps((prev) => Math.max(0, (prev ?? 0) + delta));
   }, []);
-
-  // Build workout plan items for display
-  const workoutPlanItems = useMemo(() => {
-    return steps.map((step, idx) => {
-      const isDone = idx < currentStepIndex || timer.phase === "done";
-      const isCurrent = idx === currentStepIndex && timer.phase !== "done";
-      const label = getStepLabel(step);
-
-      let detail = "";
-      if (step.type === "exercise") {
-        const setInfo =
-          step.totalSets && step.totalSets > 1
-            ? `Set ${step.setNumber}/${step.totalSets}`
-            : "";
-        const repsInfo = step.targetReps ? `${step.targetReps} reps` : "";
-        const durationInfo = step.durationSeconds
-          ? `${step.durationSeconds}s`
-          : "";
-        detail = [setInfo, repsInfo || durationInfo]
-          .filter(Boolean)
-          .join(" · ");
-      } else if (step.type === "warmup") {
-        detail = formatTime(step.seconds);
-      } else if (step.type === "rest") {
-        detail = `${step.seconds}s`;
-      }
-
-      // Check if we have actual reps for this step
-      const completion = completedSets.find((c) => c.stepKey === step.key);
-      if (completion && completion.actualReps !== completion.targetReps) {
-        detail = `${completion.actualReps} reps (target: ${completion.targetReps})`;
-      }
-
-      return { step, idx, isDone, isCurrent, label, detail };
-    });
-  }, [steps, currentStepIndex, timer.phase, getStepLabel, completedSets]);
 
   // Get next step info
   const nextStep = steps[currentStepIndex + 1] ?? null;
@@ -583,72 +548,14 @@ export function WorkoutExecutionScreen({
           </View>
         )}
 
-        {/* Workout Plan */}
+        {/* Workout Matrix */}
         {timer.phase !== "done" && (
-          <View style={styles.planSection}>
-            <Text style={styles.sectionLabel}>
-              Workout · {currentStepIndex + 1}/{steps.length}
-            </Text>
-            <View style={styles.planList}>
-              {workoutPlanItems.slice(0, 6).map((item, index) => (
-                <View
-                  key={item.step.key}
-                  style={[
-                    styles.planItem,
-                    item.isCurrent && styles.planItemCurrent,
-                    index === 0 && styles.planItemFirst,
-                    index === Math.min(5, workoutPlanItems.length - 1) &&
-                      styles.planItemLast
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.planItemIndicator,
-                      item.isDone && styles.planItemIndicatorDone,
-                      item.isCurrent && styles.planItemIndicatorCurrent
-                    ]}
-                  >
-                    {item.isDone ? (
-                      <Ionicons
-                        name="checkmark"
-                        size={12}
-                        color={theme.colors.primaryTextOn}
-                      />
-                    ) : (
-                      <Text
-                        style={[
-                          styles.planItemNumber,
-                          item.isCurrent && styles.planItemNumberCurrent
-                        ]}
-                      >
-                        {item.idx + 1}
-                      </Text>
-                    )}
-                  </View>
-                  <View style={styles.planItemContent}>
-                    <Text
-                      style={[
-                        styles.planItemLabel,
-                        item.isDone && styles.planItemLabelDone,
-                        item.isCurrent && styles.planItemLabelCurrent
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {item.label}
-                    </Text>
-                    {item.detail && (
-                      <Text style={styles.planItemDetail}>{item.detail}</Text>
-                    )}
-                  </View>
-                </View>
-              ))}
-            </View>
-            {workoutPlanItems.length > 6 && (
-              <Text style={styles.moreItems}>
-                +{workoutPlanItems.length - 6} more steps
-              </Text>
-            )}
-          </View>
+          <WorkoutMatrix
+            steps={steps}
+            currentStepIndex={currentStepIndex}
+            isDone={false}
+            exerciseNameById={exerciseNameById}
+          />
         )}
       </ScrollView>
 
@@ -1177,86 +1084,6 @@ const styles = StyleSheet.create({
   upNextDetail: {
     ...theme.typography.caption,
     color: theme.colors.muted
-  },
-
-  // Plan section
-  planSection: {
-    marginBottom: theme.spacing.lg
-  },
-  planList: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    overflow: "hidden",
-    ...theme.shadows.sm
-  },
-  planItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    gap: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderLight
-  },
-  planItemFirst: {
-    paddingTop: theme.spacing.md
-  },
-  planItemLast: {
-    borderBottomWidth: 0,
-    paddingBottom: theme.spacing.md
-  },
-  planItemCurrent: {
-    backgroundColor: theme.colors.primaryLight
-  },
-  planItemIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: theme.colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: theme.colors.border
-  },
-  planItemIndicatorDone: {
-    backgroundColor: theme.colors.success,
-    borderColor: theme.colors.success
-  },
-  planItemIndicatorCurrent: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary
-  },
-  planItemNumber: {
-    ...theme.typography.small,
-    color: theme.colors.muted
-  },
-  planItemNumberCurrent: {
-    color: theme.colors.primaryTextOn
-  },
-  planItemContent: {
-    flex: 1
-  },
-  planItemLabel: {
-    ...theme.typography.body,
-    color: theme.colors.text
-  },
-  planItemLabelDone: {
-    color: theme.colors.success
-  },
-  planItemLabelCurrent: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.primary
-  },
-  planItemDetail: {
-    ...theme.typography.small,
-    color: theme.colors.muted,
-    marginTop: 1
-  },
-  moreItems: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    textAlign: "center",
-    marginTop: theme.spacing.sm
   },
 
   // Footer
