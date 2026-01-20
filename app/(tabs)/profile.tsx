@@ -19,6 +19,32 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const isWeb = Platform.OS === "web";
 
+function showAlert(title: string, message: string) {
+  if (isWeb) {
+    window.alert(message);
+  } else {
+    Alert.alert(title, message);
+  }
+}
+
+function showConfirm(
+  title: string,
+  message: string,
+  confirmText: string,
+  onConfirm: () => void
+) {
+  if (isWeb) {
+    if (window.confirm(message)) {
+      onConfirm();
+    }
+  } else {
+    Alert.alert(title, message, [
+      { text: "Cancel", style: "cancel" },
+      { text: confirmText, style: "destructive", onPress: onConfirm }
+    ]);
+  }
+}
+
 export default function ProfileScreen() {
   const { user, isAnonymous, signOut } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -41,52 +67,31 @@ export default function ProfileScreen() {
       await signOut();
     } catch (error) {
       console.error("Failed to sign out:", error);
-      if (isWeb) {
-        window.alert("Failed to sign out. Please try again.");
-      } else {
-        Alert.alert("Error", "Failed to sign out. Please try again.");
-      }
+      showAlert("Error", "Failed to sign out. Please try again.");
     } finally {
       setLoggingOut(false);
     }
   }, [signOut]);
 
   const confirmSignOut = useCallback(() => {
-    const message = "Are you sure you want to log out?";
-    if (isWeb) {
-      if (window.confirm(message)) {
-        void handleSignOut();
-      }
-    } else {
-      Alert.alert("Log Out", message, [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Log Out",
-          style: "destructive",
-          onPress: () => void handleSignOut()
-        }
-      ]);
-    }
+    showConfirm(
+      "Log Out",
+      "Are you sure you want to log out?",
+      "Log Out",
+      handleSignOut
+    );
   }, [handleSignOut]);
 
   const doClearProgressData = useCallback(async () => {
     setClearing(true);
-    void haptics.skipAction();
+    haptics.skipAction();
     try {
       await storage.clearAllProgressData();
       refreshProgress();
-      if (isWeb) {
-        window.alert("All progress data has been cleared.");
-      } else {
-        Alert.alert("Done", "All progress data has been cleared.");
-      }
+      showAlert("Done", "All progress data has been cleared.");
     } catch (error) {
       console.error("Failed to clear progress data:", error);
-      if (isWeb) {
-        window.alert("Failed to clear data. Please try again.");
-      } else {
-        Alert.alert("Error", "Failed to clear data. Please try again.");
-      }
+      showAlert("Error", "Failed to clear data. Please try again.");
     } finally {
       setClearing(false);
     }
@@ -94,63 +99,35 @@ export default function ProfileScreen() {
 
   const doClearAllData = useCallback(async () => {
     setClearing(true);
-    void haptics.skipAction();
+    haptics.skipAction();
     try {
       await storage.clearAllData();
       refreshAll();
-      if (isWeb) {
-        window.alert("All data has been cleared.");
-      } else {
-        Alert.alert("Done", "All data has been cleared.");
-      }
+      showAlert("Done", "All data has been cleared.");
     } catch (error) {
       console.error("Failed to clear all data:", error);
-      if (isWeb) {
-        window.alert("Failed to clear data. Please try again.");
-      } else {
-        Alert.alert("Error", "Failed to clear data. Please try again.");
-      }
+      showAlert("Error", "Failed to clear data. Please try again.");
     } finally {
       setClearing(false);
     }
   }, [refreshAll]);
 
   const handleClearProgressData = useCallback(() => {
-    const message =
-      "This will delete all your workout history, streaks, and personal records. Your exercise and program library will be kept. This cannot be undone.";
-    if (isWeb) {
-      if (window.confirm(message + "\n\nContinue?")) {
-        void doClearProgressData();
-      }
-    } else {
-      Alert.alert("Clear Progress Data", message, [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear Progress",
-          style: "destructive",
-          onPress: () => void doClearProgressData()
-        }
-      ]);
-    }
+    showConfirm(
+      "Clear Progress Data",
+      "This will delete all your workout history, streaks, and personal records. Your exercise and program library will be kept. This cannot be undone.",
+      "Clear Progress",
+      doClearProgressData
+    );
   }, [doClearProgressData]);
 
   const handleClearAllData = useCallback(() => {
-    const message =
-      "This will delete ALL your data including exercises, programs, workout history, and personal records. This is a full reset and cannot be undone.";
-    if (isWeb) {
-      if (window.confirm(message + "\n\nContinue?")) {
-        void doClearAllData();
-      }
-    } else {
-      Alert.alert("Clear All Data", message, [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear Everything",
-          style: "destructive",
-          onPress: () => void doClearAllData()
-        }
-      ]);
-    }
+    showConfirm(
+      "Clear All Data",
+      "This will delete ALL your data including exercises, programs, workout history, and personal records. This is a full reset and cannot be undone.",
+      "Clear Everything",
+      doClearAllData
+    );
   }, [doClearAllData]);
 
   return (
@@ -210,7 +187,6 @@ export default function ProfileScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.dangerButton,
-              styles.warningButton,
               pressed && styles.dangerButtonPressed,
               clearing && styles.dangerButtonDisabled
             ]}
@@ -429,7 +405,6 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     backgroundColor: theme.colors.background
   },
-  warningButton: {},
   dangerButtonPressed: {
     opacity: 0.7
   },

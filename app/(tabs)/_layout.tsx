@@ -7,6 +7,30 @@ import { theme } from "@/theme/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Platform } from "react-native";
 
+type TabIconName = "home" | "library" | "stats-chart" | "person";
+
+const TAB_CONFIG = [
+  { name: "index", title: "Home", icon: "home" as TabIconName },
+  { name: "library", title: "Library", icon: "library" as TabIconName },
+  { name: "progress", title: "Statistics", icon: "stats-chart" as TabIconName },
+  { name: "profile", title: "Profile", icon: "person" as TabIconName }
+] as const;
+
+const tabPressListener = { tabPress: () => haptics.tabSwitch() };
+
+function TabIcon({
+  icon,
+  color,
+  focused
+}: {
+  icon: TabIconName;
+  color: string;
+  focused: boolean;
+}) {
+  const name = focused ? icon : (`${icon}-outline` as const);
+  return <Ionicons name={name} color={color} size={26} />;
+}
+
 export default function TabLayout() {
   const { user, loading } = useAuth();
 
@@ -24,15 +48,6 @@ export default function TabLayout() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.muted,
         headerShown: false,
-        headerStyle: {
-          backgroundColor: theme.colors.surface
-        },
-        headerShadowVisible: false,
-        headerTintColor: theme.colors.text,
-        headerTitleStyle: {
-          fontFamily: theme.fonts.semiBold,
-          fontSize: 17
-        },
         animation: "shift",
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
@@ -53,82 +68,19 @@ export default function TabLayout() {
         }
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          headerShown: false,
-          title: "Home",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "home" : "home-outline"}
-              color={color}
-              size={26}
-            />
-          )
-        }}
-        listeners={{
-          tabPress: () => {
-            haptics.tabSwitch();
-          }
-        }}
-      />
-      <Tabs.Screen
-        name="library"
-        options={{
-          headerShown: false,
-          title: "Library",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "library" : "library-outline"}
-              color={color}
-              size={26}
-            />
-          )
-        }}
-        listeners={{
-          tabPress: () => {
-            haptics.tabSwitch();
-          }
-        }}
-      />
-      <Tabs.Screen
-        name="progress"
-        options={{
-          headerShown: false,
-          title: "Statistics",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "stats-chart" : "stats-chart-outline"}
-              color={color}
-              size={26}
-            />
-          )
-        }}
-        listeners={{
-          tabPress: () => {
-            haptics.tabSwitch();
-          }
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          headerShown: false,
-          title: "Profile",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "person" : "person-outline"}
-              color={color}
-              size={26}
-            />
-          )
-        }}
-        listeners={{
-          tabPress: () => {
-            haptics.tabSwitch();
-          }
-        }}
-      />
+      {TAB_CONFIG.map(({ name, title, icon }) => (
+        <Tabs.Screen
+          key={name}
+          name={name}
+          options={{
+            title,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon icon={icon} color={color} focused={focused} />
+            )
+          }}
+          listeners={tabPressListener}
+        />
+      ))}
     </Tabs>
   );
 }

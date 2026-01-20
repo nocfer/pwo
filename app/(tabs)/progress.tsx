@@ -10,11 +10,11 @@ import {
   WeeklySummaryCard
 } from "@/components";
 import { Button } from "@/components/common";
-import { useAllProgress } from "@/hooks/data";
+import { type AggregatedProgress, useAllProgress } from "@/hooks/data";
 import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   RefreshControl,
@@ -26,95 +26,69 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-function generateProgressReport(progressData: any): string {
-  const totalMinutes = Math.round(
-    (progressData.totalTimeSpentSeconds || 0) / 60
-  );
+const SECTION_COUNT = 5;
+const ANIMATION_DURATION = 250;
+const ANIMATION_STAGGER = 80;
+
+function generateProgressReport(progressData: AggregatedProgress): string {
+  const totalMinutes = Math.round(progressData.totalTimeSpentSeconds / 60);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
   return `🏋️ Fitness Progress Report
 
 📊 Overall Stats:
-• Workouts: ${progressData.totalWorkoutsCompleted || 0}
-• Total Reps: ${progressData.totalRepsCompleted || 0}
+• Workouts: ${progressData.totalWorkoutsCompleted}
+• Total Reps: ${progressData.totalRepsCompleted}
 • Time: ${hours}h ${minutes}m
-• Streak: ${progressData.currentStreak || 0} days
+• Streak: ${progressData.currentStreak} days
 
 Generated on ${new Date().toLocaleDateString()}`;
 }
 
 export default function StatisticsScreen() {
   const [refreshing, setRefreshing] = useState(false);
-
   const { data: allProgress } = useAllProgress();
 
-  const section1Anim = useRef(new Animated.Value(0)).current;
-  const section2Anim = useRef(new Animated.Value(0)).current;
-  const section3Anim = useRef(new Animated.Value(0)).current;
-  const section4Anim = useRef(new Animated.Value(0)).current;
-  const section5Anim = useRef(new Animated.Value(0)).current;
+  const sectionAnims = useRef(
+    Array.from({ length: SECTION_COUNT }, () => new Animated.Value(0))
+  ).current;
 
   const animateSections = useCallback(() => {
-    Animated.stagger(80, [
-      Animated.timing(section1Anim, {
-        toValue: 1,
-        duration: 250,
-        useNativeDriver: true
-      }),
-      Animated.timing(section2Anim, {
-        toValue: 1,
-        duration: 250,
-        useNativeDriver: true
-      }),
-      Animated.timing(section3Anim, {
-        toValue: 1,
-        duration: 250,
-        useNativeDriver: true
-      }),
-      Animated.timing(section4Anim, {
-        toValue: 1,
-        duration: 250,
-        useNativeDriver: true
-      }),
-      Animated.timing(section5Anim, {
-        toValue: 1,
-        duration: 250,
-        useNativeDriver: true
-      })
-    ]).start();
-  }, [section1Anim, section2Anim, section3Anim, section4Anim, section5Anim]);
+    Animated.stagger(
+      ANIMATION_STAGGER,
+      sectionAnims.map((anim) =>
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: ANIMATION_DURATION,
+          useNativeDriver: true
+        })
+      )
+    ).start();
+  }, [sectionAnims]);
 
-  useState(() => {
+  const resetAnimations = useCallback(() => {
+    sectionAnims.forEach((anim) => anim.setValue(0));
+  }, [sectionAnims]);
+
+  useEffect(() => {
     animateSections();
-  });
+  }, [animateSections]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    void haptics.refresh();
-
-    section1Anim.setValue(0);
-    section2Anim.setValue(0);
-    section3Anim.setValue(0);
-    section4Anim.setValue(0);
-    section5Anim.setValue(0);
+    haptics.refresh();
+    resetAnimations();
 
     await new Promise((resolve) => setTimeout(resolve, 400));
 
     setRefreshing(false);
     animateSections();
-  }, [
-    animateSections,
-    section1Anim,
-    section2Anim,
-    section3Anim,
-    section4Anim,
-    section5Anim
-  ]);
+  }, [animateSections, resetAnimations]);
 
   const handleShareReport = useCallback(async () => {
     try {
-      void haptics.shareData();
+      haptics.shareData();
       if (!allProgress) return;
       const report = generateProgressReport(allProgress);
       await Share.share({ message: report, title: "Progress Report" });
@@ -123,7 +97,7 @@ export default function StatisticsScreen() {
     }
   }, [allProgress]);
 
-  const createAnimatedStyle = (anim: Animated.Value) => ({
+  const animatedStyles = sectionAnims.map((anim) => ({
     opacity: anim,
     transform: [
       {
@@ -133,7 +107,7 @@ export default function StatisticsScreen() {
         })
       }
     ]
-  });
+  }));
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
@@ -157,41 +131,37 @@ export default function StatisticsScreen() {
         </View>
 
         {/* Weekly Summary */}
-        <Animated.View
-          style={[styles.section, createAnimatedStyle(section1Anim)]}
-        >
+        <Animated.View style={[styles.section, animatedStyles[0]]}>
           <WeeklySummaryCard />
         </Animated.View>
 
         {/* Overall Stats */}
-        <Animated.View
-          style={[styles.section, createAnimatedStyle(section2Anim)]}
-        >
+        <Animated.View style={[styles.section, animatedStyles[1]]}>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Overall Progress</Text>
             <View style={styles.statsGrid}>
               <StatCard
                 icon="fitness"
                 label="Total Workouts"
-                value={allProgress?.totalWorkoutsCompleted || 0}
+                value={allProgress?.totalWorkoutsCompleted ?? 0}
                 color={theme.colors.primary}
               />
               <StatCard
                 icon="flame"
                 label="Current Streak"
-                value={allProgress?.currentStreak || 0}
+                value={allProgress?.currentStreak ?? 0}
                 color={theme.colors.accent}
               />
               <StatCard
                 icon="barbell"
                 label="Total Reps"
-                value={allProgress?.totalRepsCompleted || 0}
+                value={allProgress?.totalRepsCompleted ?? 0}
                 color={theme.colors.phases.working}
               />
               <StatCard
                 icon="time"
                 label="Active Programs"
-                value={allProgress?.activePrograms || 0}
+                value={allProgress?.activePrograms ?? 0}
                 color={theme.colors.success}
               />
             </View>
@@ -199,23 +169,17 @@ export default function StatisticsScreen() {
         </Animated.View>
 
         {/* Consistency Heatmap */}
-        <Animated.View
-          style={[styles.section, createAnimatedStyle(section3Anim)]}
-        >
+        <Animated.View style={[styles.section, animatedStyles[2]]}>
           <ConsistencyHeatmap weeks={12} />
         </Animated.View>
 
         {/* Personal Records */}
-        <Animated.View
-          style={[styles.section, createAnimatedStyle(section4Anim)]}
-        >
+        <Animated.View style={[styles.section, animatedStyles[3]]}>
           <PersonalRecordsCard limit={5} />
         </Animated.View>
 
         {/* Exercise Progression */}
-        <Animated.View
-          style={[styles.section, createAnimatedStyle(section5Anim)]}
-        >
+        <Animated.View style={[styles.section, animatedStyles[4]]}>
           <EnhancedExerciseProgressionChart />
         </Animated.View>
 
@@ -243,7 +207,7 @@ function StatCard({
   value,
   color
 }: {
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value: number;
   color: string;
@@ -251,7 +215,7 @@ function StatCard({
   return (
     <View style={styles.statCard}>
       <View style={[styles.statIcon, { backgroundColor: `${color}15` }]}>
-        <Ionicons name={icon as any} size={20} color={color} />
+        <Ionicons name={icon} size={20} color={color} />
       </View>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
