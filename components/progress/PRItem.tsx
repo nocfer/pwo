@@ -54,7 +54,7 @@ export default function PRItem({
 
   useEffect(() => {
     // Staggered entrance animation
-    Animated.sequence([
+    const entranceAnim = Animated.sequence([
       Animated.delay(index * 50),
       Animated.parallel([
         Animated.spring(scaleAnim, {
@@ -68,11 +68,13 @@ export default function PRItem({
           useNativeDriver: true
         })
       ])
-    ]).start();
+    ]);
+    entranceAnim.start();
 
     // Pulse animation for "NEW" badge
+    let pulseLoop: Animated.CompositeAnimation | null = null;
     if (isNew) {
-      Animated.loop(
+      pulseLoop = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
             toValue: 1.1,
@@ -85,8 +87,14 @@ export default function PRItem({
             useNativeDriver: true
           })
         ])
-      ).start();
+      );
+      pulseLoop.start();
     }
+
+    return () => {
+      entranceAnim.stop();
+      pulseLoop?.stop();
+    };
   }, [index, isNew, scaleAnim, opacityAnim, pulseAnim]);
 
   return (

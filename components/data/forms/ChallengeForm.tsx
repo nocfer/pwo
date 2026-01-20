@@ -822,26 +822,6 @@ const styles = StyleSheet.create({
     color: theme.colors.muted,
     fontFamily: theme.fonts.medium
   },
-  timeLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    fontFamily: theme.fonts.medium
-  },
-  timeSeparator: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.text,
-    marginHorizontal: 2
-  },
-  timeDisplay: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.primary
-  },
-  hint: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    marginLeft: theme.spacing.xs,
-    marginTop: theme.spacing.xs
-  },
   modalBackdrop: {
     flex: 1,
     backgroundColor: theme.colors.overlay,

@@ -11,14 +11,11 @@ type WeeklyChartProps = {
 
 const ALL_DAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
-export function WeeklyChart({
-  data,
-  maxValue,
-  title = "This Week"
-}: WeeklyChartProps) {
-  const todayIndex = getTodayIndex();
-
-  const { shiftedData, shiftedDays } = useMemo(() => {
+/**
+ * Computes shifted data aligned to today (today is always the last element)
+ */
+function useShiftedWeeklyData(data: number[], todayIndex: number) {
+  return useMemo(() => {
     const paddedData = [...data];
     while (paddedData.length < 7) {
       paddedData.unshift(0);
@@ -36,6 +33,15 @@ export function WeeklyChart({
 
     return { shiftedData: shifted, shiftedDays: days };
   }, [data, todayIndex]);
+}
+
+export function WeeklyChart({
+  data,
+  maxValue,
+  title = "This Week"
+}: WeeklyChartProps) {
+  const todayIndex = getTodayIndex();
+  const { shiftedData, shiftedDays } = useShiftedWeeklyData(data, todayIndex);
 
   const animatedValues = useRef(
     shiftedData.map(() => new Animated.Value(0))
@@ -118,18 +124,7 @@ export function WeeklyChart({
 
 export function WeeklyChartCompact({ data }: { data: number[] }) {
   const todayIndex = getTodayIndex();
-
-  const shiftedData = useMemo(() => {
-    const paddedData = [...data];
-    while (paddedData.length < 7) {
-      paddedData.unshift(0);
-    }
-    return Array.from({ length: 7 }, (_, i) => {
-      const dayIndex = (todayIndex + i + 1) % 7;
-      return paddedData[dayIndex] ?? 0;
-    });
-  }, [data, todayIndex]);
-
+  const { shiftedData } = useShiftedWeeklyData(data, todayIndex);
   const max = Math.max(...shiftedData, 1);
 
   return (

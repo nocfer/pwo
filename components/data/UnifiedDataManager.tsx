@@ -8,7 +8,7 @@ import { theme } from "@/theme/theme";
 import type { DataType, SearchState } from "@/types/enhanced";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -43,7 +43,7 @@ export function UnifiedDataManager({
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
-  const getCurrentData = () => {
+  const currentData = useMemo(() => {
     switch (activeTab) {
       case "exercises":
         return state.exercises;
@@ -54,7 +54,7 @@ export function UnifiedDataManager({
       default:
         return [];
     }
-  };
+  }, [activeTab, state.exercises, state.programs]);
 
   const handleTabChange = (tab: DataType) => {
     haptics.dataTabSwitch();
@@ -160,7 +160,6 @@ export function UnifiedDataManager({
     }
   };
 
-  const currentData = getCurrentData();
   const isLoading =
     (activeTab === "exercises" && state.exercisesLoading) ||
     (activeTab !== "exercises" && state.programsLoading);
