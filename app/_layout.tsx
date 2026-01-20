@@ -1,4 +1,4 @@
-import LoadingScreen from "@/components/common/LoadingScreen";
+import { LoadingScreen } from "@/components/common/LoadingScreen";
 import { AuthProvider } from "@/context/AuthContext";
 import { DataProvider } from "@/context/DataContext";
 import { theme } from "@/theme/theme";

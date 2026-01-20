@@ -3,7 +3,7 @@
  * Clean, professional form for creating and editing workout programs
  */
 
-import haptics from "@/lib/haptics";
+import { haptics } from "@/lib/haptics";
 import { validateProgram } from "@/lib/validation";
 import { theme } from "@/theme/theme";
 import type { ProgramBlock } from "@/types";

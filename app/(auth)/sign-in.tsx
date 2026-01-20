@@ -4,12 +4,12 @@
  * Allows users to sign in with email/password or continue as guest
  */
 
-import AuthErrorBanner from "@/components/auth/AuthErrorBanner";
-import AuthHeader from "@/components/auth/AuthHeader";
-import AuthLayout from "@/components/auth/AuthLayout";
+import { AuthErrorBanner } from "@/components/auth/AuthErrorBanner";
+import { AuthHeader } from "@/components/auth/AuthHeader";
+import { AuthLayout } from "@/components/auth/AuthLayout";
 import Button from "@/components/common/Button";
 import { useAuth } from "@/context/AuthContext";
-import haptics from "@/lib/haptics";
+import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -24,14 +24,18 @@ export default function SignInScreen() {
     try {
       await signIn(email, password);
       // Navigation will happen automatically via auth state change
-    } catch (err) {}
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleGuestAccess = async () => {
     try {
       await signInAsGuest();
       // Navigation will happen automatically via auth state change
-    } catch (err) {}
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const navigateToSignUp = () => {
