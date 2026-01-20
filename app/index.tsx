@@ -2,7 +2,7 @@
  * Root Index - Handles initial routing based on authentication state
  */
 
-import LoadingScreen from "@/components/common/LoadingScreen";
+import { LoadingScreen } from "@/components/common/LoadingScreen";
 import { useAuth } from "@/context/AuthContext";
 import { Redirect } from "expo-router";
 
@@ -23,4 +23,3 @@ export default function Index() {
     return <Redirect href="/(auth)/sign-in" />;
   }
 }
-

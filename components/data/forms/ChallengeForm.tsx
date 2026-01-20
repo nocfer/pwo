@@ -89,7 +89,8 @@ export function ChallengeForm({
 
         return {
           ...prev,
-          challengeConfig: adjustedConfig as ChallengeFormData["challengeConfig"]
+          challengeConfig:
+            adjustedConfig as ChallengeFormData["challengeConfig"]
         };
       });
     },
@@ -137,9 +138,15 @@ export function ChallengeForm({
       return;
     }
 
-    if (formData.challengeConfig.targetReps <= formData.challengeConfig.initialReps) {
+    if (
+      formData.challengeConfig.targetReps <=
+      formData.challengeConfig.initialReps
+    ) {
       haptics.formValidationError();
-      Alert.alert("Validation Error", "Target reps must be greater than initial reps.");
+      Alert.alert(
+        "Validation Error",
+        "Target reps must be greater than initial reps."
+      );
       return;
     }
 
@@ -385,7 +392,9 @@ export function ChallengeForm({
                     color={theme.colors.accent}
                   />
                 </View>
-                <Text style={styles.inlineFieldLabel}>Initial Reps per Set</Text>
+                <Text style={styles.inlineFieldLabel}>
+                  Initial Reps per Set
+                </Text>
               </View>
               <TextInput
                 value={String(formData.challengeConfig.initialReps)}
@@ -420,9 +429,7 @@ export function ChallengeForm({
               </View>
               <View style={styles.inlineInputWrapper}>
                 <TextInput
-                  value={String(
-                    formData.challengeConfig.weeklyIncreasePercent
-                  )}
+                  value={String(formData.challengeConfig.weeklyIncreasePercent)}
                   onChangeText={(value) => {
                     const num = Number(value);
                     if (Number.isFinite(num) && num >= 0 && num <= 100) {
@@ -468,7 +475,8 @@ export function ChallengeForm({
                     onChangeText={(value) => {
                       const mins = value === "" ? 0 : Number(value);
                       if (Number.isFinite(mins) && mins >= 0) {
-                        const secs = formData.challengeConfig.warmUpSeconds % 60;
+                        const secs =
+                          formData.challengeConfig.warmUpSeconds % 60;
                         updateConfig("warmUpSeconds", mins * 60 + secs);
                       }
                     }}
