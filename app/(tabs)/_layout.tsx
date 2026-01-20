@@ -1,4 +1,6 @@
-import { Tabs } from "expo-router";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import { useAuth } from "@/context/AuthContext";
+import { Redirect, Tabs } from "expo-router";
 
 import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
@@ -6,6 +8,16 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Platform } from "react-native";
 
 export default function TabLayout() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingScreen message="Loading session..." />;
+  }
+
+  if (!user) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
+
   return (
     <Tabs
       screenOptions={{
