@@ -137,17 +137,30 @@ export function useAllProgress(): {
       }
     }
 
-    // Count active programs/challenges
+    // Count active programs/challenges based on recent activity (within last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
+
     const activePrograms = programProgress.filter((p) => {
       const workouts = p.workouts ?? [];
-      const completed = workouts.filter((w) => w.completed).length;
-      const total = workouts.length;
-      return completed > 0 && total > 0 && completed < total;
+      const completedWorkouts = workouts.filter((w) => w.completed);
+      if (completedWorkouts.length === 0) return false;
+      // Consider active if there's been activity in the last 30 days
+      return completedWorkouts.some(
+        (w) => w.completedAt && w.completedAt >= thirtyDaysAgoISO
+      );
     }).length;
 
     const activeChallenges = challengeProgress.filter((c) => {
-      const completed = c.workouts.filter((w) => w.completed).length;
-      return completed > 0 && completed < c.workouts.length;
+      const completedWorkouts = c.workouts.filter((w) => w.completed);
+      if (completedWorkouts.length === 0) return false;
+      // Challenge is active if not fully completed and has recent activity
+      const hasRecentActivity = completedWorkouts.some(
+        (w) => w.completedAt && w.completedAt >= thirtyDaysAgoISO
+      );
+      // Also check if challenge is not fully completed (no completedAt on the challenge itself)
+      return hasRecentActivity && !c.completedAt;
     }).length;
 
     return {

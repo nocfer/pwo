@@ -4,12 +4,12 @@
  * Allows users to create a new account with email and password
  */
 
-import AuthErrorBanner from "@/components/auth/AuthErrorBanner";
-import AuthHeader from "@/components/auth/AuthHeader";
-import AuthLayout from "@/components/auth/AuthLayout";
+import { AuthErrorBanner } from "@/components/auth/AuthErrorBanner";
+import { AuthHeader } from "@/components/auth/AuthHeader";
+import { AuthLayout } from "@/components/auth/AuthLayout";
 import Button from "@/components/common/Button";
 import { useAuth } from "@/context/AuthContext";
-import haptics from "@/lib/haptics";
+import { haptics } from "@/lib/haptics";
 import { theme } from "@/theme/theme";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -39,11 +39,9 @@ export default function SignUpScreen() {
       return;
     }
 
-    try {
-      setLocalError(null);
-      await signUp(email, password);
-      // Navigation will happen automatically via auth state change
-    } catch (err) {}
+    setLocalError(null);
+    await signUp(email, password).catch();
+    // Navigation will happen automatically via auth state change
   };
 
   const navigateToSignIn = () => {

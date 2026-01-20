@@ -34,7 +34,45 @@ export function generateChallengeSessions(
   let i = 1;
   let sessionInWeek = 0; // Track sessions within current week
 
-  while (total <= targetReps) {
+  // Edge case protection: ensure we can make progress
+  // If initial >= target or increase is 0, just create one session at targetReps
+  if (initialReps >= targetReps || increasePercent <= 0) {
+    const dist = distributeIntoSets(targetReps, sets);
+    const blocks: ProgramSession["blocks"] = [];
+
+    if (warmUpSeconds > 0) {
+      blocks.push({ type: "warmup", seconds: warmUpSeconds });
+    }
+
+    for (let setIdx = 0; setIdx < sets; setIdx++) {
+      blocks.push({
+        type: "exercise",
+        exerciseId,
+        targetReps: dist[setIdx]
+      });
+
+      if (setIdx < sets - 1 && breakSeconds > 0) {
+        blocks.push({
+          type: "rest",
+          seconds: breakSeconds,
+          label: "Rest"
+        });
+      }
+    }
+
+    return [
+      {
+        index: 1,
+        name: `${targetReps} Reps`,
+        blocks
+      }
+    ];
+  }
+
+  // Limit maximum sessions to prevent runaway generation (e.g., 365 sessions max)
+  const maxSessions = 365;
+
+  while (total <= targetReps && result.length < maxSessions) {
     const rounded = Math.max(1, Math.round(total));
     const dist = distributeIntoSets(rounded, sets);
 
@@ -141,11 +179,18 @@ export function calculateChallengeSessionCount(
 ): number {
   const increasePercent = config.weeklyIncreasePercent ?? 10;
   const initialReps = config.initialReps ?? 20;
+
+  // Edge case protection: if initial >= target or no progression, return 1
+  if (initialReps >= config.targetReps || increasePercent <= 0) {
+    return 1;
+  }
+
   let total = initialReps;
   let count = 0;
   let sessionInWeek = 0;
+  const maxSessions = 365; // Safety limit
 
-  while (total <= config.targetReps) {
+  while (total <= config.targetReps && count < maxSessions) {
     count += 1;
     sessionInWeek += 1;
 
@@ -157,7 +202,8 @@ export function calculateChallengeSessionCount(
   }
 
   // Add one more for the final session that reaches exactly targetReps
-  return count + 1;
+  // (unless we hit the max limit)
+  return Math.min(count + 1, maxSessions);
 }
 
 /**

@@ -3,7 +3,7 @@
  * Clean, professional form for creating and editing exercises
  */
 
-import haptics from "@/lib/haptics";
+import { haptics } from "@/lib/haptics";
 import {
   VALID_EXERCISE_CATEGORIES,
   VALID_EXERCISE_ICONS,

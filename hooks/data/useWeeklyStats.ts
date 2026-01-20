@@ -44,4 +44,3 @@ export function useWeeklyCompletion(): {
 
   return { completed, goal, percentage, loading };
 }
-

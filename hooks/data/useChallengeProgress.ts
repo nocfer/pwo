@@ -51,7 +51,7 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
     return generateChallengeSessions(challengeConfig);
   }, [challengeConfig]);
 
-  const fetcher = useCallback(async (): Promise<ChallengeProgress> => {
+  const fetcher = useCallback(async (): Promise<ChallengeProgress | null> => {
     // Guaranteed to have challengeId when fetcher runs (skip handles null case)
     return storage.loadChallengeProgress(challengeId!);
   }, [challengeId]);
@@ -108,8 +108,14 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
     const currentStreak = calculateStreak(completedWorkouts);
 
     // Use shared utility for finding next session
+    // Extract session index from workoutId (format: `${challengeId}_workout_${sessionIndex}`)
     const completedIndices = new Set(
-      completedWorkouts.map((w, idx) => idx + 1)
+      completedWorkouts
+        .map((w) => {
+          const match = w.workoutId?.match(/_workout_(\d+)$/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+        .filter((idx) => idx > 0)
     );
     const nextSessionIndex = findNextSessionIndex(
       completedIndices,
