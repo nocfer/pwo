@@ -53,7 +53,7 @@ export function useAllProgress(): {
   } = useAsyncData(fetcher, [progressVersion]);
 
   const data = useMemo((): AggregatedProgress | null => {
-    if (loading || !progressData) return null;
+    if (!progressData) return null;
 
     const { programProgress, challengeProgress } = progressData;
 
@@ -159,7 +159,7 @@ export function useAllProgress(): {
       currentStreak,
       recentActivity: recentActivity.slice(0, 20)
     };
-  }, [progressData, loading]);
+  }, [progressData]);
 
   return { data, loading, error };
 }

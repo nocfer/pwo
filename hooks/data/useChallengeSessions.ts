@@ -162,6 +162,8 @@ export function calculateChallengeSessionCount(
 
 /**
  * Hook to get sessions for a program, generating them dynamically if it's a challenge.
+ * Note: Sessions are regenerated when program object changes. For challenges with many sessions,
+ * the caller should ensure program identity is stable (e.g., from context state).
  */
 export function useChallengeSessions(
   program:
