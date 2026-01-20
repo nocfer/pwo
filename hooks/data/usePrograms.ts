@@ -4,19 +4,14 @@
  * Uses the DataContext for reactive updates.
  */
 
-import DataContext from "@/context/DataContext";
-import { useContext } from "react";
+import { useDataContext } from "@/context/DataContext";
 
 export function usePrograms() {
-  const context = useContext(DataContext);
-  if (!context) {
-    // Should not happen in normal app usage
-    return { data: null, loading: false, error: null } as const;
-  }
+  const { state } = useDataContext();
 
   return {
-    data: context.state.programs,
-    loading: context.state.programsLoading,
+    data: state.programs,
+    loading: state.programsLoading,
     error: null
   } as const;
 }

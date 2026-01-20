@@ -18,12 +18,11 @@ export type LiveProgress = {
 export function useLiveProgress(slug: string | undefined) {
   const { progressVersion } = useRefreshVersions();
 
-  const fetcher = useCallback(async (): Promise<LiveProgress | null> => {
-    if (!slug) return null;
-
-    const streak = await storage.loadStreak(slug);
+  const fetcher = useCallback(async (): Promise<LiveProgress> => {
+    // slug is guaranteed to exist when fetcher runs (skip: !slug)
+    const streak = await storage.loadStreak(slug!);
     return {
-      slug,
+      slug: slug!,
       streak: streak ?? [0, 0, 0, 0, 0, 0, 0]
     };
   }, [slug]);
@@ -31,9 +30,7 @@ export function useLiveProgress(slug: string | undefined) {
   const { data, loading, error } = useAsyncData(
     fetcher,
     [slug, progressVersion],
-    {
-      skip: !slug
-    }
+    { skip: !slug }
   );
 
   return { data, loading, error } as const;

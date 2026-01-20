@@ -42,34 +42,35 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
   const { progressVersion } = useRefreshVersions();
 
   const challengeId = challenge?.id;
-  const isChallenge = Boolean(challenge?.challengeConfig);
+  const challengeConfig = challenge?.challengeConfig;
+  const isChallenge = Boolean(challengeConfig);
 
-  // Generate sessions to know total count
+  // Generate sessions to know total count - only depends on config, not entire challenge
   const sessions = useMemo(() => {
-    if (!challenge || !isChallenge) return [];
-    return generateChallengeSessions(challenge.challengeConfig!);
-  }, [challenge, isChallenge]);
+    if (!challengeConfig) return [];
+    return generateChallengeSessions(challengeConfig);
+  }, [challengeConfig]);
 
-  const fetcher = useCallback(async (): Promise<ChallengeProgress | null> => {
-    if (!challengeId || !isChallenge) return null;
-    return storage.loadChallengeProgress(challengeId);
-  }, [challengeId, isChallenge]);
+  const fetcher = useCallback(async (): Promise<ChallengeProgress> => {
+    // Guaranteed to have challengeId when fetcher runs (skip handles null case)
+    return storage.loadChallengeProgress(challengeId!);
+  }, [challengeId]);
 
   const {
     data: progress,
     loading,
     error
-  } = useAsyncData(fetcher, [challengeId, isChallenge, progressVersion], {
+  } = useAsyncData(fetcher, [challengeId, progressVersion], {
     skip: !challengeId || !isChallenge
   });
 
   const metrics = useMemo((): ChallengeProgressMetrics | null => {
-    if (!challenge || !isChallenge || !challenge.challengeConfig) {
+    if (!challenge || !challengeConfig) {
       return null;
     }
 
     const totalSessions = sessions.length;
-    const targetReps = challenge.challengeConfig.targetReps;
+    const targetReps = challengeConfig.targetReps;
 
     if (!progress) {
       return {
@@ -134,7 +135,7 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
       completedAt: progress.completedAt || null,
       lastActivityAt: progress.lastActivityAt
     };
-  }, [challenge, isChallenge, progress, sessions]);
+  }, [challenge, challengeConfig, progress, sessions]);
 
   return { metrics, loading, error };
 }
