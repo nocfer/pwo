@@ -6,7 +6,6 @@ import {
   type ProgramWithPriority
 } from "@/lib/utils/programPrioritization";
 import { theme } from "@/theme/theme";
-import { Program } from "@/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -54,7 +53,7 @@ export default function Index() {
   const { data: weeklyData } = useWeeklyActivity();
   const { data: aggregated } = useAllProgress();
 
-  const handleProgramSelect = (program: Program | ProgramWithPriority) => {
+  const handleProgramSelect = (program: ProgramWithPriority) => {
     setProgramSelectorOpen(false);
     router.navigate({ pathname: "/programs/[id]", params: { id: program.id } });
   };
@@ -251,104 +250,80 @@ export default function Index() {
               style={styles.programList}
               showsVerticalScrollIndicator={false}
             >
-              {challenges.length > 0 && (
-                <View style={styles.programSection}>
-                  <Text style={styles.sectionLabel}>Challenges</Text>
-                  {challenges.map((program) => (
-                    <Pressable
-                      key={program.id}
-                      onPress={() => handleProgramSelect(program)}
-                      style={({ pressed }) => [
-                        styles.programItem,
-                        pressed && styles.programItemPressed
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.programIcon,
-                          { backgroundColor: theme.colors.successLight }
-                        ]}
-                      >
-                        <Ionicons
-                          name="trophy"
-                          size={18}
-                          color={theme.colors.success}
-                        />
-                      </View>
-                      <View style={styles.programInfo}>
-                        <Text style={styles.programName} numberOfLines={1}>
-                          {program.name}
-                        </Text>
-                        {program.description && (
-                          <Text
-                            style={styles.programDescription}
-                            numberOfLines={1}
-                          >
-                            {program.description}
-                          </Text>
-                        )}
-                      </View>
-                      <Ionicons
-                        name="chevron-forward"
-                        size={18}
-                        color={theme.colors.muted}
-                      />
-                    </Pressable>
-                  ))}
-                </View>
-              )}
-
-              {regularPrograms.length > 0 && (
-                <View style={styles.programSection}>
-                  <Text style={styles.sectionLabel}>Programs</Text>
-                  {regularPrograms.map((program) => (
-                    <Pressable
-                      key={program.id}
-                      onPress={() => handleProgramSelect(program)}
-                      style={({ pressed }) => [
-                        styles.programItem,
-                        pressed && styles.programItemPressed
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.programIcon,
-                          { backgroundColor: theme.colors.primaryLight }
-                        ]}
-                      >
-                        <Ionicons
-                          name="barbell"
-                          size={18}
-                          color={theme.colors.primary}
-                        />
-                      </View>
-                      <View style={styles.programInfo}>
-                        <Text style={styles.programName} numberOfLines={1}>
-                          {program.name}
-                        </Text>
-                        {program.description && (
-                          <Text
-                            style={styles.programDescription}
-                            numberOfLines={1}
-                          >
-                            {program.description}
-                          </Text>
-                        )}
-                      </View>
-                      <Ionicons
-                        name="chevron-forward"
-                        size={18}
-                        color={theme.colors.muted}
-                      />
-                    </Pressable>
-                  ))}
-                </View>
-              )}
+              <ProgramSection
+                label="Challenges"
+                programs={challenges}
+                icon="trophy"
+                iconColor={theme.colors.success}
+                iconBgColor={theme.colors.successLight}
+                onSelect={handleProgramSelect}
+              />
+              <ProgramSection
+                label="Programs"
+                programs={regularPrograms}
+                icon="barbell"
+                iconColor={theme.colors.primary}
+                iconBgColor={theme.colors.primaryLight}
+                onSelect={handleProgramSelect}
+              />
             </ScrollView>
           </Pressable>
         </Pressable>
       </Modal>
     </SafeAreaView>
+  );
+}
+
+function ProgramSection({
+  label,
+  programs,
+  icon,
+  iconColor,
+  iconBgColor,
+  onSelect
+}: {
+  label: string;
+  programs: ProgramWithPriority[];
+  icon: keyof typeof Ionicons.glyphMap;
+  iconColor: string;
+  iconBgColor: string;
+  onSelect: (program: ProgramWithPriority) => void;
+}) {
+  if (programs.length === 0) return null;
+
+  return (
+    <View style={styles.programSection}>
+      <Text style={styles.sectionLabel}>{label}</Text>
+      {programs.map((program) => (
+        <Pressable
+          key={program.id}
+          onPress={() => onSelect(program)}
+          style={({ pressed }) => [
+            styles.programItem,
+            pressed && styles.programItemPressed
+          ]}
+        >
+          <View style={[styles.programIcon, { backgroundColor: iconBgColor }]}>
+            <Ionicons name={icon} size={18} color={iconColor} />
+          </View>
+          <View style={styles.programInfo}>
+            <Text style={styles.programName} numberOfLines={1}>
+              {program.name}
+            </Text>
+            {program.description && (
+              <Text style={styles.programDescription} numberOfLines={1}>
+                {program.description}
+              </Text>
+            )}
+          </View>
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={theme.colors.muted}
+          />
+        </Pressable>
+      ))}
+    </View>
   );
 }
 
