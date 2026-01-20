@@ -45,11 +45,3 @@ export function useWeeklyCompletion(): {
   return { completed, goal, percentage, loading };
 }
 
-/**
- * Format time in seconds to hh:mm format
- */
-export function formatDurationShort(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return `${hours}:${minutes.toString().padStart(2, "0")}h`;
-}

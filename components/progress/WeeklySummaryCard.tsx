@@ -2,7 +2,8 @@
  * WeeklySummaryCard - Hero card showing this week's progress
  */
 
-import { formatDurationShort, useWeeklyStats } from "@/hooks/data";
+import { useWeeklyStats } from "@/hooks/data";
+import { formatDuration } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
@@ -39,7 +40,10 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
   const completed = stats?.workoutsCompleted ?? 0;
   const goal = stats?.workoutGoal ?? 4;
   const percentage = goal > 0 ? Math.min(100, (completed / goal) * 100) : 0;
-  const timeFormatted = formatDurationShort(stats?.totalTimeSeconds ?? 0);
+  const timeFormatted = formatDuration(
+    stats?.totalTimeSeconds ?? 0,
+    "shortWithSuffix"
+  );
   const prsAchieved = stats?.prsAchieved ?? 0;
   const streak = stats?.currentStreak ?? 0;
 
