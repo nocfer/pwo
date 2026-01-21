@@ -49,7 +49,7 @@ export function WorkoutExecutionScreen({
   const currentStepIndex = timer.currentIndex;
 
   // Track completed sets with actual reps
-  const [completedSets, setCompletedSets] = useState<SetCompletion[]>([]);
+  const [, setCompletedSets] = useState<SetCompletion[]>([]);
   const [currentReps, setCurrentReps] = useState<number | null>(null);
   const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
   const [lastCompletion, setLastCompletion] = useState<SetCompletion | null>(
@@ -555,6 +555,8 @@ export function WorkoutExecutionScreen({
             currentStepIndex={currentStepIndex}
             isDone={false}
             exerciseNameById={exerciseNameById}
+            phase={timer.phase}
+            stepTimer={timer.timer}
           />
         )}
       </ScrollView>
@@ -797,7 +799,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
     backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.full
+    borderRadius: theme.radius.sm
   },
   headerTimerText: {
     ...theme.typography.captionBold,
@@ -818,12 +820,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 4,
     backgroundColor: theme.colors.border,
-    borderRadius: theme.radius.full,
+    borderRadius: theme.radius.sm,
     overflow: "hidden"
   },
   progressFill: {
     height: "100%",
-    borderRadius: theme.radius.full
+    borderRadius: theme.radius.sm
   },
   progressText: {
     ...theme.typography.small,
@@ -844,7 +846,7 @@ const styles = StyleSheet.create({
   // Main card
   mainCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.xl,
+    borderRadius: theme.radius.md,
     padding: theme.spacing.xl,
     marginBottom: theme.spacing.lg,
     borderWidth: 2,
@@ -883,7 +885,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
-    borderRadius: theme.radius.full,
+    borderRadius: theme.radius.md,
     marginBottom: theme.spacing.md
   },
   phaseChipText: {
@@ -939,7 +941,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primaryLight,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.xs,
-    borderRadius: theme.radius.full,
+    borderRadius: theme.radius.md,
     marginBottom: theme.spacing.xl
   },
   setIndicatorText: {
@@ -1065,7 +1067,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: theme.spacing.md,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.md,
     padding: theme.spacing.md,
     ...theme.shadows.sm
   },
@@ -1163,7 +1165,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.xl,
+    borderRadius: theme.radius.md,
     padding: theme.spacing.xl,
     width: "100%",
     maxWidth: 320,
