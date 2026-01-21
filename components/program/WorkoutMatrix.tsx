@@ -15,6 +15,7 @@ type SetInfo = {
   setNumber: number;
   isDone: boolean;
   isCurrent: boolean;
+  targetReps?: number;
 };
 
 type ExerciseRow = {
@@ -30,6 +31,10 @@ type Props = {
   currentStepIndex: number;
   isDone: boolean;
   exerciseNameById: Map<string, string>;
+  /** Current phase from useWorkoutTimer - "timed" for warmup/rest, "working" for exercise */
+  phase?: "timed" | "working" | "done";
+  /** Remaining seconds on current step timer */
+  stepTimer?: number;
 };
 
 function buildExerciseRows(
@@ -71,7 +76,8 @@ function buildExerciseRows(
       stepIndex: idx,
       setNumber: step.setNumber ?? exercise.sets.length + 1,
       isDone: stepIsDone,
-      isCurrent: stepIsCurrent
+      isCurrent: stepIsCurrent,
+      targetReps: step.targetReps
     });
   });
 
@@ -96,11 +102,25 @@ function buildExerciseRows(
   });
 }
 
+/** Format seconds to M:SS */
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+type PhaseInfo = {
+  type: "warmup" | "rest";
+  timer?: number;
+} | null;
+
 export function WorkoutMatrix({
   steps,
   currentStepIndex,
   isDone,
-  exerciseNameById
+  exerciseNameById,
+  phase,
+  stepTimer
 }: Props) {
   const exerciseRows = useMemo(
     () => buildExerciseRows(steps, currentStepIndex, isDone, exerciseNameById),
@@ -112,6 +132,15 @@ export function WorkoutMatrix({
     (sum, row) => sum + row.sets.filter((s) => s.isDone).length,
     0
   );
+
+  // Determine current phase info to pass to the "next" exercise row
+  const currentStep = steps[currentStepIndex];
+  const isWarmup = currentStep?.type === "warmup";
+  const isRest = currentStep?.type === "rest";
+  const phaseInfo: PhaseInfo =
+    (isWarmup || isRest) && phase === "timed"
+      ? { type: isWarmup ? "warmup" : "rest", timer: stepTimer }
+      : null;
 
   if (exerciseRows.length === 0) return null;
 
@@ -142,6 +171,7 @@ export function WorkoutMatrix({
             key={row.exerciseId || idx}
             row={row}
             index={idx + 1}
+            phaseInfo={row.isNext ? phaseInfo : null}
           />
         ))}
       </View>
@@ -149,38 +179,54 @@ export function WorkoutMatrix({
   );
 }
 
-function ExerciseRowView({ row, index }: { row: ExerciseRow; index: number }) {
+function ExerciseRowView({
+  row,
+  index,
+  phaseInfo
+}: {
+  row: ExerciseRow;
+  index: number;
+  phaseInfo: PhaseInfo;
+}) {
   const allDone = row.sets.every((s) => s.isDone);
   const hasCurrentSet = row.sets.some((s) => s.isCurrent);
 
   // Determine row state for styling
   const isActive = row.isNext || hasCurrentSet;
+  const isWaiting = phaseInfo !== null; // Waiting for warmup/rest to finish
+  const isWarmupPhase = phaseInfo?.type === "warmup";
+  const isRestPhase = phaseInfo?.type === "rest";
 
   return (
     <View
       style={[
         styles.exerciseRow,
         allDone && styles.exerciseRowDone,
-        isActive && styles.exerciseRowActive
+        isActive && !isWaiting && styles.exerciseRowActive,
+        isWaiting && isWarmupPhase && styles.exerciseRowWarmup,
+        isWaiting && isRestPhase && styles.exerciseRowRest
       ]}
     >
-      {/* Index number */}
+      {/* Index badge - shows phase icon when waiting */}
       <View
         style={[
           styles.indexBadge,
           allDone && styles.indexBadgeDone,
-          isActive && styles.indexBadgeActive
+          isActive && !isWaiting && styles.indexBadgeActive,
+          isWaiting && isWarmupPhase && styles.indexBadgeWarmup,
+          isWaiting && isRestPhase && styles.indexBadgeRest
         ]}
       >
         {allDone ? (
           <Ionicons name="checkmark" size={14} color={theme.colors.primaryTextOn} />
+        ) : isWaiting ? (
+          <Ionicons
+            name={isWarmupPhase ? "flame" : "pause"}
+            size={14}
+            color={theme.colors.primaryTextOn}
+          />
         ) : (
-          <Text
-            style={[
-              styles.indexText,
-              isActive && styles.indexTextActive
-            ]}
-          >
+          <Text style={[styles.indexText, isActive && styles.indexTextActive]}>
             {index}
           </Text>
         )}
@@ -192,15 +238,29 @@ function ExerciseRowView({ row, index }: { row: ExerciseRow; index: number }) {
           style={[
             styles.exerciseName,
             allDone && styles.exerciseNameDone,
-            isActive && styles.exerciseNameActive
+            isActive && !isWaiting && styles.exerciseNameActive,
+            isWaiting && isWarmupPhase && styles.exerciseNameWarmup,
+            isWaiting && isRestPhase && styles.exerciseNameRest
           ]}
           numberOfLines={1}
         >
           {row.name}
         </Text>
-        <Text style={styles.exerciseMeta}>
-          {row.targetReps ? `${row.targetReps} reps` : ""}
-        </Text>
+        {isWaiting && phaseInfo.timer !== undefined ? (
+          <Text
+            style={[
+              styles.exerciseMeta,
+              isWarmupPhase && styles.exerciseMetaWarmup,
+              isRestPhase && styles.exerciseMetaRest
+            ]}
+          >
+            {isWarmupPhase ? "Warming up" : "Resting"} · {formatTime(phaseInfo.timer)}
+          </Text>
+        ) : row.sets.length > 1 ? (
+          <Text style={styles.exerciseMeta}>
+            {row.sets.filter((s) => s.isDone).length}/{row.sets.length} sets
+          </Text>
+        ) : null}
       </View>
 
       {/* Set indicators */}
@@ -214,6 +274,8 @@ function ExerciseRowView({ row, index }: { row: ExerciseRow; index: number }) {
 }
 
 function SetIndicator({ set }: { set: SetInfo }) {
+  const displayValue = set.targetReps ?? set.setNumber;
+
   if (set.isDone) {
     return (
       <View style={[styles.setIndicator, styles.setDone]}>
@@ -225,14 +287,14 @@ function SetIndicator({ set }: { set: SetInfo }) {
   if (set.isCurrent) {
     return (
       <View style={[styles.setIndicator, styles.setCurrent]}>
-        <Text style={styles.setTextCurrent}>{set.setNumber}</Text>
+        <Text style={styles.setTextCurrent}>{displayValue}</Text>
       </View>
     );
   }
 
   return (
     <View style={[styles.setIndicator, styles.setPending]}>
-      <Text style={styles.setTextPending}>{set.setNumber}</Text>
+      <Text style={styles.setTextPending}>{displayValue}</Text>
     </View>
   );
 }
@@ -304,6 +366,12 @@ const styles = StyleSheet.create({
   exerciseRowActive: {
     backgroundColor: theme.colors.primaryLight
   },
+  exerciseRowWarmup: {
+    backgroundColor: theme.colors.phases.warmupBg
+  },
+  exerciseRowRest: {
+    backgroundColor: theme.colors.phases.breakBg
+  },
 
   // Index badge
   indexBadge: {
@@ -320,6 +388,12 @@ const styles = StyleSheet.create({
   },
   indexBadgeActive: {
     backgroundColor: theme.colors.primary
+  },
+  indexBadgeWarmup: {
+    backgroundColor: theme.colors.phases.warmup
+  },
+  indexBadgeRest: {
+    backgroundColor: theme.colors.phases.break
   },
   indexText: {
     ...theme.typography.captionBold,
@@ -344,10 +418,22 @@ const styles = StyleSheet.create({
   exerciseNameActive: {
     color: theme.colors.primary
   },
+  exerciseNameWarmup: {
+    color: theme.colors.phases.warmup
+  },
+  exerciseNameRest: {
+    color: theme.colors.phases.break
+  },
   exerciseMeta: {
     ...theme.typography.small,
     color: theme.colors.muted,
     marginTop: 1
+  },
+  exerciseMetaWarmup: {
+    color: theme.colors.phases.warmup
+  },
+  exerciseMetaRest: {
+    color: theme.colors.phases.break
   },
 
   // Sets container
@@ -356,11 +442,12 @@ const styles = StyleSheet.create({
     gap: 6
   },
 
-  // Set indicators
+  // Set indicators - rounded squares showing reps
   setIndicator: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    minWidth: 36,
+    height: 32,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radius.sm,
     alignItems: "center",
     justifyContent: "center"
   },
