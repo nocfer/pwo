@@ -2,7 +2,7 @@
  * SessionListItem - Reusable session row component
  */
 
-import { formatCount } from "@/lib/utils/format";
+import { formatCount, getTotalReps } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
 import type { ProgramSession } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,7 +28,7 @@ export function SessionListItem({
   const defaultSubtitle = (() => {
     const exerciseBlocks = session.blocks.filter((b) => b.type === "exercise");
     const totalReps = exerciseBlocks.reduce(
-      (sum, b) => sum + (b.targetReps ?? 0),
+      (sum, b) => sum + getTotalReps(b.targetReps, b.sets),
       0
     );
     const setsCount = exerciseBlocks.length;

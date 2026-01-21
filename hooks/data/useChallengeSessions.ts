@@ -1,3 +1,4 @@
+import { getTotalReps } from "@/lib/utils/format";
 import type { ChallengeConfig, ProgramBlock, ProgramSession } from "@/types";
 import { useMemo } from "react";
 
@@ -126,7 +127,7 @@ export function generateChallengeSessions(
   if (last) {
     const lastTotal = last.blocks
       .filter((b) => b.type === "exercise")
-      .reduce((sum, b) => sum + (b.targetReps || 0), 0);
+      .reduce((sum, b) => sum + getTotalReps(b.targetReps, b.sets), 0);
     if (lastTotal !== targetReps) {
       const dist = distributeIntoSets(targetReps, sets);
       const blocks: ProgramSession["blocks"] = [];

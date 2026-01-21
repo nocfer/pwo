@@ -3,7 +3,7 @@ import {
   useChallengeSessions,
   useSessionCompletion
 } from "@/hooks/data";
-import { formatCount } from "@/lib/utils/format";
+import { formatCount, getTotalReps } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
 import { Program } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,7 +28,7 @@ export default function ChallengeView({ challengeMetrics, program }: Props) {
   const nextSessionReps = nextSession
     ? nextSession.blocks
         .filter((b) => b.type === "exercise")
-        .reduce((sum, b) => sum + (b.targetReps ?? 0), 0)
+        .reduce((sum, b) => sum + getTotalReps(b.targetReps, b.sets), 0)
     : 0;
 
   const handleStartSession = () => {
@@ -171,7 +171,7 @@ export default function ChallengeView({ challengeMetrics, program }: Props) {
                 (b) => b.type === "exercise"
               );
               const totalReps = exerciseBlocks.reduce(
-                (sum, b) => sum + (b.targetReps ?? 0),
+                (sum, b) => sum + getTotalReps(b.targetReps, b.sets),
                 0
               );
               const setsCount = exerciseBlocks.length;
