@@ -3,21 +3,21 @@
  * Provides comprehensive logging of data modifications and operations
  */
 
-import type { AuditLogEntry, DataType } from "@/types/enhanced";
-import { AuditAction } from "@/types/enhanced";
-import { storage } from "./storage";
+import type { AuditLogEntry, DataType } from '@/types/enhanced'
+import { AuditAction } from '@/types/enhanced'
+import { storage } from './storage'
 
 // ============================================================================
 // Audit Logger Class
 // ============================================================================
 
 export class AuditLogger {
-  private static instance: AuditLogger;
-  private logEntries: AuditLogEntry[] = [];
-  private maxLogSize = 1000; // Maximum number of log entries to keep in memory
+  private static instance: AuditLogger
+  private logEntries: AuditLogEntry[] = []
+  private maxLogSize = 1000 // Maximum number of log entries to keep in memory
 
   private constructor() {
-    this.loadAuditLog();
+    this.loadAuditLog()
   }
 
   /**
@@ -25,9 +25,9 @@ export class AuditLogger {
    */
   static getInstance(): AuditLogger {
     if (!AuditLogger.instance) {
-      AuditLogger.instance = new AuditLogger();
+      AuditLogger.instance = new AuditLogger()
     }
-    return AuditLogger.instance;
+    return AuditLogger.instance
   }
 
   /**
@@ -35,13 +35,13 @@ export class AuditLogger {
    */
   private async loadAuditLog(): Promise<void> {
     try {
-      const stored = await storage.getItem("audit_log");
+      const stored = await storage.getItem('audit_log')
       if (stored) {
-        this.logEntries = JSON.parse(stored);
+        this.logEntries = JSON.parse(stored)
       }
     } catch (error) {
-      console.warn("Failed to load audit log:", error);
-      this.logEntries = [];
+      console.warn('Failed to load audit log:', error)
+      this.logEntries = []
     }
   }
 
@@ -51,11 +51,11 @@ export class AuditLogger {
   private async saveAuditLog(): Promise<void> {
     try {
       // Keep only the most recent entries to prevent storage bloat
-      const entriesToSave = this.logEntries.slice(-this.maxLogSize);
-      await storage.setItem("audit_log", JSON.stringify(entriesToSave));
-      this.logEntries = entriesToSave;
+      const entriesToSave = this.logEntries.slice(-this.maxLogSize)
+      await storage.setItem('audit_log', JSON.stringify(entriesToSave))
+      this.logEntries = entriesToSave
     } catch (error) {
-      console.error("Failed to save audit log:", error);
+      console.error('Failed to save audit log:', error)
     }
   }
 
@@ -63,7 +63,7 @@ export class AuditLogger {
    * Generates a unique ID for log entries
    */
   private generateLogId(): string {
-    return `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   }
 
   /**
@@ -88,12 +88,12 @@ export class AuditLogger {
       entityName,
       changes,
       metadata
-    };
+    }
 
-    this.logEntries.push(entry);
-    await this.saveAuditLog();
+    this.logEntries.push(entry)
+    await this.saveAuditLog()
 
-    return entry;
+    return entry
   }
 
   /**
@@ -114,7 +114,7 @@ export class AuditLogger {
       undefined,
       { entityData },
       userId
-    );
+    )
   }
 
   /**
@@ -135,7 +135,7 @@ export class AuditLogger {
       changes,
       undefined,
       userId
-    );
+    )
   }
 
   /**
@@ -156,7 +156,7 @@ export class AuditLogger {
       undefined,
       { deletedData: entityData },
       userId
-    );
+    )
   }
 
   /**
@@ -171,7 +171,7 @@ export class AuditLogger {
     return this.logEntry(
       AuditAction.BULK_DELETE,
       entityType,
-      "bulk_operation",
+      'bulk_operation',
       `Bulk delete of ${entityIds.length} ${entityType}`,
       undefined,
       {
@@ -180,7 +180,7 @@ export class AuditLogger {
         count: entityIds.length
       },
       userId
-    );
+    )
   }
 
   /**
@@ -203,10 +203,10 @@ export class AuditLogger {
       {
         originalId,
         originalName,
-        operation: "duplicate"
+        operation: 'duplicate'
       },
       userId
-    );
+    )
   }
 
   /**
@@ -223,7 +223,7 @@ export class AuditLogger {
     return this.logEntry(
       AuditAction.IMPORT,
       entityType,
-      "import_operation",
+      'import_operation',
       `Import of ${importedCount} ${entityType}`,
       undefined,
       {
@@ -233,7 +233,7 @@ export class AuditLogger {
         ...metadata
       },
       userId
-    );
+    )
   }
 
   /**
@@ -249,7 +249,7 @@ export class AuditLogger {
     return this.logEntry(
       AuditAction.EXPORT,
       entityType,
-      "export_operation",
+      'export_operation',
       `Export of ${exportedCount} ${entityType}`,
       undefined,
       {
@@ -258,106 +258,99 @@ export class AuditLogger {
         ...metadata
       },
       userId
-    );
+    )
   }
 
   /**
    * Gets audit log entries with optional filtering
    */
   getLogEntries(options?: {
-    entityType?: DataType;
-    entityId?: string;
-    action?: AuditAction;
-    startDate?: string;
-    endDate?: string;
-    limit?: number;
+    entityType?: DataType
+    entityId?: string
+    action?: AuditAction
+    startDate?: string
+    endDate?: string
+    limit?: number
   }): AuditLogEntry[] {
-    let filtered = [...this.logEntries];
+    let filtered = [...this.logEntries]
 
     if (options?.entityType) {
       filtered = filtered.filter(
-        (entry) => entry.entityType === options.entityType
-      );
+        entry => entry.entityType === options.entityType
+      )
     }
 
     if (options?.entityId) {
-      filtered = filtered.filter(
-        (entry) => entry.entityId === options.entityId
-      );
+      filtered = filtered.filter(entry => entry.entityId === options.entityId)
     }
 
     if (options?.action) {
-      filtered = filtered.filter((entry) => entry.action === options.action);
+      filtered = filtered.filter(entry => entry.action === options.action)
     }
 
     if (options?.startDate) {
-      filtered = filtered.filter(
-        (entry) => entry.timestamp >= options.startDate!
-      );
+      filtered = filtered.filter(entry => entry.timestamp >= options.startDate!)
     }
 
     if (options?.endDate) {
-      filtered = filtered.filter(
-        (entry) => entry.timestamp <= options.endDate!
-      );
+      filtered = filtered.filter(entry => entry.timestamp <= options.endDate!)
     }
 
     // Sort by timestamp (newest first)
     filtered.sort(
       (a, b) =>
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
+    )
 
     if (options?.limit) {
-      filtered = filtered.slice(0, options.limit);
+      filtered = filtered.slice(0, options.limit)
     }
 
-    return filtered;
+    return filtered
   }
 
   /**
    * Gets audit log entries for a specific entity
    */
   getEntityHistory(entityType: DataType, entityId: string): AuditLogEntry[] {
-    return this.getLogEntries({ entityType, entityId });
+    return this.getLogEntries({ entityType, entityId })
   }
 
   /**
    * Gets recent audit log entries
    */
   getRecentEntries(limit: number = 50): AuditLogEntry[] {
-    return this.getLogEntries({ limit });
+    return this.getLogEntries({ limit })
   }
 
   /**
    * Gets audit statistics
    */
   getAuditStats(): {
-    totalEntries: number;
-    entriesByAction: Record<AuditAction, number>;
-    entriesByType: Record<DataType, number>;
-    oldestEntry?: string;
-    newestEntry?: string;
+    totalEntries: number
+    entriesByAction: Record<AuditAction, number>
+    entriesByType: Record<DataType, number>
+    oldestEntry?: string
+    newestEntry?: string
   } {
-    const entriesByAction = {} as Record<AuditAction, number>;
-    const entriesByType = {} as Record<DataType, number>;
+    const entriesByAction = {} as Record<AuditAction, number>
+    const entriesByType = {} as Record<DataType, number>
 
     // Initialize counters
-    Object.values(AuditAction).forEach((action) => {
-      entriesByAction[action] = 0;
-    });
-
-    (["exercises", "programs", "challenges"] as DataType[]).forEach((type) => {
-      entriesByType[type] = 0;
-    });
+    Object.values(AuditAction).forEach(action => {
+      entriesByAction[action] = 0
+    })
+    ;(['exercises', 'programs', 'challenges'] as DataType[]).forEach(type => {
+      entriesByType[type] = 0
+    })
 
     // Count entries
-    this.logEntries.forEach((entry) => {
-      entriesByAction[entry.action]++;
-      entriesByType[entry.entityType]++;
-    });
+    this.logEntries.forEach(entry => {
+      entriesByAction[entry.action]++
+      entriesByType[entry.entityType]++
+    })
 
-    const timestamps = this.logEntries.map((e) => e.timestamp).sort();
+    const timestamps = this.logEntries.map(e => e.timestamp).sort()
 
     return {
       totalEntries: this.logEntries.length,
@@ -365,36 +358,36 @@ export class AuditLogger {
       entriesByType,
       oldestEntry: timestamps[0],
       newestEntry: timestamps[timestamps.length - 1]
-    };
+    }
   }
 
   /**
    * Clears old audit log entries
    */
   async clearOldEntries(olderThanDays: number = 90): Promise<number> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
-    const cutoffISO = cutoffDate.toISOString();
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - olderThanDays)
+    const cutoffISO = cutoffDate.toISOString()
 
-    const originalCount = this.logEntries.length;
+    const originalCount = this.logEntries.length
     this.logEntries = this.logEntries.filter(
-      (entry) => entry.timestamp >= cutoffISO
-    );
+      entry => entry.timestamp >= cutoffISO
+    )
 
-    await this.saveAuditLog();
+    await this.saveAuditLog()
 
-    return originalCount - this.logEntries.length;
+    return originalCount - this.logEntries.length
   }
 
   /**
    * Exports audit log as JSON
    */
   exportAuditLog(options?: {
-    startDate?: string;
-    endDate?: string;
-    entityType?: DataType;
+    startDate?: string
+    endDate?: string
+    entityType?: DataType
   }): string {
-    const entries = this.getLogEntries(options);
+    const entries = this.getLogEntries(options)
     return JSON.stringify(
       {
         exportedAt: new Date().toISOString(),
@@ -404,7 +397,7 @@ export class AuditLogger {
       },
       null,
       2
-    );
+    )
   }
 }
 
@@ -415,7 +408,7 @@ export class AuditLogger {
 /**
  * Gets the global audit logger instance
  */
-export const auditLogger = AuditLogger.getInstance();
+export const auditLogger = AuditLogger.getInstance()
 
 /**
  * Helper function to detect changes between two objects
@@ -424,27 +417,27 @@ export function detectChanges(
   oldData: Record<string, any>,
   newData: Record<string, any>
 ): Record<string, { from: any; to: any }> {
-  const changes: Record<string, { from: any; to: any }> = {};
+  const changes: Record<string, { from: any; to: any }> = {}
 
   // Check all keys from both objects
-  const allKeys = new Set([...Object.keys(oldData), ...Object.keys(newData)]);
+  const allKeys = new Set([...Object.keys(oldData), ...Object.keys(newData)])
 
   for (const key of allKeys) {
-    const oldValue = oldData[key];
-    const newValue = newData[key];
+    const oldValue = oldData[key]
+    const newValue = newData[key]
 
     // Skip if values are the same
     if (JSON.stringify(oldValue) === JSON.stringify(newValue)) {
-      continue;
+      continue
     }
 
     changes[key] = {
       from: oldValue,
       to: newValue
-    };
+    }
   }
 
-  return changes;
+  return changes
 }
 
 /**
@@ -458,9 +451,9 @@ export function createAuditMetadata(
     operation,
     timestamp: new Date().toISOString(),
     userAgent:
-      typeof navigator !== "undefined" ? navigator.userAgent : "Unknown",
+      typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
     ...additionalData
-  };
+  }
 }
 
 /**
@@ -479,18 +472,18 @@ export function withAuditLogging<T extends (...args: any[]) => any>(
     propertyKey: string,
     descriptor: PropertyDescriptor
   ) {
-    const originalMethod = descriptor.value;
+    const originalMethod = descriptor.value
 
     descriptor.value = async function (...args: Parameters<T>) {
-      const startTime = Date.now();
-      let result: any;
-      let error: Error | null = null;
+      const startTime = Date.now()
+      let result: any
+      let error: Error | null = null
 
       try {
-        result = await originalMethod.apply(this, args);
+        result = await originalMethod.apply(this, args)
 
         // Log successful operation
-        const entityInfo = getEntityInfo(args, result);
+        const entityInfo = getEntityInfo(args, result)
         await auditLogger.logEntry(
           operation,
           entityType,
@@ -501,15 +494,15 @@ export function withAuditLogging<T extends (...args: any[]) => any>(
             duration: Date.now() - startTime,
             success: true
           })
-        );
+        )
 
-        return result;
+        return result
       } catch (err) {
-        error = err as Error;
+        error = err as Error
 
         // Log failed operation
         try {
-          const entityInfo = getEntityInfo(args);
+          const entityInfo = getEntityInfo(args)
           await auditLogger.logEntry(
             operation,
             entityType,
@@ -521,15 +514,15 @@ export function withAuditLogging<T extends (...args: any[]) => any>(
               success: false,
               error: error.message
             })
-          );
+          )
         } catch (auditError) {
-          console.error("Failed to log audit entry:", auditError);
+          console.error('Failed to log audit entry:', auditError)
         }
 
-        throw error;
+        throw error
       }
-    };
+    }
 
-    return descriptor;
-  };
+    return descriptor
+  }
 }

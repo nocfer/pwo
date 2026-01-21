@@ -2,30 +2,30 @@
  * ErrorScreen - Consistent error/not-found state wrapper
  */
 
-import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { theme } from '@/theme/theme'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { router } from 'expo-router'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type Props = {
-  message?: string;
-  showBackButton?: boolean;
-  onBack?: () => void;
-};
+  message?: string
+  showBackButton?: boolean
+  onBack?: () => void
+}
 
 export function ErrorScreen({
-  message = "Something went wrong.",
+  message = 'Something went wrong.',
   showBackButton = true,
   onBack
 }: Props) {
   const handleBack = () => {
     if (onBack) {
-      onBack();
+      onBack()
     } else {
-      router.back();
+      router.back()
     }
-  };
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -51,7 +51,7 @@ export function ErrorScreen({
         )}
       </View>
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -61,8 +61,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: theme.spacing.lg
   },
   iconContainer: {
@@ -70,14 +70,14 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: theme.radius.lg,
     backgroundColor: theme.colors.background,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: theme.spacing.md
   },
   message: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: theme.spacing.lg
   },
   button: {
@@ -94,6 +94,6 @@ const styles = StyleSheet.create({
     ...theme.typography.bodyBold,
     color: theme.colors.text
   }
-});
+})
 
-export default ErrorScreen;
+export default ErrorScreen

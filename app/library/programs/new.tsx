@@ -1,33 +1,33 @@
 import {
   ProgramForm,
   type ProgramFormData
-} from "@/components/data/forms/ProgramForm";
-import { useDataActions } from "@/context/DataContext";
-import { useExercises } from "@/hooks/data";
-import { theme } from "@/theme/theme";
-import { router } from "expo-router";
-import { useState } from "react";
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+} from '@/components/data/forms/ProgramForm'
+import { useDataActions } from '@/context/DataContext'
+import { useExercises } from '@/hooks/data'
+import { theme } from '@/theme/theme'
+import { router } from 'expo-router'
+import { useState } from 'react'
+import { StyleSheet } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function NewProgramScreen() {
-  const actions = useDataActions();
-  const { data: exercises } = useExercises();
-  const [saving, setSaving] = useState(false);
+  const actions = useDataActions()
+  const { data: exercises } = useExercises()
+  const [saving, setSaving] = useState(false)
 
   async function handleSave(formData: ProgramFormData) {
-    setSaving(true);
+    setSaving(true)
     try {
       await actions.upsertProgram({
-        id: "",
+        id: '',
         name: formData.name,
         blocks: formData.blocks,
         initialWarmup: formData.initialWarmup,
         defaultRestBetweenExercises: formData.defaultRestBetweenExercises
-      });
-      router.back();
+      })
+      router.back()
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
   }
 
@@ -41,7 +41,7 @@ export default function NewProgramScreen() {
         exercises={exercises ?? []}
       />
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -49,4 +49,4 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   }
-});
+})

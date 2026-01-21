@@ -5,46 +5,46 @@
  * by providing a common layout for progress display.
  */
 
-import { theme } from "@/theme/theme";
-import React, { ReactNode } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import ProgressCard from "./ProgressCard";
-import ProgressStats from "./ProgressStats";
+import { theme } from '@/theme/theme'
+import React, { ReactNode } from 'react'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import ProgressCard from './ProgressCard'
+import ProgressStats from './ProgressStats'
 
 export type StatItem = {
-  label: string;
-  value: string | number;
-  icon?: string;
-};
+  label: string
+  value: string | number
+  icon?: string
+}
 
 type Props = {
   /** Display loading state */
-  loading?: boolean;
+  loading?: boolean
   /** Title for the progress card */
-  title: string;
+  title: string
   /** Overall completion percentage (0-100) */
-  completionPercentage: number;
+  completionPercentage: number
   /** Number of sessions completed */
-  sessionsCompleted: number;
+  sessionsCompleted: number
   /** Total number of sessions */
-  totalSessions: number;
+  totalSessions: number
   /** Visual variant */
-  variant: "program" | "challenge";
+  variant: 'program' | 'challenge'
   /** Statistics to display */
-  stats: StatItem[];
+  stats: StatItem[]
   /** Columns for stats grid */
-  statsColumns?: 2 | 3;
+  statsColumns?: 2 | 3
   /** Stats section title */
-  statsSectionTitle?: string;
+  statsSectionTitle?: string
   /** Next session index to display (null if none) */
-  nextSessionIndex?: number | null;
+  nextSessionIndex?: number | null
   /** Whether the entire program/challenge is completed */
-  isCompleted?: boolean;
+  isCompleted?: boolean
   /** Completion message */
-  completedMessage?: string;
+  completedMessage?: string
   /** Additional content to render before stats */
-  children?: ReactNode;
-};
+  children?: ReactNode
+}
 
 export function ProgressViewBase({
   loading = false,
@@ -55,7 +55,7 @@ export function ProgressViewBase({
   variant,
   stats,
   statsColumns = 2,
-  statsSectionTitle = "Statistics",
+  statsSectionTitle = 'Statistics',
   nextSessionIndex,
   isCompleted = false,
   completedMessage,
@@ -66,11 +66,11 @@ export function ProgressViewBase({
       <View style={styles.container}>
         <Text style={styles.muted}>Loading progress...</Text>
       </View>
-    );
+    )
   }
 
   const defaultCompletedMessage =
-    variant === "challenge" ? "Challenge Completed!" : "Program Completed!";
+    variant === 'challenge' ? 'Challenge Completed!' : 'Program Completed!'
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -112,7 +112,7 @@ export function ProgressViewBase({
         </View>
       )}
     </ScrollView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   muted: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center",
+    textAlign: 'center',
     padding: theme.spacing.lg
   },
   section: {
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
-    alignItems: "center"
+    alignItems: 'center'
   },
   nextSessionLabel: {
     ...theme.typography.caption,
@@ -160,12 +160,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
-    alignItems: "center"
+    alignItems: 'center'
   },
   completedText: {
     ...theme.typography.bodyBold,
     color: theme.colors.success
   }
-});
+})
 
-export default ProgressViewBase;
+export default ProgressViewBase

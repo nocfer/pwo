@@ -1,38 +1,38 @@
-import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { theme } from '@/theme/theme'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native'
 
 type Props = {
-  label: string;
-  variant?: "primary" | "secondary" | "ghost";
-  size?: "sm" | "md" | "lg";
-  icon?: keyof typeof Ionicons.glyphMap;
-  onPress?: () => void;
-  disabled?: boolean;
-  fullWidth?: boolean;
-  style?: ViewStyle;
-};
+  label: string
+  variant?: 'primary' | 'secondary' | 'ghost'
+  size?: 'sm' | 'md' | 'lg'
+  icon?: keyof typeof Ionicons.glyphMap
+  onPress?: () => void
+  disabled?: boolean
+  fullWidth?: boolean
+  style?: ViewStyle
+}
 
 export default function Button({
   label,
-  variant = "secondary",
-  size = "md",
+  variant = 'secondary',
+  size = 'md',
   icon,
   onPress,
   disabled = false,
   fullWidth = false,
   style
 }: Props) {
-  const isPrimary = variant === "primary";
-  const isGhost = variant === "ghost";
+  const isPrimary = variant === 'primary'
+  const isGhost = variant === 'ghost'
 
   const sizeStyles = {
     sm: styles.buttonSm,
     md: styles.buttonMd,
     lg: styles.buttonLg
-  };
+  }
 
-  const iconSize = size === "sm" ? 16 : size === "lg" ? 20 : 18;
+  const iconSize = size === 'sm' ? 16 : size === 'lg' ? 20 : 18
 
   return (
     <View style={[styles.container, fullWidth && styles.fullWidth, style]}>
@@ -67,8 +67,8 @@ export default function Button({
         <Text
           style={[
             styles.label,
-            size === "sm" && styles.labelSm,
-            size === "lg" && styles.labelLg,
+            size === 'sm' && styles.labelSm,
+            size === 'lg' && styles.labelLg,
             isPrimary && styles.labelPrimary,
             isGhost && styles.labelGhost,
             disabled && styles.labelDisabled
@@ -78,20 +78,20 @@ export default function Button({
         </Text>
       </Pressable>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
-    alignSelf: "flex-start"
+    alignSelf: 'flex-start'
   },
   fullWidth: {
-    alignSelf: "stretch"
+    alignSelf: 'stretch'
   },
   button: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -114,8 +114,8 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary
   },
   buttonGhost: {
-    backgroundColor: "transparent",
-    borderColor: "transparent"
+    backgroundColor: 'transparent',
+    borderColor: 'transparent'
   },
   buttonPressed: {
     backgroundColor: theme.colors.background,
@@ -150,4 +150,4 @@ const styles = StyleSheet.create({
   labelDisabled: {
     color: theme.colors.muted
   }
-});
+})

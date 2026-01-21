@@ -1,40 +1,40 @@
-import { useProgramProgress, usePrograms } from "@/hooks/data";
-import { formatDuration } from "@/lib/utils/format";
-import { theme } from "@/theme/theme";
-import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { ProgressViewBase } from "./ProgressViewBase";
+import { useProgramProgress, usePrograms } from '@/hooks/data'
+import { formatDuration } from '@/lib/utils/format'
+import { theme } from '@/theme/theme'
+import { useMemo } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import { ProgressViewBase } from './ProgressViewBase'
 
 type Props = {
-  programId: string;
-};
+  programId: string
+}
 
 export default function ProgramProgressView({ programId }: Props) {
-  const { data: programs } = usePrograms();
+  const { data: programs } = usePrograms()
   const program = useMemo(
-    () => programs?.find((p) => p.id === programId && !p.challengeConfig),
+    () => programs?.find(p => p.id === programId && !p.challengeConfig),
     [programs, programId]
-  );
-  const { metrics, loading } = useProgramProgress(program || undefined);
+  )
+  const { metrics, loading } = useProgramProgress(program || undefined)
 
   const stats = useMemo(() => {
-    if (!metrics) return [];
+    if (!metrics) return []
     return [
       {
-        label: "Total Time",
+        label: 'Total Time',
         value: formatDuration(metrics.lifetimeTimeSpentSeconds)
       },
       {
-        label: "Avg. Session",
+        label: 'Avg. Session',
         value: formatDuration(metrics.averageTimePerSessionSeconds)
       },
-      { label: "Current Streak", value: `${metrics.currentStreak} days` },
+      { label: 'Current Streak', value: `${metrics.currentStreak} days` },
       {
-        label: "Sessions Done",
+        label: 'Sessions Done',
         value: `${metrics.currentRunSessionsCompleted}/${metrics.totalSessions}`
       }
-    ];
-  }, [metrics]);
+    ]
+  }, [metrics])
 
   // Exercise completion as custom content
   const exerciseContent =
@@ -66,12 +66,12 @@ export default function ProgramProgressView({ programId }: Props) {
           )
         )}
       </View>
-    ) : null;
+    ) : null
 
   return (
     <ProgressViewBase
       loading={loading || !metrics}
-      title={program?.name || "Program"}
+      title={program?.name || 'Program'}
       completionPercentage={metrics?.currentRunCompletionPercentage ?? 0}
       sessionsCompleted={metrics?.currentRunSessionsCompleted ?? 0}
       totalSessions={metrics?.totalSessions ?? 0}
@@ -83,7 +83,7 @@ export default function ProgramProgressView({ programId }: Props) {
     >
       {exerciseContent}
     </ProgressViewBase>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -108,11 +108,11 @@ const styles = StyleSheet.create({
     height: 6,
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.sm,
-    overflow: "hidden",
+    overflow: 'hidden',
     marginBottom: theme.spacing.xs
   },
   exerciseProgressBar: {
-    height: "100%",
+    height: '100%',
     backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.sm
   },
@@ -120,4 +120,4 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.muted
   }
-});
+})

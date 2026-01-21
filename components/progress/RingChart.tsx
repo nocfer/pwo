@@ -2,21 +2,21 @@
  * RingChart - Animated circular progress indicator
  */
 
-import { theme } from "@/theme/theme";
-import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
-import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
+import { theme } from '@/theme/theme'
+import { useEffect, useRef } from 'react'
+import { Animated, StyleSheet, Text, View } from 'react-native'
+import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg'
 
 type Props = {
-  percentage: number; // 0-100
-  size?: number;
-  strokeWidth?: number;
-  showLabel?: boolean;
-  labelText?: string;
-  animated?: boolean;
-};
+  percentage: number // 0-100
+  size?: number
+  strokeWidth?: number
+  showLabel?: boolean
+  labelText?: string
+  animated?: boolean
+}
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 
 export default function RingChart({
   percentage,
@@ -26,11 +26,11 @@ export default function RingChart({
   labelText,
   animated = true
 }: Props) {
-  const animatedValue = useRef(new Animated.Value(0)).current;
+  const animatedValue = useRef(new Animated.Value(0)).current
 
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const center = size / 2;
+  const radius = (size - strokeWidth) / 2
+  const circumference = radius * 2 * Math.PI
+  const center = size / 2
 
   useEffect(() => {
     if (animated) {
@@ -38,18 +38,18 @@ export default function RingChart({
         toValue: percentage,
         duration: 800,
         useNativeDriver: false
-      }).start();
+      }).start()
     } else {
-      animatedValue.setValue(percentage);
+      animatedValue.setValue(percentage)
     }
-  }, [percentage, animated, animatedValue]);
+  }, [percentage, animated, animatedValue])
 
   const strokeDashoffset = animatedValue.interpolate({
     inputRange: [0, 100],
     outputRange: [circumference, 0]
-  });
+  })
 
-  const displayValue = labelText ?? `${Math.round(percentage)}%`;
+  const displayValue = labelText ?? `${Math.round(percentage)}%`
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
@@ -101,25 +101,25 @@ export default function RingChart({
         </View>
       )}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center"
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   svg: {
-    transform: [{ rotateZ: "0deg" }]
+    transform: [{ rotateZ: '0deg' }]
   },
   labelContainer: {
-    position: "absolute",
-    alignItems: "center",
-    justifyContent: "center"
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   label: {
     fontFamily: theme.fonts.bold,
     color: theme.colors.primary
   }
-});
+})

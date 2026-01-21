@@ -5,10 +5,10 @@
 export {
   useStepCompletion,
   type UseStepCompletionReturn
-} from "./useStepCompletion";
+} from './useStepCompletion'
 export {
   getTargetRepsForSet,
   useWorkoutSteps,
   type WorkoutStep
-} from "./useWorkoutSteps";
-export { useWorkoutTimer, type UseWorkoutTimerReturn } from "./useWorkoutTimer";
+} from './useWorkoutSteps'
+export { useWorkoutTimer, type UseWorkoutTimerReturn } from './useWorkoutTimer'

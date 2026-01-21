@@ -2,22 +2,22 @@
  * WeeklySummaryCard - Hero card showing this week's progress
  */
 
-import { useWeeklyStats } from "@/hooks/data";
-import { formatDuration } from "@/lib/utils/format";
-import { theme } from "@/theme/theme";
-import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
-import ProgressEmptyState from "./ProgressEmptyState";
-import RingChart from "./RingChart";
+import { useWeeklyStats } from '@/hooks/data'
+import { formatDuration } from '@/lib/utils/format'
+import { theme } from '@/theme/theme'
+import { Ionicons } from '@expo/vector-icons'
+import { useEffect, useRef } from 'react'
+import { Animated, StyleSheet, Text, View } from 'react-native'
+import ProgressEmptyState from './ProgressEmptyState'
+import RingChart from './RingChart'
 
 type Props = {
-  onStartWorkout?: () => void;
-};
+  onStartWorkout?: () => void
+}
 
 export default function WeeklySummaryCard({ onStartWorkout }: Props) {
-  const { stats, loading } = useWeeklyStats();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { stats, loading } = useWeeklyStats()
+  const fadeAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     if (!loading) {
@@ -25,45 +25,45 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
         toValue: 1,
         duration: 250,
         useNativeDriver: true
-      }).start();
+      }).start()
     }
-  }, [loading, fadeAnim]);
+  }, [loading, fadeAnim])
 
   if (loading) {
     return (
       <View style={styles.card}>
         <View style={styles.skeleton} />
       </View>
-    );
+    )
   }
 
-  const completed = stats?.workoutsCompleted ?? 0;
-  const goal = stats?.workoutGoal ?? 4;
-  const percentage = goal > 0 ? Math.min(100, (completed / goal) * 100) : 0;
+  const completed = stats?.workoutsCompleted ?? 0
+  const goal = stats?.workoutGoal ?? 4
+  const percentage = goal > 0 ? Math.min(100, (completed / goal) * 100) : 0
   const timeFormatted = formatDuration(
     stats?.totalTimeSeconds ?? 0,
-    "shortWithSuffix"
-  );
-  const prsAchieved = stats?.prsAchieved ?? 0;
-  const streak = stats?.currentStreak ?? 0;
+    'shortWithSuffix'
+  )
+  const prsAchieved = stats?.prsAchieved ?? 0
+  const streak = stats?.currentStreak ?? 0
 
   const parseLocalDate = (dateStr: string) => {
-    const [year, month, day] = dateStr.split("-").map(Number);
-    return new Date(year, month - 1, day);
-  };
+    const [year, month, day] = dateStr.split('-').map(Number)
+    return new Date(year, month - 1, day)
+  }
 
   const weekStart = stats?.weekStart
-    ? parseLocalDate(stats.weekStart).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric"
+    ? parseLocalDate(stats.weekStart).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
       })
-    : "";
+    : ''
   const weekEnd = stats?.weekEnd
-    ? parseLocalDate(stats.weekEnd).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric"
+    ? parseLocalDate(stats.weekEnd).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
       })
-    : "";
+    : ''
 
   if (completed === 0 && prsAchieved === 0) {
     return (
@@ -80,7 +80,7 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
           actionLabel="Start Workout"
         />
       </View>
-    );
+    )
   }
 
   return (
@@ -112,13 +112,13 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
           <StatRow
             icon="time"
             label="Time"
-            value={timeFormatted || "0m"}
+            value={timeFormatted || '0m'}
             color={theme.colors.phases.working}
           />
           <StatRow
             icon="trophy"
             label="PRs"
-            value={prsAchieved > 0 ? `${prsAchieved} new` : "None yet"}
+            value={prsAchieved > 0 ? `${prsAchieved} new` : 'None yet'}
             color={theme.colors.accent}
             highlight={prsAchieved > 0}
           />
@@ -129,13 +129,13 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
         <View style={styles.streakContainer}>
           <Ionicons name="flame" size={16} color={theme.colors.accent} />
           <Text style={styles.streakText}>
-            Current streak:{" "}
+            Current streak:{' '}
             <Text style={styles.streakValue}>{streak} days</Text>
           </Text>
         </View>
       )}
     </Animated.View>
-  );
+  )
 }
 
 function StatRow({
@@ -145,11 +145,11 @@ function StatRow({
   color,
   highlight = false
 }: {
-  icon: string;
-  label: string;
-  value: string;
-  color: string;
-  highlight?: boolean;
+  icon: string
+  label: string
+  value: string
+  color: string
+  highlight?: boolean
 }) {
   return (
     <View style={styles.statRow}>
@@ -165,7 +165,7 @@ function StatRow({
         </Text>
       </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -176,9 +176,9 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: theme.spacing.md
   },
   title: {
@@ -190,29 +190,29 @@ const styles = StyleSheet.create({
     color: theme.colors.muted
   },
   content: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.lg
   },
   ringSection: {
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   statsSection: {
     flex: 1,
     gap: theme.spacing.sm
   },
   statRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm
   },
   statIcon: {
     width: 28,
     height: 28,
     borderRadius: theme.radius.xs,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   statText: {
     flex: 1
@@ -230,8 +230,8 @@ const styles = StyleSheet.create({
     color: theme.colors.accent
   },
   streakContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.xs,
     marginTop: theme.spacing.md,
     paddingTop: theme.spacing.md,
@@ -252,4 +252,4 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.skeleton,
     borderRadius: theme.radius.sm
   }
-});
+})

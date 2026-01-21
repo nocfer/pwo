@@ -3,24 +3,24 @@
  * Shows program details and validates exercise dependencies
  */
 
-import { calculateChallengeSessionCount, useExercises } from "@/hooks/data";
-import { formatCount, formatReps, getFirstReps } from "@/lib/utils/format";
-import { ShareableProgramData } from "@/lib/utils/programShare";
-import { theme } from "@/theme/theme";
-import { ChallengeConfig, ProgramBlock } from "@/types";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import React, { useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { StepCard } from "../cards";
-import { AnimatedCard } from "../common";
-import Button from "../common/Button";
+import { calculateChallengeSessionCount, useExercises } from '@/hooks/data'
+import { formatCount, formatReps, getFirstReps } from '@/lib/utils/format'
+import { ShareableProgramData } from '@/lib/utils/programShare'
+import { theme } from '@/theme/theme'
+import { ChallengeConfig, ProgramBlock } from '@/types'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import React, { useMemo } from 'react'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { StepCard } from '../cards'
+import { AnimatedCard } from '../common'
+import Button from '../common/Button'
 
 type Props = {
-  programData: ShareableProgramData;
-  onConfirm: () => void;
-  onCancel: () => void;
-  isImporting?: boolean;
-};
+  programData: ShareableProgramData
+  onConfirm: () => void
+  onCancel: () => void
+  isImporting?: boolean
+}
 
 export default function ProgramImportPreview({
   programData,
@@ -28,43 +28,43 @@ export default function ProgramImportPreview({
   onCancel,
   isImporting = false
 }: Props) {
-  const { data: exercises } = useExercises();
+  const { data: exercises } = useExercises()
 
   // Extract all exercise IDs from the program
   const exerciseIds = useMemo(() => {
-    const ids = new Set<string>();
+    const ids = new Set<string>()
     for (const block of programData.blocks) {
-      if (block.type === "exercise") {
-        ids.add(block.exerciseId);
+      if (block.type === 'exercise') {
+        ids.add(block.exerciseId)
       }
     }
     if (programData.challengeConfig) {
-      ids.add(programData.challengeConfig.exerciseId);
+      ids.add(programData.challengeConfig.exerciseId)
     }
-    return Array.from(ids);
-  }, [programData]);
+    return Array.from(ids)
+  }, [programData])
 
   // Check which exercises are missing
   const missingExercises = useMemo(() => {
-    if (!exercises) return exerciseIds;
-    const exerciseIdSet = new Set(exercises.map((e) => e.id));
-    return exerciseIds.filter((id) => !exerciseIdSet.has(id));
-  }, [exercises, exerciseIds]);
+    if (!exercises) return exerciseIds
+    const exerciseIdSet = new Set(exercises.map(e => e.id))
+    return exerciseIds.filter(id => !exerciseIdSet.has(id))
+  }, [exercises, exerciseIds])
 
-  const hasMissingExercises = missingExercises.length > 0;
-  const isChallenge = Boolean(programData.challengeConfig);
+  const hasMissingExercises = missingExercises.length > 0
+  const isChallenge = Boolean(programData.challengeConfig)
 
   // For challenges, calculate session count from config
   // For regular programs, count the sessions
   const sessionCount = useMemo(() => {
     if (isChallenge && programData.challengeConfig) {
-      return calculateChallengeSessionCount(programData.challengeConfig);
+      return calculateChallengeSessionCount(programData.challengeConfig)
     }
-    return 1; // Regular programs are now single workouts
-  }, [isChallenge, programData.challengeConfig]);
+    return 1 // Regular programs are now single workouts
+  }, [isChallenge, programData.challengeConfig])
 
   // Count exercises in program
-  const exerciseCount = exerciseIds.length;
+  const exerciseCount = exerciseIds.length
 
   return (
     <ScrollView
@@ -100,12 +100,12 @@ export default function ProgramImportPreview({
           <View style={styles.statsRow}>
             <View style={styles.stat}>
               <Ionicons
-                name={isChallenge ? "trophy-outline" : "barbell-outline"}
+                name={isChallenge ? 'trophy-outline' : 'barbell-outline'}
                 size={20}
                 color={theme.colors.primary}
               />
               <Text style={styles.statLabel}>
-                {isChallenge ? "Challenge" : "Program"}
+                {isChallenge ? 'Challenge' : 'Program'}
               </Text>
             </View>
             {!isChallenge && (
@@ -116,7 +116,7 @@ export default function ProgramImportPreview({
                   color={theme.colors.primary}
                 />
                 <Text style={styles.statLabel}>
-                  {formatCount(sessionCount, "session")}
+                  {formatCount(sessionCount, 'session')}
                 </Text>
               </View>
             )}
@@ -139,7 +139,7 @@ export default function ProgramImportPreview({
                 color={theme.colors.primary}
               />
               <Text style={styles.statLabel}>
-                {formatCount(exerciseCount, "exercise")}
+                {formatCount(exerciseCount, 'exercise')}
               </Text>
             </View>
           </View>
@@ -158,12 +158,12 @@ export default function ProgramImportPreview({
               <Text style={styles.warningTitle}>Missing Exercises</Text>
             </View>
             <Text style={styles.warningText}>
-              {` This program references${" "}
-              ${formatCount(missingExercises.length, "exercise")} that you don't
+              {` This program references${' '}
+              ${formatCount(missingExercises.length, 'exercise')} that you don't
               have in your library:`}
             </Text>
             <View style={styles.missingList}>
-              {missingExercises.map((id) => (
+              {missingExercises.map(id => (
                 <View key={id} style={styles.missingItem}>
                   <Ionicons
                     name="close-circle-outline"
@@ -205,7 +205,7 @@ export default function ProgramImportPreview({
           fullWidth
         />
         <Button
-          label={isImporting ? "Importing..." : "Import Program"}
+          label={isImporting ? 'Importing...' : 'Import Program'}
           variant="primary"
           icon="download"
           onPress={onConfirm}
@@ -214,7 +214,7 @@ export default function ProgramImportPreview({
         />
       </View>
     </ScrollView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -236,8 +236,8 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md
   },
   headerIcon: {
@@ -245,8 +245,8 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   title: {
     ...theme.typography.h3,
@@ -268,13 +268,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md
   },
   statsRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.md,
-    flexWrap: "wrap"
+    flexWrap: 'wrap'
   },
   stat: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
@@ -288,8 +288,8 @@ const styles = StyleSheet.create({
     color: theme.colors.text
   },
   warningHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm,
     marginBottom: theme.spacing.sm
   },
@@ -307,8 +307,8 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md
   },
   missingItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm,
     paddingVertical: theme.spacing.xs
   },
@@ -320,11 +320,11 @@ const styles = StyleSheet.create({
   warningNote: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    fontStyle: "italic"
+    fontStyle: 'italic'
   },
   sessionsHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm,
     marginBottom: theme.spacing.xs
   },
@@ -347,8 +347,8 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs
   },
   sessionHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md
   },
   sessionNumber: {
@@ -356,8 +356,8 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   sessionNumberText: {
     ...theme.typography.bodyBold,
@@ -388,19 +388,19 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.muted,
     marginTop: theme.spacing.xs,
-    fontStyle: "italic"
+    fontStyle: 'italic'
   },
   exerciseDetails: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.md,
     marginTop: theme.spacing.xs,
-    flexWrap: "wrap"
+    flexWrap: 'wrap'
   },
   blockNote: {
     ...theme.typography.caption,
     color: theme.colors.muted,
     marginTop: theme.spacing.xs,
-    fontStyle: "italic"
+    fontStyle: 'italic'
   },
   missingExerciseLabel: {
     ...theme.typography.caption,
@@ -412,8 +412,8 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md
   },
   challengeRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     gap: theme.spacing.md,
     paddingVertical: theme.spacing.sm
   },
@@ -427,22 +427,22 @@ const styles = StyleSheet.create({
     color: theme.colors.text
   },
   challengeValueRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm
   },
   actions: {
     gap: theme.spacing.md,
     marginTop: theme.spacing.md
   }
-});
+})
 
 // Component to display all blocks
 type BlocksPreviewProps = {
-  blocks: ProgramBlock[];
-  exercises: { id: string; name: string }[];
-  missingExerciseIds: string[];
-};
+  blocks: ProgramBlock[]
+  exercises: { id: string; name: string }[]
+  missingExerciseIds: string[]
+}
 
 function BlocksPreview({
   blocks,
@@ -450,15 +450,15 @@ function BlocksPreview({
   missingExerciseIds
 }: BlocksPreviewProps) {
   const exerciseMap = useMemo(() => {
-    return new Map(exercises.map((e) => [e.id, e.name] as const));
-  }, [exercises]);
+    return new Map(exercises.map(e => [e.id, e.name] as const))
+  }, [exercises])
 
   const missingExerciseSet = useMemo(() => {
-    return new Set(missingExerciseIds);
-  }, [missingExerciseIds]);
+    return new Set(missingExerciseIds)
+  }, [missingExerciseIds])
 
   if (blocks.length === 0) {
-    return null;
+    return null
   }
 
   return (
@@ -473,7 +473,7 @@ function BlocksPreview({
           <Text style={styles.sessionsTitle}>Workout Blocks</Text>
         </View>
         <Text style={styles.sessionsSubtitle}>
-          {formatCount(blocks.length, "block")} total
+          {formatCount(blocks.length, 'block')} total
         </Text>
 
         <View style={styles.blocksList}>
@@ -489,15 +489,15 @@ function BlocksPreview({
         </View>
       </View>
     </AnimatedCard>
-  );
+  )
 }
 
 type BlockPreviewProps = {
-  block: ProgramBlock;
-  exerciseMap: Map<string, string>;
-  missingExerciseSet: Set<string>;
-  index: number;
-};
+  block: ProgramBlock
+  exerciseMap: Map<string, string>
+  missingExerciseSet: Set<string>
+  index: number
+}
 
 function BlockPreview({
   block,
@@ -505,7 +505,7 @@ function BlockPreview({
   missingExerciseSet,
   index
 }: BlockPreviewProps) {
-  if (block.type === "warmup") {
+  if (block.type === 'warmup') {
     return (
       <StepCard
         title="Warm-up"
@@ -514,24 +514,24 @@ function BlockPreview({
       >
         <Text style={styles.blockMeta}>{block.seconds} seconds</Text>
       </StepCard>
-    );
+    )
   }
 
-  if (block.type === "rest") {
+  if (block.type === 'rest') {
     return (
       <StepCard
-        title={block.label || "Rest"}
+        title={block.label || 'Rest'}
         delayMultiplier={index}
         style={styles.blockCard}
       >
         <Text style={styles.blockMeta}>{block.seconds} seconds</Text>
       </StepCard>
-    );
+    )
   }
 
   // Exercise block
-  const exerciseName = exerciseMap.get(block.exerciseId) || block.exerciseId;
-  const isMissing = missingExerciseSet.has(block.exerciseId);
+  const exerciseName = exerciseMap.get(block.exerciseId) || block.exerciseId
+  const isMissing = missingExerciseSet.has(block.exerciseId)
 
   return (
     <StepCard
@@ -568,16 +568,16 @@ function BlockPreview({
         </Text>
       )}
     </StepCard>
-  );
+  )
 }
 
 // Component to display challenge configuration row
 type ChallengeConfigRowProps = {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  value: React.ReactNode;
-  warning?: React.ReactNode;
-};
+  icon: keyof typeof Ionicons.glyphMap
+  label: string
+  value: React.ReactNode
+  warning?: React.ReactNode
+}
 
 function ChallengeConfigRow({
   icon,
@@ -590,7 +590,7 @@ function ChallengeConfigRow({
       <Ionicons name={icon} size={18} color={theme.colors.primary} />
       <View style={{ flex: 1 }}>
         <Text style={styles.challengeLabel}>{label}</Text>
-        {typeof value === "string" ? (
+        {typeof value === 'string' ? (
           <Text style={styles.challengeValue}>{value}</Text>
         ) : (
           value
@@ -598,15 +598,15 @@ function ChallengeConfigRow({
         {warning}
       </View>
     </View>
-  );
+  )
 }
 
 // Component to display challenge configuration
 type ChallengeConfigPreviewProps = {
-  challengeConfig: ChallengeConfig;
-  exercises: { id: string; name: string }[];
-  missingExerciseIds: string[];
-};
+  challengeConfig: ChallengeConfig
+  exercises: { id: string; name: string }[]
+  missingExerciseIds: string[]
+}
 
 function ChallengeConfigPreview({
   challengeConfig,
@@ -614,12 +614,12 @@ function ChallengeConfigPreview({
   missingExerciseIds
 }: ChallengeConfigPreviewProps) {
   const exerciseMap = useMemo(() => {
-    return new Map(exercises.map((e) => [e.id, e.name] as const));
-  }, [exercises]);
+    return new Map(exercises.map(e => [e.id, e.name] as const))
+  }, [exercises])
 
   const exerciseName =
-    exerciseMap.get(challengeConfig.exerciseId) || challengeConfig.exerciseId;
-  const isMissing = missingExerciseIds.includes(challengeConfig.exerciseId);
+    exerciseMap.get(challengeConfig.exerciseId) || challengeConfig.exerciseId
+  const isMissing = missingExerciseIds.includes(challengeConfig.exerciseId)
 
   return (
     <AnimatedCard>
@@ -670,7 +670,7 @@ function ChallengeConfigPreview({
           <ChallengeConfigRow
             icon="repeat-outline"
             label="Sets per Session"
-            value={formatCount(challengeConfig.sets, "set")}
+            value={formatCount(challengeConfig.sets, 'set')}
           />
 
           <ChallengeConfigRow
@@ -695,5 +695,5 @@ function ChallengeConfigPreview({
         </View>
       </View>
     </AnimatedCard>
-  );
+  )
 }

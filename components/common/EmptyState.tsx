@@ -1,41 +1,41 @@
-import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import React from "react";
-import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { theme } from '@/theme/theme'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import React from 'react'
+import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native'
 
 type EmptyStateProps = {
-  icon?: keyof typeof Ionicons.glyphMap;
-  title: string;
-  description?: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  variant?: "default" | "search" | "progress" | "history";
-  style?: ViewStyle;
-  compact?: boolean;
-};
+  icon?: keyof typeof Ionicons.glyphMap
+  title: string
+  description?: string
+  actionLabel?: string
+  onAction?: () => void
+  variant?: 'default' | 'search' | 'progress' | 'history'
+  style?: ViewStyle
+  compact?: boolean
+}
 
 const variantConfig = {
   default: {
-    icon: "barbell-outline" as const,
+    icon: 'barbell-outline' as const,
     iconColor: theme.colors.primary,
     iconBg: theme.colors.primaryLight
   },
   search: {
-    icon: "search-outline" as const,
+    icon: 'search-outline' as const,
     iconColor: theme.colors.muted,
     iconBg: theme.colors.background
   },
   progress: {
-    icon: "trending-up-outline" as const,
+    icon: 'trending-up-outline' as const,
     iconColor: theme.colors.success,
     iconBg: theme.colors.successLight
   },
   history: {
-    icon: "time-outline" as const,
+    icon: 'time-outline' as const,
     iconColor: theme.colors.accent,
     iconBg: theme.colors.accentLight
   }
-};
+}
 
 export function EmptyState({
   icon,
@@ -43,12 +43,12 @@ export function EmptyState({
   description,
   actionLabel,
   onAction,
-  variant = "default",
+  variant = 'default',
   style,
   compact = false
 }: EmptyStateProps) {
-  const config = variantConfig[variant];
-  const iconName = icon || config.icon;
+  const config = variantConfig[variant]
+  const iconName = icon || config.icon
 
   if (compact) {
     return (
@@ -79,7 +79,7 @@ export function EmptyState({
           </Pressable>
         )}
       </View>
-    );
+    )
   }
 
   return (
@@ -104,7 +104,7 @@ export function EmptyState({
         </Pressable>
       )}
     </View>
-  );
+  )
 }
 
 // Pre-built empty states
@@ -116,7 +116,7 @@ export function NoSearchResultsEmpty({ query }: { query: string }) {
       description={`Nothing matches "${query}"`}
       compact
     />
-  );
+  )
 }
 
 export function NoProgressEmpty() {
@@ -127,7 +127,7 @@ export function NoProgressEmpty() {
       title="No progress yet"
       description="Complete your first workout to start tracking"
     />
-  );
+  )
 }
 
 export function NoHistoryEmpty() {
@@ -137,12 +137,12 @@ export function NoHistoryEmpty() {
       title="No history yet"
       description="Your workout history will appear here"
     />
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: theme.spacing.xxl,
     paddingHorizontal: theme.spacing.xl
   },
@@ -150,20 +150,20 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: theme.radius.xl,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: theme.spacing.lg
   },
   title: {
     ...theme.typography.h3,
     color: theme.colors.text,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: theme.spacing.sm
   },
   description: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center",
+    textAlign: 'center',
     maxWidth: 260,
     lineHeight: 22
   },
@@ -183,8 +183,8 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryTextOn
   },
   compactContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md,
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.surface,
@@ -194,8 +194,8 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   compactTextContainer: {
     flex: 1,
@@ -219,6 +219,6 @@ const styles = StyleSheet.create({
     ...theme.typography.captionBold,
     color: theme.colors.primary
   }
-});
+})
 
-export default EmptyState;
+export default EmptyState

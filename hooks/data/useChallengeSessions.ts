@@ -1,15 +1,15 @@
-import { getTotalReps } from "@/lib/utils/format";
-import type { ChallengeConfig, ProgramBlock, ProgramSession } from "@/types";
-import { useMemo } from "react";
+import { getTotalReps } from '@/lib/utils/format'
+import type { ChallengeConfig, ProgramBlock, ProgramSession } from '@/types'
+import { useMemo } from 'react'
 
 function distributeIntoSets(total: number, sets: number): number[] {
-  const base = Math.floor(total / sets);
-  const remainder = total - base * sets;
+  const base = Math.floor(total / sets)
+  const remainder = total - base * sets
   const arr = Array.from(
     { length: sets },
     (_, i) => base + (i < remainder ? 1 : 0)
-  );
-  return arr;
+  )
+  return arr
 }
 
 /**
@@ -28,36 +28,36 @@ export function generateChallengeSessions(
     warmUpSeconds,
     breakSeconds,
     weeklyIncreasePercent
-  } = config;
-  const increasePercent = weeklyIncreasePercent ?? 10;
-  const result: ProgramSession[] = [];
-  let total = initialReps;
-  let i = 1;
-  let sessionInWeek = 0; // Track sessions within current week
+  } = config
+  const increasePercent = weeklyIncreasePercent ?? 10
+  const result: ProgramSession[] = []
+  let total = initialReps
+  let i = 1
+  let sessionInWeek = 0 // Track sessions within current week
 
   // Edge case protection: ensure we can make progress
   // If initial >= target or increase is 0, just create one session at targetReps
   if (initialReps >= targetReps || increasePercent <= 0) {
-    const dist = distributeIntoSets(targetReps, sets);
-    const blocks: ProgramSession["blocks"] = [];
+    const dist = distributeIntoSets(targetReps, sets)
+    const blocks: ProgramSession['blocks'] = []
 
     if (warmUpSeconds > 0) {
-      blocks.push({ type: "warmup", seconds: warmUpSeconds });
+      blocks.push({ type: 'warmup', seconds: warmUpSeconds })
     }
 
     for (let setIdx = 0; setIdx < sets; setIdx++) {
       blocks.push({
-        type: "exercise",
+        type: 'exercise',
         exerciseId,
         targetReps: dist[setIdx]
-      });
+      })
 
       if (setIdx < sets - 1 && breakSeconds > 0) {
         blocks.push({
-          type: "rest",
+          type: 'rest',
           seconds: breakSeconds,
-          label: "Rest"
-        });
+          label: 'Rest'
+        })
       }
     }
 
@@ -67,88 +67,88 @@ export function generateChallengeSessions(
         name: `${targetReps} Reps`,
         blocks
       }
-    ];
+    ]
   }
 
   // Limit maximum sessions to prevent runaway generation (e.g., 365 sessions max)
-  const maxSessions = 365;
+  const maxSessions = 365
 
   while (total <= targetReps && result.length < maxSessions) {
-    const rounded = Math.max(1, Math.round(total));
-    const dist = distributeIntoSets(rounded, sets);
+    const rounded = Math.max(1, Math.round(total))
+    const dist = distributeIntoSets(rounded, sets)
 
-    const blocks: ProgramSession["blocks"] = [];
+    const blocks: ProgramSession['blocks'] = []
 
     // Add warmup block
     if (warmUpSeconds > 0) {
-      blocks.push({ type: "warmup", seconds: warmUpSeconds });
+      blocks.push({ type: 'warmup', seconds: warmUpSeconds })
     }
 
     // Add exercise and rest blocks for each set
     for (let setIdx = 0; setIdx < sets; setIdx++) {
       blocks.push({
-        type: "exercise",
+        type: 'exercise',
         exerciseId,
         targetReps: dist[setIdx]
-      });
+      })
 
       // Add rest block after each set except the last one
       if (setIdx < sets - 1 && breakSeconds > 0) {
         blocks.push({
-          type: "rest",
+          type: 'rest',
           seconds: breakSeconds,
-          label: "Rest"
-        });
+          label: 'Rest'
+        })
       }
     }
 
     // Generate descriptive name showing total reps
-    const totalReps = dist.reduce((sum, r) => sum + r, 0);
-    const sessionName = `${totalReps} Reps`;
+    const totalReps = dist.reduce((sum, r) => sum + r, 0)
+    const sessionName = `${totalReps} Reps`
 
     result.push({
       index: i,
       name: sessionName,
       blocks
-    });
+    })
 
-    i += 1;
-    sessionInWeek += 1;
+    i += 1
+    sessionInWeek += 1
 
     // Increase reps every 7 sessions (weekly)
     if (sessionInWeek >= 7) {
-      total += (total * increasePercent) / 100;
-      sessionInWeek = 0;
+      total += (total * increasePercent) / 100
+      sessionInWeek = 0
     }
   }
 
   // Ensure last session is exactly targetReps if we overshot slightly
-  const last = result[result.length - 1];
+  const last = result[result.length - 1]
   if (last) {
     const lastTotal = last.blocks
-      .filter((b) => b.type === "exercise")
-      .reduce((sum, b) => sum + getTotalReps(b.targetReps, b.sets), 0);
+      .filter(b => b.type === 'exercise')
+      .reduce((sum, b) => sum + getTotalReps(b.targetReps, b.sets), 0)
     if (lastTotal !== targetReps) {
-      const dist = distributeIntoSets(targetReps, sets);
-      const blocks: ProgramSession["blocks"] = [];
+      const dist = distributeIntoSets(targetReps, sets)
+      const blocks: ProgramSession['blocks'] = []
 
       if (warmUpSeconds > 0) {
-        blocks.push({ type: "warmup", seconds: warmUpSeconds });
+        blocks.push({ type: 'warmup', seconds: warmUpSeconds })
       }
 
       for (let setIdx = 0; setIdx < sets; setIdx++) {
         blocks.push({
-          type: "exercise",
+          type: 'exercise',
           exerciseId,
           targetReps: dist[setIdx]
-        });
+        })
 
         if (setIdx < sets - 1 && breakSeconds > 0) {
           blocks.push({
-            type: "rest",
+            type: 'rest',
             seconds: breakSeconds,
-            label: "Rest"
-          });
+            label: 'Rest'
+          })
         }
       }
 
@@ -157,17 +157,17 @@ export function generateChallengeSessions(
         ...last,
         name: `${targetReps} Reps`,
         blocks
-      };
+      }
     } else {
       // Update name to show target reps even if we didn't overshoot
       result[result.length - 1] = {
         ...last,
         name: `${targetReps} Reps`
-      };
+      }
     }
   }
 
-  return result;
+  return result
 }
 
 /**
@@ -178,33 +178,33 @@ export function generateChallengeSessions(
 export function calculateChallengeSessionCount(
   config: ChallengeConfig
 ): number {
-  const increasePercent = config.weeklyIncreasePercent ?? 10;
-  const initialReps = config.initialReps ?? 20;
+  const increasePercent = config.weeklyIncreasePercent ?? 10
+  const initialReps = config.initialReps ?? 20
 
   // Edge case protection: if initial >= target or no progression, return 1
   if (initialReps >= config.targetReps || increasePercent <= 0) {
-    return 1;
+    return 1
   }
 
-  let total = initialReps;
-  let count = 0;
-  let sessionInWeek = 0;
-  const maxSessions = 365; // Safety limit
+  let total = initialReps
+  let count = 0
+  let sessionInWeek = 0
+  const maxSessions = 365 // Safety limit
 
   while (total <= config.targetReps && count < maxSessions) {
-    count += 1;
-    sessionInWeek += 1;
+    count += 1
+    sessionInWeek += 1
 
     // Increase reps every 7 sessions (weekly)
     if (sessionInWeek >= 7) {
-      total += (total * increasePercent) / 100;
-      sessionInWeek = 0;
+      total += (total * increasePercent) / 100
+      sessionInWeek = 0
     }
   }
 
   // Add one more for the final session that reaches exactly targetReps
   // (unless we hit the max limit)
-  return Math.min(count + 1, maxSessions);
+  return Math.min(count + 1, maxSessions)
 }
 
 /**
@@ -219,17 +219,17 @@ export function useChallengeSessions(
     | undefined
 ): ProgramSession[] {
   return useMemo(() => {
-    if (!program) return [];
+    if (!program) return []
     if (program.challengeConfig) {
-      return generateChallengeSessions(program.challengeConfig);
+      return generateChallengeSessions(program.challengeConfig)
     }
     // For regular programs, create a single session from blocks
     return [
       {
         index: 1,
-        name: "Workout",
+        name: 'Workout',
         blocks: program.blocks
       }
-    ];
-  }, [program]);
+    ]
+  }, [program])
 }

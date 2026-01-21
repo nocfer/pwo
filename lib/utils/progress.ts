@@ -6,8 +6,8 @@
  */
 
 type SessionWithCompletedAt = {
-  completedAt?: string | null;
-};
+  completedAt?: string | null
+}
 
 /**
  * Calculate current streak from a list of sessions with completion dates.
@@ -17,46 +17,46 @@ type SessionWithCompletedAt = {
  * @returns Current streak count (0 if no recent activity)
  */
 export function calculateStreak(sessions: SessionWithCompletedAt[]): number {
-  const completedSessions = sessions.filter((s) => s.completedAt);
+  const completedSessions = sessions.filter(s => s.completedAt)
 
   if (completedSessions.length === 0) {
-    return 0;
+    return 0
   }
 
   // Sort by date descending (most recent first)
   const sortedByDate = [...completedSessions].sort(
     (a, b) =>
-      new Date(b.completedAt || "").getTime() -
-      new Date(a.completedAt || "").getTime()
-  );
+      new Date(b.completedAt || '').getTime() -
+      new Date(a.completedAt || '').getTime()
+  )
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-  let currentStreak = 0;
-  let checkDate = new Date(today);
+  let currentStreak = 0
+  let checkDate = new Date(today)
 
   for (const session of sortedByDate) {
-    if (!session.completedAt) continue;
+    if (!session.completedAt) continue
 
-    const sessionDate = new Date(session.completedAt);
-    sessionDate.setHours(0, 0, 0, 0);
+    const sessionDate = new Date(session.completedAt)
+    sessionDate.setHours(0, 0, 0, 0)
 
     const daysDiff = Math.floor(
       (checkDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    )
 
     // Allow starting streak from today or yesterday
     if (daysDiff === 0 || (currentStreak === 0 && daysDiff <= 1)) {
-      currentStreak++;
-      checkDate = new Date(sessionDate);
-      checkDate.setDate(checkDate.getDate() - 1);
+      currentStreak++
+      checkDate = new Date(sessionDate)
+      checkDate.setDate(checkDate.getDate() - 1)
     } else {
-      break;
+      break
     }
   }
 
-  return currentStreak;
+  return currentStreak
 }
 
 /**
@@ -72,10 +72,10 @@ export function findNextSessionIndex(
 ): number | null {
   for (let i = 1; i <= totalSessions; i++) {
     if (!completedIndices.has(i)) {
-      return i;
+      return i
     }
   }
-  return null;
+  return null
 }
 
 /**
@@ -89,8 +89,8 @@ export function calculateCompletionPercentage(
   completed: number,
   total: number
 ): number {
-  if (total <= 0) return 0;
-  return (completed / total) * 100;
+  if (total <= 0) return 0
+  return (completed / total) * 100
 }
 
 /**
@@ -102,13 +102,13 @@ export function calculateCompletionPercentage(
 export function getActivityDates(
   sessions: SessionWithCompletedAt[]
 ): Set<string> {
-  const dates = new Set<string>();
+  const dates = new Set<string>()
 
   for (const session of sessions) {
     if (session.completedAt) {
-      dates.add(session.completedAt.slice(0, 10));
+      dates.add(session.completedAt.slice(0, 10))
     }
   }
 
-  return dates;
+  return dates
 }

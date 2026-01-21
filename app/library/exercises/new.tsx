@@ -1,30 +1,30 @@
 import {
   ExerciseForm,
   type ExerciseFormData
-} from "@/components/data/forms/ExerciseForm";
-import { useDataActions } from "@/context/DataContext";
-import { theme } from "@/theme/theme";
-import { router } from "expo-router";
-import { useState } from "react";
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+} from '@/components/data/forms/ExerciseForm'
+import { useDataActions } from '@/context/DataContext'
+import { theme } from '@/theme/theme'
+import { router } from 'expo-router'
+import { useState } from 'react'
+import { StyleSheet } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function NewExerciseScreen() {
-  const actions = useDataActions();
-  const [saving, setSaving] = useState(false);
+  const actions = useDataActions()
+  const [saving, setSaving] = useState(false)
 
   async function handleSave(formData: ExerciseFormData) {
-    setSaving(true);
+    setSaving(true)
     try {
       await actions.upsertExercise({
-        id: "",
+        id: '',
         name: formData.name,
         category: formData.category,
         icon: formData.icon
-      });
-      router.back();
+      })
+      router.back()
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
   }
 
@@ -37,7 +37,7 @@ export default function NewExerciseScreen() {
         saving={saving}
       />
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -45,4 +45,4 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   }
-});
+})

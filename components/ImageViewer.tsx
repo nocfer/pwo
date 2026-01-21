@@ -1,13 +1,13 @@
-import { theme } from "@/theme/theme";
-import { Image } from "expo-image";
-import { ImageSourcePropType, StyleSheet } from "react-native";
+import { theme } from '@/theme/theme'
+import { Image } from 'expo-image'
+import { ImageSourcePropType, StyleSheet } from 'react-native'
 
 type Props = {
-  imgSource: ImageSourcePropType;
-};
+  imgSource: ImageSourcePropType
+}
 
 export default function ImageViewer({ imgSource }: Props) {
-  return <Image source={imgSource} style={styles.image} />;
+  return <Image source={imgSource} style={styles.image} />
 }
 
 const styles = StyleSheet.create({
@@ -16,4 +16,4 @@ const styles = StyleSheet.create({
     height: 440,
     borderRadius: theme.radius.xl
   }
-});
+})

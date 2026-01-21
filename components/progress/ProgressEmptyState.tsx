@@ -2,49 +2,49 @@
  * ProgressEmptyState - Beautiful empty states for progress components
  */
 
-import { theme } from "@/theme/theme";
-import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { theme } from '@/theme/theme'
+import { Ionicons } from '@expo/vector-icons'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 type EmptyStateType =
-  | "no-workouts"
-  | "no-prs"
-  | "no-exercise-data"
-  | "no-consistency";
+  | 'no-workouts'
+  | 'no-prs'
+  | 'no-exercise-data'
+  | 'no-consistency'
 
 type Props = {
-  type: EmptyStateType;
-  exerciseName?: string;
-  onAction?: () => void;
-  actionLabel?: string;
-};
+  type: EmptyStateType
+  exerciseName?: string
+  onAction?: () => void
+  actionLabel?: string
+}
 
 const emptyStates: Record<
   EmptyStateType,
   { icon: string; title: string; description: string }
 > = {
-  "no-workouts": {
-    icon: "fitness-outline",
-    title: "Start your week strong!",
-    description: "Complete your first workout to track your progress."
+  'no-workouts': {
+    icon: 'fitness-outline',
+    title: 'Start your week strong!',
+    description: 'Complete your first workout to track your progress.'
   },
-  "no-prs": {
-    icon: "trophy-outline",
-    title: "Your PRs will appear here",
-    description: "Keep training to set your first personal records!"
+  'no-prs': {
+    icon: 'trophy-outline',
+    title: 'Your PRs will appear here',
+    description: 'Keep training to set your first personal records!'
   },
-  "no-exercise-data": {
-    icon: "bar-chart-outline",
-    title: "No data yet",
+  'no-exercise-data': {
+    icon: 'bar-chart-outline',
+    title: 'No data yet',
     description:
-      "Complete a session with this exercise to see your progression."
+      'Complete a session with this exercise to see your progression.'
   },
-  "no-consistency": {
-    icon: "calendar-outline",
-    title: "Build your streak",
-    description: "Work out regularly to fill up your consistency grid."
+  'no-consistency': {
+    icon: 'calendar-outline',
+    title: 'Build your streak',
+    description: 'Work out regularly to fill up your consistency grid.'
   }
-};
+}
 
 export default function ProgressEmptyState({
   type,
@@ -52,13 +52,13 @@ export default function ProgressEmptyState({
   onAction,
   actionLabel
 }: Props) {
-  const state = emptyStates[type];
+  const state = emptyStates[type]
 
   // Customize description if exercise name provided
   const description =
-    type === "no-exercise-data" && exerciseName
+    type === 'no-exercise-data' && exerciseName
       ? `Complete a session with ${exerciseName} to see your progression.`
-      : state.description;
+      : state.description
 
   return (
     <View style={styles.container}>
@@ -83,7 +83,7 @@ export default function ProgressEmptyState({
         </Pressable>
       )}
     </View>
-  );
+  )
 }
 
 /**
@@ -91,23 +91,23 @@ export default function ProgressEmptyState({
  */
 export function CompactEmptyState({
   message,
-  icon = "information-circle-outline"
+  icon = 'information-circle-outline'
 }: {
-  message: string;
-  icon?: string;
+  message: string
+  icon?: string
 }) {
   return (
     <View style={styles.compactContainer}>
       <Ionicons name={icon as any} size={20} color={theme.colors.muted} />
       <Text style={styles.compactText}>{message}</Text>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: theme.spacing.xl,
     paddingHorizontal: theme.spacing.lg
   },
@@ -116,20 +116,20 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     backgroundColor: theme.colors.card,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: theme.spacing.md
   },
   title: {
     ...theme.typography.h3,
     color: theme.colors.text,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: theme.spacing.xs
   },
   description: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center",
+    textAlign: 'center',
     maxWidth: 280
   },
   button: {
@@ -147,8 +147,8 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryTextOn
   },
   compactContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg
@@ -157,4 +157,4 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.muted
   }
-});
+})

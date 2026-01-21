@@ -1,48 +1,48 @@
-import { ErrorScreen } from "@/components/common";
+import { ErrorScreen } from '@/components/common'
 import {
   ExerciseForm,
   type ExerciseFormData
-} from "@/components/data/forms/ExerciseForm";
-import { useDataActions } from "@/context/DataContext";
-import { useExercises } from "@/hooks/data";
-import { theme } from "@/theme/theme";
-import { router, useLocalSearchParams } from "expo-router";
-import { useMemo, useState } from "react";
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+} from '@/components/data/forms/ExerciseForm'
+import { useDataActions } from '@/context/DataContext'
+import { useExercises } from '@/hooks/data'
+import { theme } from '@/theme/theme'
+import { router, useLocalSearchParams } from 'expo-router'
+import { useMemo, useState } from 'react'
+import { StyleSheet } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function EditExerciseScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const { data } = useExercises();
-  const actions = useDataActions();
-  const [saving, setSaving] = useState(false);
+  const { id } = useLocalSearchParams<{ id: string }>()
+  const { data } = useExercises()
+  const actions = useDataActions()
+  const [saving, setSaving] = useState(false)
 
   const exercise = useMemo(
-    () => data?.find((e) => e.id === id) ?? null,
+    () => data?.find(e => e.id === id) ?? null,
     [data, id]
-  );
+  )
 
   async function handleSave(formData: ExerciseFormData) {
-    setSaving(true);
+    setSaving(true)
     try {
       await actions.upsertExercise({
         id,
         name: formData.name,
         category: formData.category,
         icon: formData.icon
-      });
-      router.back();
+      })
+      router.back()
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
   }
 
   if (!exercise) {
-    return <ErrorScreen message="Exercise not found." />;
+    return <ErrorScreen message="Exercise not found." />
   }
 
-  if (exercise.source === "builtin") {
-    return <ErrorScreen message="Built-in exercises cannot be edited." />;
+  if (exercise.source === 'builtin') {
+    return <ErrorScreen message="Built-in exercises cannot be edited." />
   }
 
   return (
@@ -59,7 +59,7 @@ export default function EditExerciseScreen() {
         saving={saving}
       />
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -67,4 +67,4 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   }
-});
+})

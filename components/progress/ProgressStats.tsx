@@ -1,19 +1,19 @@
-import { theme } from "@/theme/theme";
-import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { theme } from '@/theme/theme'
+import { Ionicons } from '@expo/vector-icons'
+import { StyleSheet, Text, View } from 'react-native'
 
 type StatItem = {
-  label: string;
-  value: string | number;
-  icon?: string;
-  color?: string;
-};
+  label: string
+  value: string | number
+  icon?: string
+  color?: string
+}
 
 type Props = {
-  stats: StatItem[];
-  columns?: 2 | 3;
-  compact?: boolean;
-};
+  stats: StatItem[]
+  columns?: 2 | 3
+  compact?: boolean
+}
 
 export default function ProgressStats({
   stats,
@@ -36,7 +36,7 @@ export default function ProgressStats({
           </View>
         ))}
       </View>
-    );
+    )
   }
 
   return (
@@ -68,33 +68,33 @@ export default function ProgressStats({
         </View>
       ))}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: theme.spacing.sm
   },
   statItem: {
     flex: 1,
-    minWidth: "45%",
+    minWidth: '45%',
     backgroundColor: theme.colors.background,
     borderRadius: theme.radius.md,
     padding: theme.spacing.md,
-    alignItems: "center"
+    alignItems: 'center'
   },
   statItemThreeColumns: {
-    minWidth: "30%"
+    minWidth: '30%'
   },
   iconContainer: {
     width: 36,
     height: 36,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: theme.spacing.sm
   },
   value: {
@@ -105,17 +105,17 @@ const styles = StyleSheet.create({
   label: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    textAlign: "center"
+    textAlign: 'center'
   },
   compactContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     backgroundColor: theme.colors.background,
     borderRadius: theme.radius.md,
     padding: theme.spacing.sm
   },
   compactItem: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: theme.spacing.xs
   },
   compactItemBorder: {
@@ -131,4 +131,4 @@ const styles = StyleSheet.create({
     ...theme.typography.small,
     color: theme.colors.muted
   }
-});
+})

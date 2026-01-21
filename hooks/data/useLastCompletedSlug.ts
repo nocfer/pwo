@@ -4,9 +4,9 @@
  * Uses the DataContext for reactive updates.
  */
 
-import { useDataContext } from "@/context/DataContext";
+import { useDataContext } from '@/context/DataContext'
 
 export function useLastCompletedSlug(): string | null {
-  const { state } = useDataContext();
-  return state.lastCompletedSlug;
+  const { state } = useDataContext()
+  return state.lastCompletedSlug
 }

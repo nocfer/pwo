@@ -1,14 +1,14 @@
-import { WeeklyChart } from "@/components";
-import { AnimatedCard, EmptyState } from "@/components/common";
-import { useAllProgress, usePrograms, useWeeklyActivity } from "@/hooks/data";
+import { WeeklyChart } from '@/components'
+import { AnimatedCard, EmptyState } from '@/components/common'
+import { useAllProgress, usePrograms, useWeeklyActivity } from '@/hooks/data'
 import {
   prioritizePrograms,
   type ProgramWithPriority
-} from "@/lib/utils/programPrioritization";
-import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+} from '@/lib/utils/programPrioritization'
+import { theme } from '@/theme/theme'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { router } from 'expo-router'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Modal,
   Pressable,
@@ -16,60 +16,60 @@ import {
   StyleSheet,
   Text,
   View
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function Index() {
-  const { data: programs } = usePrograms();
-  const [programSelectorOpen, setProgramSelectorOpen] = useState(false);
+  const { data: programs } = usePrograms()
+  const [programSelectorOpen, setProgramSelectorOpen] = useState(false)
   const [prioritizedPrograms, setPrioritizedPrograms] = useState<
     ProgramWithPriority[]
-  >([]);
+  >([])
 
   useEffect(() => {
     if (programs) {
-      prioritizePrograms(programs).then(setPrioritizedPrograms);
+      prioritizePrograms(programs).then(setPrioritizedPrograms)
     } else {
-      setPrioritizedPrograms([]);
+      setPrioritizedPrograms([])
     }
-  }, [programs]);
+  }, [programs])
 
   const { regularPrograms, challenges, allPrograms } = useMemo(() => {
     if (prioritizedPrograms.length === 0) {
-      return { regularPrograms: [], challenges: [], allPrograms: [] };
+      return { regularPrograms: [], challenges: [], allPrograms: [] }
     }
 
-    const regular = prioritizedPrograms.filter((p) => !p.challengeConfig);
-    const challenge = prioritizedPrograms.filter((p) => p.challengeConfig);
-    const all = [...regular, ...challenge];
+    const regular = prioritizedPrograms.filter(p => !p.challengeConfig)
+    const challenge = prioritizedPrograms.filter(p => p.challengeConfig)
+    const all = [...regular, ...challenge]
 
     return {
       regularPrograms: regular,
       challenges: challenge,
       allPrograms: all
-    };
-  }, [prioritizedPrograms]);
+    }
+  }, [prioritizedPrograms])
 
-  const { data: weeklyData } = useWeeklyActivity();
-  const { data: aggregated } = useAllProgress();
+  const { data: weeklyData } = useWeeklyActivity()
+  const { data: aggregated } = useAllProgress()
 
   const handleProgramSelect = (program: ProgramWithPriority) => {
-    setProgramSelectorOpen(false);
-    router.navigate({ pathname: "/programs/[id]", params: { id: program.id } });
-  };
+    setProgramSelectorOpen(false)
+    router.navigate({ pathname: '/programs/[id]', params: { id: program.id } })
+  }
 
   const handleQuickStart = () => {
     if (allPrograms.length === 1) {
-      handleProgramSelect(allPrograms[0]);
+      handleProgramSelect(allPrograms[0])
     } else if (allPrograms.length > 1) {
-      setProgramSelectorOpen(true);
+      setProgramSelectorOpen(true)
     }
-  };
+  }
 
-  const hasProgress = aggregated && aggregated.totalWorkoutsCompleted > 0;
+  const hasProgress = aggregated && aggregated.totalWorkoutsCompleted > 0
 
   return (
-    <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -102,8 +102,8 @@ export default function Index() {
                   <View style={styles.heroTextContainer}>
                     <Text style={styles.heroTitle}>
                       {allPrograms.length === 1
-                        ? "Start Workout"
-                        : "Quick Start"}
+                        ? 'Start Workout'
+                        : 'Quick Start'}
                     </Text>
                     <Text style={styles.heroSubtitle}>
                       {allPrograms.length === 1
@@ -130,7 +130,7 @@ export default function Index() {
                     styles.statCard,
                     pressed && styles.statCardPressed
                   ]}
-                  onPress={() => router.navigate("/(tabs)/progress")}
+                  onPress={() => router.navigate('/(tabs)/progress')}
                 >
                   <View style={styles.statIconContainer}>
                     <Ionicons
@@ -150,7 +150,7 @@ export default function Index() {
                     styles.statCard,
                     pressed && styles.statCardPressed
                   ]}
-                  onPress={() => router.navigate("/(tabs)/progress")}
+                  onPress={() => router.navigate('/(tabs)/progress')}
                 >
                   <View
                     style={[
@@ -185,7 +185,7 @@ export default function Index() {
                 styles.browseCard,
                 pressed && styles.browseCardPressed
               ]}
-              onPress={() => router.navigate("/(tabs)/library")}
+              onPress={() => router.navigate('/(tabs)/library')}
             >
               <View style={styles.browseContent}>
                 <View style={styles.browseIconContainer}>
@@ -219,7 +219,7 @@ export default function Index() {
                 title="No programs yet"
                 description="Create your first program or challenge to get started"
                 actionLabel="Go to Library"
-                onAction={() => router.navigate("/(tabs)/library")}
+                onAction={() => router.navigate('/(tabs)/library')}
               />
             </AnimatedCard>
           )}
@@ -239,7 +239,7 @@ export default function Index() {
         >
           <Pressable
             style={styles.modalContent}
-            onPress={(e) => e.stopPropagation()}
+            onPress={e => e.stopPropagation()}
           >
             <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
@@ -271,7 +271,7 @@ export default function Index() {
         </Pressable>
       </Modal>
     </SafeAreaView>
-  );
+  )
 }
 
 function ProgramSection({
@@ -282,19 +282,19 @@ function ProgramSection({
   iconBgColor,
   onSelect
 }: {
-  label: string;
-  programs: ProgramWithPriority[];
-  icon: keyof typeof Ionicons.glyphMap;
-  iconColor: string;
-  iconBgColor: string;
-  onSelect: (program: ProgramWithPriority) => void;
+  label: string
+  programs: ProgramWithPriority[]
+  icon: keyof typeof Ionicons.glyphMap
+  iconColor: string
+  iconBgColor: string
+  onSelect: (program: ProgramWithPriority) => void
 }) {
-  if (programs.length === 0) return null;
+  if (programs.length === 0) return null
 
   return (
     <View style={styles.programSection}>
       <Text style={styles.sectionLabel}>{label}</Text>
-      {programs.map((program) => (
+      {programs.map(program => (
         <Pressable
           key={program.id}
           onPress={() => onSelect(program)}
@@ -324,7 +324,7 @@ function ProgramSection({
         </Pressable>
       ))}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -355,9 +355,9 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md
   },
   heroCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
@@ -368,8 +368,8 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }]
   },
   heroContent: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md,
     flex: 1
   },
@@ -377,9 +377,9 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: theme.radius.full,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    alignItems: "center",
-    justifyContent: "center"
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   heroTextContainer: {
     flex: 1,
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     opacity: 0.85
   },
   statsRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.md
   },
   statCard: {
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    alignItems: "center",
+    alignItems: 'center',
     ...theme.shadows.sm
   },
   statCardPressed: {
@@ -414,8 +414,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: theme.spacing.sm
   },
   statValue: {
@@ -428,9 +428,9 @@ const styles = StyleSheet.create({
     color: theme.colors.muted
   },
   browseCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
@@ -441,8 +441,8 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }]
   },
   browseContent: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md,
     flex: 1
   },
@@ -451,8 +451,8 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   browseTextContainer: {
     flex: 1,
@@ -469,13 +469,13 @@ const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
     backgroundColor: theme.colors.overlay,
-    justifyContent: "flex-end"
+    justifyContent: 'flex-end'
   },
   modalContent: {
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    maxHeight: "70%",
+    maxHeight: '70%',
     paddingBottom: theme.spacing.xxl
   },
   modalHandle: {
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: theme.colors.border,
     borderRadius: 2,
-    alignSelf: "center",
+    alignSelf: 'center',
     marginTop: theme.spacing.sm,
     marginBottom: theme.spacing.sm
   },
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     ...theme.typography.h3,
     color: theme.colors.text,
-    textAlign: "center"
+    textAlign: 'center'
   },
   programList: {
     paddingHorizontal: theme.spacing.lg
@@ -507,14 +507,14 @@ const styles = StyleSheet.create({
   sectionLabel: {
     ...theme.typography.small,
     color: theme.colors.muted,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: theme.spacing.sm,
     marginLeft: theme.spacing.xs
   },
   programItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.sm,
@@ -527,8 +527,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   programInfo: {
     flex: 1,
@@ -542,4 +542,4 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.muted
   }
-});
+})

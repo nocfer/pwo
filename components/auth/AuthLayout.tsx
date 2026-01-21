@@ -1,5 +1,5 @@
-import { theme } from "@/theme/theme";
-import React, { ReactNode } from "react";
+import { theme } from '@/theme/theme'
+import React, { ReactNode } from 'react'
 import {
   KeyboardAvoidingView,
   Platform,
@@ -7,20 +7,20 @@ import {
   StyleProp,
   StyleSheet,
   ViewStyle
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type Props = {
-  children: ReactNode;
-  contentStyle?: StyleProp<ViewStyle>;
-};
+  children: ReactNode
+  contentStyle?: StyleProp<ViewStyle>
+}
 
 export function AuthLayout({ children, contentStyle }: Props) {
   return (
-    <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           style={styles.scrollView}
@@ -35,7 +35,7 @@ export function AuthLayout({ children, contentStyle }: Props) {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -53,6 +53,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: theme.spacing.lg
   }
-});
+})
 
-export default AuthLayout;
+export default AuthLayout

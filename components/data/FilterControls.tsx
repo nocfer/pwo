@@ -2,9 +2,9 @@
  * FilterControls - Provides filtering and sorting controls for data lists
  */
 
-import { theme } from "@/theme/theme";
-import type { DataType, ExerciseCategory, SearchState } from "@/types";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { theme } from '@/theme/theme'
+import type { DataType, ExerciseCategory, SearchState } from '@/types'
+import Ionicons from '@expo/vector-icons/Ionicons'
 import {
   Pressable,
   ScrollView,
@@ -12,42 +12,42 @@ import {
   Text,
   View,
   ViewStyle
-} from "react-native";
+} from 'react-native'
 
 type Props = {
-  dataType: DataType;
-  filters: SearchState["filters"];
-  sortBy: SearchState["sortBy"];
-  sortOrder: SearchState["sortOrder"];
-  onFiltersChange: (filters: SearchState["filters"]) => void;
+  dataType: DataType
+  filters: SearchState['filters']
+  sortBy: SearchState['sortBy']
+  sortOrder: SearchState['sortOrder']
+  onFiltersChange: (filters: SearchState['filters']) => void
   onSortChange: (
-    sortBy: SearchState["sortBy"],
-    sortOrder: SearchState["sortOrder"]
-  ) => void;
-  style?: ViewStyle;
-};
+    sortBy: SearchState['sortBy'],
+    sortOrder: SearchState['sortOrder']
+  ) => void
+  style?: ViewStyle
+}
 
 const EXERCISE_CATEGORIES: ExerciseCategory[] = [
-  "strength",
-  "cardio",
-  "flexibility",
-  "skill"
-];
+  'strength',
+  'cardio',
+  'flexibility',
+  'skill'
+]
 
 const SOURCE_OPTIONS = [
-  { key: "builtin" as const, label: "Built-in" },
-  { key: "user" as const, label: "Custom" }
-];
+  { key: 'builtin' as const, label: 'Built-in' },
+  { key: 'user' as const, label: 'Custom' }
+]
 
 const SORT_OPTIONS = [
-  { key: "name" as const, label: "Name", icon: "text-outline" as const },
-  { key: "created" as const, label: "Newest", icon: "time-outline" as const },
+  { key: 'name' as const, label: 'Name', icon: 'text-outline' as const },
+  { key: 'created' as const, label: 'Newest', icon: 'time-outline' as const },
   {
-    key: "updated" as const,
-    label: "Updated",
-    icon: "refresh-outline" as const
+    key: 'updated' as const,
+    label: 'Updated',
+    icon: 'refresh-outline' as const
   }
-];
+]
 
 export function FilterControls({
   dataType,
@@ -59,46 +59,46 @@ export function FilterControls({
   style
 }: Props) {
   const handleCategoryToggle = (category: ExerciseCategory) => {
-    const currentCategories = filters.category || [];
+    const currentCategories = filters.category || []
     const newCategories = currentCategories.includes(category)
-      ? currentCategories.filter((c) => c !== category)
-      : [...currentCategories, category];
+      ? currentCategories.filter(c => c !== category)
+      : [...currentCategories, category]
 
     onFiltersChange({
       ...filters,
       category: newCategories.length > 0 ? newCategories : undefined
-    });
-  };
+    })
+  }
 
-  const handleSourceToggle = (source: "builtin" | "user") => {
-    const currentSources = filters.source || [];
+  const handleSourceToggle = (source: 'builtin' | 'user') => {
+    const currentSources = filters.source || []
     const newSources = currentSources.includes(source)
-      ? currentSources.filter((s) => s !== source)
-      : [...currentSources, source];
+      ? currentSources.filter(s => s !== source)
+      : [...currentSources, source]
 
     onFiltersChange({
       ...filters,
       source: newSources.length > 0 ? newSources : undefined
-    });
-  };
+    })
+  }
 
-  const handleSortChange = (newSortBy: SearchState["sortBy"]) => {
+  const handleSortChange = (newSortBy: SearchState['sortBy']) => {
     if (newSortBy === sortBy) {
-      onSortChange(sortBy, sortOrder === "asc" ? "desc" : "asc");
+      onSortChange(sortBy, sortOrder === 'asc' ? 'desc' : 'asc')
     } else {
-      onSortChange(newSortBy, "asc");
+      onSortChange(newSortBy, 'asc')
     }
-  };
+  }
 
   const clearAllFilters = () => {
-    onFiltersChange({});
-    onSortChange("name", "asc");
-  };
+    onFiltersChange({})
+    onSortChange('name', 'asc')
+  }
 
   const hasActiveFilters =
     (filters.category && filters.category.length > 0) ||
     (filters.source && filters.source.length > 0) ||
-    sortBy !== "name";
+    sortBy !== 'name'
 
   return (
     <View style={[styles.container, style]}>
@@ -110,8 +110,8 @@ export function FilterControls({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.pillsContainer}
         >
-          {SORT_OPTIONS.map((option) => {
-            const isActive = sortBy === option.key;
+          {SORT_OPTIONS.map(option => {
+            const isActive = sortBy === option.key
             return (
               <Pressable
                 key={option.key}
@@ -130,19 +130,19 @@ export function FilterControls({
                 </Text>
                 {isActive && (
                   <Ionicons
-                    name={sortOrder === "asc" ? "arrow-up" : "arrow-down"}
+                    name={sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'}
                     size={12}
                     color={theme.colors.primary}
                   />
                 )}
               </Pressable>
-            );
+            )
           })}
         </ScrollView>
       </View>
 
       {/* Category (exercises only) */}
-      {dataType === "exercises" && (
+      {dataType === 'exercises' && (
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Category</Text>
           <ScrollView
@@ -150,8 +150,8 @@ export function FilterControls({
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.pillsContainer}
           >
-            {EXERCISE_CATEGORIES.map((category) => {
-              const isSelected = filters.category?.includes(category) || false;
+            {EXERCISE_CATEGORIES.map(category => {
+              const isSelected = filters.category?.includes(category) || false
               return (
                 <Pressable
                   key={category}
@@ -167,7 +167,7 @@ export function FilterControls({
                     {category.charAt(0).toUpperCase() + category.slice(1)}
                   </Text>
                 </Pressable>
-              );
+              )
             })}
           </ScrollView>
         </View>
@@ -177,8 +177,8 @@ export function FilterControls({
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Source</Text>
         <View style={styles.pillsRow}>
-          {SOURCE_OPTIONS.map((option) => {
-            const isSelected = filters.source?.includes(option.key) || false;
+          {SOURCE_OPTIONS.map(option => {
+            const isSelected = filters.source?.includes(option.key) || false
             return (
               <Pressable
                 key={option.key}
@@ -191,7 +191,7 @@ export function FilterControls({
                   {option.label}
                 </Text>
               </Pressable>
-            );
+            )
           })}
         </View>
       </View>
@@ -208,7 +208,7 @@ export function FilterControls({
         </Pressable>
       )}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     ...theme.typography.small,
     color: theme.colors.muted,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginLeft: theme.spacing.xs
   },
@@ -232,12 +232,12 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm
   },
   pillsRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.sm
   },
   pill: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.xs,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
@@ -256,9 +256,9 @@ const styles = StyleSheet.create({
     color: theme.colors.primary
   },
   clearButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
     marginTop: theme.spacing.xs
@@ -267,6 +267,6 @@ const styles = StyleSheet.create({
     ...theme.typography.captionBold,
     color: theme.colors.primary
   }
-});
+})
 
-export default FilterControls;
+export default FilterControls

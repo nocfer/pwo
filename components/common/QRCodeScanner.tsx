@@ -2,35 +2,35 @@
  * QRCodeScanner - Camera-based QR code scanner component
  */
 
-import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Camera, CameraView } from "expo-camera";
-import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { theme } from '@/theme/theme'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { Camera, CameraView } from 'expo-camera'
+import { useEffect, useState } from 'react'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 type Props = {
-  onScan: (data: string) => void;
-  onClose?: () => void;
-};
+  onScan: (data: string) => void
+  onClose?: () => void
+}
 
 export default function QRCodeScanner({ onScan, onClose }: Props) {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [scanned, setScanned] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null)
+  const [scanned, setScanned] = useState(false)
 
   useEffect(() => {
     const getCameraPermissions = async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === "granted");
-    };
+      const { status } = await Camera.requestCameraPermissionsAsync()
+      setHasPermission(status === 'granted')
+    }
 
-    getCameraPermissions();
-  }, []);
+    getCameraPermissions()
+  }, [])
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
-    if (scanned) return;
-    setScanned(true);
-    onScan(data);
-  };
+    if (scanned) return
+    setScanned(true)
+    onScan(data)
+  }
 
   if (hasPermission === null) {
     return (
@@ -39,7 +39,7 @@ export default function QRCodeScanner({ onScan, onClose }: Props) {
           <Text style={styles.message}>Requesting camera permission...</Text>
         </View>
       </View>
-    );
+    )
   }
 
   if (hasPermission === false) {
@@ -68,7 +68,7 @@ export default function QRCodeScanner({ onScan, onClose }: Props) {
           )}
         </View>
       </View>
-    );
+    )
   }
 
   return (
@@ -76,7 +76,7 @@ export default function QRCodeScanner({ onScan, onClose }: Props) {
       <CameraView
         onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
         barcodeScannerSettings={{
-          barcodeTypes: ["qr"]
+          barcodeTypes: ['qr']
         }}
         style={StyleSheet.absoluteFillObject}
       />
@@ -105,7 +105,7 @@ export default function QRCodeScanner({ onScan, onClose }: Props) {
         </View>
       </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -115,20 +115,20 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: theme.spacing.xl,
     gap: theme.spacing.md
   },
   message: {
     ...theme.typography.h3,
     color: theme.colors.text,
-    textAlign: "center"
+    textAlign: 'center'
   },
   submessage: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center",
+    textAlign: 'center',
     marginTop: theme.spacing.sm
   },
   button: {
@@ -148,15 +148,15 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    justifyContent: "space-between"
+    justifyContent: 'space-between'
   },
   topBar: {
     padding: theme.spacing.lg,
     paddingTop: theme.spacing.xl,
-    backgroundColor: "rgba(0, 0, 0, 0.5)"
+    backgroundColor: 'rgba(0, 0, 0, 0.5)'
   },
   closeButton: {
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     padding: theme.spacing.sm,
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.full,
@@ -167,8 +167,8 @@ const styles = StyleSheet.create({
   },
   scannerArea: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center"
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   scannerFrame: {
     width: 280,
@@ -176,23 +176,23 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: theme.colors.primary,
     borderRadius: theme.radius.lg,
-    backgroundColor: "transparent"
+    backgroundColor: 'transparent'
   },
   bottomBar: {
     padding: theme.spacing.lg,
     paddingBottom: theme.spacing.xl,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    alignItems: "center",
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    alignItems: 'center',
     gap: theme.spacing.sm
   },
   instruction: {
     ...theme.typography.body,
     color: theme.colors.primaryTextOn,
-    textAlign: "center"
+    textAlign: 'center'
   },
   scannedText: {
     ...theme.typography.bodyBold,
     color: theme.colors.success,
-    textAlign: "center"
+    textAlign: 'center'
   }
-});
+})

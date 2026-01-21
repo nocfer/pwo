@@ -2,11 +2,11 @@
  * SearchableList - Enhanced list component with metadata display and search capabilities
  */
 
-import { theme } from "@/theme/theme";
-import type { Program } from "@/types";
-import type { DataType } from "@/types/enhanced";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useMemo, useState } from "react";
+import { theme } from '@/theme/theme'
+import type { Program } from '@/types'
+import type { DataType } from '@/types/enhanced'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { useMemo, useState } from 'react'
 import {
   FlatList,
   Pressable,
@@ -14,46 +14,46 @@ import {
   Text,
   View,
   ViewStyle
-} from "react-native";
-import { EmptyState, LoadingScreen } from "../common";
-import { SearchInput } from "../common/SearchInput";
-import { ProgramListItem } from "./ProgramListItem";
+} from 'react-native'
+import { EmptyState, LoadingScreen } from '../common'
+import { SearchInput } from '../common/SearchInput'
+import { ProgramListItem } from './ProgramListItem'
 
 type ListItem = {
-  id: string;
-  name: string;
-  description?: string;
-  source: "builtin" | "user";
-  createdAt?: string;
-  updatedAt?: string;
-  category?: string;
-  icon?: string;
-  [key: string]: unknown;
-};
+  id: string
+  name: string
+  description?: string
+  source: 'builtin' | 'user'
+  createdAt?: string
+  updatedAt?: string
+  category?: string
+  icon?: string
+  [key: string]: unknown
+}
 
 type Props = {
-  data: ListItem[];
-  dataType: DataType;
-  searchPlaceholder?: string;
-  onItemPress?: (item: ListItem) => void;
-  onItemEdit?: (item: ListItem) => void;
-  onItemLongPress?: (item: ListItem) => void;
-  selectedItems?: string[];
-  onSelectionChange?: (itemIds: string[]) => void;
-  showSearch?: boolean;
-  showMetadata?: boolean;
-  showInlineActions?: boolean;
-  isLoading?: boolean;
-  error?: string;
-  emptyTitle?: string;
-  emptySubtitle?: string;
-  style?: ViewStyle;
-};
+  data: ListItem[]
+  dataType: DataType
+  searchPlaceholder?: string
+  onItemPress?: (item: ListItem) => void
+  onItemEdit?: (item: ListItem) => void
+  onItemLongPress?: (item: ListItem) => void
+  selectedItems?: string[]
+  onSelectionChange?: (itemIds: string[]) => void
+  showSearch?: boolean
+  showMetadata?: boolean
+  showInlineActions?: boolean
+  isLoading?: boolean
+  error?: string
+  emptyTitle?: string
+  emptySubtitle?: string
+  style?: ViewStyle
+}
 
 export function SearchableList({
   data,
   dataType,
-  searchPlaceholder = "Search...",
+  searchPlaceholder = 'Search...',
   onItemPress,
   onItemEdit,
   onItemLongPress,
@@ -68,66 +68,66 @@ export function SearchableList({
   emptySubtitle,
   style
 }: Props) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const selectionMode = selectedItems.length > 0;
+  const [searchQuery, setSearchQuery] = useState('')
+  const selectionMode = selectedItems.length > 0
 
   // Filter data based on search query
   const filteredData = useMemo(() => {
-    if (!searchQuery.trim()) return data;
+    if (!searchQuery.trim()) return data
 
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase()
     return data.filter(
-      (item) =>
+      item =>
         item.name.toLowerCase().includes(query) ||
         (item.description && item.description.toLowerCase().includes(query)) ||
         (item.category && item.category.toLowerCase().includes(query))
-    );
-  }, [data, searchQuery]);
+    )
+  }, [data, searchQuery])
 
   const handleItemPress = (item: ListItem) => {
     if (selectionMode) {
-      handleItemSelection(item.id);
+      handleItemSelection(item.id)
     } else {
-      onItemPress?.(item);
+      onItemPress?.(item)
     }
-  };
+  }
 
   const handleItemLongPress = (item: ListItem) => {
     if (!selectionMode) {
       // Start selection mode by selecting this item
-      onSelectionChange?.([item.id]);
+      onSelectionChange?.([item.id])
     } else {
-      onItemLongPress?.(item);
+      onItemLongPress?.(item)
     }
-  };
+  }
 
   const handleItemSelection = (itemId: string) => {
-    const isSelected = selectedItems.includes(itemId);
+    const isSelected = selectedItems.includes(itemId)
     const newSelection = isSelected
-      ? selectedItems.filter((id) => id !== itemId)
-      : [...selectedItems, itemId];
+      ? selectedItems.filter(id => id !== itemId)
+      : [...selectedItems, itemId]
 
-    onSelectionChange?.(newSelection);
-  };
+    onSelectionChange?.(newSelection)
+  }
 
   const renderItem = ({ item }: { item: ListItem }) => {
-    const isSelected = selectedItems.includes(item.id);
+    const isSelected = selectedItems.includes(item.id)
 
     // Use ProgramListItem for programs when inline actions are enabled
     if (
       showInlineActions &&
-      (dataType === "programs" || dataType === "challenges")
+      (dataType === 'programs' || dataType === 'challenges')
     ) {
       const program: Program = {
         id: item.id,
         name: item.name,
-        description: item.description || "",
+        description: item.description || '',
         source: item.source,
         createdAt: item.createdAt || new Date().toISOString(),
         updatedAt: item.updatedAt || new Date().toISOString(),
-        blocks: (item.blocks as Program["blocks"]) || [],
-        challengeConfig: item.challengeConfig as Program["challengeConfig"]
-      };
+        blocks: (item.blocks as Program['blocks']) || [],
+        challengeConfig: item.challengeConfig as Program['challengeConfig']
+      }
 
       return (
         <ProgramListItem
@@ -140,14 +140,14 @@ export function SearchableList({
               ? (selected: boolean) => {
                   const newSelection = selected
                     ? [...selectedItems, item.id]
-                    : selectedItems.filter((id) => id !== item.id);
-                  onSelectionChange?.(newSelection);
+                    : selectedItems.filter(id => id !== item.id)
+                  onSelectionChange?.(newSelection)
                 }
               : undefined
           }
           showMetadata={showMetadata}
         />
-      );
+      )
     }
 
     // Default exercise item rendering
@@ -164,7 +164,7 @@ export function SearchableList({
         {selectionMode && (
           <View style={styles.selectionIndicator}>
             <Ionicons
-              name={isSelected ? "checkmark-circle" : "ellipse-outline"}
+              name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
               size={22}
               color={isSelected ? theme.colors.primary : theme.colors.muted}
             />
@@ -179,7 +179,7 @@ export function SearchableList({
         >
           <Ionicons
             name={
-              (item.icon as keyof typeof Ionicons.glyphMap) || "fitness-outline"
+              (item.icon as keyof typeof Ionicons.glyphMap) || 'fitness-outline'
             }
             size={20}
             color={theme.colors.primary}
@@ -191,7 +191,7 @@ export function SearchableList({
             <Text style={styles.itemName} numberOfLines={1}>
               {item.name}
             </Text>
-            {item.source === "builtin" && (
+            {item.source === 'builtin' && (
               <View style={styles.builtinBadge}>
                 <Text style={styles.builtinBadgeText}>Built-in</Text>
               </View>
@@ -207,11 +207,11 @@ export function SearchableList({
 
         <Ionicons name="chevron-forward" size={18} color={theme.colors.muted} />
       </Pressable>
-    );
-  };
+    )
+  }
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <LoadingScreen />
   }
 
   if (error) {
@@ -222,7 +222,7 @@ export function SearchableList({
         icon="alert-circle-outline"
         style={style}
       />
-    );
+    )
   }
 
   return (
@@ -248,23 +248,23 @@ export function SearchableList({
           description={
             emptySubtitle ||
             (searchQuery
-              ? "Try a different search"
+              ? 'Try a different search'
               : `Create your first ${dataType.slice(0, -1)}`)
           }
-          icon={searchQuery ? "search-outline" : "add-circle-outline"}
+          icon={searchQuery ? 'search-outline' : 'add-circle-outline'}
           style={styles.emptyState}
         />
       ) : (
         <FlatList
           data={filteredData}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
         />
       )}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -285,8 +285,8 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xl
   },
   itemContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
@@ -306,8 +306,8 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: theme.spacing.md
   },
   itemContent: {
@@ -315,8 +315,8 @@ const styles = StyleSheet.create({
     gap: 4
   },
   itemHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm
   },
   itemName: {
@@ -338,6 +338,6 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.muted
   }
-});
+})
 
-export default SearchableList;
+export default SearchableList

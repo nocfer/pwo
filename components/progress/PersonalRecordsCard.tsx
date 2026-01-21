@@ -2,23 +2,23 @@
  * PersonalRecordsCard - Display recent PRs
  */
 
-import { useExercises, usePRs } from "@/hooks/data";
-import { theme } from "@/theme/theme";
-import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useMemo, useRef } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
-import PRItem from "./PRItem";
-import ProgressEmptyState from "./ProgressEmptyState";
+import { useExercises, usePRs } from '@/hooks/data'
+import { theme } from '@/theme/theme'
+import { Ionicons } from '@expo/vector-icons'
+import { useEffect, useMemo, useRef } from 'react'
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native'
+import PRItem from './PRItem'
+import ProgressEmptyState from './ProgressEmptyState'
 
 type Props = {
-  limit?: number;
-  onViewAll?: () => void;
-};
+  limit?: number
+  onViewAll?: () => void
+}
 
 export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
-  const { data: prsData, loading } = usePRs(limit);
-  const { data: exercises } = useExercises();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { data: prsData, loading } = usePRs(limit)
+  const { data: exercises } = useExercises()
+  const fadeAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     if (!loading) {
@@ -26,27 +26,27 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
         toValue: 1,
         duration: 250,
         useNativeDriver: true
-      }).start();
+      }).start()
     }
-  }, [loading, fadeAnim]);
+  }, [loading, fadeAnim])
 
   const exerciseMap = useMemo(() => {
-    const map = new Map<string, { name: string; icon?: string }>();
-    exercises?.forEach((ex) => {
-      map.set(ex.id, { name: ex.name, icon: ex.icon });
-    });
-    return map;
-  }, [exercises]);
+    const map = new Map<string, { name: string; icon?: string }>()
+    exercises?.forEach(ex => {
+      map.set(ex.id, { name: ex.name, icon: ex.icon })
+    })
+    return map
+  }, [exercises])
 
   if (loading) {
     return (
       <View style={styles.card}>
         <View style={styles.skeleton} />
       </View>
-    );
+    )
   }
 
-  const prs = prsData?.latestPRs ?? [];
+  const prs = prsData?.latestPRs ?? []
 
   if (prs.length === 0) {
     return (
@@ -64,7 +64,7 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
         </View>
         <ProgressEmptyState type="no-prs" />
       </View>
-    );
+    )
   }
 
   return (
@@ -99,7 +99,7 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
 
       <View style={styles.prList}>
         {prs.map((pr, index) => {
-          const exercise = exerciseMap.get(pr.exerciseId);
+          const exercise = exerciseMap.get(pr.exerciseId)
           return (
             <PRItem
               key={pr.id}
@@ -108,11 +108,11 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
               exerciseIcon={exercise?.icon}
               index={index}
             />
-          );
+          )
         })}
       </View>
     </Animated.View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -123,14 +123,14 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: theme.spacing.md
   },
   titleRow: {
-    flexDirection: "row",
-    alignItems: "center"
+    flexDirection: 'row',
+    alignItems: 'center'
   },
   titleIcon: {
     marginRight: theme.spacing.xs
@@ -140,8 +140,8 @@ const styles = StyleSheet.create({
     color: theme.colors.text
   },
   viewAllButton: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 2
   },
   viewAllButtonPressed: {
@@ -160,4 +160,4 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.skeleton,
     borderRadius: theme.radius.sm
   }
-});
+})

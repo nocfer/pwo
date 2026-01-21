@@ -5,9 +5,9 @@
  * Requirements: 1.5
  */
 
-import { theme } from "@/theme/theme";
-import type { SearchState } from "@/types/enhanced";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { theme } from '@/theme/theme'
+import type { SearchState } from '@/types/enhanced'
+import Ionicons from '@expo/vector-icons/Ionicons'
 import {
   Pressable,
   ScrollView,
@@ -15,40 +15,40 @@ import {
   Text,
   View,
   ViewStyle
-} from "react-native";
+} from 'react-native'
 
 type Props = {
-  sortBy: SearchState["sortBy"];
-  sortOrder: SearchState["sortOrder"];
+  sortBy: SearchState['sortBy']
+  sortOrder: SearchState['sortOrder']
   onSortChange: (
-    sortBy: SearchState["sortBy"],
-    sortOrder: SearchState["sortOrder"]
-  ) => void;
-  style?: ViewStyle;
-};
+    sortBy: SearchState['sortBy'],
+    sortOrder: SearchState['sortOrder']
+  ) => void
+  style?: ViewStyle
+}
 
 const SORT_OPTIONS = [
   {
-    key: "name" as const,
-    label: "Name",
-    icon: "text-outline" as keyof typeof Ionicons.glyphMap
+    key: 'name' as const,
+    label: 'Name',
+    icon: 'text-outline' as keyof typeof Ionicons.glyphMap
   },
   {
-    key: "created" as const,
-    label: "Created",
-    icon: "calendar-outline" as keyof typeof Ionicons.glyphMap
+    key: 'created' as const,
+    label: 'Created',
+    icon: 'calendar-outline' as keyof typeof Ionicons.glyphMap
   },
   {
-    key: "updated" as const,
-    label: "Updated",
-    icon: "time-outline" as keyof typeof Ionicons.glyphMap
+    key: 'updated' as const,
+    label: 'Updated',
+    icon: 'time-outline' as keyof typeof Ionicons.glyphMap
   },
   {
-    key: "usage" as const,
-    label: "Usage",
-    icon: "trending-up-outline" as keyof typeof Ionicons.glyphMap
+    key: 'usage' as const,
+    label: 'Usage',
+    icon: 'trending-up-outline' as keyof typeof Ionicons.glyphMap
   }
-];
+]
 
 export function SortControls({
   sortBy,
@@ -56,15 +56,15 @@ export function SortControls({
   onSortChange,
   style
 }: Props) {
-  const handleSortChange = (newSortBy: SearchState["sortBy"]) => {
+  const handleSortChange = (newSortBy: SearchState['sortBy']) => {
     if (newSortBy === sortBy) {
       // Toggle sort order if same field
-      onSortChange(sortBy, sortOrder === "asc" ? "desc" : "asc");
+      onSortChange(sortBy, sortOrder === 'asc' ? 'desc' : 'asc')
     } else {
       // Change sort field with default ascending order
-      onSortChange(newSortBy, "asc");
+      onSortChange(newSortBy, 'asc')
     }
-  };
+  }
 
   return (
     <View style={[styles.container, style]}>
@@ -75,8 +75,8 @@ export function SortControls({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.optionsContainer}
       >
-        {SORT_OPTIONS.map((option) => {
-          const isActive = sortBy === option.key;
+        {SORT_OPTIONS.map(option => {
+          const isActive = sortBy === option.key
           return (
             <Pressable
               key={option.key}
@@ -100,18 +100,18 @@ export function SortControls({
               </Text>
               {isActive && (
                 <Ionicons
-                  name={sortOrder === "asc" ? "arrow-up" : "arrow-down"}
+                  name={sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'}
                   size={14}
                   color={theme.colors.primary}
                   style={styles.sortIcon}
                 />
               )}
             </Pressable>
-          );
+          )
         })}
       </ScrollView>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -131,8 +131,8 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm
   },
   option: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.radius.md,
@@ -163,6 +163,6 @@ const styles = StyleSheet.create({
   sortIcon: {
     marginLeft: theme.spacing.xs
   }
-});
+})
 
-export default SortControls;
+export default SortControls

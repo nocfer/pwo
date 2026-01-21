@@ -1,11 +1,11 @@
-import Button from "@/components/common/Button";
-import { useAuth } from "@/context/AuthContext";
-import { useDataActions } from "@/context/DataContext";
-import { haptics } from "@/lib/haptics";
-import { storage } from "@/lib/storage";
-import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useCallback, useMemo, useState } from "react";
+import Button from '@/components/common/Button'
+import { useAuth } from '@/context/AuthContext'
+import { useDataActions } from '@/context/DataContext'
+import { haptics } from '@/lib/haptics'
+import { storage } from '@/lib/storage'
+import { theme } from '@/theme/theme'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { useCallback, useMemo, useState } from 'react'
 import {
   Alert,
   Platform,
@@ -14,16 +14,16 @@ import {
   StyleSheet,
   Text,
   View
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
-const isWeb = Platform.OS === "web";
+const isWeb = Platform.OS === 'web'
 
 function showAlert(title: string, message: string) {
   if (isWeb) {
-    window.alert(message);
+    window.alert(message)
   } else {
-    Alert.alert(title, message);
+    Alert.alert(title, message)
   }
 }
 
@@ -35,103 +35,103 @@ function showConfirm(
 ) {
   if (isWeb) {
     if (window.confirm(message)) {
-      onConfirm();
+      onConfirm()
     }
   } else {
     Alert.alert(title, message, [
-      { text: "Cancel", style: "cancel" },
-      { text: confirmText, style: "destructive", onPress: onConfirm }
-    ]);
+      { text: 'Cancel', style: 'cancel' },
+      { text: confirmText, style: 'destructive', onPress: onConfirm }
+    ])
   }
 }
 
 export default function ProfileScreen() {
-  const { user, isAnonymous, signOut } = useAuth();
-  const [loggingOut, setLoggingOut] = useState(false);
-  const [clearing, setClearing] = useState(false);
-  const { refreshAll, refreshProgress } = useDataActions();
+  const { user, isAnonymous, signOut } = useAuth()
+  const [loggingOut, setLoggingOut] = useState(false)
+  const [clearing, setClearing] = useState(false)
+  const { refreshAll, refreshProgress } = useDataActions()
 
   const emailLabel = useMemo(() => {
     if (!user) {
-      return "No account";
+      return 'No account'
     }
     if (isAnonymous || !user.email) {
-      return "Guest account";
+      return 'Guest account'
     }
-    return user.email;
-  }, [isAnonymous, user]);
+    return user.email
+  }, [isAnonymous, user])
 
   const handleSignOut = useCallback(async () => {
-    setLoggingOut(true);
+    setLoggingOut(true)
     try {
-      await signOut();
+      await signOut()
     } catch (error) {
-      console.error("Failed to sign out:", error);
-      showAlert("Error", "Failed to sign out. Please try again.");
+      console.error('Failed to sign out:', error)
+      showAlert('Error', 'Failed to sign out. Please try again.')
     } finally {
-      setLoggingOut(false);
+      setLoggingOut(false)
     }
-  }, [signOut]);
+  }, [signOut])
 
   const confirmSignOut = useCallback(() => {
     showConfirm(
-      "Log Out",
-      "Are you sure you want to log out?",
-      "Log Out",
+      'Log Out',
+      'Are you sure you want to log out?',
+      'Log Out',
       handleSignOut
-    );
-  }, [handleSignOut]);
+    )
+  }, [handleSignOut])
 
   const doClearProgressData = useCallback(async () => {
-    setClearing(true);
-    haptics.skipAction();
+    setClearing(true)
+    haptics.skipAction()
     try {
-      await storage.clearAllProgressData();
-      refreshProgress();
-      showAlert("Done", "All progress data has been cleared.");
+      await storage.clearAllProgressData()
+      refreshProgress()
+      showAlert('Done', 'All progress data has been cleared.')
     } catch (error) {
-      console.error("Failed to clear progress data:", error);
-      showAlert("Error", "Failed to clear data. Please try again.");
+      console.error('Failed to clear progress data:', error)
+      showAlert('Error', 'Failed to clear data. Please try again.')
     } finally {
-      setClearing(false);
+      setClearing(false)
     }
-  }, [refreshProgress]);
+  }, [refreshProgress])
 
   const doClearAllData = useCallback(async () => {
-    setClearing(true);
-    haptics.skipAction();
+    setClearing(true)
+    haptics.skipAction()
     try {
-      await storage.clearAllData();
-      refreshAll();
-      showAlert("Done", "All data has been cleared.");
+      await storage.clearAllData()
+      refreshAll()
+      showAlert('Done', 'All data has been cleared.')
     } catch (error) {
-      console.error("Failed to clear all data:", error);
-      showAlert("Error", "Failed to clear data. Please try again.");
+      console.error('Failed to clear all data:', error)
+      showAlert('Error', 'Failed to clear data. Please try again.')
     } finally {
-      setClearing(false);
+      setClearing(false)
     }
-  }, [refreshAll]);
+  }, [refreshAll])
 
   const handleClearProgressData = useCallback(() => {
     showConfirm(
-      "Clear Progress Data",
-      "This will delete all your workout history, streaks, and personal records. Your exercise and program library will be kept. This cannot be undone.",
-      "Clear Progress",
+      'Clear Progress Data',
+      'This will delete all your workout history, streaks, and personal records. Your exercise and program library will be kept. This cannot be undone.',
+      'Clear Progress',
       doClearProgressData
-    );
-  }, [doClearProgressData]);
+    )
+  }, [doClearProgressData])
 
   const handleClearAllData = useCallback(() => {
     showConfirm(
-      "Clear All Data",
-      "This will delete ALL your data including exercises, programs, workout history, and personal records. This is a full reset and cannot be undone.",
-      "Clear Everything",
+      'Clear All Data',
+      'This will delete ALL your data including exercises, programs, workout history, and personal records. This is a full reset and cannot be undone.',
+      'Clear Everything',
       doClearAllData
-    );
-  }, [doClearAllData]);
+    )
+  }, [doClearAllData])
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "right", "left"]}>
+    <SafeAreaView style={styles.container} edges={['top', 'right', 'left']}>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -177,8 +177,8 @@ export default function ProfileScreen() {
           <View style={styles.divider} />
           <Text style={styles.caption}>
             {isAnonymous
-              ? "Create an account to keep your data across devices."
-              : "Your account stays synced across devices."}
+              ? 'Create an account to keep your data across devices.'
+              : 'Your account stays synced across devices.'}
           </Text>
         </View>
 
@@ -260,7 +260,7 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Session</Text>
           <Button
-            label={loggingOut ? "Logging out..." : "Log Out"}
+            label={loggingOut ? 'Logging out...' : 'Log Out'}
             variant="secondary"
             size="lg"
             icon="log-out-outline"
@@ -271,7 +271,7 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
-  );
+  )
 }
 
 function FeatureRow({
@@ -280,10 +280,10 @@ function FeatureRow({
   title,
   description
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
-  iconColor: string;
-  title: string;
-  description: string;
+  icon: keyof typeof Ionicons.glyphMap
+  iconColor: string
+  title: string
+  description: string
 }) {
   return (
     <View style={styles.featureRow}>
@@ -295,7 +295,7 @@ function FeatureRow({
         <Text style={styles.featureDescription}>{description}</Text>
       </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.xl,
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: theme.spacing.lg,
     ...theme.shadows.sm
   },
@@ -320,8 +320,8 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: theme.radius.lg,
     backgroundColor: theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: theme.spacing.md
   },
   title: {
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   subtitle: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: theme.spacing.sm
   },
   card: {
@@ -343,16 +343,16 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   featureRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: theme.spacing.sm
   },
   featureIcon: {
     width: 36,
     height: 36,
     borderRadius: theme.radius.sm,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: theme.spacing.md
   },
   featureContent: {
@@ -373,9 +373,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md
   },
   infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: theme.spacing.sm
   },
   infoLabel: {
@@ -385,8 +385,8 @@ const styles = StyleSheet.create({
   infoValue: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
-    maxWidth: "65%",
-    textAlign: "right"
+    maxWidth: '65%',
+    textAlign: 'right'
   },
   divider: {
     height: 1,
@@ -398,8 +398,8 @@ const styles = StyleSheet.create({
     color: theme.colors.muted
   },
   dangerButton: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: theme.spacing.md,
     borderRadius: theme.radius.md,
     marginBottom: theme.spacing.sm,
@@ -415,8 +415,8 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: theme.radius.sm,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: theme.spacing.md
   },
   dangerButtonContent: {
@@ -430,4 +430,4 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.muted
   }
-});
+})

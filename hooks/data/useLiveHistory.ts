@@ -5,31 +5,31 @@
  * for automatic UI updates.
  */
 
-import { useRefreshVersions } from "@/context/DataContext";
-import { useAsyncData } from "@/hooks/useAsyncData";
-import { storage } from "@/lib/storage";
-import type { HistoryEntry } from "@/types";
-import { useCallback } from "react";
+import { useRefreshVersions } from '@/context/DataContext'
+import { useAsyncData } from '@/hooks/useAsyncData'
+import { storage } from '@/lib/storage'
+import type { HistoryEntry } from '@/types'
+import { useCallback } from 'react'
 
-export type { HistoryEntry };
+export type { HistoryEntry }
 
 export function useLiveHistory(slug: string | undefined) {
-  const { historyVersion } = useRefreshVersions();
+  const { historyVersion } = useRefreshVersions()
 
   const fetcher = useCallback(async (): Promise<HistoryEntry[]> => {
     // slug is guaranteed to exist when fetcher runs (skip: !slug)
-    const history = await storage.loadHistory(slug!);
+    const history = await storage.loadHistory(slug!)
     // Sort by date descending
     return history.sort((a, b) =>
       a.date < b.date ? 1 : a.date > b.date ? -1 : 0
-    );
-  }, [slug]);
+    )
+  }, [slug])
 
   const { data, loading, error } = useAsyncData(
     fetcher,
     [slug, historyVersion],
     { skip: !slug }
-  );
+  )
 
-  return { data, loading, error } as const;
+  return { data, loading, error } as const
 }

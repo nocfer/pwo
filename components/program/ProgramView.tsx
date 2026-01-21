@@ -1,64 +1,64 @@
-import { ProgramProgressMetrics, useExercises } from "@/hooks/data";
-import { getFirstReps, getTotalReps } from "@/lib/utils/format";
-import { theme } from "@/theme/theme";
-import { Program } from "@/types";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { AnimatedCard } from "../common";
+import { ProgramProgressMetrics, useExercises } from '@/hooks/data'
+import { getFirstReps, getTotalReps } from '@/lib/utils/format'
+import { theme } from '@/theme/theme'
+import { Program } from '@/types'
+import { Ionicons } from '@expo/vector-icons'
+import { router } from 'expo-router'
+import { useMemo } from 'react'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { AnimatedCard } from '../common'
 
-type Props = { program: Program; programMetrics: ProgramProgressMetrics };
+type Props = { program: Program; programMetrics: ProgramProgressMetrics }
 
 // Format seconds to human-readable time (e.g., "15 min", "1h 30m")
 function formatEstimatedTime(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
 
   if (hours > 0) {
-    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`
   }
-  return `${minutes} min`;
+  return `${minutes} min`
 }
 
 export default function ProgramView({ program, programMetrics }: Props) {
-  const { data: exercises } = useExercises();
-  const hasSessions = programMetrics.totalSessions > 0;
-  const nextSessionIndex = programMetrics.nextSessionIndex ?? 1;
-  const hasCompletedBefore = programMetrics.lifetimeSessionsCompleted > 0;
-  const ctaLabel = hasCompletedBefore ? "Start Again" : "Start Workout";
+  const { data: exercises } = useExercises()
+  const hasSessions = programMetrics.totalSessions > 0
+  const nextSessionIndex = programMetrics.nextSessionIndex ?? 1
+  const hasCompletedBefore = programMetrics.lifetimeSessionsCompleted > 0
+  const ctaLabel = hasCompletedBefore ? 'Start Again' : 'Start Workout'
 
   // Calculate workout stats
   const stats = useMemo(() => {
-    let totalSets = 0;
-    let totalReps = 0;
-    let warmupSeconds = 0;
-    let restSeconds = 0;
-    const exerciseIds = new Set<string>();
+    let totalSets = 0
+    let totalReps = 0
+    let warmupSeconds = 0
+    let restSeconds = 0
+    const exerciseIds = new Set<string>()
 
-    program.blocks.forEach((block) => {
-      if (block.type === "exercise") {
-        exerciseIds.add(block.exerciseId);
-        const sets = block.sets ?? 1;
-        totalSets += sets;
-        totalReps += getTotalReps(block.targetReps, sets);
+    program.blocks.forEach(block => {
+      if (block.type === 'exercise') {
+        exerciseIds.add(block.exerciseId)
+        const sets = block.sets ?? 1
+        totalSets += sets
+        totalReps += getTotalReps(block.targetReps, sets)
         // Add rest between sets
         if (sets > 1) {
-          restSeconds += (block.restBetweenSets ?? 60) * (sets - 1);
+          restSeconds += (block.restBetweenSets ?? 60) * (sets - 1)
         }
-      } else if (block.type === "warmup") {
-        warmupSeconds += block.seconds;
-      } else if (block.type === "rest") {
-        restSeconds += block.seconds;
+      } else if (block.type === 'warmup') {
+        warmupSeconds += block.seconds
+      } else if (block.type === 'rest') {
+        restSeconds += block.seconds
       }
-    });
+    })
 
     if (program.initialWarmup) {
-      warmupSeconds += program.initialWarmup.seconds;
+      warmupSeconds += program.initialWarmup.seconds
     }
 
     // Estimate total workout time (rough: 30s per set + rest + warmup)
-    const estimatedSeconds = totalSets * 30 + restSeconds + warmupSeconds;
+    const estimatedSeconds = totalSets * 30 + restSeconds + warmupSeconds
 
     return {
       totalExercises: exerciseIds.size,
@@ -66,45 +66,45 @@ export default function ProgramView({ program, programMetrics }: Props) {
       totalReps,
       warmupSeconds,
       estimatedSeconds
-    };
-  }, [program.blocks, program.initialWarmup]);
+    }
+  }, [program.blocks, program.initialWarmup])
 
   // Get unique exercises with details
   const exerciseDetails = useMemo(() => {
     const exerciseMap = new Map(
-      (exercises ?? []).map((e) => [e.id, e.name] as const)
-    );
+      (exercises ?? []).map(e => [e.id, e.name] as const)
+    )
 
     const details: {
-      id: string;
-      name: string;
-      sets: number;
-      reps: number;
-    }[] = [];
-    const seen = new Set<string>();
+      id: string
+      name: string
+      sets: number
+      reps: number
+    }[] = []
+    const seen = new Set<string>()
 
-    program.blocks.forEach((block) => {
-      if (block.type === "exercise" && !seen.has(block.exerciseId)) {
-        seen.add(block.exerciseId);
-        const name = exerciseMap.get(block.exerciseId) ?? block.exerciseId;
-        const sets = block.sets ?? 1;
-        const reps = getFirstReps(block.targetReps);
-        details.push({ id: block.exerciseId, name, sets, reps });
+    program.blocks.forEach(block => {
+      if (block.type === 'exercise' && !seen.has(block.exerciseId)) {
+        seen.add(block.exerciseId)
+        const name = exerciseMap.get(block.exerciseId) ?? block.exerciseId
+        const sets = block.sets ?? 1
+        const reps = getFirstReps(block.targetReps)
+        details.push({ id: block.exerciseId, name, sets, reps })
       }
-    });
+    })
 
-    return details;
-  }, [program.blocks, exercises]);
+    return details
+  }, [program.blocks, exercises])
 
   const handleStartWorkout = () => {
     router.navigate({
-      pathname: "/programs/[id]/session/[index]",
+      pathname: '/programs/[id]/session/[index]',
       params: {
         id: program.id,
         index: String(nextSessionIndex)
       }
-    });
-  };
+    })
+  }
 
   return (
     <>
@@ -164,7 +164,7 @@ export default function ProgramView({ program, programMetrics }: Props) {
             />
             <Text style={styles.statPillText}>
               {stats.totalExercises} exercise
-              {stats.totalExercises !== 1 ? "s" : ""}
+              {stats.totalExercises !== 1 ? 's' : ''}
             </Text>
           </View>
           <View style={styles.statPill}>
@@ -215,7 +215,7 @@ export default function ProgramView({ program, programMetrics }: Props) {
                         ? `${exercise.sets} sets × ${exercise.reps} reps`
                         : exercise.reps > 0
                           ? `${exercise.reps} reps`
-                          : "Self-guided"}
+                          : 'Self-guided'}
                     </Text>
                   </View>
                 </View>
@@ -238,8 +238,8 @@ export default function ProgramView({ program, programMetrics }: Props) {
                 <Text style={styles.lifetimeStatLabel}>
                   workout
                   {programMetrics.lifetimeSessionsCompleted !== 1
-                    ? "s"
-                    : ""}{" "}
+                    ? 's'
+                    : ''}{' '}
                   completed
                 </Text>
               </View>
@@ -258,7 +258,7 @@ export default function ProgramView({ program, programMetrics }: Props) {
         </AnimatedCard>
       )}
     </>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -269,9 +269,9 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   heroCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
@@ -285,17 +285,17 @@ const styles = StyleSheet.create({
     opacity: 0.5
   },
   heroContent: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md
   },
   heroIconContainer: {
     width: 48,
     height: 48,
     borderRadius: theme.radius.full,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    alignItems: "center",
-    justifyContent: "center"
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   heroTextContainer: {
     gap: theme.spacing.xs
@@ -315,13 +315,13 @@ const styles = StyleSheet.create({
     lineHeight: 22
   },
   statsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: theme.spacing.sm
   },
   statPill: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.xs,
     backgroundColor: theme.colors.primaryLight,
     paddingVertical: theme.spacing.sm,
@@ -341,8 +341,8 @@ const styles = StyleSheet.create({
     gap: 0
   },
   exerciseItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md,
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
@@ -357,8 +357,8 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.background,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   exerciseIndexText: {
     ...theme.typography.captionBold,
@@ -377,12 +377,12 @@ const styles = StyleSheet.create({
     color: theme.colors.muted
   },
   lifetimeStats: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.lg
   },
   lifetimeStat: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: theme.spacing.md,
     backgroundColor: theme.colors.background,
     borderRadius: theme.radius.md
@@ -395,6 +395,6 @@ const styles = StyleSheet.create({
   lifetimeStatLabel: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    textAlign: "center"
+    textAlign: 'center'
   }
-});
+})

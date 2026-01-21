@@ -1,27 +1,25 @@
-import { theme } from "@/theme/theme";
-import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { theme } from '@/theme/theme'
+import { Ionicons } from '@expo/vector-icons'
+import { StyleSheet, Text, View } from 'react-native'
 
 type Props = {
-  title: string;
-  completionPercentage: number;
-  sessionsCompleted: number;
-  totalSessions: number;
-  variant?: "challenge" | "program";
-};
+  title: string
+  completionPercentage: number
+  sessionsCompleted: number
+  totalSessions: number
+  variant?: 'challenge' | 'program'
+}
 
 export default function ProgressCard({
   title,
   completionPercentage,
   sessionsCompleted,
   totalSessions,
-  variant = "program"
+  variant = 'program'
 }: Props) {
-  const percentage = Math.round(completionPercentage);
-  const isChallenge = variant === "challenge";
-  const primaryColor = isChallenge
-    ? theme.colors.success
-    : theme.colors.primary;
+  const percentage = Math.round(completionPercentage)
+  const isChallenge = variant === 'challenge'
+  const primaryColor = isChallenge ? theme.colors.success : theme.colors.primary
 
   return (
     <View style={styles.container}>
@@ -38,7 +36,7 @@ export default function ProgressCard({
           ]}
         >
           <Ionicons
-            name={isChallenge ? "trophy" : "barbell"}
+            name={isChallenge ? 'trophy' : 'barbell'}
             size={20}
             color={primaryColor}
           />
@@ -70,8 +68,8 @@ export default function ProgressCard({
           {sessionsCompleted === 0
             ? "Let's get started"
             : percentage >= 100
-              ? "Run complete"
-              : "Keep going"}
+              ? 'Run complete'
+              : 'Keep going'}
         </Text>
         <View
           style={[styles.percentageBadge, { backgroundColor: primaryColor }]}
@@ -80,7 +78,7 @@ export default function ProgressCard({
         </View>
       </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -93,8 +91,8 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md,
     marginBottom: theme.spacing.md
   },
@@ -102,8 +100,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: theme.radius.full,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     flexShrink: 0
   },
   title: {
@@ -119,17 +117,17 @@ const styles = StyleSheet.create({
     height: 8,
     backgroundColor: theme.colors.border,
     borderRadius: theme.radius.sm,
-    overflow: "hidden",
+    overflow: 'hidden',
     marginBottom: theme.spacing.md
   },
   progressBar: {
-    height: "100%",
+    height: '100%',
     borderRadius: theme.radius.sm
   },
   footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between"
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
   },
   statusText: {
     ...theme.typography.caption,
@@ -139,12 +137,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: theme.radius.full,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   percentage: {
     ...theme.typography.h3,
     color: theme.colors.primaryTextOn,
     fontFamily: theme.fonts.bold
   }
-});
+})

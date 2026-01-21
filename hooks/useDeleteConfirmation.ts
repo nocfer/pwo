@@ -2,12 +2,12 @@
  * useDeleteConfirmation - Hook for handling delete confirmations with error handling
  */
 
-import { showDeleteConfirmation, showErrorAlert } from "@/lib/utils/alerts";
-import { useCallback } from "react";
+import { showDeleteConfirmation, showErrorAlert } from '@/lib/utils/alerts'
+import { useCallback } from 'react'
 
-type ItemType = "program" | "exercise";
+type ItemType = 'program' | 'exercise'
 
-type DeleteFunction = (id: string) => Promise<void>;
+type DeleteFunction = (id: string) => Promise<void>
 
 /**
  * Hook that returns a function to show delete confirmation and handle deletion
@@ -20,14 +20,14 @@ export function useDeleteConfirmation(
     (id: string, itemName: string) => {
       showDeleteConfirmation(itemType, itemName, async () => {
         try {
-          await deleteFn(id);
+          await deleteFn(id)
         } catch (error) {
-          showErrorAlert("Couldn't delete", error);
+          showErrorAlert("Couldn't delete", error)
         }
-      });
+      })
     },
     [itemType, deleteFn]
-  );
+  )
 
-  return handleDelete;
+  return handleDelete
 }

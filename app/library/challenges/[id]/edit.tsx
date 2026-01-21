@@ -1,46 +1,46 @@
-import { ErrorScreen } from "@/components/common";
+import { ErrorScreen } from '@/components/common'
 import {
   ChallengeForm,
   type ChallengeFormData
-} from "@/components/data/forms/ChallengeForm";
-import { useDataActions } from "@/context/DataContext";
-import { useExercises, usePrograms } from "@/hooks/data";
-import { theme } from "@/theme/theme";
-import { router, useLocalSearchParams } from "expo-router";
-import { useMemo, useState } from "react";
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+} from '@/components/data/forms/ChallengeForm'
+import { useDataActions } from '@/context/DataContext'
+import { useExercises, usePrograms } from '@/hooks/data'
+import { theme } from '@/theme/theme'
+import { router, useLocalSearchParams } from 'expo-router'
+import { useMemo, useState } from 'react'
+import { StyleSheet } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function EditChallengeScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const actions = useDataActions();
-  const { data: programs } = usePrograms();
-  const { data: exercises } = useExercises();
-  const [saving, setSaving] = useState(false);
+  const { id } = useLocalSearchParams<{ id: string }>()
+  const actions = useDataActions()
+  const { data: programs } = usePrograms()
+  const { data: exercises } = useExercises()
+  const [saving, setSaving] = useState(false)
 
   const challenge = useMemo(
-    () => programs?.find((p) => p.id === id && p.challengeConfig) ?? null,
+    () => programs?.find(p => p.id === id && p.challengeConfig) ?? null,
     [programs, id]
-  );
+  )
 
   async function handleSave(formData: ChallengeFormData) {
-    if (!challenge) return;
+    if (!challenge) return
 
-    setSaving(true);
+    setSaving(true)
     try {
       await actions.upsertProgram({
         ...challenge,
         name: formData.name,
         challengeConfig: formData.challengeConfig
-      });
-      router.back();
+      })
+      router.back()
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
   }
 
   if (!challenge?.challengeConfig) {
-    return <ErrorScreen message="Challenge not found." />;
+    return <ErrorScreen message="Challenge not found." />
   }
 
   const initialData: ChallengeFormData = {
@@ -55,7 +55,7 @@ export default function EditChallengeScreen() {
       warmUpSeconds: challenge.challengeConfig.warmUpSeconds,
       breakSeconds: challenge.challengeConfig.breakSeconds
     }
-  };
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -68,7 +68,7 @@ export default function EditChallengeScreen() {
         exercises={exercises ?? []}
       />
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -76,4 +76,4 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background
   }
-});
+})

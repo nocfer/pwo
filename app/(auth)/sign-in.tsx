@@ -4,46 +4,46 @@
  * Allows users to sign in with email/password or continue as guest
  */
 
-import { AuthErrorBanner } from "@/components/auth/AuthErrorBanner";
-import { AuthHeader } from "@/components/auth/AuthHeader";
-import { AuthLayout } from "@/components/auth/AuthLayout";
-import Button from "@/components/common/Button";
-import { useAuth } from "@/context/AuthContext";
-import { haptics } from "@/lib/haptics";
-import { theme } from "@/theme/theme";
-import { router } from "expo-router";
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner'
+import { AuthHeader } from '@/components/auth/AuthHeader'
+import { AuthLayout } from '@/components/auth/AuthLayout'
+import Button from '@/components/common/Button'
+import { useAuth } from '@/context/AuthContext'
+import { haptics } from '@/lib/haptics'
+import { theme } from '@/theme/theme'
+import { router } from 'expo-router'
+import { useState } from 'react'
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 
 export default function SignInScreen() {
-  const { signIn, signInAsGuest, loading, error } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { signIn, signInAsGuest, loading, error } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   const handleSignIn = async () => {
     try {
-      await signIn(email, password);
+      await signIn(email, password)
       // Navigation will happen automatically via auth state change
     } catch (err) {
-      console.error(err);
+      console.error(err)
     }
-  };
+  }
 
   const handleGuestAccess = async () => {
     try {
-      await signInAsGuest();
+      await signInAsGuest()
       // Navigation will happen automatically via auth state change
     } catch (err) {
-      console.error(err);
+      console.error(err)
     }
-  };
+  }
 
   const navigateToSignUp = () => {
-    haptics.buttonTap();
-    router.push("/(auth)/sign-up");
-  };
+    haptics.buttonTap()
+    router.push('/(auth)/sign-up')
+  }
 
-  const isLoading = loading;
+  const isLoading = loading
 
   return (
     <AuthLayout>
@@ -89,7 +89,7 @@ export default function SignInScreen() {
         </View>
 
         <Button
-          label={isLoading ? "Signing in..." : "Sign In"}
+          label={isLoading ? 'Signing in...' : 'Sign In'}
           variant="primary"
           size="lg"
           onPress={handleSignIn}
@@ -129,7 +129,7 @@ export default function SignInScreen() {
         </View>
       </View>
     </AuthLayout>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -152,8 +152,8 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.sm
   },
   divider: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md,
     marginVertical: theme.spacing.sm
   },
@@ -170,9 +170,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm
   },
   footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: theme.spacing.lg
   },
   footerText: {
@@ -190,4 +190,4 @@ const styles = StyleSheet.create({
     ...theme.typography.bodyBold,
     color: theme.colors.primary
   }
-});
+})
