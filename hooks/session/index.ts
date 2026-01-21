@@ -2,5 +2,13 @@
  * Session hooks barrel export
  */
 
-export { useWorkoutSteps, type WorkoutStep } from "./useWorkoutSteps";
+export {
+  useStepCompletion,
+  type UseStepCompletionReturn
+} from "./useStepCompletion";
+export {
+  getTargetRepsForSet,
+  useWorkoutSteps,
+  type WorkoutStep
+} from "./useWorkoutSteps";
 export { useWorkoutTimer, type UseWorkoutTimerReturn } from "./useWorkoutTimer";

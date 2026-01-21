@@ -46,6 +46,16 @@ export type UseWorkoutTimerReturn = {
   handleSkip: () => void;
   handleComplete: () => void;
   setShowConfetti: (show: boolean) => void;
+
+  // Navigation Actions (Free Navigation)
+  /** Jump to any step in the workout */
+  goToStep: (index: number) => void;
+  /** Go back to the previous step */
+  goBack: () => void;
+  /** Repeat the current step (records as repeat) */
+  repeatStep: () => void;
+  /** Check if can go back */
+  canGoBack: boolean;
 };
 
 // ============================================================================
@@ -102,14 +112,130 @@ function recordStepSkipped(step: WorkoutStep, ctx: EventContext) {
 // Main Hook
 // ============================================================================
 
+type StepStatusGetter = (
+  stepIndex: number
+) => "pending" | "completed" | "skipped";
+
+/**
+ * Finds the next uncompleted step in session order after completing a step.
+ *
+ * Algorithm:
+ * 1. If the completed step is part of an exercise with remaining uncompleted sets,
+ *    go to the first uncompleted set of that exercise.
+ * 2. Otherwise, search forward from (currentIndex + 1) for the next uncompleted step.
+ * 3. If none found after current, wrap around to the beginning.
+ * 4. Returns -1 if no uncompleted steps exist (all completed or skipped).
+ * 5. Returns -2 if only skipped steps remain (for session safeguard).
+ */
+function findNextUncompletedStep(
+  steps: WorkoutStep[],
+  currentIndex: number,
+  getStepStatus: StepStatusGetter
+): number {
+  const totalSteps = steps.length;
+  if (totalSteps === 0) return -1;
+
+  const currentStep = steps[currentIndex];
+
+  // Build exercise step count map for multi-set exercise tracking
+  const exerciseStepCount: Record<
+    string,
+    { total: number; completed: number; skipped: number }
+  > = {};
+
+  // Build exercise completion map
+  steps.forEach((step, idx) => {
+    if (step.type !== "exercise") return;
+    const key = `${step.exerciseId}-${step.blockIndex ?? 0}`;
+    if (!exerciseStepCount[key]) {
+      exerciseStepCount[key] = { total: 0, completed: 0, skipped: 0 };
+    }
+    exerciseStepCount[key].total++;
+    const status = getStepStatus(idx);
+    if (status === "completed") {
+      exerciseStepCount[key].completed++;
+    } else if (status === "skipped") {
+      exerciseStepCount[key].skipped++;
+    }
+  });
+
+  // If current step is an exercise, check if same exercise has more uncompleted sets
+  if (currentStep?.type === "exercise") {
+    const currentKey = `${currentStep.exerciseId}-${currentStep.blockIndex ?? 0}`;
+    const counts = exerciseStepCount[currentKey];
+
+    // If not all sets of this exercise are done, find the next uncompleted set
+    if (counts && counts.completed + counts.skipped < counts.total) {
+      for (let i = currentIndex + 1; i < totalSteps; i++) {
+        const step = steps[i];
+        if (step.type !== "exercise") continue;
+        const key = `${step.exerciseId}-${step.blockIndex ?? 0}`;
+        if (key === currentKey && getStepStatus(i) === "pending") {
+          return i;
+        }
+      }
+    }
+  }
+
+  // Search forward from current position for next uncompleted exercise step
+  const searchForUncompleted = (startIdx: number, endIdx: number): number => {
+    for (let i = startIdx; i < endIdx; i++) {
+      const step = steps[i];
+      // Skip non-exercise steps (rest/warmup are handled automatically)
+      if (step.type !== "exercise") continue;
+      if (getStepStatus(i) === "pending") {
+        return i;
+      }
+    }
+    return -1;
+  };
+
+  // First, search from current+1 to end
+  let nextIdx = searchForUncompleted(currentIndex + 1, totalSteps);
+  if (nextIdx !== -1) return nextIdx;
+
+  // Then, wrap around and search from beginning to current
+  nextIdx = searchForUncompleted(0, currentIndex);
+  if (nextIdx !== -1) return nextIdx;
+
+  // No uncompleted exercise steps found - check if only skipped remain
+  let hasSkipped = false;
+  let hasUncompleted = false;
+  for (let i = 0; i < totalSteps; i++) {
+    const step = steps[i];
+    if (step.type !== "exercise") continue;
+    const status = getStepStatus(i);
+    if (status === "skipped") hasSkipped = true;
+    if (status === "pending") hasUncompleted = true;
+  }
+
+  if (hasSkipped && !hasUncompleted) {
+    return -2; // Only skipped exercises remain - trigger safeguard
+  }
+
+  return -1; // All completed
+}
+
 export function useWorkoutTimer(opts: {
   slug: string;
   program: Program | null | undefined;
   sessionIndex: number;
   steps: WorkoutStep[];
   actions: TimerActions;
+  /** Function to get step completion status */
+  getStepStatus?: StepStatusGetter;
+  /** Callback when session completion needs safeguard (skipped exercises exist) */
+  onSessionSafeguard?: () => void;
 }): UseWorkoutTimerReturn {
-  const { slug, program, sessionIndex, steps, actions } = opts;
+  const {
+    slug,
+    program,
+    sessionIndex,
+    steps,
+    actions,
+    getStepStatus,
+    onSessionSafeguard
+  } = opts;
   const { recordEvent, completeSession, saveSessionState, loadSessionState } =
     actions;
 
@@ -212,15 +338,41 @@ export function useWorkoutTimer(opts: {
   ]);
 
   const advanceToNextStep = useCallback(() => {
-    setCurrentIndex((i) => {
-      const next = i + 1;
-      if (next >= steps.length) {
-        void completeWorkout();
-        return i;
+    // Default status getter for backward compatibility
+    const statusGetter: StepStatusGetter =
+      getStepStatus ??
+      ((idx) => {
+        // Legacy behavior: steps before current are "completed"
+        return idx < currentIndex ? "completed" : "pending";
+      });
+
+    const nextIdx = findNextUncompletedStep(steps, currentIndex, statusGetter);
+
+    if (nextIdx === -2) {
+      // Only skipped exercises remain - trigger safeguard
+      onSessionSafeguard?.();
+      return; // Stay at current position until user decides
+    }
+
+    if (nextIdx === -1) {
+      // All exercises completed
+      void completeWorkout();
+      return;
+    }
+
+    // Handle rest/warmup steps between current and next exercise
+    // If the next step after current is a rest or warmup, go there first
+    const immediateNext = currentIndex + 1;
+    if (immediateNext < steps.length && immediateNext < nextIdx) {
+      const nextStep = steps[immediateNext];
+      if (nextStep?.type === "rest" || nextStep?.type === "warmup") {
+        setCurrentIndex(immediateNext); // Let the rest/warmup play first
+        return;
       }
-      return next;
-    });
-  }, [steps.length, completeWorkout]);
+    }
+
+    setCurrentIndex(nextIdx);
+  }, [steps, currentIndex, getStepStatus, onSessionSafeguard, completeWorkout]);
 
   // ---------------------------------------------------------------------------
   // State Persistence
@@ -466,6 +618,101 @@ export function useWorkoutTimer(opts: {
   ]);
 
   // ---------------------------------------------------------------------------
+  // Navigation Actions (Free Navigation)
+  // ---------------------------------------------------------------------------
+
+  /** Navigate to a specific step by index */
+  const goToStep = useCallback(
+    (targetIndex: number) => {
+      // Validate target index
+      if (targetIndex < 0 || targetIndex >= steps.length) return;
+      if (phase === "done") return;
+
+      // Clear any running timer
+      if (phase === "timed") {
+        clearStepTimer();
+        setStepTimer(0);
+        setIsPaused(false);
+        timedStepRef.current = null;
+      }
+
+      // Record jump event
+      void recordEvent({
+        slug,
+        sessionIndex,
+        type: "step_jumped_to",
+        data: {
+          fromIndex: currentIndex,
+          toIndex: targetIndex,
+          fromStepKey: currentStep?.key,
+          toStepKey: steps[targetIndex]?.key
+        }
+      });
+
+      void haptics.buttonTap();
+      setCurrentIndex(targetIndex);
+      setPhase("working");
+    },
+    [
+      steps,
+      phase,
+      currentIndex,
+      currentStep,
+      clearStepTimer,
+      recordEvent,
+      slug,
+      sessionIndex
+    ]
+  );
+
+  /** Go back to the previous step */
+  const goBack = useCallback(() => {
+    if (currentIndex <= 0 || phase === "done") return;
+    goToStep(currentIndex - 1);
+  }, [currentIndex, phase, goToStep]);
+
+  /** Repeat the current step */
+  const repeatStep = useCallback(() => {
+    if (!currentStep || phase === "done") return;
+
+    // Clear any running timer
+    if (phase === "timed") {
+      clearStepTimer();
+      setStepTimer(0);
+      setIsPaused(false);
+      timedStepRef.current = null;
+    }
+
+    // Record repeat event
+    void recordEvent({
+      slug,
+      sessionIndex,
+      type: "step_repeated",
+      data: {
+        stepIndex: currentIndex,
+        stepKey: currentStep.key,
+        stepType: currentStep.type
+      }
+    });
+
+    void haptics.buttonTap();
+
+    // Reset to working phase to re-show the step
+    setPhase("working");
+  }, [
+    currentStep,
+    currentIndex,
+    phase,
+    clearStepTimer,
+    recordEvent,
+    slug,
+    sessionIndex
+  ]);
+
+  /** Check if can go back */
+  const canGoBack = currentIndex > 0 && phase !== "done";
+
+  // ---------------------------------------------------------------------------
   // Return
   // ---------------------------------------------------------------------------
   return {
@@ -481,6 +728,11 @@ export function useWorkoutTimer(opts: {
     handlePauseResume,
     handleSkip,
     handleComplete,
-    setShowConfetti
+    setShowConfetti,
+    // Navigation
+    goToStep,
+    goBack,
+    repeatStep,
+    canGoBack
   };
 }

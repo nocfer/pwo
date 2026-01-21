@@ -9,6 +9,35 @@ const DEFAULT_SETS = 1;
 const DEFAULT_REST_BETWEEN_SETS = 60; // seconds
 const DEFAULT_REST_BETWEEN_EXERCISES = 60; // seconds
 
+/**
+ * Gets the target reps for a specific set from a targetReps value.
+ * Handles both single number (same for all sets) and array (per-set targets).
+ *
+ * @param targetReps - Single number or array of per-set targets
+ * @param setIndex - 0-based set index
+ * @param totalSets - Total number of sets (for array bounds)
+ * @returns Target reps for the specific set, or undefined if not set
+ */
+export function getTargetRepsForSet(
+  targetReps: number | number[] | undefined,
+  setIndex: number,
+  totalSets: number
+): number | undefined {
+  if (targetReps === undefined) return undefined;
+
+  if (typeof targetReps === "number") {
+    return targetReps;
+  }
+
+  // Array of per-set targets
+  if (setIndex < targetReps.length) {
+    return targetReps[setIndex];
+  }
+
+  // If array is shorter than totalSets, use the last value for remaining sets
+  return targetReps[targetReps.length - 1];
+}
+
 export type WorkoutStep =
   | { key: string; type: "warmup"; seconds: number }
   | {
@@ -22,6 +51,8 @@ export type WorkoutStep =
       setNumber?: number;
       /** Total number of sets for this exercise */
       totalSets?: number;
+      /** Index of the block in the session (for per-set updates) */
+      blockIndex?: number;
     }
   | {
       key: string;
@@ -58,17 +89,25 @@ function expandExerciseBlock(
     exerciseBlock.restBetweenSets ?? DEFAULT_REST_BETWEEN_SETS;
 
   for (let setNum = 1; setNum <= sets; setNum++) {
+    // Get target reps for this specific set (handles both single number and per-set arrays)
+    const setTargetReps = getTargetRepsForSet(
+      exerciseBlock.targetReps,
+      setNum - 1, // Convert to 0-based index
+      sets
+    );
+
     // Add exercise step for this set
     // Always include setNumber and totalSets for consistent display
     steps.push({
       key: `ex-${exerciseBlock.exerciseId}-${blockIndex}-set${setNum}-${currentStepCount + steps.length}`,
       type: "exercise",
       exerciseId: exerciseBlock.exerciseId,
-      targetReps: exerciseBlock.targetReps,
+      targetReps: setTargetReps,
       durationSeconds: exerciseBlock.durationSeconds,
       note: exerciseBlock.note,
       setNumber: setNum,
-      totalSets: sets
+      totalSets: sets,
+      blockIndex
     });
 
     // Add rest between sets (not after the last set)
