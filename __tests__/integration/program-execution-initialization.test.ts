@@ -8,6 +8,7 @@
  */
 
 import { generateChallengeSessions } from "@/hooks/data/useChallengeSessions";
+import { getTotalReps } from "@/lib/utils/format";
 import { findNextSessionIndex } from "@/lib/utils/progress";
 import { ProgramSession } from "@/types";
 import { router } from "expo-router";
@@ -263,7 +264,7 @@ describe("Program Execution Initialization", () => {
           (b) => b.type === "exercise"
         );
         const totalReps = exerciseBlocks.reduce(
-          (sum, b) => sum + (b.targetReps || 0),
+          (sum, b) => sum + getTotalReps(b.targetReps, b.sets),
           0
         );
 
@@ -275,7 +276,7 @@ describe("Program Execution Initialization", () => {
       const lastSession = sessions[sessions.length - 1];
       const lastSessionReps = lastSession.blocks
         .filter((b) => b.type === "exercise")
-        .reduce((sum, b) => sum + (b.targetReps || 0), 0);
+        .reduce((sum, b) => sum + getTotalReps(b.targetReps, b.sets), 0);
 
       expect(lastSessionReps).toBe(challengeConfig.targetReps);
     });

@@ -4,7 +4,7 @@
  */
 
 import { calculateChallengeSessionCount, useExercises } from "@/hooks/data";
-import { formatCount, formatReps } from "@/lib/utils/format";
+import { formatCount, formatReps, getFirstReps } from "@/lib/utils/format";
 import { ShareableProgramData } from "@/lib/utils/programShare";
 import { theme } from "@/theme/theme";
 import { ChallengeConfig, ProgramBlock } from "@/types";
@@ -550,7 +550,9 @@ function BlockPreview({
     >
       <View style={styles.exerciseDetails}>
         {block.targetReps != null && (
-          <Text style={styles.blockMeta}>{formatReps(block.targetReps)}</Text>
+          <Text style={styles.blockMeta}>
+            {formatReps(getFirstReps(block.targetReps))}
+          </Text>
         )}
         {block.durationSeconds != null && (
           <Text style={styles.blockMeta}>{block.durationSeconds} seconds</Text>

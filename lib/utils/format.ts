@@ -67,3 +67,44 @@ export function formatCount(
   const word = count === 1 ? singular : (plural ?? `${singular}s`);
   return `${count} ${word}`;
 }
+
+/**
+ * Get total reps from a targetReps value that may be a single number or per-set array.
+ * For arrays, returns the sum of all set reps.
+ *
+ * @param targetReps - Single number or array of per-set targets
+ * @param sets - Number of sets (used when targetReps is a single number)
+ * @returns Total reps across all sets
+ */
+export function getTotalReps(
+  targetReps: number | number[] | undefined,
+  sets: number = 1
+): number {
+  if (targetReps === undefined) return 0;
+
+  if (typeof targetReps === "number") {
+    return targetReps * sets;
+  }
+
+  // Array of per-set targets - sum them
+  return targetReps.reduce((sum, reps) => sum + reps, 0);
+}
+
+/**
+ * Get the first/representative rep count from a targetReps value.
+ * For arrays, returns the first element.
+ *
+ * @param targetReps - Single number or array of per-set targets
+ * @returns First rep count, or 0 if undefined
+ */
+export function getFirstReps(
+  targetReps: number | number[] | undefined
+): number {
+  if (targetReps === undefined) return 0;
+
+  if (typeof targetReps === "number") {
+    return targetReps;
+  }
+
+  return targetReps[0] ?? 0;
+}

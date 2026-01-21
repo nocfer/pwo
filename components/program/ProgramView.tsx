@@ -1,4 +1,5 @@
 import { ProgramProgressMetrics, useExercises } from "@/hooks/data";
+import { getFirstReps, getTotalReps } from "@/lib/utils/format";
 import { theme } from "@/theme/theme";
 import { Program } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -40,7 +41,7 @@ export default function ProgramView({ program, programMetrics }: Props) {
         exerciseIds.add(block.exerciseId);
         const sets = block.sets ?? 1;
         totalSets += sets;
-        totalReps += (block.targetReps ?? 0) * sets;
+        totalReps += getTotalReps(block.targetReps, sets);
         // Add rest between sets
         if (sets > 1) {
           restSeconds += (block.restBetweenSets ?? 60) * (sets - 1);
@@ -87,7 +88,7 @@ export default function ProgramView({ program, programMetrics }: Props) {
         seen.add(block.exerciseId);
         const name = exerciseMap.get(block.exerciseId) ?? block.exerciseId;
         const sets = block.sets ?? 1;
-        const reps = block.targetReps ?? 0;
+        const reps = getFirstReps(block.targetReps);
         details.push({ id: block.exerciseId, name, sets, reps });
       }
     });
