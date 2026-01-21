@@ -1,5 +1,9 @@
 import { useExercises } from "@/hooks";
-import { UseWorkoutTimerReturn, WorkoutStep } from "@/hooks/session";
+import {
+  UseStepCompletionReturn,
+  UseWorkoutTimerReturn,
+  WorkoutStep
+} from "@/hooks/session";
 import { Program, ProgramSession } from "@/types";
 import { useMemo } from "react";
 import { WorkoutExecutionScreen } from "./WorkoutExecutionScreen";
@@ -9,6 +13,7 @@ type Props = {
   timer: UseWorkoutTimerReturn;
   steps: WorkoutStep[];
   program: Program;
+  stepCompletion: UseStepCompletionReturn;
   onProgramUpdate?: (program: Program) => Promise<void>;
 };
 
@@ -17,6 +22,7 @@ export default function ProgramSessionView({
   timer,
   steps,
   program,
+  stepCompletion,
   onProgramUpdate
 }: Props) {
   const { data: exercises } = useExercises();
@@ -34,6 +40,7 @@ export default function ProgramSessionView({
       steps={steps}
       program={program}
       exerciseNameById={exerciseNameById}
+      stepCompletion={stepCompletion}
       onProgramUpdate={onProgramUpdate}
     />
   );

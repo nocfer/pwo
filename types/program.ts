@@ -20,9 +20,12 @@ export type ProgramExerciseBlock = {
   exerciseId: string;
   /**
    * Optional rep target for the exercise.
+   * Can be a single number (same reps for all sets) or an array (per-set targets).
    * If omitted, the step is self-guided (user does their reps).
+   * @example targetReps: 12 // 12 reps for all sets
+   * @example targetReps: [12, 10, 8] // 12 reps for set 1, 10 for set 2, 8 for set 3
    */
-  targetReps?: number;
+  targetReps?: number | number[];
   /**
    * Optional timed work (seconds). If set, the runner will start a timer.
    */

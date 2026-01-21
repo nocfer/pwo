@@ -30,7 +30,9 @@ export type EventRecord = {
     | "break_resumed"
     | "break_skipped"
     | "break_completed"
-    | "session_completed";
+    | "session_completed"
+    | "step_jumped_to"
+    | "step_repeated";
   data?: Record<string, unknown>;
 };
 
@@ -49,4 +51,47 @@ export type StreakEntry = {
   slug: string;
   streak: number[];
   updatedAt: string;
+};
+
+/**
+ * Status of a single step in the workout
+ */
+export type StepStatus = "pending" | "completed" | "skipped";
+
+/**
+ * Record of a single step completion attempt
+ */
+export type StepCompletionAttempt = {
+  /** Actual reps performed (for exercise steps) */
+  actualReps?: number;
+  /** Timestamp when this attempt was completed */
+  timestamp: string;
+};
+
+/**
+ * Completion record for a single workout step
+ * Tracks status and all completion attempts (supports repeats)
+ */
+export type StepCompletionRecord = {
+  /** Index of the step in the workout steps array */
+  stepIndex: number;
+  /** Current status of the step */
+  status: StepStatus;
+  /** All completion attempts for this step (multiple if repeated) */
+  completions: StepCompletionAttempt[];
+};
+
+/**
+ * Full completion state for a workout session
+ * Maps step indices to their completion records
+ */
+export type StepCompletionState = {
+  /** Program slug */
+  slug: string;
+  /** Session index (1-based) */
+  sessionIndex: number;
+  /** Completion records keyed by step index */
+  steps: Record<number, StepCompletionRecord>;
+  /** Total steps in the workout */
+  totalSteps: number;
 };

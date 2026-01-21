@@ -6,16 +6,19 @@
 
 import { WorkoutStep } from "@/hooks/session";
 import { theme } from "@/theme/theme";
+import { StepStatus } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type SetInfo = {
   stepIndex: number;
   setNumber: number;
   isDone: boolean;
   isCurrent: boolean;
+  isSkipped: boolean;
   targetReps?: number;
+  completionCount: number;
 };
 
 type ExerciseRow = {
@@ -35,13 +38,21 @@ type Props = {
   phase?: "timed" | "working" | "done";
   /** Remaining seconds on current step timer */
   stepTimer?: number;
+  /** Callback when a step is tapped for navigation */
+  onStepPress?: (stepIndex: number) => void;
+  /** Function to get the status of a step (for completion tracking) */
+  getStepStatus?: (stepIndex: number) => StepStatus;
+  /** Function to get the completion count of a step */
+  getCompletionCount?: (stepIndex: number) => number;
 };
 
 function buildExerciseRows(
   steps: WorkoutStep[],
   currentStepIndex: number,
   isDone: boolean,
-  exerciseNameById: Map<string, string>
+  exerciseNameById: Map<string, string>,
+  getStepStatus?: (stepIndex: number) => StepStatus,
+  getCompletionCount?: (stepIndex: number) => number
 ): ExerciseRow[] {
   const exerciseMap = new Map<
     string,
@@ -57,8 +68,19 @@ function buildExerciseRows(
   steps.forEach((step, idx) => {
     if (step.type !== "exercise") return;
 
-    const stepIsDone = isDone || idx < currentStepIndex;
+    // Use step completion status if available
+    const status = getStepStatus?.(idx);
+    // Only mark as done if:
+    // - Explicitly completed via status tracking, OR
+    // - Workout is fully done (isDone), OR
+    // - No status tracking AND position is before current (legacy fallback)
+    const stepIsDone =
+      status === "completed" ||
+      isDone ||
+      (!getStepStatus && idx < currentStepIndex);
+    const stepIsSkipped = status === "skipped";
     const stepIsCurrent = !isDone && idx === currentStepIndex;
+    const completionCount = getCompletionCount?.(idx) ?? 0;
     const exerciseId = step.exerciseId;
 
     if (!exerciseMap.has(exerciseId)) {
@@ -77,7 +99,9 @@ function buildExerciseRows(
       setNumber: step.setNumber ?? exercise.sets.length + 1,
       isDone: stepIsDone,
       isCurrent: stepIsCurrent,
-      targetReps: step.targetReps
+      isSkipped: stepIsSkipped,
+      targetReps: step.targetReps,
+      completionCount
     });
   });
 
@@ -85,12 +109,56 @@ function buildExerciseRows(
     (a, b) => a.firstIndex - b.firstIndex
   );
 
-  // Find which exercise is "next" (first one with incomplete sets)
-  let foundNext = false;
+  // Find the exercise containing the current step
+  const exerciseWithCurrentStep = rows.find((row) =>
+    row.sets.some((s) => s.isCurrent)
+  );
+
+  // Find the next exercise that will be navigated to after completion
+  // This matches the navigation algorithm: search forward then wrap around
+  let nextUpcomingExercise: (typeof rows)[0] | undefined = undefined;
+
+  if (!exerciseWithCurrentStep) {
+    // Not on an exercise step (warmup/rest) - find first pending exercise from current position
+    // First search forward from current+1
+    for (let i = currentStepIndex + 1; i < steps.length; i++) {
+      const step = steps[i];
+      if (step.type !== "exercise") continue;
+      if (getStepStatus?.(i) === "pending") {
+        const row = rows.find((r) => r.sets.some((s) => s.stepIndex === i));
+        if (row) {
+          nextUpcomingExercise = row;
+          break;
+        }
+      }
+    }
+
+    // If not found, wrap around and search from beginning
+    if (!nextUpcomingExercise) {
+      for (let i = 0; i < currentStepIndex; i++) {
+        const step = steps[i];
+        if (step.type !== "exercise") continue;
+        if (getStepStatus?.(i) === "pending") {
+          const row = rows.find((r) => r.sets.some((s) => s.stepIndex === i));
+          if (row) {
+            nextUpcomingExercise = row;
+            break;
+          }
+        }
+      }
+    }
+  }
+
   return rows.map(({ exerciseId, name, sets, targetReps }) => {
-    const hasIncompleteSets = sets.some((s) => !s.isDone);
-    const isNext = !foundNext && hasIncompleteSets;
-    if (isNext) foundNext = true;
+    const hasCurrentSet = sets.some((s) => s.isCurrent);
+
+    // isNext is true for:
+    // - The exercise containing the current step (if any), OR
+    // - The next upcoming exercise (during warmup/rest when no exercise is current)
+    const isNext =
+      hasCurrentSet ||
+      (!exerciseWithCurrentStep &&
+        nextUpcomingExercise?.exerciseId === exerciseId);
 
     return {
       exerciseId,
@@ -120,11 +188,29 @@ export function WorkoutMatrix({
   isDone,
   exerciseNameById,
   phase,
-  stepTimer
+  stepTimer,
+  onStepPress,
+  getStepStatus,
+  getCompletionCount
 }: Props) {
   const exerciseRows = useMemo(
-    () => buildExerciseRows(steps, currentStepIndex, isDone, exerciseNameById),
-    [steps, currentStepIndex, isDone, exerciseNameById]
+    () =>
+      buildExerciseRows(
+        steps,
+        currentStepIndex,
+        isDone,
+        exerciseNameById,
+        getStepStatus,
+        getCompletionCount
+      ),
+    [
+      steps,
+      currentStepIndex,
+      isDone,
+      exerciseNameById,
+      getStepStatus,
+      getCompletionCount
+    ]
   );
 
   const totalSets = exerciseRows.reduce((sum, row) => sum + row.sets.length, 0);
@@ -172,6 +258,7 @@ export function WorkoutMatrix({
             row={row}
             index={idx + 1}
             phaseInfo={row.isNext ? phaseInfo : null}
+            onStepPress={onStepPress}
           />
         ))}
       </View>
@@ -182,17 +269,19 @@ export function WorkoutMatrix({
 function ExerciseRowView({
   row,
   index,
-  phaseInfo
+  phaseInfo,
+  onStepPress
 }: {
   row: ExerciseRow;
   index: number;
   phaseInfo: PhaseInfo;
+  onStepPress?: (stepIndex: number) => void;
 }) {
   const allDone = row.sets.every((s) => s.isDone);
-  const hasCurrentSet = row.sets.some((s) => s.isCurrent);
 
   // Determine row state for styling
-  const isActive = row.isNext || hasCurrentSet;
+  // row.isNext is already true if this exercise contains the current step
+  const isActive = row.isNext;
   const isWaiting = phaseInfo !== null; // Waiting for warmup/rest to finish
   const isWarmupPhase = phaseInfo?.type === "warmup";
   const isRestPhase = phaseInfo?.type === "rest";
@@ -218,7 +307,11 @@ function ExerciseRowView({
         ]}
       >
         {allDone ? (
-          <Ionicons name="checkmark" size={14} color={theme.colors.primaryTextOn} />
+          <Ionicons
+            name="checkmark"
+            size={14}
+            color={theme.colors.primaryTextOn}
+          />
         ) : isWaiting ? (
           <Ionicons
             name={isWarmupPhase ? "flame" : "pause"}
@@ -254,7 +347,8 @@ function ExerciseRowView({
               isRestPhase && styles.exerciseMetaRest
             ]}
           >
-            {isWarmupPhase ? "Warming up" : "Resting"} · {formatTime(phaseInfo.timer)}
+            {isWarmupPhase ? "Warming up" : "Resting"} ·{" "}
+            {formatTime(phaseInfo.timer)}
           </Text>
         ) : row.sets.length > 1 ? (
           <Text style={styles.exerciseMeta}>
@@ -266,36 +360,96 @@ function ExerciseRowView({
       {/* Set indicators */}
       <View style={styles.setsContainer}>
         {row.sets.map((set) => (
-          <SetIndicator key={set.stepIndex} set={set} />
+          <SetIndicator key={set.stepIndex} set={set} onPress={onStepPress} />
         ))}
       </View>
     </View>
   );
 }
 
-function SetIndicator({ set }: { set: SetInfo }) {
+function SetIndicator({
+  set,
+  onPress
+}: {
+  set: SetInfo;
+  onPress?: (stepIndex: number) => void;
+}) {
   const displayValue = set.targetReps ?? set.setNumber;
+  const isTappable = onPress !== undefined;
 
+  const handlePress = () => {
+    onPress?.(set.stepIndex);
+  };
+
+  // Skipped state
+  if (set.isSkipped) {
+    return (
+      <Pressable
+        onPress={handlePress}
+        disabled={!isTappable}
+        style={({ pressed }) => [
+          styles.setIndicator,
+          styles.setSkipped,
+          pressed && isTappable && styles.setPressed
+        ]}
+      >
+        <Ionicons name="remove" size={14} color={theme.colors.muted} />
+      </Pressable>
+    );
+  }
+
+  // Completed state
   if (set.isDone) {
     return (
-      <View style={[styles.setIndicator, styles.setDone]}>
-        <Ionicons name="checkmark" size={14} color={theme.colors.primaryTextOn} />
-      </View>
+      <Pressable
+        onPress={handlePress}
+        disabled={!isTappable}
+        style={({ pressed }) => [
+          styles.setIndicator,
+          styles.setDone,
+          pressed && isTappable && styles.setPressed
+        ]}
+      >
+        <Ionicons
+          name="checkmark"
+          size={14}
+          color={theme.colors.primaryTextOn}
+        />
+        {/* No repeat badge - per spec, latest execution is single source of truth */}
+      </Pressable>
     );
   }
 
+  // Current state
   if (set.isCurrent) {
     return (
-      <View style={[styles.setIndicator, styles.setCurrent]}>
+      <Pressable
+        onPress={handlePress}
+        disabled={!isTappable}
+        style={({ pressed }) => [
+          styles.setIndicator,
+          styles.setCurrent,
+          pressed && isTappable && styles.setPressed
+        ]}
+      >
         <Text style={styles.setTextCurrent}>{displayValue}</Text>
-      </View>
+      </Pressable>
     );
   }
 
+  // Pending state
   return (
-    <View style={[styles.setIndicator, styles.setPending]}>
+    <Pressable
+      onPress={handlePress}
+      disabled={!isTappable}
+      style={({ pressed }) => [
+        styles.setIndicator,
+        styles.setPending,
+        pressed && isTappable && styles.setPressed
+      ]}
+    >
       <Text style={styles.setTextPending}>{displayValue}</Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -467,6 +621,16 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: theme.colors.border
   },
+  setSkipped: {
+    backgroundColor: theme.colors.background,
+    borderWidth: 1.5,
+    borderColor: theme.colors.border,
+    borderStyle: "dashed"
+  },
+  setPressed: {
+    opacity: 0.7,
+    transform: [{ scale: 0.95 }]
+  },
   setTextCurrent: {
     ...theme.typography.captionBold,
     color: theme.colors.primaryTextOn
@@ -474,6 +638,23 @@ const styles = StyleSheet.create({
   setTextPending: {
     ...theme.typography.captionBold,
     color: theme.colors.muted
+  },
+  repeatBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    backgroundColor: theme.colors.accent,
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4
+  },
+  repeatBadgeText: {
+    ...theme.typography.small,
+    fontSize: 10,
+    color: theme.colors.primaryTextOn
   }
 });
 

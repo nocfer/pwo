@@ -1,4 +1,8 @@
-import { UseWorkoutTimerReturn, WorkoutStep } from "@/hooks/session";
+import {
+  UseStepCompletionReturn,
+  UseWorkoutTimerReturn,
+  WorkoutStep
+} from "@/hooks/session";
 import { formatTime } from "@/lib/utils";
 import { theme } from "@/theme/theme";
 import { Program, ProgramSession } from "@/types";
@@ -25,6 +29,8 @@ type SetCompletion = {
   actualReps: number;
   setNumber: number;
   totalSets: number;
+  /** Index of the block in the session (for per-set updates) */
+  blockIndex?: number;
 };
 
 type Props = {
@@ -33,6 +39,7 @@ type Props = {
   steps: WorkoutStep[];
   program: Program;
   exerciseNameById: Map<string, string>;
+  stepCompletion: UseStepCompletionReturn;
   onProgramUpdate?: (updatedProgram: Program) => Promise<void>;
 };
 
@@ -42,11 +49,16 @@ export function WorkoutExecutionScreen({
   steps,
   program,
   exerciseNameById,
+  stepCompletion,
   onProgramUpdate
 }: Props) {
   const title = session.name ?? `Session ${session.index}`;
   const current = timer.currentStep;
   const currentStepIndex = timer.currentIndex;
+
+  // Step completion tracking for free navigation
+  const { getStepStatus, getCompletionCount, markCompleted, markSkipped } =
+    stepCompletion;
 
   // Track completed sets with actual reps
   const [, setCompletedSets] = useState<SetCompletion[]>([]);
@@ -152,10 +164,14 @@ export function WorkoutExecutionScreen({
         targetReps: current.targetReps ?? 0,
         actualReps: currentReps,
         setNumber: current.setNumber ?? 1,
-        totalSets: current.totalSets ?? 1
+        totalSets: current.totalSets ?? 1,
+        blockIndex: current.blockIndex
       };
 
       setCompletedSets((prev) => [...prev, completion]);
+
+      // Mark step as completed in tracking
+      markCompleted(currentStepIndex, currentReps);
 
       // Show update prompt if reps differ from target
       if (currentReps !== current.targetReps) {
@@ -165,12 +181,40 @@ export function WorkoutExecutionScreen({
     }
 
     timer.handleComplete();
-  }, [current, currentReps, timer]);
+  }, [current, currentReps, currentStepIndex, markCompleted, timer]);
 
   // Adjust reps
   const adjustReps = useCallback((delta: number) => {
     setCurrentReps((prev) => Math.max(0, (prev ?? 0) + delta));
   }, []);
+
+  // Handle skipping a step
+  const handleSkip = useCallback(() => {
+    markSkipped(currentStepIndex);
+    timer.handleSkip();
+  }, [currentStepIndex, markSkipped, timer]);
+
+  // Track previous step index for detecting natural advancement
+  const prevStepIndexRef = useRef(currentStepIndex);
+
+  // When step index advances by 1 (natural completion), mark the previous step as completed
+  // This handles timed steps (warmup/rest) that complete when their timer finishes
+  useEffect(() => {
+    const prevIndex = prevStepIndexRef.current;
+    const currentIndex = currentStepIndex;
+
+    // Only mark as completed if:
+    // - We advanced by exactly 1 (natural advancement, not a jump)
+    // - The previous step wasn't already tracked (pending status)
+    if (currentIndex === prevIndex + 1) {
+      const prevStatus = getStepStatus(prevIndex);
+      if (prevStatus === "pending") {
+        markCompleted(prevIndex);
+      }
+    }
+
+    prevStepIndexRef.current = currentIndex;
+  }, [currentStepIndex, getStepStatus, markCompleted]);
 
   // Get next step info
   const nextStep = steps[currentStepIndex + 1] ?? null;
@@ -557,6 +601,9 @@ export function WorkoutExecutionScreen({
             exerciseNameById={exerciseNameById}
             phase={timer.phase}
             stepTimer={timer.timer}
+            onStepPress={timer.goToStep}
+            getStepStatus={getStepStatus}
+            getCompletionCount={getCompletionCount}
           />
         )}
       </ScrollView>
@@ -588,7 +635,7 @@ export function WorkoutExecutionScreen({
                     styles.secondaryButton,
                     pressed && styles.secondaryButtonPressed
                   ]}
-                  onPress={timer.handleSkip}
+                  onPress={handleSkip}
                 >
                   <Ionicons
                     name="play-skip-forward"
@@ -621,7 +668,7 @@ export function WorkoutExecutionScreen({
                     styles.secondaryButton,
                     pressed && styles.secondaryButtonPressed
                   ]}
-                  onPress={timer.handleSkip}
+                  onPress={handleSkip}
                 >
                   <Ionicons
                     name="play-skip-forward"
@@ -688,8 +735,11 @@ export function WorkoutExecutionScreen({
               instead of {lastCompletion.targetReps}.
             </Text>
             <Text style={styles.modalSubtext}>
-              Update this exercise to {lastCompletion.actualReps} reps for
-              future workouts?
+              Update{" "}
+              {lastCompletion.totalSets > 1
+                ? `set ${lastCompletion.setNumber}`
+                : "this exercise"}{" "}
+              to {lastCompletion.actualReps} reps for future workouts?
             </Text>
             <View style={styles.modalButtons}>
               <Pressable
@@ -712,14 +762,17 @@ export function WorkoutExecutionScreen({
                     return;
                   }
 
-                  const blockIndex = program.blocks.findIndex(
-                    (block) =>
-                      block.type === "exercise" &&
-                      block.exerciseId === lastCompletion.exerciseId &&
-                      block.targetReps === lastCompletion.targetReps
-                  );
+                  // Use blockIndex from completion if available, otherwise find by exerciseId
+                  let blockIndex = lastCompletion.blockIndex;
+                  if (blockIndex === undefined) {
+                    blockIndex = program.blocks.findIndex(
+                      (block) =>
+                        block.type === "exercise" &&
+                        block.exerciseId === lastCompletion.exerciseId
+                    );
+                  }
 
-                  if (blockIndex === -1) {
+                  if (blockIndex === -1 || blockIndex === undefined) {
                     setShowUpdatePrompt(false);
                     return;
                   }
@@ -727,9 +780,38 @@ export function WorkoutExecutionScreen({
                   const updatedBlocks = [...program.blocks];
                   const block = updatedBlocks[blockIndex];
                   if (block.type === "exercise") {
+                    const totalSets = block.sets ?? 1;
+                    const setIndex = lastCompletion.setNumber - 1; // Convert to 0-based
+
+                    // Handle per-set rep update
+                    let newTargetReps: number | number[];
+
+                    if (totalSets === 1) {
+                      // Single set - just update the value
+                      newTargetReps = lastCompletion.actualReps;
+                    } else if (typeof block.targetReps === "number") {
+                      // Convert single number to array and update specific set
+                      const repsArray = Array(totalSets).fill(block.targetReps);
+                      repsArray[setIndex] = lastCompletion.actualReps;
+                      newTargetReps = repsArray;
+                    } else if (Array.isArray(block.targetReps)) {
+                      // Already an array - update specific set
+                      newTargetReps = [...block.targetReps];
+                      // Ensure array is long enough
+                      while (newTargetReps.length < totalSets) {
+                        newTargetReps.push(
+                          newTargetReps[newTargetReps.length - 1] ?? 0
+                        );
+                      }
+                      newTargetReps[setIndex] = lastCompletion.actualReps;
+                    } else {
+                      // Fallback - single value
+                      newTargetReps = lastCompletion.actualReps;
+                    }
+
                     updatedBlocks[blockIndex] = {
                       ...block,
-                      targetReps: lastCompletion.actualReps
+                      targetReps: newTargetReps
                     };
                   }
 
@@ -1108,6 +1190,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.sm
+  },
+  iconButton: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border
+  },
+  iconButtonPressed: {
+    backgroundColor: theme.colors.border,
+    transform: [{ scale: 0.95 }]
   },
   secondaryButton: {
     flexDirection: "row",

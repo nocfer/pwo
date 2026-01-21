@@ -1,6 +1,6 @@
+import { theme } from "@/theme/theme";
 import { Image } from "expo-image";
 import { ImageSourcePropType, StyleSheet } from "react-native";
-import { theme } from "@/theme/theme";
 
 type Props = {
   imgSource: ImageSourcePropType;
