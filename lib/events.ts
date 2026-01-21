@@ -6,23 +6,23 @@
  * re-fetch data when those events are emitted.
  */
 
-import type { DataEvent, DataEventCallback, DataEventType } from "@/types";
+import type { DataEvent, DataEventCallback, DataEventType } from '@/types'
 
 // Re-export types for backwards compatibility
-export type { DataEvent, DataEventCallback, DataEventType } from "@/types";
+export type { DataEvent, DataEventCallback, DataEventType } from '@/types'
 
 // ============================================================================
 // Event Emitter Implementation
 // ============================================================================
 
 type Listener = {
-  callback: DataEventCallback;
-  types?: DataEventType[];
-};
+  callback: DataEventCallback
+  types?: DataEventType[]
+}
 
-let listeners: Listener[] = [];
-let nextId = 0;
-const listenerIds = new Map<number, Listener>();
+let listeners: Listener[] = []
+let nextId = 0
+const listenerIds = new Map<number, Listener>()
 
 /**
  * Subscribe to data events
@@ -34,16 +34,16 @@ export function subscribe(
   callback: DataEventCallback,
   types?: DataEventType[]
 ): () => void {
-  const id = nextId++;
-  const listener: Listener = { callback, types };
-  listenerIds.set(id, listener);
-  listeners.push(listener);
+  const id = nextId++
+  const listener: Listener = { callback, types }
+  listenerIds.set(id, listener)
+  listeners.push(listener)
 
   // Return unsubscribe function
   return () => {
-    listenerIds.delete(id);
-    listeners = listeners.filter((l) => l !== listener);
-  };
+    listenerIds.delete(id)
+    listeners = listeners.filter(l => l !== listener)
+  }
 }
 
 /**
@@ -53,12 +53,12 @@ export function emit(event: DataEvent): void {
   for (const listener of listeners) {
     // If listener has type filter, check if this event type matches
     if (listener.types && !listener.types.includes(event.type)) {
-      continue;
+      continue
     }
     try {
-      listener.callback(event);
+      listener.callback(event)
     } catch (error) {
-      console.warn("[DataEvents] Listener error:", error);
+      console.warn('[DataEvents] Listener error:', error)
     }
   }
 }
@@ -67,15 +67,15 @@ export function emit(event: DataEvent): void {
  * Get current listener count (useful for debugging)
  */
 export function getListenerCount(): number {
-  return listeners.length;
+  return listeners.length
 }
 
 /**
  * Clear all listeners (useful for testing)
  */
 export function clearAllListeners(): void {
-  listeners = [];
-  listenerIds.clear();
+  listeners = []
+  listenerIds.clear()
 }
 
 // ============================================================================
@@ -90,24 +90,24 @@ export const dataEvents = {
 
   // Typed emit helpers
   emitSessionCompleted(slug: string, sessionIndex: number): void {
-    emit({ type: "SESSION_COMPLETED", slug, sessionIndex });
+    emit({ type: 'SESSION_COMPLETED', slug, sessionIndex })
   },
 
   emitSessionStateChanged(slug: string, sessionIndex: number): void {
-    emit({ type: "SESSION_STATE_CHANGED", slug, sessionIndex });
+    emit({ type: 'SESSION_STATE_CHANGED', slug, sessionIndex })
   },
 
   emitProgressUpdated(slug: string): void {
-    emit({ type: "PROGRESS_UPDATED", slug });
+    emit({ type: 'PROGRESS_UPDATED', slug })
   },
 
   emitHistoryUpdated(slug: string): void {
-    emit({ type: "HISTORY_UPDATED", slug });
+    emit({ type: 'HISTORY_UPDATED', slug })
   },
 
   emitEventRecorded(slug: string, eventType: string): void {
-    emit({ type: "EVENT_RECORDED", slug, eventType });
+    emit({ type: 'EVENT_RECORDED', slug, eventType })
   }
-};
+}
 
-export default dataEvents;
+export default dataEvents

@@ -1,19 +1,19 @@
-import { theme } from "@/theme/theme";
-import React, { ReactNode } from "react";
-import { StyleSheet, Text, View, ViewStyle } from "react-native";
-import { AnimatedCard } from "../common";
+import { theme } from '@/theme/theme'
+import React, { ReactNode } from 'react'
+import { StyleSheet, Text, View, ViewStyle } from 'react-native'
+import { AnimatedCard } from '../common'
 
 export type StepCardProps = {
-  title: string;
-  active?: boolean;
-  done?: boolean;
-  locked?: boolean;
-  right?: ReactNode;
-  style?: ViewStyle | ViewStyle[];
-  children?: ReactNode;
-  delayMultiplier?: number;
-  phaseAccent?: string;
-};
+  title: string
+  active?: boolean
+  done?: boolean
+  locked?: boolean
+  right?: ReactNode
+  style?: ViewStyle | ViewStyle[]
+  children?: ReactNode
+  delayMultiplier?: number
+  phaseAccent?: string
+}
 
 export function StepCard({
   title,
@@ -29,7 +29,7 @@ export function StepCard({
   // Determine card state styling
   const getContainerStyle = () => {
     if (done) {
-      return [styles.card, styles.cardDone, style];
+      return [styles.card, styles.cardDone, style]
     }
     if (active) {
       return [
@@ -37,20 +37,20 @@ export function StepCard({
         styles.cardActive,
         { borderLeftColor: phaseAccent },
         style
-      ];
+      ]
     }
     if (locked) {
-      return [styles.card, styles.cardLocked, style];
+      return [styles.card, styles.cardLocked, style]
     }
-    return [styles.card, style];
-  };
+    return [styles.card, style]
+  }
 
   const getTitleStyle = () => {
-    if (done) return [styles.cardTitle, styles.cardTitleDone];
-    if (locked) return [styles.cardTitle, styles.cardTitleLocked];
-    if (active) return [styles.cardTitle, styles.cardTitleActive];
-    return [styles.cardTitle];
-  };
+    if (done) return [styles.cardTitle, styles.cardTitleDone]
+    if (locked) return [styles.cardTitle, styles.cardTitleLocked]
+    if (active) return [styles.cardTitle, styles.cardTitleActive]
+    return [styles.cardTitle]
+  }
 
   return (
     <AnimatedCard delay={60 * delayMultiplier}>
@@ -66,7 +66,7 @@ export function StepCard({
         {children && <View style={styles.childrenContainer}>{children}</View>}
       </View>
     </AnimatedCard>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     padding: theme.spacing.md,
     borderLeftWidth: 3,
-    borderLeftColor: "transparent"
+    borderLeftColor: 'transparent'
   },
   cardActive: {
     backgroundColor: theme.colors.surface,
@@ -99,15 +99,15 @@ const styles = StyleSheet.create({
   },
   cardTitleDone: {
     color: theme.colors.success,
-    textDecorationLine: "line-through"
+    textDecorationLine: 'line-through'
   },
   cardTitleLocked: {
     color: theme.colors.muted
   },
   rowBetween: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between"
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
   },
   titleContainer: {
     flex: 1,
@@ -119,6 +119,6 @@ const styles = StyleSheet.create({
   childrenContainer: {
     marginTop: theme.spacing.xs
   }
-});
+})
 
-export default StepCard;
+export default StepCard

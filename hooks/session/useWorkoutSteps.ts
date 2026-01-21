@@ -1,13 +1,13 @@
-import { useChallengeSessions } from "@/hooks/data";
-import type { Program, ProgramExerciseBlock } from "@/types";
-import { useMemo } from "react";
+import { useChallengeSessions } from '@/hooks/data'
+import type { Program, ProgramExerciseBlock } from '@/types'
+import { useMemo } from 'react'
 
 /**
  * Default values for sets and rest configuration
  */
-const DEFAULT_SETS = 1;
-const DEFAULT_REST_BETWEEN_SETS = 60; // seconds
-const DEFAULT_REST_BETWEEN_EXERCISES = 60; // seconds
+const DEFAULT_SETS = 1
+const DEFAULT_REST_BETWEEN_SETS = 60 // seconds
+const DEFAULT_REST_BETWEEN_EXERCISES = 60 // seconds
 
 /**
  * Gets the target reps for a specific set from a targetReps value.
@@ -23,45 +23,45 @@ export function getTargetRepsForSet(
   setIndex: number,
   totalSets: number
 ): number | undefined {
-  if (targetReps === undefined) return undefined;
+  if (targetReps === undefined) return undefined
 
-  if (typeof targetReps === "number") {
-    return targetReps;
+  if (typeof targetReps === 'number') {
+    return targetReps
   }
 
   // Array of per-set targets
   if (setIndex < targetReps.length) {
-    return targetReps[setIndex];
+    return targetReps[setIndex]
   }
 
   // If array is shorter than totalSets, use the last value for remaining sets
-  return targetReps[targetReps.length - 1];
+  return targetReps[targetReps.length - 1]
 }
 
 export type WorkoutStep =
-  | { key: string; type: "warmup"; seconds: number }
+  | { key: string; type: 'warmup'; seconds: number }
   | {
-      key: string;
-      type: "exercise";
-      exerciseId: string;
-      targetReps?: number;
-      durationSeconds?: number;
-      note?: string;
+      key: string
+      type: 'exercise'
+      exerciseId: string
+      targetReps?: number
+      durationSeconds?: number
+      note?: string
       /** 1-based set number for this exercise step */
-      setNumber?: number;
+      setNumber?: number
       /** Total number of sets for this exercise */
-      totalSets?: number;
+      totalSets?: number
       /** Index of the block in the session (for per-set updates) */
-      blockIndex?: number;
+      blockIndex?: number
     }
   | {
-      key: string;
-      type: "rest";
-      seconds: number;
-      label?: string;
+      key: string
+      type: 'rest'
+      seconds: number
+      label?: string
       /** Context for the rest block: between sets of same exercise or between different exercises */
-      restContext?: "between-sets" | "between-exercises";
-    };
+      restContext?: 'between-sets' | 'between-exercises'
+    }
 
 /**
  * Expands exercise blocks into multiple steps based on sets configuration.
@@ -83,10 +83,10 @@ function expandExerciseBlock(
   currentStepCount: number,
   hasExplicitRestAfter: boolean
 ): WorkoutStep[] {
-  const steps: WorkoutStep[] = [];
-  const sets = exerciseBlock.sets ?? DEFAULT_SETS;
+  const steps: WorkoutStep[] = []
+  const sets = exerciseBlock.sets ?? DEFAULT_SETS
   const restBetweenSets =
-    exerciseBlock.restBetweenSets ?? DEFAULT_REST_BETWEEN_SETS;
+    exerciseBlock.restBetweenSets ?? DEFAULT_REST_BETWEEN_SETS
 
   for (let setNum = 1; setNum <= sets; setNum++) {
     // Get target reps for this specific set (handles both single number and per-set arrays)
@@ -94,13 +94,13 @@ function expandExerciseBlock(
       exerciseBlock.targetReps,
       setNum - 1, // Convert to 0-based index
       sets
-    );
+    )
 
     // Add exercise step for this set
     // Always include setNumber and totalSets for consistent display
     steps.push({
       key: `ex-${exerciseBlock.exerciseId}-${blockIndex}-set${setNum}-${currentStepCount + steps.length}`,
-      type: "exercise",
+      type: 'exercise',
       exerciseId: exerciseBlock.exerciseId,
       targetReps: setTargetReps,
       durationSeconds: exerciseBlock.durationSeconds,
@@ -108,17 +108,17 @@ function expandExerciseBlock(
       setNumber: setNum,
       totalSets: sets,
       blockIndex
-    });
+    })
 
     // Add rest between sets (not after the last set)
     if (setNum < sets && restBetweenSets > 0) {
       steps.push({
         key: `rest-between-sets-${blockIndex}-${setNum}-${currentStepCount + steps.length}`,
-        type: "rest",
+        type: 'rest',
         seconds: restBetweenSets,
-        label: "Rest between sets",
-        restContext: "between-sets"
-      });
+        label: 'Rest between sets',
+        restContext: 'between-sets'
+      })
     }
   }
 
@@ -130,14 +130,14 @@ function expandExerciseBlock(
   ) {
     steps.push({
       key: `rest-between-exercises-${blockIndex}-${currentStepCount + steps.length}`,
-      type: "rest",
+      type: 'rest',
       seconds: defaultRestBetweenExercises,
-      label: "Rest between exercises",
-      restContext: "between-exercises"
-    });
+      label: 'Rest between exercises',
+      restContext: 'between-exercises'
+    })
   }
 
-  return steps;
+  return steps
 }
 
 export function useWorkoutSteps(
@@ -145,73 +145,73 @@ export function useWorkoutSteps(
   sessionIndex: number | undefined
 ) {
   // Generate sessions dynamically if this is a challenge program
-  const sessions = useChallengeSessions(program);
+  const sessions = useChallengeSessions(program)
 
   const session = useMemo(() => {
-    if (!program || !sessionIndex) return null;
-    return sessions.find((s) => s.index === sessionIndex) ?? null;
-  }, [program, sessionIndex, sessions]);
+    if (!program || !sessionIndex) return null
+    return sessions.find(s => s.index === sessionIndex) ?? null
+  }, [program, sessionIndex, sessions])
 
   const steps = useMemo<WorkoutStep[]>(() => {
-    if (!program || !session) return [];
-    const list: WorkoutStep[] = [];
+    if (!program || !session) return []
+    const list: WorkoutStep[] = []
 
     // Get default rest between exercises from program config
     const defaultRestBetweenExercises =
-      program.defaultRestBetweenExercises ?? DEFAULT_REST_BETWEEN_EXERCISES;
+      program.defaultRestBetweenExercises ?? DEFAULT_REST_BETWEEN_EXERCISES
 
     // Add initial warmup from program config if present
     if (program.initialWarmup && program.initialWarmup.seconds > 0) {
       list.push({
         key: `initial-warmup-${list.length}`,
-        type: "warmup",
+        type: 'warmup',
         seconds: program.initialWarmup.seconds
-      });
+      })
     }
 
     // Find all exercise blocks to determine which is the last one
-    const exerciseBlockIndices: number[] = [];
+    const exerciseBlockIndices: number[] = []
     session.blocks.forEach((block, idx) => {
-      if (block.type === "exercise") {
-        exerciseBlockIndices.push(idx);
+      if (block.type === 'exercise') {
+        exerciseBlockIndices.push(idx)
       }
-    });
+    })
     const lastExerciseBlockIndex =
-      exerciseBlockIndices[exerciseBlockIndices.length - 1];
+      exerciseBlockIndices[exerciseBlockIndices.length - 1]
 
     for (let blockIdx = 0; blockIdx < session.blocks.length; blockIdx++) {
-      const block = session.blocks[blockIdx];
+      const block = session.blocks[blockIdx]
 
-      if (block.type === "warmup") {
+      if (block.type === 'warmup') {
         if (block.seconds > 0) {
           list.push({
             key: `warmup-${list.length}`,
-            type: "warmup",
+            type: 'warmup',
             seconds: block.seconds
-          });
+          })
         }
-        continue;
+        continue
       }
 
-      if (block.type === "rest") {
+      if (block.type === 'rest') {
         if (block.seconds > 0) {
           list.push({
             key: `rest-${list.length}`,
-            type: "rest",
+            type: 'rest',
             seconds: block.seconds,
             label: block.label,
             // Explicit rest blocks in session are typically between exercises
-            restContext: "between-exercises"
-          });
+            restContext: 'between-exercises'
+          })
         }
-        continue;
+        continue
       }
 
       // Exercise block → expand into multiple steps based on sets
-      const isLastExercise = blockIdx === lastExerciseBlockIndex;
+      const isLastExercise = blockIdx === lastExerciseBlockIndex
       // Check if the next block is an explicit rest block to avoid duplication
-      const nextBlock = session.blocks[blockIdx + 1];
-      const hasExplicitRestAfter = nextBlock?.type === "rest";
+      const nextBlock = session.blocks[blockIdx + 1]
+      const hasExplicitRestAfter = nextBlock?.type === 'rest'
       const expandedSteps = expandExerciseBlock(
         block,
         blockIdx,
@@ -219,12 +219,12 @@ export function useWorkoutSteps(
         defaultRestBetweenExercises,
         list.length,
         hasExplicitRestAfter
-      );
-      list.push(...expandedSteps);
+      )
+      list.push(...expandedSteps)
     }
 
-    return list;
-  }, [program, session]);
+    return list
+  }, [program, session])
 
-  return { session, steps } as const;
+  return { session, steps } as const
 }

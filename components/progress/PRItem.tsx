@@ -2,55 +2,53 @@
  * PRItem - Single personal record row
  */
 
-import { isPRRecent } from "@/hooks/data";
-import { theme } from "@/theme/theme";
-import type { PersonalRecord } from "@/types";
-import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { isPRRecent } from '@/hooks/data'
+import { theme } from '@/theme/theme'
+import type { PersonalRecord } from '@/types'
+import { Ionicons } from '@expo/vector-icons'
+import { useEffect, useRef } from 'react'
+import { Animated, StyleSheet, Text, View } from 'react-native'
 
 type Props = {
-  pr: PersonalRecord;
-  exerciseName: string;
-  exerciseIcon?: string;
-  index?: number;
-};
+  pr: PersonalRecord
+  exerciseName: string
+  exerciseIcon?: string
+  index?: number
+}
 
 function formatPRValue(pr: PersonalRecord): string {
   switch (pr.type) {
-    case "max_reps":
-      return `${pr.value} reps`;
-    case "max_weight":
-      return pr.details
-        ? `${pr.value}kg × ${pr.details.reps}`
-        : `${pr.value}kg`;
-    case "max_volume":
-      return `${pr.value}kg volume`;
-    case "estimated_1rm":
-      return `~${pr.value}kg 1RM`;
+    case 'max_reps':
+      return `${pr.value} reps`
+    case 'max_weight':
+      return pr.details ? `${pr.value}kg × ${pr.details.reps}` : `${pr.value}kg`
+    case 'max_volume':
+      return `${pr.value}kg volume`
+    case 'estimated_1rm':
+      return `~${pr.value}kg 1RM`
     default:
-      return String(pr.value);
+      return String(pr.value)
   }
 }
 
 function formatDate(isoDate: string): string {
-  const date = new Date(isoDate);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric"
-  });
+  const date = new Date(isoDate)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  })
 }
 
 export default function PRItem({
   pr,
   exerciseName,
-  exerciseIcon = "barbell",
+  exerciseIcon = 'barbell',
   index = 0
 }: Props) {
-  const isNew = isPRRecent(pr, 7);
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const isNew = isPRRecent(pr, 7)
+  const scaleAnim = useRef(new Animated.Value(0.95)).current
+  const opacityAnim = useRef(new Animated.Value(0)).current
+  const pulseAnim = useRef(new Animated.Value(1)).current
 
   useEffect(() => {
     // Staggered entrance animation
@@ -68,11 +66,11 @@ export default function PRItem({
           useNativeDriver: true
         })
       ])
-    ]);
-    entranceAnim.start();
+    ])
+    entranceAnim.start()
 
     // Pulse animation for "NEW" badge
-    let pulseLoop: Animated.CompositeAnimation | null = null;
+    let pulseLoop: Animated.CompositeAnimation | null = null
     if (isNew) {
       pulseLoop = Animated.loop(
         Animated.sequence([
@@ -87,15 +85,15 @@ export default function PRItem({
             useNativeDriver: true
           })
         ])
-      );
-      pulseLoop.start();
+      )
+      pulseLoop.start()
     }
 
     return () => {
-      entranceAnim.stop();
-      pulseLoop?.stop();
-    };
-  }, [index, isNew, scaleAnim, opacityAnim, pulseAnim]);
+      entranceAnim.stop()
+      pulseLoop?.stop()
+    }
+  }, [index, isNew, scaleAnim, opacityAnim, pulseAnim])
 
   return (
     <Animated.View
@@ -133,13 +131,13 @@ export default function PRItem({
         )}
       </View>
     </Animated.View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
@@ -152,8 +150,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   content: {
     flex: 1
@@ -168,7 +166,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary
   },
   meta: {
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
     gap: theme.spacing.xs
   },
   date: {
@@ -183,8 +181,8 @@ const styles = StyleSheet.create({
   },
   newBadgeText: {
     ...theme.typography.caption,
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     fontFamily: theme.fonts.bold,
     fontSize: 10
   }
-});
+})

@@ -2,15 +2,15 @@
  * LoadingScreen - Consistent loading state wrapper
  */
 
-import { theme } from "@/theme/theme";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { theme } from '@/theme/theme'
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type Props = {
-  message?: string;
-};
+  message?: string
+}
 
-export function LoadingScreen({ message = "Loading…" }: Props) {
+export function LoadingScreen({ message = 'Loading…' }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -22,7 +22,7 @@ export function LoadingScreen({ message = "Loading…" }: Props) {
         <Text style={styles.message}>{message}</Text>
       </View>
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -32,8 +32,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   spinner: {
     marginBottom: theme.spacing.md
@@ -42,6 +42,6 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.muted
   }
-});
+})
 
-export default LoadingScreen;
+export default LoadingScreen

@@ -2,4 +2,4 @@
  * Session components barrel export
  */
 
-export { StepCard } from "./StepCard";
+export { StepCard } from './StepCard'

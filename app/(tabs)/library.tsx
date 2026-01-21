@@ -1,74 +1,74 @@
-import { UnifiedDataManager } from "@/components/data";
-import { haptics } from "@/lib/haptics";
-import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { router } from "expo-router";
-import { useCallback, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { UnifiedDataManager } from '@/components/data'
+import { haptics } from '@/lib/haptics'
+import { theme } from '@/theme/theme'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { router } from 'expo-router'
+import { useCallback, useState } from 'react'
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
-type CreateType = "exercise" | "program" | "challenge";
+type CreateType = 'exercise' | 'program' | 'challenge'
 
 const CREATE_MENU_ITEMS: {
-  type: CreateType;
-  title: string;
-  subtitle: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  iconColor: string;
-  iconBgColor: string;
+  type: CreateType
+  title: string
+  subtitle: string
+  icon: keyof typeof Ionicons.glyphMap
+  iconColor: string
+  iconBgColor: string
 }[] = [
   {
-    type: "exercise",
-    title: "Exercise",
-    subtitle: "Add a custom exercise",
-    icon: "fitness",
+    type: 'exercise',
+    title: 'Exercise',
+    subtitle: 'Add a custom exercise',
+    icon: 'fitness',
     iconColor: theme.colors.primary,
     iconBgColor: theme.colors.primaryLight
   },
   {
-    type: "program",
-    title: "Program",
-    subtitle: "Build a workout routine",
-    icon: "barbell",
+    type: 'program',
+    title: 'Program',
+    subtitle: 'Build a workout routine',
+    icon: 'barbell',
     iconColor: theme.colors.success,
     iconBgColor: theme.colors.successLight
   },
   {
-    type: "challenge",
-    title: "Challenge",
-    subtitle: "Set a progressive goal",
-    icon: "trophy",
+    type: 'challenge',
+    title: 'Challenge',
+    subtitle: 'Set a progressive goal',
+    icon: 'trophy',
     iconColor: theme.colors.accent,
     iconBgColor: theme.colors.accentLight
   }
-];
+]
 
 export default function LibraryScreen() {
-  const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const [showCreateMenu, setShowCreateMenu] = useState(false)
 
   const handleCreateNew = useCallback((type: CreateType) => {
-    haptics.buttonTap();
-    setShowCreateMenu(false);
+    haptics.buttonTap()
+    setShowCreateMenu(false)
     switch (type) {
-      case "exercise":
-        router.navigate("/library/exercises/new");
-        break;
-      case "program":
-        router.navigate("/library/programs/new");
-        break;
-      case "challenge":
-        router.navigate("/library/challenges/new");
-        break;
+      case 'exercise':
+        router.navigate('/library/exercises/new')
+        break
+      case 'program':
+        router.navigate('/library/programs/new')
+        break
+      case 'challenge':
+        router.navigate('/library/challenges/new')
+        break
     }
-  }, []);
+  }, [])
 
   const handleScanQR = () => {
-    haptics.buttonTap();
-    router.navigate("/library/scan");
-  };
+    haptics.buttonTap()
+    router.navigate('/library/scan')
+  }
 
   return (
-    <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -93,8 +93,8 @@ export default function LibraryScreen() {
                 pressed && styles.addButtonPressed
               ]}
               onPress={() => {
-                haptics.buttonTap();
-                setShowCreateMenu(true);
+                haptics.buttonTap()
+                setShowCreateMenu(true)
               }}
             >
               <Ionicons
@@ -175,7 +175,7 @@ export default function LibraryScreen() {
         </Pressable>
       </Modal>
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -190,26 +190,26 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   },
   headerTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between"
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
   },
   title: {
     ...theme.typography.h1,
     color: theme.colors.text
   },
   headerActions: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.sm,
-    alignItems: "center"
+    alignItems: 'center'
   },
   iconButton: {
     width: 44,
     height: 44,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     ...theme.shadows.sm
   },
   iconButtonPressed: {
@@ -220,8 +220,8 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     ...theme.shadows.sm
   },
   addButtonPressed: {
@@ -233,21 +233,21 @@ const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
     backgroundColor: theme.colors.overlay,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: theme.spacing.lg
   },
   createMenu: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.xl,
-    width: "100%",
+    width: '100%',
     maxWidth: 360,
     ...theme.shadows.lg
   },
   createMenuHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.borderLight
@@ -260,8 +260,8 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: theme.radius.full,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   closeButtonPressed: {
     backgroundColor: theme.colors.background
@@ -270,8 +270,8 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md
   },
   createMenuItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: theme.spacing.md,
     borderRadius: theme.radius.lg,
     marginBottom: theme.spacing.xs
@@ -286,8 +286,8 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: theme.spacing.md
   },
   menuItemText: {
@@ -302,4 +302,4 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.muted
   }
-});
+})

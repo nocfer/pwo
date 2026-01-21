@@ -5,21 +5,21 @@
  * for React Native using the Firebase JS SDK.
  */
 
-import { getApps, initializeApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
+import { getApps, initializeApp, type FirebaseApp } from 'firebase/app'
+import { getAuth, type Auth } from 'firebase/auth'
 
 // Firebase configuration from environment variables
 // Expo requires EXPO_PUBLIC_ prefix for client-side access
 function normalizeEnvValue(value?: string) {
-  if (!value) return "";
-  const trimmed = value.trim();
-  let decoded = trimmed;
+  if (!value) return ''
+  const trimmed = value.trim()
+  let decoded = trimmed
   try {
-    decoded = decodeURIComponent(trimmed);
+    decoded = decodeURIComponent(trimmed)
   } catch {
-    decoded = trimmed;
+    decoded = trimmed
   }
-  return decoded.replace(/^"+|"+$/g, "");
+  return decoded.replace(/^"+|"+$/g, '')
 }
 
 const firebaseConfig = {
@@ -33,39 +33,39 @@ const firebaseConfig = {
     process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
   ),
   appId: normalizeEnvValue(process.env.EXPO_PUBLIC_FIREBASE_APP_ID)
-};
+}
 
 // Validate that all required config values are present
 const requiredKeys: (keyof typeof firebaseConfig)[] = [
-  "apiKey",
-  "authDomain",
-  "projectId",
-  "storageBucket",
-  "messagingSenderId",
-  "appId"
-];
+  'apiKey',
+  'authDomain',
+  'projectId',
+  'storageBucket',
+  'messagingSenderId',
+  'appId'
+]
 
 const missingKeys = requiredKeys.filter(
-  (key) => !firebaseConfig[key] || firebaseConfig[key] === ""
-);
+  key => !firebaseConfig[key] || firebaseConfig[key] === ''
+)
 
 if (missingKeys.length > 0) {
   console.warn(
-    `Firebase configuration missing: ${missingKeys.join(", ")}. ` +
-      "Please set EXPO_PUBLIC_FIREBASE_* environment variables in your .env file and restart Expo."
-  );
+    `Firebase configuration missing: ${missingKeys.join(', ')}. ` +
+      'Please set EXPO_PUBLIC_FIREBASE_* environment variables in your .env file and restart Expo.'
+  )
 }
 
 // Initialize Firebase app (only if not already initialized)
-let app: FirebaseApp;
+let app: FirebaseApp
 if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
+  app = initializeApp(firebaseConfig)
 } else {
-  app = getApps()[0];
+  app = getApps()[0]
 }
 
 // Initialize Auth
-const auth: Auth = getAuth(app);
+const auth: Auth = getAuth(app)
 
-export { app, auth };
-export default app;
+export { app, auth }
+export default app

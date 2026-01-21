@@ -6,9 +6,9 @@
  * Format seconds into M:SS format (e.g., "5:30")
  */
 export function formatTime(total: number): string {
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
+  const m = Math.floor(total / 60)
+  const s = total % 60
+  return `${m}:${s.toString().padStart(2, '0')}`
 }
 
 /**
@@ -20,36 +20,36 @@ export function formatTime(total: number): string {
  */
 export function formatDuration(
   seconds: number,
-  style: "short" | "shortWithSuffix" | "long" = "short"
+  style: 'short' | 'shortWithSuffix' | 'long' = 'short'
 ): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
 
-  if (style === "short") {
-    return `${hours}:${minutes.toString().padStart(2, "0")}`;
+  if (style === 'short') {
+    return `${hours}:${minutes.toString().padStart(2, '0')}`
   }
 
-  if (style === "shortWithSuffix") {
-    return `${hours}:${minutes.toString().padStart(2, "0")}h`;
+  if (style === 'shortWithSuffix') {
+    return `${hours}:${minutes.toString().padStart(2, '0')}h`
   }
 
   // Long format
-  const hourText = hours === 1 ? "hour" : "hours";
-  const minuteText = minutes === 1 ? "minute" : "minutes";
+  const hourText = hours === 1 ? 'hour' : 'hours'
+  const minuteText = minutes === 1 ? 'minute' : 'minutes'
 
   if (hours > 0) {
     return minutes > 0
       ? `${hours} ${hourText} ${minutes} ${minuteText}`
-      : `${hours} ${hourText}`;
+      : `${hours} ${hourText}`
   }
-  return `${minutes} ${minuteText}`;
+  return `${minutes} ${minuteText}`
 }
 
 /**
  * Format rep count with proper pluralization
  */
 export function formatReps(count: number): string {
-  return count === 1 ? "1 rep" : `${count} reps`;
+  return count === 1 ? '1 rep' : `${count} reps`
 }
 
 /**
@@ -64,8 +64,8 @@ export function formatCount(
   singular: string,
   plural?: string
 ): string {
-  const word = count === 1 ? singular : (plural ?? `${singular}s`);
-  return `${count} ${word}`;
+  const word = count === 1 ? singular : (plural ?? `${singular}s`)
+  return `${count} ${word}`
 }
 
 /**
@@ -80,14 +80,14 @@ export function getTotalReps(
   targetReps: number | number[] | undefined,
   sets: number = 1
 ): number {
-  if (targetReps === undefined) return 0;
+  if (targetReps === undefined) return 0
 
-  if (typeof targetReps === "number") {
-    return targetReps * sets;
+  if (typeof targetReps === 'number') {
+    return targetReps * sets
   }
 
   // Array of per-set targets - sum them
-  return targetReps.reduce((sum, reps) => sum + reps, 0);
+  return targetReps.reduce((sum, reps) => sum + reps, 0)
 }
 
 /**
@@ -100,11 +100,11 @@ export function getTotalReps(
 export function getFirstReps(
   targetReps: number | number[] | undefined
 ): number {
-  if (targetReps === undefined) return 0;
+  if (targetReps === undefined) return 0
 
-  if (typeof targetReps === "number") {
-    return targetReps;
+  if (typeof targetReps === 'number') {
+    return targetReps
   }
 
-  return targetReps[0] ?? 0;
+  return targetReps[0] ?? 0
 }

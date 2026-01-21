@@ -3,16 +3,16 @@
  * Clean, professional form for creating and editing exercises
  */
 
-import { haptics } from "@/lib/haptics";
+import { haptics } from '@/lib/haptics'
 import {
   VALID_EXERCISE_CATEGORIES,
   VALID_EXERCISE_ICONS,
   validateExercise
-} from "@/lib/validation";
-import { theme } from "@/theme/theme";
-import type { ExerciseCategory } from "@/types";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useCallback, useState } from "react";
+} from '@/lib/validation'
+import { theme } from '@/theme/theme'
+import type { ExerciseCategory } from '@/types'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { useCallback, useState } from 'react'
 import {
   Alert,
   KeyboardAvoidingView,
@@ -24,21 +24,21 @@ import {
   Text,
   TextInput,
   View
-} from "react-native";
+} from 'react-native'
 
 export type ExerciseFormData = {
-  name: string;
-  category: ExerciseCategory;
-  icon: string;
-};
+  name: string
+  category: ExerciseCategory
+  icon: string
+}
 
 export type ExerciseFormProps = {
-  mode: "create" | "edit";
-  initialData?: Partial<ExerciseFormData>;
-  onSave: (data: ExerciseFormData) => Promise<void>;
-  onCancel: () => void;
-  saving?: boolean;
-};
+  mode: 'create' | 'edit'
+  initialData?: Partial<ExerciseFormData>
+  onSave: (data: ExerciseFormData) => Promise<void>
+  onCancel: () => void
+  saving?: boolean
+}
 
 export function ExerciseForm({
   mode,
@@ -48,68 +48,68 @@ export function ExerciseForm({
   saving = false
 }: ExerciseFormProps) {
   const [formData, setFormData] = useState<ExerciseFormData>({
-    name: initialData?.name || "",
-    category: initialData?.category || "strength",
-    icon: initialData?.icon || "barbell"
-  });
+    name: initialData?.name || '',
+    category: initialData?.category || 'strength',
+    icon: initialData?.icon || 'barbell'
+  })
 
-  const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  const [iconPickerOpen, setIconPickerOpen] = useState(false)
 
   const updateField = useCallback(
     <K extends keyof ExerciseFormData>(
       field: K,
       value: ExerciseFormData[K]
     ) => {
-      if (field === "category") {
-        haptics.buttonTap();
+      if (field === 'category') {
+        haptics.buttonTap()
       }
-      setFormData((prev) => ({ ...prev, [field]: value }));
+      setFormData(prev => ({ ...prev, [field]: value }))
     },
     []
-  );
+  )
 
   const handleSave = useCallback(async () => {
-    const trimmed = formData.name.trim();
+    const trimmed = formData.name.trim()
 
     const exerciseData = {
       name: trimmed,
       category: formData.category,
       icon: formData.icon
-    };
+    }
 
-    const validationResult = validateExercise(exerciseData as never);
+    const validationResult = validateExercise(exerciseData as never)
 
     if (!validationResult.isValid) {
-      haptics.formValidationError();
-      const firstError = validationResult.errors[0];
-      Alert.alert("Validation Error", firstError.message);
-      return;
+      haptics.formValidationError()
+      const firstError = validationResult.errors[0]
+      Alert.alert('Validation Error', firstError.message)
+      return
     }
 
     try {
       await onSave({
         ...formData,
         name: trimmed
-      });
-      haptics.formSave();
+      })
+      haptics.formSave()
     } catch (error) {
-      haptics.formValidationError();
+      haptics.formValidationError()
       Alert.alert(
         "Couldn't save",
         error instanceof Error ? error.message : String(error)
-      );
+      )
     }
-  }, [formData, onSave]);
+  }, [formData, onSave])
 
   const handleCancel = useCallback(() => {
-    haptics.formCancel();
-    onCancel();
-  }, [onCancel]);
+    haptics.formCancel()
+    onCancel()
+  }, [onCancel])
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       {/* Header */}
       <View style={styles.header}>
@@ -123,7 +123,7 @@ export function ExerciseForm({
           <Ionicons name="close" size={24} color={theme.colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>
-          {mode === "create" ? "New Exercise" : "Edit Exercise"}
+          {mode === 'create' ? 'New Exercise' : 'Edit Exercise'}
         </Text>
         <Pressable
           onPress={handleSave}
@@ -140,7 +140,7 @@ export function ExerciseForm({
               (saving || !formData.name.trim()) && styles.saveButtonTextDisabled
             ]}
           >
-            {saving ? "Saving..." : "Save"}
+            {saving ? 'Saving...' : 'Save'}
           </Text>
         </Pressable>
       </View>
@@ -157,11 +157,11 @@ export function ExerciseForm({
           <Text style={styles.sectionTitle}>Name</Text>
           <TextInput
             value={formData.name}
-            onChangeText={(value) => updateField("name", value)}
+            onChangeText={value => updateField('name', value)}
             placeholder="e.g. Bench Press"
             placeholderTextColor={theme.colors.muted}
             style={styles.textInput}
-            autoFocus={mode === "create"}
+            autoFocus={mode === 'create'}
           />
         </View>
 
@@ -169,12 +169,12 @@ export function ExerciseForm({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Category</Text>
           <View style={styles.categoryGrid}>
-            {VALID_EXERCISE_CATEGORIES.map((category) => {
-              const isSelected = formData.category === category;
+            {VALID_EXERCISE_CATEGORIES.map(category => {
+              const isSelected = formData.category === category
               return (
                 <Pressable
                   key={category}
-                  onPress={() => updateField("category", category)}
+                  onPress={() => updateField('category', category)}
                   style={[
                     styles.categoryOption,
                     isSelected && styles.categoryOptionSelected
@@ -189,7 +189,7 @@ export function ExerciseForm({
                     {category.charAt(0).toUpperCase() + category.slice(1)}
                   </Text>
                 </Pressable>
-              );
+              )
             })}
           </View>
         </View>
@@ -199,8 +199,8 @@ export function ExerciseForm({
           <Text style={styles.sectionTitle}>Icon</Text>
           <Pressable
             onPress={() => {
-              haptics.buttonTap();
-              setIconPickerOpen(true);
+              haptics.buttonTap()
+              setIconPickerOpen(true)
             }}
             style={({ pressed }) => [
               styles.iconSelector,
@@ -211,7 +211,7 @@ export function ExerciseForm({
               <View style={styles.iconCircle}>
                 <Ionicons
                   name={
-                    (formData.icon as keyof typeof Ionicons.glyphMap) || "help"
+                    (formData.icon as keyof typeof Ionicons.glyphMap) || 'help'
                   }
                   size={24}
                   color={theme.colors.primary}
@@ -250,15 +250,15 @@ export function ExerciseForm({
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.iconGridContent}
             >
-              {VALID_EXERCISE_ICONS.map((iconName) => {
-                const isSelected = formData.icon === iconName;
+              {VALID_EXERCISE_ICONS.map(iconName => {
+                const isSelected = formData.icon === iconName
                 return (
                   <Pressable
                     key={iconName}
                     onPress={() => {
-                      haptics.buttonTap();
-                      updateField("icon", iconName);
-                      setIconPickerOpen(false);
+                      haptics.buttonTap()
+                      updateField('icon', iconName)
+                      setIconPickerOpen(false)
                     }}
                     style={[
                       styles.iconOption,
@@ -273,14 +273,14 @@ export function ExerciseForm({
                       }
                     />
                   </Pressable>
-                );
+                )
               })}
             </ScrollView>
           </View>
         </Pressable>
       </Modal>
     </KeyboardAvoidingView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -289,9 +289,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
     backgroundColor: theme.colors.background
@@ -300,8 +300,8 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: theme.radius.full,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   backButtonPressed: {
     backgroundColor: theme.colors.surface
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...theme.typography.small,
     color: theme.colors.muted,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginLeft: theme.spacing.xs
   },
@@ -356,8 +356,8 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   categoryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: theme.spacing.sm
   },
   categoryOption: {
@@ -378,9 +378,9 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryTextOn
   },
   iconSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
@@ -390,8 +390,8 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }]
   },
   iconPreview: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md
   },
   iconCircle: {
@@ -399,8 +399,8 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   iconName: {
     ...theme.typography.body,
@@ -419,13 +419,13 @@ const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
     backgroundColor: theme.colors.overlay,
-    justifyContent: "flex-end"
+    justifyContent: 'flex-end'
   },
   modalContent: {
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    maxHeight: "70%",
+    maxHeight: '70%',
     paddingBottom: theme.spacing.xxl
   },
   modalHandle: {
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: theme.colors.border,
     borderRadius: 2,
-    alignSelf: "center",
+    alignSelf: 'center',
     marginTop: theme.spacing.sm,
     marginBottom: theme.spacing.sm
   },
@@ -446,14 +446,14 @@ const styles = StyleSheet.create({
   modalTitle: {
     ...theme.typography.h3,
     color: theme.colors.text,
-    textAlign: "center"
+    textAlign: 'center'
   },
   iconGrid: {
     flex: 1
   },
   iconGridContent: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     padding: theme.spacing.lg,
     gap: theme.spacing.sm
   },
@@ -461,11 +461,11 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: theme.colors.background
   },
   iconOptionSelected: {
     backgroundColor: theme.colors.primaryLight
   }
-});
+})

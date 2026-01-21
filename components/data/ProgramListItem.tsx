@@ -2,19 +2,19 @@
  * ProgramListItem - Specialized list item for programs with inline actions
  */
 
-import { theme } from "@/theme/theme";
-import type { Program } from "@/types";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { theme } from '@/theme/theme'
+import type { Program } from '@/types'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native'
 
 export interface ProgramListItemProps {
-  program: Program;
-  onStart: (program: Program) => void;
-  onEdit: (program: Program) => void;
-  selected?: boolean;
-  onSelectionChange?: (selected: boolean) => void;
-  showMetadata?: boolean;
-  style?: ViewStyle;
+  program: Program
+  onStart: (program: Program) => void
+  onEdit: (program: Program) => void
+  selected?: boolean
+  onSelectionChange?: (selected: boolean) => void
+  showMetadata?: boolean
+  style?: ViewStyle
 }
 
 export function ProgramListItem({
@@ -26,19 +26,17 @@ export function ProgramListItem({
   showMetadata = true,
   style
 }: ProgramListItemProps) {
-  const isChallenge = Boolean(program.challengeConfig);
+  const isChallenge = Boolean(program.challengeConfig)
 
   // Calculate stats
-  const exerciseCount = program.blocks.filter(
-    (b) => b.type === "exercise"
-  ).length;
+  const exerciseCount = program.blocks.filter(b => b.type === 'exercise').length
   const totalSets = program.blocks
-    .filter((b) => b.type === "exercise")
-    .reduce((sum, b) => sum + (b.sets ?? 1), 0);
+    .filter(b => b.type === 'exercise')
+    .reduce((sum, b) => sum + (b.sets ?? 1), 0)
 
-  const handleItemPress = () => onStart(program);
-  const handleEditPress = () => onEdit(program);
-  const handleSelectionPress = () => onSelectionChange?.(!selected);
+  const handleItemPress = () => onStart(program)
+  const handleEditPress = () => onEdit(program)
+  const handleSelectionPress = () => onSelectionChange?.(!selected)
 
   return (
     <Pressable
@@ -56,7 +54,7 @@ export function ProgramListItem({
           onPress={handleSelectionPress}
         >
           <Ionicons
-            name={selected ? "checkmark-circle" : "ellipse-outline"}
+            name={selected ? 'checkmark-circle' : 'ellipse-outline'}
             size={22}
             color={selected ? theme.colors.primary : theme.colors.muted}
           />
@@ -74,7 +72,7 @@ export function ProgramListItem({
         ]}
       >
         <Ionicons
-          name={isChallenge ? "trophy" : "barbell"}
+          name={isChallenge ? 'trophy' : 'barbell'}
           size={20}
           color={isChallenge ? theme.colors.accent : theme.colors.primary}
         />
@@ -85,7 +83,7 @@ export function ProgramListItem({
           <Text style={styles.name} numberOfLines={1}>
             {program.name}
           </Text>
-          {program.source === "builtin" && (
+          {program.source === 'builtin' && (
             <View style={styles.builtinBadge}>
               <Text style={styles.builtinBadgeText}>Built-in</Text>
             </View>
@@ -138,13 +136,13 @@ export function ProgramListItem({
         <Ionicons name="chevron-forward" size={18} color={theme.colors.muted} />
       </View>
     </Pressable>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
@@ -165,8 +163,8 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: theme.spacing.md
   },
   content: {
@@ -174,8 +172,8 @@ const styles = StyleSheet.create({
     gap: 4
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm
   },
   name: {
@@ -198,13 +196,13 @@ const styles = StyleSheet.create({
     color: theme.colors.muted
   },
   stats: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.md,
     marginTop: 2
   },
   stat: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 4
   },
   statText: {
@@ -212,8 +210,8 @@ const styles = StyleSheet.create({
     color: theme.colors.muted
   },
   actions: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm,
     marginLeft: theme.spacing.sm
   },
@@ -222,12 +220,12 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.background,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   editButtonPressed: {
     backgroundColor: theme.colors.border
   }
-});
+})
 
-export default ProgramListItem;
+export default ProgramListItem

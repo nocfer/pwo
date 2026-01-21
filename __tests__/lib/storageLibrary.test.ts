@@ -1,80 +1,80 @@
-import { storage } from "@/lib/storage";
-import { beforeEach, describe, expect, it } from "vitest";
+import { storage } from '@/lib/storage'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 function createLocalStorageMock() {
-  const map = new Map<string, string>();
+  const map = new Map<string, string>()
   return {
     getItem: (k: string) => (map.has(k) ? map.get(k)! : null),
     setItem: (k: string, v: string) => {
-      map.set(k, v);
+      map.set(k, v)
     },
     removeItem: (k: string) => {
-      map.delete(k);
+      map.delete(k)
     },
     clear: () => {
-      map.clear();
+      map.clear()
     },
     key: (index: number) => Array.from(map.keys())[index] || null,
     length: 0
-  } as Storage;
+  } as Storage
 }
 
-describe("storage library CRUD", () => {
+describe('storage library CRUD', () => {
   beforeEach(() => {
-    Object.defineProperty(globalThis, "window", {
+    Object.defineProperty(globalThis, 'window', {
       value: {
         localStorage: createLocalStorageMock()
       },
       writable: true
-    });
-  });
+    })
+  })
 
-  it("upsert/load/delete exercise roundtrip", async () => {
+  it('upsert/load/delete exercise roundtrip', async () => {
     const saved = await storage.upsertExercise({
-      id: "",
-      name: "Bench Press",
-      category: "strength",
-      icon: "barbell",
-      source: "user"
-    });
+      id: '',
+      name: 'Bench Press',
+      category: 'strength',
+      icon: 'barbell',
+      source: 'user'
+    })
 
-    expect(saved.id).toBeTruthy();
-    const loaded = await storage.loadExercises();
-    expect(loaded.find((e) => e.id === saved.id)?.name).toBe("Bench Press");
+    expect(saved.id).toBeTruthy()
+    const loaded = await storage.loadExercises()
+    expect(loaded.find(e => e.id === saved.id)?.name).toBe('Bench Press')
 
     const updated = await storage.upsertExercise({
       id: saved.id,
-      name: "Bench Press (Barbell)",
-      category: "strength",
-      icon: "barbell",
-      source: "user"
-    });
-    expect(updated.id).toBe(saved.id);
-    const loaded2 = await storage.loadExercises();
-    expect(loaded2.find((e) => e.id === saved.id)?.name).toBe(
-      "Bench Press (Barbell)"
-    );
+      name: 'Bench Press (Barbell)',
+      category: 'strength',
+      icon: 'barbell',
+      source: 'user'
+    })
+    expect(updated.id).toBe(saved.id)
+    const loaded2 = await storage.loadExercises()
+    expect(loaded2.find(e => e.id === saved.id)?.name).toBe(
+      'Bench Press (Barbell)'
+    )
 
-    await storage.deleteExercise(saved.id);
-    const loaded3 = await storage.loadExercises();
-    expect(loaded3.find((e) => e.id === saved.id)).toBeUndefined();
-  });
+    await storage.deleteExercise(saved.id)
+    const loaded3 = await storage.loadExercises()
+    expect(loaded3.find(e => e.id === saved.id)).toBeUndefined()
+  })
 
-  it("upsert/load/delete program roundtrip", async () => {
+  it('upsert/load/delete program roundtrip', async () => {
     const saved = await storage.upsertProgram({
-      id: "",
-      name: "Test Program",
-      description: "desc",
-      blocks: [{ type: "warmup", seconds: 60 }],
-      source: "user"
-    });
+      id: '',
+      name: 'Test Program',
+      description: 'desc',
+      blocks: [{ type: 'warmup', seconds: 60 }],
+      source: 'user'
+    })
 
-    expect(saved.id).toBeTruthy();
-    const loaded = await storage.loadPrograms();
-    expect(loaded.find((p) => p.id === saved.id)?.name).toBe("Test Program");
+    expect(saved.id).toBeTruthy()
+    const loaded = await storage.loadPrograms()
+    expect(loaded.find(p => p.id === saved.id)?.name).toBe('Test Program')
 
-    await storage.deleteProgram(saved.id);
-    const loaded2 = await storage.loadPrograms();
-    expect(loaded2.find((p) => p.id === saved.id)).toBeUndefined();
-  });
-});
+    await storage.deleteProgram(saved.id)
+    const loaded2 = await storage.loadPrograms()
+    expect(loaded2.find(p => p.id === saved.id)).toBeUndefined()
+  })
+})

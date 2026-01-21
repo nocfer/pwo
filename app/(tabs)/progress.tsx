@@ -8,13 +8,13 @@ import {
   EnhancedExerciseProgressionChart,
   PersonalRecordsCard,
   WeeklySummaryCard
-} from "@/components";
-import { Button } from "@/components/common";
-import { type AggregatedProgress, useAllProgress } from "@/hooks/data";
-import { haptics } from "@/lib/haptics";
-import { theme } from "@/theme/theme";
-import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useEffect, useRef, useState } from "react";
+} from '@/components'
+import { Button } from '@/components/common'
+import { type AggregatedProgress, useAllProgress } from '@/hooks/data'
+import { haptics } from '@/lib/haptics'
+import { theme } from '@/theme/theme'
+import { Ionicons } from '@expo/vector-icons'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Animated,
   RefreshControl,
@@ -23,17 +23,17 @@ import {
   StyleSheet,
   Text,
   View
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
-const SECTION_COUNT = 5;
-const ANIMATION_DURATION = 250;
-const ANIMATION_STAGGER = 80;
+const SECTION_COUNT = 5
+const ANIMATION_DURATION = 250
+const ANIMATION_STAGGER = 80
 
 function generateProgressReport(progressData: AggregatedProgress): string {
-  const totalMinutes = Math.round(progressData.totalTimeSpentSeconds / 60);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
+  const totalMinutes = Math.round(progressData.totalTimeSpentSeconds / 60)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
 
   return `🏋️ Fitness Progress Report
 
@@ -43,61 +43,61 @@ function generateProgressReport(progressData: AggregatedProgress): string {
 • Time: ${hours}h ${minutes}m
 • Streak: ${progressData.currentStreak} days
 
-Generated on ${new Date().toLocaleDateString()}`;
+Generated on ${new Date().toLocaleDateString()}`
 }
 
 export default function StatisticsScreen() {
-  const [refreshing, setRefreshing] = useState(false);
-  const { data: allProgress } = useAllProgress();
+  const [refreshing, setRefreshing] = useState(false)
+  const { data: allProgress } = useAllProgress()
 
   const sectionAnims = useRef(
     Array.from({ length: SECTION_COUNT }, () => new Animated.Value(0))
-  ).current;
+  ).current
 
   const animateSections = useCallback(() => {
     Animated.stagger(
       ANIMATION_STAGGER,
-      sectionAnims.map((anim) =>
+      sectionAnims.map(anim =>
         Animated.timing(anim, {
           toValue: 1,
           duration: ANIMATION_DURATION,
           useNativeDriver: true
         })
       )
-    ).start();
-  }, [sectionAnims]);
+    ).start()
+  }, [sectionAnims])
 
   const resetAnimations = useCallback(() => {
-    sectionAnims.forEach((anim) => anim.setValue(0));
-  }, [sectionAnims]);
+    sectionAnims.forEach(anim => anim.setValue(0))
+  }, [sectionAnims])
 
   useEffect(() => {
-    animateSections();
-  }, [animateSections]);
+    animateSections()
+  }, [animateSections])
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    haptics.refresh();
-    resetAnimations();
+    setRefreshing(true)
+    haptics.refresh()
+    resetAnimations()
 
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await new Promise(resolve => setTimeout(resolve, 400))
 
-    setRefreshing(false);
-    animateSections();
-  }, [animateSections, resetAnimations]);
+    setRefreshing(false)
+    animateSections()
+  }, [animateSections, resetAnimations])
 
   const handleShareReport = useCallback(async () => {
     try {
-      haptics.shareData();
-      if (!allProgress) return;
-      const report = generateProgressReport(allProgress);
-      await Share.share({ message: report, title: "Progress Report" });
+      haptics.shareData()
+      if (!allProgress) return
+      const report = generateProgressReport(allProgress)
+      await Share.share({ message: report, title: 'Progress Report' })
     } catch {
       // Share cancelled or failed
     }
-  }, [allProgress]);
+  }, [allProgress])
 
-  const animatedStyles = sectionAnims.map((anim) => ({
+  const animatedStyles = sectionAnims.map(anim => ({
     opacity: anim,
     transform: [
       {
@@ -107,10 +107,10 @@ export default function StatisticsScreen() {
         })
       }
     ]
-  }));
+  }))
 
   return (
-    <SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -198,7 +198,7 @@ export default function StatisticsScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
-  );
+  )
 }
 
 function StatCard({
@@ -207,10 +207,10 @@ function StatCard({
   value,
   color
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  value: number;
-  color: string;
+  icon: keyof typeof Ionicons.glyphMap
+  label: string
+  value: number
+  color: string
 }) {
   return (
     <View style={styles.statCard}>
@@ -220,7 +220,7 @@ function StatCard({
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -263,14 +263,14 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md
   },
   statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: theme.spacing.md
   },
   statCard: {
     flex: 1,
-    minWidth: "45%",
-    alignItems: "center",
+    minWidth: '45%',
+    alignItems: 'center',
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.sm
   },
@@ -278,8 +278,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: theme.spacing.sm
   },
   statValue: {
@@ -290,6 +290,6 @@ const styles = StyleSheet.create({
   statLabel: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    textAlign: "center"
+    textAlign: 'center'
   }
-});
+})

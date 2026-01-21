@@ -2,13 +2,13 @@ import {
   UseStepCompletionReturn,
   UseWorkoutTimerReturn,
   WorkoutStep
-} from "@/hooks/session";
-import { formatTime } from "@/lib/utils";
-import { theme } from "@/theme/theme";
-import { Program, ProgramSession } from "@/types";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+} from '@/hooks/session'
+import { formatTime } from '@/lib/utils'
+import { theme } from '@/theme/theme'
+import { Program, ProgramSession } from '@/types'
+import { Ionicons } from '@expo/vector-icons'
+import { router } from 'expo-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Animated,
   Pressable,
@@ -17,31 +17,31 @@ import {
   Text,
   TextInput,
   View
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { WorkoutMatrix } from "./WorkoutMatrix";
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { WorkoutMatrix } from './WorkoutMatrix'
 
 // Types for tracking actual reps
 type SetCompletion = {
-  stepKey: string;
-  exerciseId: string;
-  targetReps: number;
-  actualReps: number;
-  setNumber: number;
-  totalSets: number;
+  stepKey: string
+  exerciseId: string
+  targetReps: number
+  actualReps: number
+  setNumber: number
+  totalSets: number
   /** Index of the block in the session (for per-set updates) */
-  blockIndex?: number;
-};
+  blockIndex?: number
+}
 
 type Props = {
-  session: ProgramSession;
-  timer: UseWorkoutTimerReturn;
-  steps: WorkoutStep[];
-  program: Program;
-  exerciseNameById: Map<string, string>;
-  stepCompletion: UseStepCompletionReturn;
-  onProgramUpdate?: (updatedProgram: Program) => Promise<void>;
-};
+  session: ProgramSession
+  timer: UseWorkoutTimerReturn
+  steps: WorkoutStep[]
+  program: Program
+  exerciseNameById: Map<string, string>
+  stepCompletion: UseStepCompletionReturn
+  onProgramUpdate?: (updatedProgram: Program) => Promise<void>
+}
 
 export function WorkoutExecutionScreen({
   session,
@@ -52,31 +52,31 @@ export function WorkoutExecutionScreen({
   stepCompletion,
   onProgramUpdate
 }: Props) {
-  const title = session.name ?? `Session ${session.index}`;
-  const current = timer.currentStep;
-  const currentStepIndex = timer.currentIndex;
+  const title = session.name ?? `Session ${session.index}`
+  const current = timer.currentStep
+  const currentStepIndex = timer.currentIndex
 
   // Step completion tracking for free navigation
   const { getStepStatus, getCompletionCount, markCompleted, markSkipped } =
-    stepCompletion;
+    stepCompletion
 
   // Track completed sets with actual reps
-  const [, setCompletedSets] = useState<SetCompletion[]>([]);
-  const [currentReps, setCurrentReps] = useState<number | null>(null);
-  const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
+  const [, setCompletedSets] = useState<SetCompletion[]>([])
+  const [currentReps, setCurrentReps] = useState<number | null>(null)
+  const [showUpdatePrompt, setShowUpdatePrompt] = useState(false)
   const [lastCompletion, setLastCompletion] = useState<SetCompletion | null>(
     null
-  );
+  )
 
   // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const scaleAnim = useRef(new Animated.Value(0.95)).current
+  const pulseAnim = useRef(new Animated.Value(1)).current
 
   // Animate on mount and step change
   useEffect(() => {
-    fadeAnim.setValue(0);
-    scaleAnim.setValue(0.95);
+    fadeAnim.setValue(0)
+    scaleAnim.setValue(0.95)
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -89,12 +89,12 @@ export function WorkoutExecutionScreen({
         tension: 40,
         useNativeDriver: true
       })
-    ]).start();
-  }, [current?.key, fadeAnim, scaleAnim]);
+    ]).start()
+  }, [current?.key, fadeAnim, scaleAnim])
 
   // Pulse animation for timer
   useEffect(() => {
-    if (timer.phase === "timed" && !timer.isPaused) {
+    if (timer.phase === 'timed' && !timer.isPaused) {
       const pulse = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
@@ -108,56 +108,56 @@ export function WorkoutExecutionScreen({
             useNativeDriver: true
           })
         ])
-      );
-      pulse.start();
-      return () => pulse.stop();
+      )
+      pulse.start()
+      return () => pulse.stop()
     } else {
-      pulseAnim.setValue(1);
+      pulseAnim.setValue(1)
     }
-  }, [timer.phase, timer.isPaused, pulseAnim]);
+  }, [timer.phase, timer.isPaused, pulseAnim])
 
   // Initialize current reps when step changes
   const currentTargetReps =
-    current?.type === "exercise" ? current.targetReps : undefined;
+    current?.type === 'exercise' ? current.targetReps : undefined
   useEffect(() => {
-    if (current?.type === "exercise" && currentTargetReps) {
-      setCurrentReps(currentTargetReps);
+    if (current?.type === 'exercise' && currentTargetReps) {
+      setCurrentReps(currentTargetReps)
     } else {
-      setCurrentReps(null);
+      setCurrentReps(null)
     }
-  }, [current?.key, current?.type, currentTargetReps]);
+  }, [current?.key, current?.type, currentTargetReps])
 
   const getStepLabel = useCallback(
     (step: WorkoutStep | null): string => {
-      if (!step) return "";
-      if (step.type === "warmup") return "Warmup";
-      if (step.type === "rest") return "Rest";
-      if (step.type === "exercise") {
-        return exerciseNameById.get(step.exerciseId) ?? "Exercise";
+      if (!step) return ''
+      if (step.type === 'warmup') return 'Warmup'
+      if (step.type === 'rest') return 'Rest'
+      if (step.type === 'exercise') {
+        return exerciseNameById.get(step.exerciseId) ?? 'Exercise'
       }
-      return "";
+      return ''
     },
     [exerciseNameById]
-  );
+  )
 
   // Get phase color based on current step
   const getPhaseColor = useCallback(() => {
-    if (timer.phase === "done") return theme.colors.phases.done;
-    if (current?.type === "warmup") return theme.colors.phases.warmup;
-    if (current?.type === "rest") return theme.colors.phases.break;
-    return theme.colors.phases.working;
-  }, [timer.phase, current?.type]);
+    if (timer.phase === 'done') return theme.colors.phases.done
+    if (current?.type === 'warmup') return theme.colors.phases.warmup
+    if (current?.type === 'rest') return theme.colors.phases.break
+    return theme.colors.phases.working
+  }, [timer.phase, current?.type])
 
   const getPhaseBgColor = useCallback(() => {
-    if (timer.phase === "done") return theme.colors.phases.doneBg;
-    if (current?.type === "warmup") return theme.colors.phases.warmupBg;
-    if (current?.type === "rest") return theme.colors.phases.breakBg;
-    return theme.colors.phases.workingBg;
-  }, [timer.phase, current?.type]);
+    if (timer.phase === 'done') return theme.colors.phases.doneBg
+    if (current?.type === 'warmup') return theme.colors.phases.warmupBg
+    if (current?.type === 'rest') return theme.colors.phases.breakBg
+    return theme.colors.phases.workingBg
+  }, [timer.phase, current?.type])
 
   // Handle completing a set with actual reps
   const handleCompleteSet = useCallback(() => {
-    if (current?.type === "exercise" && currentReps !== null) {
+    if (current?.type === 'exercise' && currentReps !== null) {
       const completion: SetCompletion = {
         stepKey: current.key,
         exerciseId: current.exerciseId,
@@ -166,69 +166,69 @@ export function WorkoutExecutionScreen({
         setNumber: current.setNumber ?? 1,
         totalSets: current.totalSets ?? 1,
         blockIndex: current.blockIndex
-      };
+      }
 
-      setCompletedSets((prev) => [...prev, completion]);
+      setCompletedSets(prev => [...prev, completion])
 
       // Mark step as completed in tracking
-      markCompleted(currentStepIndex, currentReps);
+      markCompleted(currentStepIndex, currentReps)
 
       // Show update prompt if reps differ from target
       if (currentReps !== current.targetReps) {
-        setLastCompletion(completion);
-        setShowUpdatePrompt(true);
+        setLastCompletion(completion)
+        setShowUpdatePrompt(true)
       }
     }
 
-    timer.handleComplete();
-  }, [current, currentReps, currentStepIndex, markCompleted, timer]);
+    timer.handleComplete()
+  }, [current, currentReps, currentStepIndex, markCompleted, timer])
 
   // Adjust reps
   const adjustReps = useCallback((delta: number) => {
-    setCurrentReps((prev) => Math.max(0, (prev ?? 0) + delta));
-  }, []);
+    setCurrentReps(prev => Math.max(0, (prev ?? 0) + delta))
+  }, [])
 
   // Handle skipping a step
   const handleSkip = useCallback(() => {
-    markSkipped(currentStepIndex);
-    timer.handleSkip();
-  }, [currentStepIndex, markSkipped, timer]);
+    markSkipped(currentStepIndex)
+    timer.handleSkip()
+  }, [currentStepIndex, markSkipped, timer])
 
   // Track previous step index for detecting natural advancement
-  const prevStepIndexRef = useRef(currentStepIndex);
+  const prevStepIndexRef = useRef(currentStepIndex)
 
   // When step index advances by 1 (natural completion), mark the previous step as completed
   // This handles timed steps (warmup/rest) that complete when their timer finishes
   useEffect(() => {
-    const prevIndex = prevStepIndexRef.current;
-    const currentIndex = currentStepIndex;
+    const prevIndex = prevStepIndexRef.current
+    const currentIndex = currentStepIndex
 
     // Only mark as completed if:
     // - We advanced by exactly 1 (natural advancement, not a jump)
     // - The previous step wasn't already tracked (pending status)
     if (currentIndex === prevIndex + 1) {
-      const prevStatus = getStepStatus(prevIndex);
-      if (prevStatus === "pending") {
-        markCompleted(prevIndex);
+      const prevStatus = getStepStatus(prevIndex)
+      if (prevStatus === 'pending') {
+        markCompleted(prevIndex)
       }
     }
 
-    prevStepIndexRef.current = currentIndex;
-  }, [currentStepIndex, getStepStatus, markCompleted]);
+    prevStepIndexRef.current = currentIndex
+  }, [currentStepIndex, getStepStatus, markCompleted])
 
   // Get next step info
-  const nextStep = steps[currentStepIndex + 1] ?? null;
-  const nextLabel = getStepLabel(nextStep);
+  const nextStep = steps[currentStepIndex + 1] ?? null
+  const nextLabel = getStepLabel(nextStep)
 
   // Render content based on current state
   const renderContent = () => {
-    if (timer.phase === "done") return renderCompletedState();
-    if (timer.phase === "timed") return renderTimerState();
-    if (current?.type === "exercise") return renderExerciseState();
-    if (current?.type === "warmup") return renderWarmupState();
-    if (current?.type === "rest") return renderRestReadyState();
-    return null;
-  };
+    if (timer.phase === 'done') return renderCompletedState()
+    if (timer.phase === 'timed') return renderTimerState()
+    if (current?.type === 'exercise') return renderExerciseState()
+    if (current?.type === 'warmup') return renderWarmupState()
+    if (current?.type === 'rest') return renderRestReadyState()
+    return null
+  }
 
   const renderCompletedState = () => (
     <View style={styles.stateContainer}>
@@ -258,13 +258,13 @@ export function WorkoutExecutionScreen({
         </View>
       </View>
     </View>
-  );
+  )
 
   const renderTimerState = () => {
-    const isWarmup = current?.type === "warmup";
-    const isRest = current?.type === "rest";
-    const label = isWarmup ? "Warmup" : isRest ? "Rest" : getStepLabel(current);
-    const phaseColor = getPhaseColor();
+    const isWarmup = current?.type === 'warmup'
+    const isRest = current?.type === 'rest'
+    const label = isWarmup ? 'Warmup' : isRest ? 'Rest' : getStepLabel(current)
+    const phaseColor = getPhaseColor()
 
     return (
       <View style={styles.stateContainer}>
@@ -272,12 +272,12 @@ export function WorkoutExecutionScreen({
           style={[styles.phaseChip, { backgroundColor: getPhaseBgColor() }]}
         >
           <Ionicons
-            name={isWarmup ? "flame" : isRest ? "hourglass" : "barbell"}
+            name={isWarmup ? 'flame' : isRest ? 'hourglass' : 'barbell'}
             size={14}
             color={phaseColor}
           />
           <Text style={[styles.phaseChipText, { color: phaseColor }]}>
-            {isWarmup ? "Warmup" : isRest ? "Rest" : "Exercise"}
+            {isWarmup ? 'Warmup' : isRest ? 'Rest' : 'Exercise'}
           </Text>
         </View>
         <Text style={styles.timerLabel}>{label}</Text>
@@ -294,8 +294,8 @@ export function WorkoutExecutionScreen({
         )}
         {isWarmup && <Text style={styles.timerNext}>Prepare your body</Text>}
       </View>
-    );
-  };
+    )
+  }
 
   const renderWarmupState = () => (
     <View style={styles.stateContainer}>
@@ -320,13 +320,13 @@ export function WorkoutExecutionScreen({
         </Text>
       </View>
       <Text style={styles.warmupDuration}>
-        {current?.type === "warmup" ? formatTime(current.seconds) : ""}
+        {current?.type === 'warmup' ? formatTime(current.seconds) : ''}
       </Text>
       <Text style={styles.stateSubtitle}>
         Prepare your body for the workout
       </Text>
     </View>
-  );
+  )
 
   const renderRestReadyState = () => (
     <View style={styles.stateContainer}>
@@ -355,17 +355,17 @@ export function WorkoutExecutionScreen({
         </Text>
       </View>
       <Text style={styles.restDuration}>
-        {current?.type === "rest" ? `${current.seconds}s` : ""}
+        {current?.type === 'rest' ? `${current.seconds}s` : ''}
       </Text>
       {nextLabel && <Text style={styles.stateSubtitle}>Next: {nextLabel}</Text>}
     </View>
-  );
+  )
 
   const renderExerciseState = () => {
-    if (current?.type !== "exercise") return null;
+    if (current?.type !== 'exercise') return null
 
-    const exerciseName = exerciseNameById.get(current.exerciseId) ?? "Exercise";
-    const hasMultipleSets = current.totalSets && current.totalSets > 1;
+    const exerciseName = exerciseNameById.get(current.exerciseId) ?? 'Exercise'
+    const hasMultipleSets = current.totalSets && current.totalSets > 1
 
     return (
       <View style={styles.stateContainer}>
@@ -418,10 +418,10 @@ export function WorkoutExecutionScreen({
                 <TextInput
                   style={styles.repInput}
                   value={String(currentReps ?? 0)}
-                  onChangeText={(text) => {
-                    const num = parseInt(text, 10);
+                  onChangeText={text => {
+                    const num = parseInt(text, 10)
                     if (!isNaN(num) && num >= 0) {
-                      setCurrentReps(num);
+                      setCurrentReps(num)
                     }
                   }}
                   keyboardType="number-pad"
@@ -466,14 +466,14 @@ export function WorkoutExecutionScreen({
           </View>
         )}
       </View>
-    );
-  };
+    )
+  }
 
   // Progress percentage
-  const progressPercent = Math.round(timer.progress * 100);
+  const progressPercent = Math.round(timer.progress * 100)
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable
@@ -542,7 +542,7 @@ export function WorkoutExecutionScreen({
         </Animated.View>
 
         {/* Up Next section */}
-        {nextStep && timer.phase !== "done" && (
+        {nextStep && timer.phase !== 'done' && (
           <View style={styles.upNextSection}>
             <Text style={styles.sectionLabel}>Up Next</Text>
             <View style={styles.upNextCard}>
@@ -551,9 +551,9 @@ export function WorkoutExecutionScreen({
                   styles.upNextIcon,
                   {
                     backgroundColor:
-                      nextStep.type === "warmup"
+                      nextStep.type === 'warmup'
                         ? theme.colors.phases.warmupBg
-                        : nextStep.type === "rest"
+                        : nextStep.type === 'rest'
                           ? theme.colors.phases.breakBg
                           : theme.colors.phases.workingBg
                   }
@@ -561,17 +561,17 @@ export function WorkoutExecutionScreen({
               >
                 <Ionicons
                   name={
-                    nextStep.type === "exercise"
-                      ? "barbell-outline"
-                      : nextStep.type === "warmup"
-                        ? "flame-outline"
-                        : "time-outline"
+                    nextStep.type === 'exercise'
+                      ? 'barbell-outline'
+                      : nextStep.type === 'warmup'
+                        ? 'flame-outline'
+                        : 'time-outline'
                   }
                   size={16}
                   color={
-                    nextStep.type === "warmup"
+                    nextStep.type === 'warmup'
                       ? theme.colors.phases.warmup
-                      : nextStep.type === "rest"
+                      : nextStep.type === 'rest'
                         ? theme.colors.phases.break
                         : theme.colors.phases.working
                   }
@@ -580,12 +580,12 @@ export function WorkoutExecutionScreen({
               <Text style={styles.upNextName} numberOfLines={1}>
                 {nextLabel}
               </Text>
-              {nextStep.type === "exercise" && nextStep.targetReps && (
+              {nextStep.type === 'exercise' && nextStep.targetReps && (
                 <Text style={styles.upNextDetail}>
                   {nextStep.targetReps} reps
                 </Text>
               )}
-              {nextStep.type === "rest" && (
+              {nextStep.type === 'rest' && (
                 <Text style={styles.upNextDetail}>{nextStep.seconds}s</Text>
               )}
             </View>
@@ -593,7 +593,7 @@ export function WorkoutExecutionScreen({
         )}
 
         {/* Workout Matrix */}
-        {timer.phase !== "done" && (
+        {timer.phase !== 'done' && (
           <WorkoutMatrix
             steps={steps}
             currentStepIndex={currentStepIndex}
@@ -610,9 +610,9 @@ export function WorkoutExecutionScreen({
 
       {/* Footer actions */}
       <View style={styles.footer}>
-        <SafeAreaView edges={["bottom"]} style={styles.footerSafeArea}>
+        <SafeAreaView edges={['bottom']} style={styles.footerSafeArea}>
           <View style={styles.footerContent}>
-            {timer.phase === "done" ? (
+            {timer.phase === 'done' ? (
               <Pressable
                 style={({ pressed }) => [
                   styles.primaryButton,
@@ -628,7 +628,7 @@ export function WorkoutExecutionScreen({
                 />
                 <Text style={styles.primaryButtonText}>Done</Text>
               </Pressable>
-            ) : timer.phase === "timed" ? (
+            ) : timer.phase === 'timed' ? (
               <>
                 <Pressable
                   style={({ pressed }) => [
@@ -652,12 +652,12 @@ export function WorkoutExecutionScreen({
                   onPress={timer.handlePauseResume}
                 >
                   <Ionicons
-                    name={timer.isPaused ? "play" : "pause"}
+                    name={timer.isPaused ? 'play' : 'pause'}
                     size={20}
                     color={theme.colors.primaryTextOn}
                   />
                   <Text style={styles.primaryButtonText}>
-                    {timer.isPaused ? "Resume" : "Pause"}
+                    {timer.isPaused ? 'Resume' : 'Pause'}
                   </Text>
                 </Pressable>
               </>
@@ -683,30 +683,30 @@ export function WorkoutExecutionScreen({
                     pressed && styles.primaryButtonPressed
                   ]}
                   onPress={
-                    current?.type === "exercise"
+                    current?.type === 'exercise'
                       ? handleCompleteSet
                       : timer.handleComplete
                   }
                 >
                   <Ionicons
                     name={
-                      current?.type === "exercise" && !current.durationSeconds
-                        ? "checkmark-circle"
-                        : "play"
+                      current?.type === 'exercise' && !current.durationSeconds
+                        ? 'checkmark-circle'
+                        : 'play'
                     }
                     size={20}
                     color={theme.colors.primaryTextOn}
                   />
                   <Text style={styles.primaryButtonText}>
-                    {current?.type === "warmup"
-                      ? "Start"
-                      : current?.type === "rest"
-                        ? "Start"
-                        : current?.type === "exercise"
+                    {current?.type === 'warmup'
+                      ? 'Start'
+                      : current?.type === 'rest'
+                        ? 'Start'
+                        : current?.type === 'exercise'
                           ? current.durationSeconds
-                            ? "Start"
-                            : "Complete"
-                          : "Continue"}
+                            ? 'Start'
+                            : 'Complete'
+                          : 'Continue'}
                   </Text>
                 </Pressable>
               </>
@@ -728,17 +728,17 @@ export function WorkoutExecutionScreen({
             </View>
             <Text style={styles.modalTitle}>Update Program?</Text>
             <Text style={styles.modalText}>
-              You completed{" "}
+              You completed{' '}
               <Text style={styles.modalHighlight}>
                 {lastCompletion.actualReps} reps
-              </Text>{" "}
+              </Text>{' '}
               instead of {lastCompletion.targetReps}.
             </Text>
             <Text style={styles.modalSubtext}>
-              Update{" "}
+              Update{' '}
               {lastCompletion.totalSets > 1
                 ? `set ${lastCompletion.setNumber}`
-                : "this exercise"}{" "}
+                : 'this exercise'}{' '}
               to {lastCompletion.actualReps} reps for future workouts?
             </Text>
             <View style={styles.modalButtons}>
@@ -758,74 +758,74 @@ export function WorkoutExecutionScreen({
                 ]}
                 onPress={async () => {
                   if (!lastCompletion || !onProgramUpdate) {
-                    setShowUpdatePrompt(false);
-                    return;
+                    setShowUpdatePrompt(false)
+                    return
                   }
 
                   // Use blockIndex from completion if available, otherwise find by exerciseId
-                  let blockIndex = lastCompletion.blockIndex;
+                  let blockIndex = lastCompletion.blockIndex
                   if (blockIndex === undefined) {
                     blockIndex = program.blocks.findIndex(
-                      (block) =>
-                        block.type === "exercise" &&
+                      block =>
+                        block.type === 'exercise' &&
                         block.exerciseId === lastCompletion.exerciseId
-                    );
+                    )
                   }
 
                   if (blockIndex === -1 || blockIndex === undefined) {
-                    setShowUpdatePrompt(false);
-                    return;
+                    setShowUpdatePrompt(false)
+                    return
                   }
 
-                  const updatedBlocks = [...program.blocks];
-                  const block = updatedBlocks[blockIndex];
-                  if (block.type === "exercise") {
-                    const totalSets = block.sets ?? 1;
-                    const setIndex = lastCompletion.setNumber - 1; // Convert to 0-based
+                  const updatedBlocks = [...program.blocks]
+                  const block = updatedBlocks[blockIndex]
+                  if (block.type === 'exercise') {
+                    const totalSets = block.sets ?? 1
+                    const setIndex = lastCompletion.setNumber - 1 // Convert to 0-based
 
                     // Handle per-set rep update
-                    let newTargetReps: number | number[];
+                    let newTargetReps: number | number[]
 
                     if (totalSets === 1) {
                       // Single set - just update the value
-                      newTargetReps = lastCompletion.actualReps;
-                    } else if (typeof block.targetReps === "number") {
+                      newTargetReps = lastCompletion.actualReps
+                    } else if (typeof block.targetReps === 'number') {
                       // Convert single number to array and update specific set
-                      const repsArray = Array(totalSets).fill(block.targetReps);
-                      repsArray[setIndex] = lastCompletion.actualReps;
-                      newTargetReps = repsArray;
+                      const repsArray = Array(totalSets).fill(block.targetReps)
+                      repsArray[setIndex] = lastCompletion.actualReps
+                      newTargetReps = repsArray
                     } else if (Array.isArray(block.targetReps)) {
                       // Already an array - update specific set
-                      newTargetReps = [...block.targetReps];
+                      newTargetReps = [...block.targetReps]
                       // Ensure array is long enough
                       while (newTargetReps.length < totalSets) {
                         newTargetReps.push(
                           newTargetReps[newTargetReps.length - 1] ?? 0
-                        );
+                        )
                       }
-                      newTargetReps[setIndex] = lastCompletion.actualReps;
+                      newTargetReps[setIndex] = lastCompletion.actualReps
                     } else {
                       // Fallback - single value
-                      newTargetReps = lastCompletion.actualReps;
+                      newTargetReps = lastCompletion.actualReps
                     }
 
                     updatedBlocks[blockIndex] = {
                       ...block,
                       targetReps: newTargetReps
-                    };
+                    }
                   }
 
                   const updatedProgram: Program = {
                     ...program,
                     blocks: updatedBlocks,
                     updatedAt: new Date().toISOString()
-                  };
+                  }
 
                   try {
-                    await onProgramUpdate(updatedProgram);
-                    setShowUpdatePrompt(false);
+                    await onProgramUpdate(updatedProgram)
+                    setShowUpdatePrompt(false)
                   } catch (error) {
-                    console.error("Failed to update program:", error);
+                    console.error('Failed to update program:', error)
                   }
                 }}
               >
@@ -836,7 +836,7 @@ export function WorkoutExecutionScreen({
         </View>
       )}
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -847,8 +847,8 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.surface,
@@ -857,14 +857,14 @@ const styles = StyleSheet.create({
   headerButton: {
     width: 36,
     height: 36,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.background
   },
   headerCenter: {
     flex: 1,
-    alignItems: "center"
+    alignItems: 'center'
   },
   headerTitle: {
     ...theme.typography.bodyBold,
@@ -876,8 +876,8 @@ const styles = StyleSheet.create({
     marginTop: 1
   },
   headerTimer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
     backgroundColor: theme.colors.background,
@@ -886,13 +886,13 @@ const styles = StyleSheet.create({
   headerTimerText: {
     ...theme.typography.captionBold,
     color: theme.colors.text,
-    fontVariant: ["tabular-nums"]
+    fontVariant: ['tabular-nums']
   },
 
   // Progress
   progressContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.surface,
@@ -903,17 +903,17 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: theme.colors.border,
     borderRadius: theme.radius.sm,
-    overflow: "hidden"
+    overflow: 'hidden'
   },
   progressFill: {
-    height: "100%",
+    height: '100%',
     borderRadius: theme.radius.sm
   },
   progressText: {
     ...theme.typography.small,
     color: theme.colors.muted,
     width: 32,
-    textAlign: "right"
+    textAlign: 'right'
   },
 
   // Scroll
@@ -937,33 +937,33 @@ const styles = StyleSheet.create({
 
   // State container (shared)
   stateContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: theme.spacing.md
   },
   stateIcon: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: theme.spacing.lg
   },
   stateTitle: {
     ...theme.typography.h1,
     color: theme.colors.text,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: theme.spacing.xs
   },
   stateSubtitle: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center"
+    textAlign: 'center'
   },
 
   // Phase chip
   phaseChip: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
@@ -973,7 +973,7 @@ const styles = StyleSheet.create({
   phaseChipText: {
     ...theme.typography.small,
     fontFamily: theme.fonts.semiBold,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     letterSpacing: 0.5
   },
 
@@ -981,13 +981,13 @@ const styles = StyleSheet.create({
   timerLabel: {
     ...theme.typography.h3,
     color: theme.colors.text,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: theme.spacing.sm
   },
   timerDisplay: {
     fontSize: 64,
     fontFamily: theme.fonts.bold,
-    fontVariant: ["tabular-nums"],
+    fontVariant: ['tabular-nums'],
     letterSpacing: -2
   },
   timerNext: {
@@ -1016,7 +1016,7 @@ const styles = StyleSheet.create({
   exerciseName: {
     ...theme.typography.h1,
     color: theme.colors.text,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: theme.spacing.sm
   },
   setIndicator: {
@@ -1031,12 +1031,12 @@ const styles = StyleSheet.create({
     color: theme.colors.primary
   },
   repCounter: {
-    alignItems: "center",
-    width: "100%"
+    alignItems: 'center',
+    width: '100%'
   },
   repInputRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.lg
   },
   repButton: {
@@ -1044,8 +1044,8 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 26,
     backgroundColor: theme.colors.background,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: theme.colors.border
   },
@@ -1054,15 +1054,15 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.95 }]
   },
   repInputContainer: {
-    alignItems: "center"
+    alignItems: 'center'
   },
   repInput: {
     fontSize: 52,
     fontFamily: theme.fonts.bold,
     color: theme.colors.text,
-    textAlign: "center",
+    textAlign: 'center',
     minWidth: 80,
-    fontVariant: ["tabular-nums"]
+    fontVariant: ['tabular-nums']
   },
   repInputLabel: {
     ...theme.typography.caption,
@@ -1075,7 +1075,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md
   },
   durationDisplay: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: theme.spacing.lg
   },
   durationValue: {
@@ -1089,14 +1089,14 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xs
   },
   noteContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     gap: theme.spacing.sm,
     marginTop: theme.spacing.xl,
     padding: theme.spacing.md,
     backgroundColor: theme.colors.primaryLight,
     borderRadius: theme.radius.md,
-    width: "100%"
+    width: '100%'
   },
   noteText: {
     ...theme.typography.caption,
@@ -1106,8 +1106,8 @@ const styles = StyleSheet.create({
 
   // Completed stats
   completedStats: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: theme.spacing.xl,
     paddingTop: theme.spacing.lg,
     borderTopWidth: 1,
@@ -1115,7 +1115,7 @@ const styles = StyleSheet.create({
   },
   completedStatItem: {
     flex: 1,
-    alignItems: "center"
+    alignItems: 'center'
   },
   completedStatValue: {
     ...theme.typography.h2,
@@ -1139,14 +1139,14 @@ const styles = StyleSheet.create({
   sectionLabel: {
     ...theme.typography.small,
     color: theme.colors.muted,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: theme.spacing.sm,
     marginLeft: theme.spacing.xs
   },
   upNextCard: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md,
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
@@ -1157,8 +1157,8 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: theme.radius.sm,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   upNextName: {
     ...theme.typography.bodyBold,
@@ -1172,7 +1172,7 @@ const styles = StyleSheet.create({
 
   // Footer
   footer: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
@@ -1181,11 +1181,11 @@ const styles = StyleSheet.create({
     borderTopColor: theme.colors.border
   },
   footerSafeArea: {
-    width: "100%"
+    width: '100%'
   },
   footerContent: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md,
@@ -1194,8 +1194,8 @@ const styles = StyleSheet.create({
   iconButton: {
     width: 48,
     height: 48,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: theme.colors.background,
     borderRadius: theme.radius.md,
     borderWidth: 1,
@@ -1206,9 +1206,9 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.95 }]
   },
   secondaryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: theme.spacing.xs,
     height: 48,
     paddingHorizontal: theme.spacing.lg,
@@ -1227,9 +1227,9 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: theme.spacing.sm,
     height: 48,
     backgroundColor: theme.colors.primary,
@@ -1249,43 +1249,43 @@ const styles = StyleSheet.create({
 
   // Modal
   modalOverlay: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     backgroundColor: theme.colors.overlay,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: theme.spacing.lg
   },
   modalContent: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
     padding: theme.spacing.xl,
-    width: "100%",
+    width: '100%',
     maxWidth: 320,
-    alignItems: "center"
+    alignItems: 'center'
   },
   modalIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: theme.spacing.lg
   },
   modalTitle: {
     ...theme.typography.h2,
     color: theme.colors.text,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: theme.spacing.sm
   },
   modalText: {
     ...theme.typography.body,
     color: theme.colors.subtext,
-    textAlign: "center"
+    textAlign: 'center'
   },
   modalHighlight: {
     ...theme.typography.bodyBold,
@@ -1294,14 +1294,14 @@ const styles = StyleSheet.create({
   modalSubtext: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    textAlign: "center",
+    textAlign: 'center',
     marginTop: theme.spacing.xs,
     marginBottom: theme.spacing.xl
   },
   modalButtons: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.md,
-    width: "100%"
+    width: '100%'
   },
   modalButtonSecondary: {
     flex: 1,
@@ -1309,7 +1309,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    alignItems: "center"
+    alignItems: 'center'
   },
   modalButtonSecondaryText: {
     ...theme.typography.bodyBold,
@@ -1320,7 +1320,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.primary,
-    alignItems: "center"
+    alignItems: 'center'
   },
   modalButtonPrimaryText: {
     ...theme.typography.bodyBold,
@@ -1330,6 +1330,6 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.7
   }
-});
+})
 
-export default WorkoutExecutionScreen;
+export default WorkoutExecutionScreen

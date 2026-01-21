@@ -2,20 +2,20 @@
  * SessionListItem - Reusable session row component
  */
 
-import { formatCount, getTotalReps } from "@/lib/utils/format";
-import { theme } from "@/theme/theme";
-import type { ProgramSession } from "@/types";
-import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { formatCount, getTotalReps } from '@/lib/utils/format'
+import { theme } from '@/theme/theme'
+import type { ProgramSession } from '@/types'
+import { Ionicons } from '@expo/vector-icons'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 type Props = {
-  session: ProgramSession;
-  isCompleted?: boolean;
-  isLocked?: boolean;
-  isNext?: boolean;
-  onPress?: () => void;
-  subtitle?: string;
-};
+  session: ProgramSession
+  isCompleted?: boolean
+  isLocked?: boolean
+  isNext?: boolean
+  onPress?: () => void
+  subtitle?: string
+}
 
 export function SessionListItem({
   session,
@@ -26,17 +26,17 @@ export function SessionListItem({
   subtitle
 }: Props) {
   const defaultSubtitle = (() => {
-    const exerciseBlocks = session.blocks.filter((b) => b.type === "exercise");
+    const exerciseBlocks = session.blocks.filter(b => b.type === 'exercise')
     const totalReps = exerciseBlocks.reduce(
       (sum, b) => sum + getTotalReps(b.targetReps, b.sets),
       0
-    );
-    const setsCount = exerciseBlocks.length;
-    return `${formatCount(setsCount, "set")} • ${totalReps} target reps`;
-  })();
+    )
+    const setsCount = exerciseBlocks.length
+    return `${formatCount(setsCount, 'set')} • ${totalReps} target reps`
+  })()
 
-  const displaySubtitle = subtitle ?? defaultSubtitle;
-  const title = session.name || `Session ${session.index}`;
+  const displaySubtitle = subtitle ?? defaultSubtitle
+  const title = session.name || `Session ${session.index}`
 
   return (
     <Pressable
@@ -68,19 +68,19 @@ export function SessionListItem({
         <Text style={styles.subtitle}>{displaySubtitle}</Text>
       </View>
       <Ionicons
-        name={isLocked ? "lock-closed" : "chevron-forward"}
+        name={isLocked ? 'lock-closed' : 'chevron-forward'}
         size={16}
         color={theme.colors.muted}
       />
     </Pressable>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
     padding: theme.spacing.md,
@@ -101,8 +101,8 @@ const styles = StyleSheet.create({
     flex: 1
   },
   titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.xs
   },
   title: {
@@ -124,6 +124,6 @@ const styles = StyleSheet.create({
     ...theme.typography.small,
     color: theme.colors.primary
   }
-});
+})
 
-export default SessionListItem;
+export default SessionListItem

@@ -2,70 +2,70 @@
  * useExerciseProgression - Hook for loading exercise progression data for charts
  */
 
-import { useRefreshVersions } from "@/context/DataContext";
-import { useAsyncData } from "@/hooks/useAsyncData";
-import { storage } from "@/lib/storage";
-import { useCallback } from "react";
+import { useRefreshVersions } from '@/context/DataContext'
+import { useAsyncData } from '@/hooks/useAsyncData'
+import { storage } from '@/lib/storage'
+import { useCallback } from 'react'
 
 export type ProgressionDataPoint = {
-  date: string;
-  reps: number;
-  maxWeight?: number;
-  volume?: number;
-};
+  date: string
+  reps: number
+  maxWeight?: number
+  volume?: number
+}
 
 export type ProgressionTrend = {
-  direction: "up" | "down" | "stable";
-  delta: number;
-  percentChange: number;
-};
+  direction: 'up' | 'down' | 'stable'
+  delta: number
+  percentChange: number
+}
 
 export type ExerciseProgressionData = {
-  dataPoints: ProgressionDataPoint[];
-  trend: ProgressionTrend;
-  hasWeightData: boolean;
-};
+  dataPoints: ProgressionDataPoint[]
+  trend: ProgressionTrend
+  hasWeightData: boolean
+}
 
 export function useExerciseProgression(
   exerciseId: string | null,
   days: number = 30
 ): {
-  data: ExerciseProgressionData | null;
-  loading: boolean;
-  error: Error | null;
+  data: ExerciseProgressionData | null
+  loading: boolean
+  error: Error | null
 } {
-  const { progressVersion } = useRefreshVersions();
+  const { progressVersion } = useRefreshVersions()
 
   const fetcher =
     useCallback(async (): Promise<ExerciseProgressionData | null> => {
-      if (!exerciseId) return null;
+      if (!exerciseId) return null
 
-      const dataPoints = await storage.getExerciseProgression(exerciseId, days);
+      const dataPoints = await storage.getExerciseProgression(exerciseId, days)
 
       if (dataPoints.length === 0) {
         return {
           dataPoints: [],
-          trend: { direction: "stable", delta: 0, percentChange: 0 },
+          trend: { direction: 'stable', delta: 0, percentChange: 0 },
           hasWeightData: false
-        };
+        }
       }
 
       // Check if any data point has weight data
-      const hasWeightData = dataPoints.some((dp) => dp.maxWeight !== undefined);
+      const hasWeightData = dataPoints.some(dp => dp.maxWeight !== undefined)
 
       // Calculate trend based on reps (or weight if available)
-      const trend = calculateTrend(dataPoints, hasWeightData);
+      const trend = calculateTrend(dataPoints, hasWeightData)
 
-      return { dataPoints, trend, hasWeightData };
-    }, [exerciseId, days]);
+      return { dataPoints, trend, hasWeightData }
+    }, [exerciseId, days])
 
   const { data, loading, error } = useAsyncData(fetcher, [
     progressVersion,
     exerciseId,
     days
-  ]);
+  ])
 
-  return { data, loading, error };
+  return { data, loading, error }
 }
 
 function calculateTrend(
@@ -73,62 +73,62 @@ function calculateTrend(
   useWeight: boolean
 ): ProgressionTrend {
   if (dataPoints.length < 2) {
-    return { direction: "stable", delta: 0, percentChange: 0 };
+    return { direction: 'stable', delta: 0, percentChange: 0 }
   }
 
   // Compare first half average to second half average
-  const midpoint = Math.floor(dataPoints.length / 2);
-  const firstHalf = dataPoints.slice(0, midpoint);
-  const secondHalf = dataPoints.slice(midpoint);
+  const midpoint = Math.floor(dataPoints.length / 2)
+  const firstHalf = dataPoints.slice(0, midpoint)
+  const secondHalf = dataPoints.slice(midpoint)
 
   const getValue = (dp: ProgressionDataPoint) =>
-    useWeight && dp.maxWeight !== undefined ? dp.maxWeight : dp.reps;
+    useWeight && dp.maxWeight !== undefined ? dp.maxWeight : dp.reps
 
   const firstAvg =
-    firstHalf.reduce((sum, dp) => sum + getValue(dp), 0) / firstHalf.length;
+    firstHalf.reduce((sum, dp) => sum + getValue(dp), 0) / firstHalf.length
   const secondAvg =
-    secondHalf.reduce((sum, dp) => sum + getValue(dp), 0) / secondHalf.length;
+    secondHalf.reduce((sum, dp) => sum + getValue(dp), 0) / secondHalf.length
 
-  const delta = secondAvg - firstAvg;
-  const percentChange = firstAvg > 0 ? (delta / firstAvg) * 100 : 0;
+  const delta = secondAvg - firstAvg
+  const percentChange = firstAvg > 0 ? (delta / firstAvg) * 100 : 0
 
-  let direction: "up" | "down" | "stable";
+  let direction: 'up' | 'down' | 'stable'
   if (percentChange > 5) {
-    direction = "up";
+    direction = 'up'
   } else if (percentChange < -5) {
-    direction = "down";
+    direction = 'down'
   } else {
-    direction = "stable";
+    direction = 'stable'
   }
 
   return {
     direction,
     delta: Math.round(delta * 10) / 10,
     percentChange: Math.round(percentChange * 10) / 10
-  };
+  }
 }
 
 /**
  * Hook to get list of exercises that have progression data
  */
 export function useExercisesWithProgression(): {
-  exerciseIds: string[];
-  loading: boolean;
+  exerciseIds: string[]
+  loading: boolean
 } {
-  const { progressVersion } = useRefreshVersions();
+  const { progressVersion } = useRefreshVersions()
 
   const fetcher = useCallback(async (): Promise<string[]> => {
     const [programProgress, challengeProgress] = await Promise.all([
       storage.loadAllProgramProgress(),
       storage.loadAllChallengeProgress()
-    ]);
+    ])
 
-    const exerciseIds = new Set<string>();
+    const exerciseIds = new Set<string>()
 
     for (const prog of programProgress) {
       for (const workout of prog.workouts ?? []) {
         for (const ex of workout.exercises ?? []) {
-          exerciseIds.add(ex.exerciseId);
+          exerciseIds.add(ex.exerciseId)
         }
       }
     }
@@ -136,15 +136,15 @@ export function useExercisesWithProgression(): {
     for (const challenge of challengeProgress) {
       for (const workout of challenge.workouts ?? []) {
         for (const ex of workout.exercises ?? []) {
-          exerciseIds.add(ex.exerciseId);
+          exerciseIds.add(ex.exerciseId)
         }
       }
     }
 
-    return Array.from(exerciseIds);
-  }, []);
+    return Array.from(exerciseIds)
+  }, [])
 
-  const { data, loading } = useAsyncData(fetcher, [progressVersion]);
+  const { data, loading } = useAsyncData(fetcher, [progressVersion])
 
-  return { exerciseIds: data ?? [], loading };
+  return { exerciseIds: data ?? [], loading }
 }

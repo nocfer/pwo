@@ -2,8 +2,8 @@
  * LineChart - Simple line chart with gradient fill
  */
 
-import { theme } from "@/theme/theme";
-import { StyleSheet, Text, View } from "react-native";
+import { theme } from '@/theme/theme'
+import { StyleSheet, Text, View } from 'react-native'
 import Svg, {
   Circle,
   Defs,
@@ -12,23 +12,23 @@ import Svg, {
   Path,
   Stop,
   Text as SvgText
-} from "react-native-svg";
+} from 'react-native-svg'
 
 export type DataPoint = {
-  date: string;
-  value: number;
-  label?: string;
-};
+  date: string
+  value: number
+  label?: string
+}
 
 type Props = {
-  data: DataPoint[];
-  height?: number;
-  showDots?: boolean;
-  showLabels?: boolean;
-  showGrid?: boolean;
-  valueFormatter?: (value: number) => string;
-  color?: string;
-};
+  data: DataPoint[]
+  height?: number
+  showDots?: boolean
+  showLabels?: boolean
+  showGrid?: boolean
+  valueFormatter?: (value: number) => string
+  color?: string
+}
 
 export default function LineChart({
   data,
@@ -36,7 +36,7 @@ export default function LineChart({
   showDots = true,
   showLabels = true,
   showGrid = true,
-  valueFormatter = (v) => String(v),
+  valueFormatter = v => String(v),
   color = theme.colors.primary
 }: Props) {
   if (data.length === 0) {
@@ -44,50 +44,50 @@ export default function LineChart({
       <View style={[styles.container, { height }]}>
         <Text style={styles.emptyText}>No data available</Text>
       </View>
-    );
+    )
   }
 
-  const width = 300; // Will be stretched via aspectRatio
-  const padding = { top: 20, right: 20, bottom: 40, left: 40 };
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
+  const width = 300 // Will be stretched via aspectRatio
+  const padding = { top: 20, right: 20, bottom: 40, left: 40 }
+  const chartWidth = width - padding.left - padding.right
+  const chartHeight = height - padding.top - padding.bottom
 
-  const values = data.map((d) => d.value);
-  const minValue = Math.min(...values);
-  const maxValue = Math.max(...values);
-  const valueRange = maxValue - minValue || 1;
+  const values = data.map(d => d.value)
+  const minValue = Math.min(...values)
+  const maxValue = Math.max(...values)
+  const valueRange = maxValue - minValue || 1
 
   // Scale values to chart dimensions
   const getX = (index: number) =>
-    padding.left + (index / (data.length - 1 || 1)) * chartWidth;
+    padding.left + (index / (data.length - 1 || 1)) * chartWidth
   const getY = (value: number) =>
-    padding.top + chartHeight - ((value - minValue) / valueRange) * chartHeight;
+    padding.top + chartHeight - ((value - minValue) / valueRange) * chartHeight
 
   // Build line path
   const linePath = data
     .map((point, index) => {
-      const x = getX(index);
-      const y = getY(point.value);
-      return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+      const x = getX(index)
+      const y = getY(point.value)
+      return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`
     })
-    .join(" ");
+    .join(' ')
 
   // Build fill path (closed polygon)
   const fillPath =
     linePath +
     ` L ${getX(data.length - 1)} ${padding.top + chartHeight}` +
     ` L ${padding.left} ${padding.top + chartHeight}` +
-    " Z";
+    ' Z'
 
   // Y-axis labels (3 values: min, mid, max)
   const yLabels = [
     { value: maxValue, y: padding.top },
     { value: (maxValue + minValue) / 2, y: padding.top + chartHeight / 2 },
     { value: minValue, y: padding.top + chartHeight }
-  ];
+  ]
 
   // X-axis labels (first, middle, last)
-  const xLabelIndices = [0, Math.floor(data.length / 2), data.length - 1];
+  const xLabelIndices = [0, Math.floor(data.length / 2), data.length - 1]
 
   return (
     <View style={styles.container}>
@@ -164,14 +164,14 @@ export default function LineChart({
         {/* X-axis labels */}
         {showLabels &&
           xLabelIndices.map((idx, position) => {
-            if (!data[idx]) return null;
-            const point = data[idx];
+            if (!data[idx]) return null
+            const point = data[idx]
             const label =
               point.label ||
-              new Date(point.date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric"
-              });
+              new Date(point.date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+              })
             return (
               <SvgText
                 key={`x-label-${position}-${idx}`}
@@ -183,21 +183,21 @@ export default function LineChart({
               >
                 {label}
               </SvgText>
-            );
+            )
           })}
       </Svg>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%"
+    width: '100%'
   },
   emptyText: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center",
+    textAlign: 'center',
     paddingVertical: theme.spacing.xl
   }
-});
+})

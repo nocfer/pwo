@@ -4,53 +4,53 @@
  * Allows users to create a new account with email and password
  */
 
-import { AuthErrorBanner } from "@/components/auth/AuthErrorBanner";
-import { AuthHeader } from "@/components/auth/AuthHeader";
-import { AuthLayout } from "@/components/auth/AuthLayout";
-import Button from "@/components/common/Button";
-import { useAuth } from "@/context/AuthContext";
-import { haptics } from "@/lib/haptics";
-import { theme } from "@/theme/theme";
-import { router } from "expo-router";
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner'
+import { AuthHeader } from '@/components/auth/AuthHeader'
+import { AuthLayout } from '@/components/auth/AuthLayout'
+import Button from '@/components/common/Button'
+import { useAuth } from '@/context/AuthContext'
+import { haptics } from '@/lib/haptics'
+import { theme } from '@/theme/theme'
+import { router } from 'expo-router'
+import { useState } from 'react'
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 
 export default function SignUpScreen() {
-  const { signUp, loading, error } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [localError, setLocalError] = useState<string | null>(null);
+  const { signUp, loading, error } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [localError, setLocalError] = useState<string | null>(null)
 
   const handleSignUp = async () => {
     // Validation
     if (!email.trim() || !password || !confirmPassword) {
-      setLocalError("Please fill in all fields");
-      return;
+      setLocalError('Please fill in all fields')
+      return
     }
 
     if (password.length < 6) {
-      setLocalError("Password must be at least 6 characters");
-      return;
+      setLocalError('Password must be at least 6 characters')
+      return
     }
 
     if (password !== confirmPassword) {
-      setLocalError("Passwords do not match");
-      return;
+      setLocalError('Passwords do not match')
+      return
     }
 
-    setLocalError(null);
-    await signUp(email, password).catch();
+    setLocalError(null)
+    await signUp(email, password).catch()
     // Navigation will happen automatically via auth state change
-  };
+  }
 
   const navigateToSignIn = () => {
-    haptics.buttonTap();
-    router.back();
-  };
+    haptics.buttonTap()
+    router.back()
+  }
 
-  const isLoading = loading;
-  const formError = localError ?? error;
+  const isLoading = loading
+  const formError = localError ?? error
 
   return (
     <AuthLayout>
@@ -114,7 +114,7 @@ export default function SignUpScreen() {
         </View>
 
         <Button
-          label={isLoading ? "Creating account..." : "Create Account"}
+          label={isLoading ? 'Creating account...' : 'Create Account'}
           variant="primary"
           size="lg"
           onPress={handleSignUp}
@@ -144,7 +144,7 @@ export default function SignUpScreen() {
         </View>
       </View>
     </AuthLayout>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -167,9 +167,9 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.sm
   },
   footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: theme.spacing.lg
   },
   footerText: {
@@ -187,4 +187,4 @@ const styles = StyleSheet.create({
     ...theme.typography.bodyBold,
     color: theme.colors.primary
   }
-});
+})

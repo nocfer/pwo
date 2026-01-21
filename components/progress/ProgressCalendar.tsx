@@ -1,14 +1,14 @@
-import { storage } from "@/lib/storage";
-import { theme } from "@/theme/theme";
-import { useEffect, useMemo, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { storage } from '@/lib/storage'
+import { theme } from '@/theme/theme'
+import { useEffect, useMemo, useState } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
 
 type Props = {
-  programId?: string;
-  challengeId?: string;
-  month?: number; // 0-11
-  year?: number;
-};
+  programId?: string
+  challengeId?: string
+  month?: number // 0-11
+  year?: number
+}
 
 export default function ProgressCalendar({
   programId,
@@ -16,68 +16,68 @@ export default function ProgressCalendar({
   month,
   year
 }: Props) {
-  const [completedDates, setCompletedDates] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const [completedDates, setCompletedDates] = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(true)
 
   const targetDate = useMemo(() => {
-    const now = new Date();
-    return new Date(year ?? now.getFullYear(), month ?? now.getMonth(), 1);
-  }, [month, year]);
+    const now = new Date()
+    return new Date(year ?? now.getFullYear(), month ?? now.getMonth(), 1)
+  }, [month, year])
 
   useEffect(() => {
-    let mounted = true;
+    let mounted = true
 
     async function loadCompletedDates() {
       try {
-        setLoading(true);
+        setLoading(true)
         const history = await storage.getProgressHistory(
           programId,
           challengeId,
           60 // Last 60 days
-        );
+        )
 
-        if (!mounted) return;
+        if (!mounted) return
 
-        const dates = new Set<string>();
-        history.forEach((entry) => {
-          dates.add(entry.date);
-        });
+        const dates = new Set<string>()
+        history.forEach(entry => {
+          dates.add(entry.date)
+        })
 
-        setCompletedDates(dates);
+        setCompletedDates(dates)
       } catch (e) {
-        console.error("Failed to load calendar data", e);
+        console.error('Failed to load calendar data', e)
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) setLoading(false)
       }
     }
 
-    loadCompletedDates();
+    loadCompletedDates()
 
     return () => {
-      mounted = false;
-    };
-  }, [programId, challengeId]);
+      mounted = false
+    }
+  }, [programId, challengeId])
 
   const daysInMonth = new Date(
     targetDate.getFullYear(),
     targetDate.getMonth() + 1,
     0
-  ).getDate();
+  ).getDate()
 
-  const firstDayOfWeek = targetDate.getDay();
-  const monthName = targetDate.toLocaleDateString("en-US", { month: "long" });
-  const yearNum = targetDate.getFullYear();
+  const firstDayOfWeek = targetDate.getDay()
+  const monthName = targetDate.toLocaleDateString('en-US', { month: 'long' })
+  const yearNum = targetDate.getFullYear()
 
   const days = useMemo(() => {
-    const result: { day: number; date: string; isToday: boolean }[] = [];
+    const result: { day: number; date: string; isToday: boolean }[] = []
 
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfWeek; i++) {
-      result.push({ day: 0, date: "", isToday: false });
+      result.push({ day: 0, date: '', isToday: false })
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
@@ -85,27 +85,27 @@ export default function ProgressCalendar({
         targetDate.getFullYear(),
         targetDate.getMonth(),
         day
-      );
-      const dateStr = date.toISOString().slice(0, 10);
+      )
+      const dateStr = date.toISOString().slice(0, 10)
       const isToday =
         date.getTime() === today.getTime() &&
         date.getMonth() === today.getMonth() &&
-        date.getFullYear() === today.getFullYear();
+        date.getFullYear() === today.getFullYear()
 
-      result.push({ day, date: dateStr, isToday });
+      result.push({ day, date: dateStr, isToday })
     }
 
-    return result;
-  }, [targetDate, daysInMonth, firstDayOfWeek]);
+    return result
+  }, [targetDate, daysInMonth, firstDayOfWeek])
 
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   if (loading) {
     return (
       <View style={styles.container}>
         <Text style={styles.muted}>Loading calendar...</Text>
       </View>
-    );
+    )
   }
 
   return (
@@ -117,7 +117,7 @@ export default function ProgressCalendar({
       </View>
 
       <View style={styles.weekDays}>
-        {weekDays.map((day) => (
+        {weekDays.map(day => (
           <View key={day} style={styles.weekDay}>
             <Text style={styles.weekDayText}>{day}</Text>
           </View>
@@ -127,10 +127,10 @@ export default function ProgressCalendar({
       <View style={styles.daysGrid}>
         {days.map((item, index) => {
           if (item.day === 0) {
-            return <View key={index} style={styles.dayCell} />;
+            return <View key={index} style={styles.dayCell} />
           }
 
-          const isCompleted = completedDates.has(item.date);
+          const isCompleted = completedDates.has(item.date)
 
           return (
             <View
@@ -152,11 +152,11 @@ export default function ProgressCalendar({
               </Text>
               {isCompleted && <View style={styles.checkmark} />}
             </View>
-          );
+          )
         })}
       </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: theme.spacing.md,
-    alignItems: "center"
+    alignItems: 'center'
   },
   monthYear: {
     ...theme.typography.h3,
@@ -180,16 +180,16 @@ const styles = StyleSheet.create({
   muted: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center",
+    textAlign: 'center',
     padding: theme.spacing.lg
   },
   weekDays: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: theme.spacing.xs
   },
   weekDay: {
     flex: 1,
-    alignItems: "center"
+    alignItems: 'center'
   },
   weekDayText: {
     ...theme.typography.caption,
@@ -197,15 +197,15 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.semiBold
   },
   daysGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap"
+    flexDirection: 'row',
+    flexWrap: 'wrap'
   },
   dayCell: {
-    width: "14.28%",
+    width: '14.28%',
     aspectRatio: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative"
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative'
   },
   dayCellCompleted: {
     backgroundColor: theme.colors.successLight,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.bold
   },
   checkmark: {
-    position: "absolute",
+    position: 'absolute',
     top: 2,
     right: 2,
     width: 6,
@@ -237,4 +237,4 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: theme.colors.success
   }
-});
+})

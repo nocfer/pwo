@@ -5,15 +5,15 @@
  * Requirements: 1.4, 1.5
  */
 
-import { theme } from "@/theme/theme";
-import { StyleSheet, View, ViewStyle } from "react-native";
-import { Skeleton } from "../common";
+import { theme } from '@/theme/theme'
+import { StyleSheet, View, ViewStyle } from 'react-native'
+import { Skeleton } from '../common'
 
 type Props = {
-  itemCount?: number;
-  showSearch?: boolean;
-  style?: ViewStyle;
-};
+  itemCount?: number
+  showSearch?: boolean
+  style?: ViewStyle
+}
 
 export function LoadingStateList({
   itemCount = 5,
@@ -28,7 +28,7 @@ export function LoadingStateList({
           <Skeleton
             height={44}
             borderRadius={theme.radius.lg}
-            style={{ width: "100%" }}
+            style={{ width: '100%' }}
           />
         </View>
       )}
@@ -52,7 +52,7 @@ export function LoadingStateList({
                 <Skeleton
                   height={18}
                   borderRadius={theme.radius.sm}
-                  style={{ width: "60%" }}
+                  style={{ width: '60%' }}
                 />
                 <Skeleton
                   width={60}
@@ -62,7 +62,7 @@ export function LoadingStateList({
               </View>
 
               {/* Description */}
-              <View style={{ width: "80%" }}>
+              <View style={{ width: '80%' }}>
                 <Skeleton
                   height={14}
                   borderRadius={theme.radius.sm}
@@ -91,7 +91,7 @@ export function LoadingStateList({
         ))}
       </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -111,8 +111,8 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xxl
   },
   itemContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -128,18 +128,18 @@ const styles = StyleSheet.create({
     flex: 1
   },
   itemHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: theme.spacing.sm
   },
   descriptionSkeleton: {
     marginBottom: theme.spacing.sm
   },
   metadata: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.md
   }
-});
+})
 
-export default LoadingStateList;
+export default LoadingStateList

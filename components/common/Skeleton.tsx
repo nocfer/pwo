@@ -1,14 +1,14 @@
-import { theme } from "@/theme/theme";
-import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet, View, ViewStyle } from "react-native";
+import { theme } from '@/theme/theme'
+import { LinearGradient } from 'expo-linear-gradient'
+import React, { useEffect, useRef } from 'react'
+import { Animated, StyleSheet, View, ViewStyle } from 'react-native'
 
 type SkeletonProps = {
-  width?: number;
-  height?: number;
-  borderRadius?: number;
-  style?: ViewStyle;
-};
+  width?: number
+  height?: number
+  borderRadius?: number
+  style?: ViewStyle
+}
 
 export function Skeleton({
   width,
@@ -16,7 +16,7 @@ export function Skeleton({
   borderRadius = theme.radius.sm,
   style
 }: SkeletonProps) {
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
+  const shimmerAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -32,15 +32,15 @@ export function Skeleton({
           useNativeDriver: true
         })
       ])
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [shimmerAnim]);
+    )
+    animation.start()
+    return () => animation.stop()
+  }, [shimmerAnim])
 
   const translateX = shimmerAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [-200, 200]
-  });
+  })
 
   return (
     <View
@@ -63,14 +63,14 @@ export function Skeleton({
         ]}
       >
         <LinearGradient
-          colors={["transparent", "rgba(255,255,255,0.4)", "transparent"]}
+          colors={['transparent', 'rgba(255,255,255,0.4)', 'transparent']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.gradient}
         />
       </Animated.View>
     </View>
-  );
+  )
 }
 
 // Pre-built skeleton variants
@@ -87,7 +87,7 @@ export function SkeletonCard() {
       <Skeleton height={14} style={{ marginTop: theme.spacing.md }} />
       <Skeleton width={150} height={14} style={{ marginTop: 8 }} />
     </View>
-  );
+  )
 }
 
 export function SkeletonChallengeButton() {
@@ -103,7 +103,7 @@ export function SkeletonChallengeButton() {
       </View>
       <Skeleton width={20} height={20} borderRadius={theme.radius.sm} />
     </View>
-  );
+  )
 }
 
 export function SkeletonSessionCard() {
@@ -131,7 +131,7 @@ export function SkeletonSessionCard() {
         <Skeleton width={50} height={28} borderRadius={theme.radius.sm} />
       </View>
     </View>
-  );
+  )
 }
 
 export function SkeletonStreakDots() {
@@ -156,16 +156,16 @@ export function SkeletonStreakDots() {
         style={{ marginTop: theme.spacing.md }}
       />
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   skeleton: {
     backgroundColor: theme.colors.skeleton,
-    overflow: "hidden"
+    overflow: 'hidden'
   },
   shimmer: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
@@ -184,17 +184,17 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border
   },
   cardHeader: {
-    flexDirection: "row",
-    alignItems: "center"
+    flexDirection: 'row',
+    alignItems: 'center'
   },
   cardHeaderText: {
     marginLeft: theme.spacing.sm,
     flex: 1
   },
   routineButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     borderWidth: 1,
@@ -203,8 +203,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg
   },
   routineButtonContent: {
-    flexDirection: "row",
-    alignItems: "center"
+    flexDirection: 'row',
+    alignItems: 'center'
   },
   sessionCard: {
     backgroundColor: theme.colors.surface,
@@ -214,30 +214,30 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg
   },
   sessionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center"
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
   },
   sessionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center"
+    flexDirection: 'row',
+    alignItems: 'center'
   },
   pillRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.sm,
     marginTop: theme.spacing.sm
   },
   streakContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: theme.spacing.md
   },
   streakRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.sm
   },
   dayContainer: {
-    alignItems: "center"
+    alignItems: 'center'
   }
-});
+})
 
-export default Skeleton;
+export default Skeleton

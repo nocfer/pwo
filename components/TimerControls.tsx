@@ -1,25 +1,25 @@
-import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { theme } from '@/theme/theme'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import React from 'react'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 export type TimerControlsProps = {
-  isPaused: boolean;
-  onPause: () => void;
-  onResume: () => void;
-  onSkip: () => void;
-  layout?: "row" | "column";
-};
+  isPaused: boolean
+  onPause: () => void
+  onResume: () => void
+  onSkip: () => void
+  layout?: 'row' | 'column'
+}
 
 export function TimerControls({
   isPaused,
   onPause,
   onResume,
   onSkip,
-  layout = "row"
+  layout = 'row'
 }: TimerControlsProps) {
   return (
-    <View style={[styles.container, layout === "row" && styles.row]}>
+    <View style={[styles.container, layout === 'row' && styles.row]}>
       {!isPaused ? (
         <Pressable
           style={({ pressed }) => [
@@ -72,7 +72,7 @@ export function TimerControls({
         <Text style={styles.buttonSecondaryText}>Skip</Text>
       </Pressable>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -80,14 +80,14 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm
   },
   row: {
-    flexDirection: "row",
-    alignItems: "center"
+    flexDirection: 'row',
+    alignItems: 'center'
   },
   button: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
     borderRadius: theme.radius.lg,
@@ -122,6 +122,6 @@ const styles = StyleSheet.create({
     ...theme.typography.bodyBold,
     color: theme.colors.text
   }
-});
+})
 
-export default TimerControls;
+export default TimerControls

@@ -3,12 +3,12 @@
  * Clean, professional form for creating and editing workout programs
  */
 
-import { haptics } from "@/lib/haptics";
-import { validateProgram } from "@/lib/validation";
-import { theme } from "@/theme/theme";
-import type { ProgramBlock } from "@/types";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useCallback, useMemo, useState } from "react";
+import { haptics } from '@/lib/haptics'
+import { validateProgram } from '@/lib/validation'
+import { theme } from '@/theme/theme'
+import type { ProgramBlock } from '@/types'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { useCallback, useMemo, useState } from 'react'
 import {
   Alert,
   KeyboardAvoidingView,
@@ -20,64 +20,64 @@ import {
   Text,
   TextInput,
   View
-} from "react-native";
+} from 'react-native'
 
 type BlockDraft = {
-  type: "exercise";
-  exerciseId: string;
-  targetReps?: string;
-  sets?: string;
-  restBetweenSets?: string;
-};
+  type: 'exercise'
+  exerciseId: string
+  targetReps?: string
+  sets?: string
+  restBetweenSets?: string
+}
 
 export type ProgramFormData = {
-  name: string;
-  blocks: ProgramBlock[];
-  initialWarmup?: { seconds: number };
-  defaultRestBetweenExercises?: number;
-};
+  name: string
+  blocks: ProgramBlock[]
+  initialWarmup?: { seconds: number }
+  defaultRestBetweenExercises?: number
+}
 
 export type ProgramFormProps = {
-  mode: "create" | "edit";
-  initialData?: Partial<ProgramFormData>;
-  onSave: (data: ProgramFormData) => Promise<void>;
-  onCancel: () => void;
-  saving?: boolean;
-  exercises: { id: string; name: string; source: "builtin" | "user" }[];
-};
+  mode: 'create' | 'edit'
+  initialData?: Partial<ProgramFormData>
+  onSave: (data: ProgramFormData) => Promise<void>
+  onCancel: () => void
+  saving?: boolean
+  exercises: { id: string; name: string; source: 'builtin' | 'user' }[]
+}
 
-const DEFAULT_WARMUP_SECONDS = 300;
-const DEFAULT_REST_BETWEEN_EXERCISES = 60;
-const DEFAULT_SETS = 3;
-const DEFAULT_REST_BETWEEN_SETS = 60;
+const DEFAULT_WARMUP_SECONDS = 300
+const DEFAULT_REST_BETWEEN_EXERCISES = 60
+const DEFAULT_SETS = 3
+const DEFAULT_REST_BETWEEN_SETS = 60
 
 function secondsToMmss(totalSeconds: number): string {
-  const mins = Math.floor(totalSeconds / 60);
-  const secs = totalSeconds % 60;
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
+  const mins = Math.floor(totalSeconds / 60)
+  const secs = totalSeconds % 60
+  return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
 function mmssToSeconds(mmss: string): number {
-  const trimmed = mmss.trim();
-  if (!trimmed) return 0;
-  if (trimmed.includes(":")) {
-    const parts = trimmed.split(":");
-    const mins = parseInt(parts[0], 10) || 0;
-    const secs = parseInt(parts[1], 10) || 0;
-    return mins * 60 + secs;
+  const trimmed = mmss.trim()
+  if (!trimmed) return 0
+  if (trimmed.includes(':')) {
+    const parts = trimmed.split(':')
+    const mins = parseInt(parts[0], 10) || 0
+    const secs = parseInt(parts[1], 10) || 0
+    return mins * 60 + secs
   }
-  return parseInt(trimmed, 10) || 0;
+  return parseInt(trimmed, 10) || 0
 }
 
 function convertBlocksToDraft(blocks: ProgramBlock[]): BlockDraft[] {
   return blocks
-    .filter((block) => block.type === "exercise")
-    .map((block) => ({
-      type: "exercise" as const,
+    .filter(block => block.type === 'exercise')
+    .map(block => ({
+      type: 'exercise' as const,
       exerciseId: (block as { exerciseId: string }).exerciseId,
       targetReps: (block as { targetReps?: number }).targetReps
         ? String((block as { targetReps?: number }).targetReps)
-        : "",
+        : '',
       sets: (block as { sets?: number }).sets
         ? String((block as { sets?: number }).sets)
         : String(DEFAULT_SETS),
@@ -86,31 +86,31 @@ function convertBlocksToDraft(blocks: ProgramBlock[]): BlockDraft[] {
             (block as { restBetweenSets?: number }).restBetweenSets!
           )
         : secondsToMmss(DEFAULT_REST_BETWEEN_SETS)
-    }));
+    }))
 }
 
 function convertDraftToBlocks(drafts: BlockDraft[]): ProgramBlock[] {
-  return drafts.map((draft) => {
-    const parsedSets = draft.sets ? Number(draft.sets) : DEFAULT_SETS;
+  return drafts.map(draft => {
+    const parsedSets = draft.sets ? Number(draft.sets) : DEFAULT_SETS
     const sets =
       Number.isInteger(parsedSets) && parsedSets >= 1
         ? parsedSets
-        : DEFAULT_SETS;
+        : DEFAULT_SETS
 
     const parsedRest = draft.restBetweenSets
       ? mmssToSeconds(draft.restBetweenSets)
-      : DEFAULT_REST_BETWEEN_SETS;
+      : DEFAULT_REST_BETWEEN_SETS
     const restBetweenSets =
-      parsedRest >= 0 ? parsedRest : DEFAULT_REST_BETWEEN_SETS;
+      parsedRest >= 0 ? parsedRest : DEFAULT_REST_BETWEEN_SETS
 
     return {
-      type: "exercise",
+      type: 'exercise',
       exerciseId: draft.exerciseId,
       targetReps: draft.targetReps ? Number(draft.targetReps) : undefined,
       sets,
       restBetweenSets
-    };
-  });
+    }
+  })
 }
 
 export function ProgramForm({
@@ -121,179 +121,179 @@ export function ProgramForm({
   saving = false,
   exercises
 }: ProgramFormProps) {
-  const [name, setName] = useState(initialData?.name || "");
+  const [name, setName] = useState(initialData?.name || '')
   const [blocksDraft, setBlocksDraft] = useState<BlockDraft[]>(
     convertBlocksToDraft(initialData?.blocks || [])
-  );
-  const [exercisePickerOpen, setExercisePickerOpen] = useState(false);
+  )
+  const [exercisePickerOpen, setExercisePickerOpen] = useState(false)
   const [pickerTargetIndex, setPickerTargetIndex] = useState<number | null>(
     null
-  );
+  )
 
   const [warmupEnabled, setWarmupEnabled] = useState(
     initialData?.initialWarmup !== undefined
-  );
+  )
   const [warmupTime, setWarmupTime] = useState(
     secondsToMmss(initialData?.initialWarmup?.seconds ?? DEFAULT_WARMUP_SECONDS)
-  );
+  )
   const [restEnabled, setRestEnabled] = useState(
     initialData?.defaultRestBetweenExercises !== undefined
-  );
+  )
   const [restTime, setRestTime] = useState(
     secondsToMmss(
       initialData?.defaultRestBetweenExercises ?? DEFAULT_REST_BETWEEN_EXERCISES
     )
-  );
+  )
 
   const exerciseNameById = useMemo(
     () =>
       exercises.reduce((map, ex) => {
-        map.set(ex.id, ex.name);
-        return map;
+        map.set(ex.id, ex.name)
+        return map
       }, new Map<string, string>()),
     [exercises]
-  );
+  )
 
   const addExercise = useCallback(() => {
-    haptics.buttonTap();
-    const firstExercise = exercises[0]?.id || "";
-    setBlocksDraft((prev) => [
+    haptics.buttonTap()
+    const firstExercise = exercises[0]?.id || ''
+    setBlocksDraft(prev => [
       ...prev,
       {
-        type: "exercise",
+        type: 'exercise',
         exerciseId: firstExercise,
-        targetReps: "",
+        targetReps: '',
         sets: String(DEFAULT_SETS),
         restBetweenSets: secondsToMmss(DEFAULT_REST_BETWEEN_SETS)
       }
-    ]);
-  }, [exercises]);
+    ])
+  }, [exercises])
 
   const removeExercise = useCallback((index: number) => {
-    haptics.deleteItem();
-    setBlocksDraft((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+    haptics.deleteItem()
+    setBlocksDraft(prev => prev.filter((_, i) => i !== index))
+  }, [])
 
   const moveExercise = useCallback(
-    (fromIndex: number, direction: "up" | "down") => {
-      haptics.buttonTap();
-      const toIndex = direction === "up" ? fromIndex - 1 : fromIndex + 1;
-      setBlocksDraft((prev) => {
-        const newBlocks = [...prev];
-        const [movedBlock] = newBlocks.splice(fromIndex, 1);
-        newBlocks.splice(toIndex, 0, movedBlock);
-        return newBlocks;
-      });
+    (fromIndex: number, direction: 'up' | 'down') => {
+      haptics.buttonTap()
+      const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1
+      setBlocksDraft(prev => {
+        const newBlocks = [...prev]
+        const [movedBlock] = newBlocks.splice(fromIndex, 1)
+        newBlocks.splice(toIndex, 0, movedBlock)
+        return newBlocks
+      })
     },
     []
-  );
+  )
 
   const updateExerciseField = useCallback(
     (index: number, field: string, value: string) => {
-      setBlocksDraft((prev) =>
+      setBlocksDraft(prev =>
         prev.map((b, i) => (i === index ? { ...b, [field]: value } : b))
-      );
+      )
     },
     []
-  );
+  )
 
   const handleSave = useCallback(async () => {
-    const trimmed = name.trim();
-    const finalBlocks = convertDraftToBlocks(blocksDraft);
+    const trimmed = name.trim()
+    const finalBlocks = convertDraftToBlocks(blocksDraft)
 
-    const warmupSeconds = warmupEnabled ? mmssToSeconds(warmupTime) : 0;
+    const warmupSeconds = warmupEnabled ? mmssToSeconds(warmupTime) : 0
     if (warmupEnabled && warmupSeconds <= 0) {
-      haptics.formValidationError();
-      Alert.alert("Validation Error", "Warmup duration must be greater than 0");
-      return;
+      haptics.formValidationError()
+      Alert.alert('Validation Error', 'Warmup duration must be greater than 0')
+      return
     }
 
-    const defaultRestSeconds = restEnabled ? mmssToSeconds(restTime) : 0;
+    const defaultRestSeconds = restEnabled ? mmssToSeconds(restTime) : 0
     if (restEnabled && defaultRestSeconds < 0) {
-      haptics.formValidationError();
-      Alert.alert("Validation Error", "Rest duration must be 0 or greater");
-      return;
+      haptics.formValidationError()
+      Alert.alert('Validation Error', 'Rest duration must be 0 or greater')
+      return
     }
 
     for (let i = 0; i < blocksDraft.length; i++) {
-      const block = blocksDraft[i];
-      const setsValue = block.sets ? Number(block.sets) : DEFAULT_SETS;
+      const block = blocksDraft[i]
+      const setsValue = block.sets ? Number(block.sets) : DEFAULT_SETS
       const restValue = block.restBetweenSets
         ? mmssToSeconds(block.restBetweenSets)
-        : DEFAULT_REST_BETWEEN_SETS;
+        : DEFAULT_REST_BETWEEN_SETS
 
       if (!Number.isInteger(setsValue) || setsValue < 1) {
-        haptics.formValidationError();
+        haptics.formValidationError()
         Alert.alert(
-          "Validation Error",
+          'Validation Error',
           `Exercise ${i + 1}: Sets must be at least 1`
-        );
-        return;
+        )
+        return
       }
 
       if (restValue < 0) {
-        haptics.formValidationError();
+        haptics.formValidationError()
         Alert.alert(
-          "Validation Error",
+          'Validation Error',
           `Exercise ${i + 1}: Rest duration must be 0 or greater`
-        );
-        return;
+        )
+        return
       }
     }
 
     const initialWarmup = warmupEnabled
       ? { seconds: warmupSeconds || DEFAULT_WARMUP_SECONDS }
-      : undefined;
+      : undefined
 
     const defaultRestBetweenExercises = restEnabled
       ? defaultRestSeconds || DEFAULT_REST_BETWEEN_EXERCISES
-      : undefined;
+      : undefined
 
     const programData = {
       name: trimmed,
       blocks: finalBlocks,
       initialWarmup,
       defaultRestBetweenExercises
-    };
+    }
 
-    const validationResult = validateProgram(programData as never);
+    const validationResult = validateProgram(programData as never)
 
     if (!validationResult.isValid) {
-      haptics.formValidationError();
-      Alert.alert("Validation Error", validationResult.errors[0].message);
-      return;
+      haptics.formValidationError()
+      Alert.alert('Validation Error', validationResult.errors[0].message)
+      return
     }
 
     if (exercises.length === 0) {
-      haptics.formValidationError();
+      haptics.formValidationError()
       Alert.alert(
-        "Add an exercise first",
-        "Create at least one exercise before creating a program."
-      );
-      return;
+        'Add an exercise first',
+        'Create at least one exercise before creating a program.'
+      )
+      return
     }
 
-    const exerciseIds = new Set(exercises.map((ex) => ex.id));
+    const exerciseIds = new Set(exercises.map(ex => ex.id))
     for (const block of finalBlocks) {
-      if (block.type === "exercise" && !exerciseIds.has(block.exerciseId)) {
-        haptics.formValidationError();
+      if (block.type === 'exercise' && !exerciseIds.has(block.exerciseId)) {
+        haptics.formValidationError()
         Alert.alert(
-          "Invalid exercise",
-          "One or more exercises no longer exist."
-        );
-        return;
+          'Invalid exercise',
+          'One or more exercises no longer exist.'
+        )
+        return
       }
     }
 
     try {
-      await onSave(programData);
-      haptics.formSave();
+      await onSave(programData)
+      haptics.formSave()
     } catch (error) {
-      haptics.formValidationError();
+      haptics.formValidationError()
       Alert.alert(
         "Couldn't save",
         error instanceof Error ? error.message : String(error)
-      );
+      )
     }
   }, [
     name,
@@ -304,17 +304,17 @@ export function ProgramForm({
     restTime,
     exercises,
     onSave
-  ]);
+  ])
 
   const handleCancel = useCallback(() => {
-    haptics.formCancel();
-    onCancel();
-  }, [onCancel]);
+    haptics.formCancel()
+    onCancel()
+  }, [onCancel])
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       {/* Header */}
       <View style={styles.header}>
@@ -328,7 +328,7 @@ export function ProgramForm({
           <Ionicons name="close" size={24} color={theme.colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>
-          {mode === "create" ? "New Program" : "Edit Program"}
+          {mode === 'create' ? 'New Program' : 'Edit Program'}
         </Text>
         <Pressable
           onPress={handleSave}
@@ -345,7 +345,7 @@ export function ProgramForm({
               (saving || !name.trim()) && styles.saveButtonTextDisabled
             ]}
           >
-            {saving ? "Saving..." : "Save"}
+            {saving ? 'Saving...' : 'Save'}
           </Text>
         </Pressable>
       </View>
@@ -367,7 +367,7 @@ export function ProgramForm({
               placeholder="e.g. Upper Body Strength"
               placeholderTextColor={theme.colors.muted}
               style={styles.nameInput}
-              autoFocus={mode === "create"}
+              autoFocus={mode === 'create'}
             />
           </View>
         </View>
@@ -379,8 +379,8 @@ export function ProgramForm({
             {/* Warmup Toggle */}
             <Pressable
               onPress={() => {
-                haptics.buttonTap();
-                setWarmupEnabled((prev) => !prev);
+                haptics.buttonTap()
+                setWarmupEnabled(prev => !prev)
               }}
               style={styles.optionRow}
             >
@@ -438,8 +438,8 @@ export function ProgramForm({
             {/* Rest Toggle */}
             <Pressable
               onPress={() => {
-                haptics.buttonTap();
-                setRestEnabled((prev) => !prev);
+                haptics.buttonTap()
+                setRestEnabled(prev => !prev)
               }}
               style={styles.optionRow}
             >
@@ -543,9 +543,9 @@ export function ProgramForm({
                     </View>
                     <Pressable
                       onPress={() => {
-                        haptics.buttonTap();
-                        setPickerTargetIndex(index);
-                        setExercisePickerOpen(true);
+                        haptics.buttonTap()
+                        setPickerTargetIndex(index)
+                        setExercisePickerOpen(true)
                       }}
                       style={({ pressed }) => [
                         styles.exercisePicker,
@@ -560,7 +560,7 @@ export function ProgramForm({
                         numberOfLines={1}
                       >
                         {exerciseNameById.get(block.exerciseId) ||
-                          "Select exercise"}
+                          'Select exercise'}
                       </Text>
                       <Ionicons
                         name="chevron-down"
@@ -571,7 +571,7 @@ export function ProgramForm({
                     <View style={styles.exerciseActions}>
                       {index > 0 && (
                         <Pressable
-                          onPress={() => moveExercise(index, "up")}
+                          onPress={() => moveExercise(index, 'up')}
                           style={styles.actionButton}
                         >
                           <Ionicons
@@ -583,7 +583,7 @@ export function ProgramForm({
                       )}
                       {index < blocksDraft.length - 1 && (
                         <Pressable
-                          onPress={() => moveExercise(index, "down")}
+                          onPress={() => moveExercise(index, 'down')}
                           style={styles.actionButton}
                         >
                           <Ionicons
@@ -610,9 +610,9 @@ export function ProgramForm({
                     <View style={styles.exerciseField}>
                       <Text style={styles.exerciseFieldLabel}>Reps</Text>
                       <TextInput
-                        value={block.targetReps || ""}
-                        onChangeText={(v) =>
-                          updateExerciseField(index, "targetReps", v)
+                        value={block.targetReps || ''}
+                        onChangeText={v =>
+                          updateExerciseField(index, 'targetReps', v)
                         }
                         keyboardType="number-pad"
                         style={styles.exerciseFieldInput}
@@ -624,9 +624,9 @@ export function ProgramForm({
                       <Text style={styles.exerciseFieldLabel}>Sets</Text>
                       <TextInput
                         value={block.sets || String(DEFAULT_SETS)}
-                        onChangeText={(v) => {
-                          const cleaned = v.replace(/[^0-9]/g, "");
-                          updateExerciseField(index, "sets", cleaned);
+                        onChangeText={v => {
+                          const cleaned = v.replace(/[^0-9]/g, '')
+                          updateExerciseField(index, 'sets', cleaned)
                         }}
                         keyboardType="number-pad"
                         style={styles.exerciseFieldInput}
@@ -641,8 +641,8 @@ export function ProgramForm({
                           block.restBetweenSets ||
                           secondsToMmss(DEFAULT_REST_BETWEEN_SETS)
                         }
-                        onChangeText={(v) =>
-                          updateExerciseField(index, "restBetweenSets", v)
+                        onChangeText={v =>
+                          updateExerciseField(index, 'restBetweenSets', v)
                         }
                         style={styles.exerciseFieldInput}
                         placeholder="1:00"
@@ -680,23 +680,23 @@ export function ProgramForm({
               style={styles.modalList}
               showsVerticalScrollIndicator={false}
             >
-              {exercises.map((exercise) => {
+              {exercises.map(exercise => {
                 const isSelected =
                   pickerTargetIndex !== null &&
-                  blocksDraft[pickerTargetIndex]?.exerciseId === exercise.id;
+                  blocksDraft[pickerTargetIndex]?.exerciseId === exercise.id
                 return (
                   <Pressable
                     key={exercise.id}
                     onPress={() => {
-                      if (pickerTargetIndex === null) return;
-                      haptics.buttonTap();
+                      if (pickerTargetIndex === null) return
+                      haptics.buttonTap()
                       updateExerciseField(
                         pickerTargetIndex,
-                        "exerciseId",
+                        'exerciseId',
                         exercise.id
-                      );
-                      setExercisePickerOpen(false);
-                      setPickerTargetIndex(null);
+                      )
+                      setExercisePickerOpen(false)
+                      setPickerTargetIndex(null)
                     }}
                     style={({ pressed }) => [
                       styles.modalItem,
@@ -720,7 +720,7 @@ export function ProgramForm({
                       />
                     )}
                   </Pressable>
-                );
+                )
               })}
               {exercises.length === 0 && (
                 <View style={styles.modalEmpty}>
@@ -730,7 +730,7 @@ export function ProgramForm({
                     color={theme.colors.muted}
                   />
                   <Text style={styles.modalEmptyText}>
-                    No exercises available.{"\n"}Create an exercise first.
+                    No exercises available.{'\n'}Create an exercise first.
                   </Text>
                 </View>
               )}
@@ -739,7 +739,7 @@ export function ProgramForm({
         </Pressable>
       </Modal>
     </KeyboardAvoidingView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -748,9 +748,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
     backgroundColor: theme.colors.background
@@ -759,8 +759,8 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: theme.radius.full,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   backButtonPressed: {
     backgroundColor: theme.colors.surface
@@ -800,14 +800,14 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm
   },
   sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between"
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
   },
   sectionTitle: {
     ...theme.typography.small,
     color: theme.colors.muted,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginLeft: theme.spacing.xs
   },
@@ -822,22 +822,22 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg
   },
   optionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     padding: theme.spacing.lg
   },
   optionLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md
   },
   optionIcon: {
     width: 40,
     height: 40,
     borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: theme.colors.background
   },
   optionIconWarmup: {
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: theme.colors.border,
     padding: 2,
-    justifyContent: "center"
+    justifyContent: 'center'
   },
   toggleActive: {
     backgroundColor: theme.colors.primary
@@ -873,12 +873,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface
   },
   toggleKnobActive: {
-    alignSelf: "flex-end"
+    alignSelf: 'flex-end'
   },
   optionExpanded: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.lg,
     paddingLeft: 72
@@ -890,7 +890,7 @@ const styles = StyleSheet.create({
   timeInput: {
     ...theme.typography.bodyBold,
     color: theme.colors.primary,
-    textAlign: "center",
+    textAlign: 'center',
     width: 80,
     padding: theme.spacing.sm,
     backgroundColor: theme.colors.background,
@@ -902,8 +902,8 @@ const styles = StyleSheet.create({
     marginHorizontal: theme.spacing.lg
   },
   addButton: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
@@ -921,18 +921,18 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.xxl,
-    alignItems: "center",
+    alignItems: 'center',
     gap: theme.spacing.md,
     ...theme.shadows.sm
   },
   emptyText: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center"
+    textAlign: 'center'
   },
   emptyButton: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.xs,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
@@ -958,8 +958,8 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   exerciseHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm
   },
   exerciseNumber: {
@@ -967,8 +967,8 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primary,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   exerciseNumberText: {
     ...theme.typography.captionBold,
@@ -976,9 +976,9 @@ const styles = StyleSheet.create({
   },
   exercisePicker: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.md,
@@ -997,18 +997,18 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.regular
   },
   exerciseActions: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.xs
   },
   actionButton: {
     width: 32,
     height: 32,
     borderRadius: theme.radius.sm,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   exerciseFields: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.sm
   },
   exerciseField: {
@@ -1018,12 +1018,12 @@ const styles = StyleSheet.create({
   exerciseFieldLabel: {
     ...theme.typography.small,
     color: theme.colors.muted,
-    textAlign: "center"
+    textAlign: 'center'
   },
   exerciseFieldInput: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
-    textAlign: "center",
+    textAlign: 'center',
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.sm,
     backgroundColor: theme.colors.background,
@@ -1032,13 +1032,13 @@ const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
     backgroundColor: theme.colors.overlay,
-    justifyContent: "flex-end"
+    justifyContent: 'flex-end'
   },
   modalContent: {
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    maxHeight: "60%",
+    maxHeight: '60%',
     paddingBottom: theme.spacing.xxl
   },
   modalHandle: {
@@ -1046,7 +1046,7 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: theme.colors.border,
     borderRadius: 2,
-    alignSelf: "center",
+    alignSelf: 'center',
     marginTop: theme.spacing.sm,
     marginBottom: theme.spacing.sm
   },
@@ -1059,16 +1059,16 @@ const styles = StyleSheet.create({
   modalTitle: {
     ...theme.typography.h3,
     color: theme.colors.text,
-    textAlign: "center"
+    textAlign: 'center'
   },
   modalList: {
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md
   },
   modalItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.md,
@@ -1089,13 +1089,13 @@ const styles = StyleSheet.create({
     color: theme.colors.primary
   },
   modalEmpty: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: theme.spacing.xxl,
     gap: theme.spacing.md
   },
   modalEmptyText: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center"
+    textAlign: 'center'
   }
-});
+})

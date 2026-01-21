@@ -2,33 +2,27 @@
  * SearchInput - Reusable search input component
  */
 
-import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useState } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-  ViewStyle
-} from "react-native";
+import { theme } from '@/theme/theme'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { useState } from 'react'
+import { Pressable, StyleSheet, TextInput, View, ViewStyle } from 'react-native'
 
 type Props = {
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder?: string;
-  style?: ViewStyle;
-  autoFocus?: boolean;
-};
+  value: string
+  onChangeText: (text: string) => void
+  placeholder?: string
+  style?: ViewStyle
+  autoFocus?: boolean
+}
 
 export function SearchInput({
   value,
   onChangeText,
-  placeholder = "Search...",
+  placeholder = 'Search...',
   style,
   autoFocus = false
 }: Props) {
-  const [isFocused, setIsFocused] = useState(false);
+  const [isFocused, setIsFocused] = useState(false)
 
   return (
     <View
@@ -55,7 +49,7 @@ export function SearchInput({
       />
       {value.length > 0 && (
         <Pressable
-          onPress={() => onChangeText("")}
+          onPress={() => onChangeText('')}
           style={({ pressed }) => [
             styles.clearButton,
             pressed && styles.clearButtonPressed
@@ -66,13 +60,13 @@ export function SearchInput({
         </Pressable>
       )}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing.md,
@@ -100,6 +94,6 @@ const styles = StyleSheet.create({
   clearButtonPressed: {
     opacity: 0.6
   }
-});
+})
 
-export default SearchInput;
+export default SearchInput

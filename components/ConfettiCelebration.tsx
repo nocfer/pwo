@@ -1,44 +1,44 @@
-import { haptics } from "@/lib/haptics";
-import { theme } from "@/theme/theme";
-import React, { useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, StyleSheet, Text, View } from "react-native";
-import ConfettiCannon from "react-native-confetti-cannon";
+import { haptics } from '@/lib/haptics'
+import { theme } from '@/theme/theme'
+import React, { useEffect, useRef, useState } from 'react'
+import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native'
+import ConfettiCannon from 'react-native-confetti-cannon'
 
 type ConfettiCelebrationProps = {
-  show: boolean;
-  onComplete?: () => void;
-  message?: string;
-  subMessage?: string;
-};
+  show: boolean
+  onComplete?: () => void
+  message?: string
+  subMessage?: string
+}
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 
 const CONFETTI_COLORS = [
   theme.colors.primary,
   theme.colors.success,
   theme.colors.warning,
-  "#FF6B6B", // coral
-  "#4ECDC4", // teal
-  "#FFE66D", // yellow
-  "#95E1D3" // mint
-];
+  '#FF6B6B', // coral
+  '#4ECDC4', // teal
+  '#FFE66D', // yellow
+  '#95E1D3' // mint
+]
 
 export function ConfettiCelebration({
   show,
   onComplete,
-  message = "Amazing! 🎉",
-  subMessage = "You crushed it!"
+  message = 'Amazing! 🎉',
+  subMessage = 'You crushed it!'
 }: ConfettiCelebrationProps) {
-  const [isVisible, setIsVisible] = useState(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const [isVisible, setIsVisible] = useState(false)
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const scaleAnim = useRef(new Animated.Value(0.8)).current
 
   useEffect(() => {
     if (show) {
-      setIsVisible(true);
+      setIsVisible(true)
 
       // Trigger haptics
-      haptics.celebration();
+      haptics.celebration()
 
       // Animate message in
       Animated.parallel([
@@ -53,7 +53,7 @@ export function ConfettiCelebration({
           tension: 100,
           useNativeDriver: true
         })
-      ]).start();
+      ]).start()
 
       // Auto-hide after delay
       const timer = setTimeout(() => {
@@ -62,23 +62,23 @@ export function ConfettiCelebration({
           duration: 300,
           useNativeDriver: true
         }).start(() => {
-          setIsVisible(false);
-          onComplete?.();
-        });
-      }, 3000);
+          setIsVisible(false)
+          onComplete?.()
+        })
+      }, 3000)
 
-      return () => clearTimeout(timer);
+      return () => clearTimeout(timer)
     } else {
-      fadeAnim.setValue(0);
-      scaleAnim.setValue(0.8);
-      setIsVisible(false);
+      fadeAnim.setValue(0)
+      scaleAnim.setValue(0.8)
+      setIsVisible(false)
     }
-  }, [show, fadeAnim, scaleAnim, onComplete]);
+  }, [show, fadeAnim, scaleAnim, onComplete])
 
-  if (!isVisible) return null;
+  if (!isVisible) return null
 
   return (
-    <View style={[styles.container, { pointerEvents: "none" }]}>
+    <View style={[styles.container, { pointerEvents: 'none' }]}>
       {/* Confetti cannons from both sides */}
       <ConfettiCannon
         count={80}
@@ -113,22 +113,22 @@ export function ConfettiCelebration({
         <Text style={styles.subMessage}>{subMessage}</Text>
       </Animated.View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1000,
-    justifyContent: "center",
-    alignItems: "center"
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   messageContainer: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.xl,
     paddingVertical: theme.spacing.xl,
     paddingHorizontal: theme.spacing.xxl,
-    alignItems: "center",
+    alignItems: 'center',
     ...theme.shadows.lg
   },
   message: {
@@ -140,6 +140,6 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.muted
   }
-});
+})
 
-export default ConfettiCelebration;
+export default ConfettiCelebration

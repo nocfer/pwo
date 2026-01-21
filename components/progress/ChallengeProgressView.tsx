@@ -1,33 +1,33 @@
-import { useChallengeProgress, usePrograms } from "@/hooks/data";
-import { theme } from "@/theme/theme";
-import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { ProgressViewBase } from "./ProgressViewBase";
+import { useChallengeProgress, usePrograms } from '@/hooks/data'
+import { theme } from '@/theme/theme'
+import { useMemo } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import { ProgressViewBase } from './ProgressViewBase'
 
 type Props = {
-  challengeId: string;
-};
+  challengeId: string
+}
 
 export default function ChallengeProgressView({ challengeId }: Props) {
-  const { data: programs } = usePrograms();
+  const { data: programs } = usePrograms()
   const challenge = useMemo(
-    () => programs?.find((p) => p.id === challengeId && p.challengeConfig),
+    () => programs?.find(p => p.id === challengeId && p.challengeConfig),
     [programs, challengeId]
-  );
-  const { metrics, loading } = useChallengeProgress(challenge || undefined);
+  )
+  const { metrics, loading } = useChallengeProgress(challenge || undefined)
 
   const stats = useMemo(() => {
-    if (!metrics) return [];
+    if (!metrics) return []
     return [
-      { label: "Total Reps", value: metrics.totalRepsCompleted },
-      { label: "Target Reps", value: metrics.targetReps },
-      { label: "Current Streak", value: `${metrics.currentStreak} days` },
+      { label: 'Total Reps', value: metrics.totalRepsCompleted },
+      { label: 'Target Reps', value: metrics.targetReps },
+      { label: 'Current Streak', value: `${metrics.currentStreak} days` },
       {
-        label: "Sessions Done",
+        label: 'Sessions Done',
         value: `${metrics.sessionsCompleted}/${metrics.totalSessions}`
       }
-    ];
-  }, [metrics]);
+    ]
+  }, [metrics])
 
   // Reps progress bar as custom content
   const repsProgressContent = metrics ? (
@@ -49,12 +49,12 @@ export default function ChallengeProgressView({ challengeId }: Props) {
         {Math.round(metrics.repsProgressPercentage)}%)
       </Text>
     </View>
-  ) : null;
+  ) : null
 
   return (
     <ProgressViewBase
       loading={loading || !metrics}
-      title={challenge?.name || "Challenge"}
+      title={challenge?.name || 'Challenge'}
       completionPercentage={metrics?.completionPercentage ?? 0}
       sessionsCompleted={metrics?.sessionsCompleted ?? 0}
       totalSessions={metrics?.totalSessions ?? 0}
@@ -65,7 +65,7 @@ export default function ChallengeProgressView({ challengeId }: Props) {
     >
       {repsProgressContent}
     </ProgressViewBase>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -82,10 +82,10 @@ const styles = StyleSheet.create({
     height: 12,
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.md,
-    overflow: "hidden"
+    overflow: 'hidden'
   },
   progressBar: {
-    height: "100%",
+    height: '100%',
     borderRadius: theme.radius.md
   },
   caption: {
@@ -93,4 +93,4 @@ const styles = StyleSheet.create({
     color: theme.colors.muted,
     marginTop: theme.spacing.xs
   }
-});
+})

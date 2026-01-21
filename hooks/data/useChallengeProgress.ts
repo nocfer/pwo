@@ -5,56 +5,56 @@
  * and other challenge-specific metrics.
  */
 
-import { useRefreshVersions } from "@/context/DataContext";
-import { useAsyncData } from "@/hooks/useAsyncData";
-import { storage } from "@/lib/storage";
+import { useRefreshVersions } from '@/context/DataContext'
+import { useAsyncData } from '@/hooks/useAsyncData'
+import { storage } from '@/lib/storage'
 import {
   calculateCompletionPercentage,
   calculateStreak,
   findNextSessionIndex
-} from "@/lib/utils/progress";
-import type { ChallengeProgress, Program } from "@/types";
-import { useCallback, useMemo } from "react";
-import { generateChallengeSessions } from "./useChallengeSessions";
+} from '@/lib/utils/progress'
+import type { ChallengeProgress, Program } from '@/types'
+import { useCallback, useMemo } from 'react'
+import { generateChallengeSessions } from './useChallengeSessions'
 
 export type ChallengeProgressMetrics = {
-  challengeId: string;
-  progress: ChallengeProgress | null;
-  totalSessions: number;
-  sessionsCompleted: number;
-  completionPercentage: number;
-  totalRepsCompleted: number;
-  targetReps: number;
-  repsProgressPercentage: number;
-  currentStreak: number;
-  nextSessionIndex: number | null;
-  isCompleted: boolean;
-  startedAt: string | null;
-  completedAt: string | null;
-  lastActivityAt: string | null;
-};
+  challengeId: string
+  progress: ChallengeProgress | null
+  totalSessions: number
+  sessionsCompleted: number
+  completionPercentage: number
+  totalRepsCompleted: number
+  targetReps: number
+  repsProgressPercentage: number
+  currentStreak: number
+  nextSessionIndex: number | null
+  isCompleted: boolean
+  startedAt: string | null
+  completedAt: string | null
+  lastActivityAt: string | null
+}
 
 export function useChallengeProgress(challenge: Program | null | undefined): {
-  metrics: ChallengeProgressMetrics | null;
-  loading: boolean;
-  error: Error | null;
+  metrics: ChallengeProgressMetrics | null
+  loading: boolean
+  error: Error | null
 } {
-  const { progressVersion } = useRefreshVersions();
+  const { progressVersion } = useRefreshVersions()
 
-  const challengeId = challenge?.id;
-  const challengeConfig = challenge?.challengeConfig;
-  const isChallenge = Boolean(challengeConfig);
+  const challengeId = challenge?.id
+  const challengeConfig = challenge?.challengeConfig
+  const isChallenge = Boolean(challengeConfig)
 
   // Generate sessions to know total count - only depends on config, not entire challenge
   const sessions = useMemo(() => {
-    if (!challengeConfig) return [];
-    return generateChallengeSessions(challengeConfig);
-  }, [challengeConfig]);
+    if (!challengeConfig) return []
+    return generateChallengeSessions(challengeConfig)
+  }, [challengeConfig])
 
   const fetcher = useCallback(async (): Promise<ChallengeProgress | null> => {
     // Guaranteed to have challengeId when fetcher runs (skip handles null case)
-    return storage.loadChallengeProgress(challengeId!);
-  }, [challengeId]);
+    return storage.loadChallengeProgress(challengeId!)
+  }, [challengeId])
 
   const {
     data: progress,
@@ -62,15 +62,15 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
     error
   } = useAsyncData(fetcher, [challengeId, progressVersion], {
     skip: !challengeId || !isChallenge
-  });
+  })
 
   const metrics = useMemo((): ChallengeProgressMetrics | null => {
     if (!challenge || !challengeConfig) {
-      return null;
+      return null
     }
 
-    const totalSessions = sessions.length;
-    const targetReps = challengeConfig.targetReps;
+    const totalSessions = sessions.length
+    const targetReps = challengeConfig.targetReps
 
     if (!progress) {
       return {
@@ -88,42 +88,42 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
         startedAt: null,
         completedAt: null,
         lastActivityAt: null
-      };
+      }
     }
 
-    const completedWorkouts = progress.workouts.filter((w) => w.completed);
-    const sessionsCompleted = completedWorkouts.length;
+    const completedWorkouts = progress.workouts.filter(w => w.completed)
+    const sessionsCompleted = completedWorkouts.length
     const completionPercentage = calculateCompletionPercentage(
       sessionsCompleted,
       totalSessions
-    );
+    )
 
-    const totalRepsCompleted = progress.totalRepsCompleted;
+    const totalRepsCompleted = progress.totalRepsCompleted
     const repsProgressPercentage =
       targetReps > 0
         ? Math.min(100, (totalRepsCompleted / targetReps) * 100)
-        : 0;
+        : 0
 
     // Use shared utility for streak calculation
-    const currentStreak = calculateStreak(completedWorkouts);
+    const currentStreak = calculateStreak(completedWorkouts)
 
     // Use shared utility for finding next session
     // Extract session index from workoutId (format: `${challengeId}_workout_${sessionIndex}`)
     const completedIndices = new Set(
       completedWorkouts
-        .map((w) => {
-          const match = w.workoutId?.match(/_workout_(\d+)$/);
-          return match ? parseInt(match[1], 10) : 0;
+        .map(w => {
+          const match = w.workoutId?.match(/_workout_(\d+)$/)
+          return match ? parseInt(match[1], 10) : 0
         })
-        .filter((idx) => idx > 0)
-    );
+        .filter(idx => idx > 0)
+    )
     const nextSessionIndex = findNextSessionIndex(
       completedIndices,
       totalSessions
-    );
+    )
 
     const isCompleted =
-      sessionsCompleted === totalSessions && totalRepsCompleted >= targetReps;
+      sessionsCompleted === totalSessions && totalRepsCompleted >= targetReps
 
     return {
       challengeId: challenge.id,
@@ -140,8 +140,8 @@ export function useChallengeProgress(challenge: Program | null | undefined): {
       startedAt: progress.startedAt,
       completedAt: progress.completedAt || null,
       lastActivityAt: progress.lastActivityAt
-    };
-  }, [challenge, challengeConfig, progress, sessions]);
+    }
+  }, [challenge, challengeConfig, progress, sessions])
 
-  return { metrics, loading, error };
+  return { metrics, loading, error }
 }

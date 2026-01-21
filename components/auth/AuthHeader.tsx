@@ -1,15 +1,15 @@
-import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { theme } from '@/theme/theme'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import React from 'react'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 type Props = {
-  title: string;
-  subtitle: string;
-  iconName: React.ComponentProps<typeof Ionicons>["name"];
-  showBackButton?: boolean;
-  onBack?: () => void;
-};
+  title: string
+  subtitle: string
+  iconName: React.ComponentProps<typeof Ionicons>['name']
+  showBackButton?: boolean
+  onBack?: () => void
+}
 
 export function AuthHeader({
   title,
@@ -39,22 +39,22 @@ export function AuthHeader({
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   header: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: theme.spacing.xl,
     marginBottom: theme.spacing.xl
   },
   backButton: {
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     width: 44,
     height: 44,
     borderRadius: theme.radius.full,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: theme.spacing.md
   },
   backButtonPressed: {
@@ -65,8 +65,8 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: theme.spacing.lg
   },
   title: {
@@ -77,8 +77,8 @@ const styles = StyleSheet.create({
   subtitle: {
     ...theme.typography.body,
     color: theme.colors.muted,
-    textAlign: "center"
+    textAlign: 'center'
   }
-});
+})
 
-export default AuthHeader;
+export default AuthHeader

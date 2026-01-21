@@ -6,29 +6,29 @@ import {
   getDayLabels,
   useConsistencyData,
   type ConsistencyLevel
-} from "@/hooks/data";
-import { theme } from "@/theme/theme";
-import { useEffect, useRef } from "react";
-import { Animated, ScrollView, StyleSheet, Text, View } from "react-native";
-import { CompactEmptyState } from "./ProgressEmptyState";
+} from '@/hooks/data'
+import { theme } from '@/theme/theme'
+import { useEffect, useRef } from 'react'
+import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { CompactEmptyState } from './ProgressEmptyState'
 
 type Props = {
-  weeks?: number;
-};
+  weeks?: number
+}
 
-const CELL_SIZE = 22;
-const CELL_GAP = 3;
+const CELL_SIZE = 22
+const CELL_GAP = 3
 
 const levelColors: Record<ConsistencyLevel, string> = {
   0: theme.colors.background,
   1: theme.colors.successLight,
   2: theme.colors.success,
-  3: "#059669"
-};
+  3: '#059669'
+}
 
 export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
-  const { data, loading } = useConsistencyData(weeks);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { data, loading } = useConsistencyData(weeks)
+  const fadeAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     if (!loading && data) {
@@ -36,16 +36,16 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
         toValue: 1,
         duration: 300,
         useNativeDriver: true
-      }).start();
+      }).start()
     }
-  }, [loading, data, fadeAnim]);
+  }, [loading, data, fadeAnim])
 
   if (loading) {
     return (
       <View style={styles.card}>
         <View style={styles.skeleton} />
       </View>
-    );
+    )
   }
 
   if (!data || data.totalWorkouts === 0) {
@@ -60,10 +60,10 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
           icon="calendar-outline"
         />
       </View>
-    );
+    )
   }
 
-  const dayLabels = getDayLabels();
+  const dayLabels = getDayLabels()
 
   return (
     <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
@@ -86,7 +86,7 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.weeksScrollContent}
         >
-          {data.weeks.map((week) => (
+          {data.weeks.map(week => (
             <View key={week.weekNumber} style={styles.weekColumn}>
               {week.days.map((day, dayIndex) => (
                 <View
@@ -95,7 +95,7 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
                     styles.cell,
                     {
                       backgroundColor: day.isFuture
-                        ? "transparent"
+                        ? 'transparent'
                         : levelColors[day.level]
                     },
                     day.isFuture && styles.cellFuture,
@@ -110,7 +110,7 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
 
       <View style={styles.legend}>
         <Text style={styles.legendLabel}>Less</Text>
-        {([0, 1, 2, 3] as ConsistencyLevel[]).map((level) => (
+        {([0, 1, 2, 3] as ConsistencyLevel[]).map(level => (
           <View
             key={level}
             style={[styles.legendCell, { backgroundColor: levelColors[level] }]}
@@ -119,7 +119,7 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
         <Text style={styles.legendLabel}>More</Text>
       </View>
     </Animated.View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -130,9 +130,9 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: theme.spacing.md
   },
   title: {
@@ -144,30 +144,30 @@ const styles = StyleSheet.create({
     color: theme.colors.muted
   },
   gridContainer: {
-    flexDirection: "row"
+    flexDirection: 'row'
   },
   dayLabelsColumn: {
     marginRight: theme.spacing.xs,
-    flexDirection: "column",
+    flexDirection: 'column',
     gap: CELL_GAP
   },
   dayLabelCell: {
     height: CELL_SIZE,
-    justifyContent: "center"
+    justifyContent: 'center'
   },
   dayLabel: {
     ...theme.typography.caption,
     color: theme.colors.muted,
     fontSize: 10,
     width: 16,
-    textAlign: "right"
+    textAlign: 'right'
   },
   weeksScrollContent: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: CELL_GAP
   },
   weekColumn: {
-    flexDirection: "column",
+    flexDirection: 'column',
     gap: CELL_GAP
   },
   cell: {
@@ -178,16 +178,16 @@ const styles = StyleSheet.create({
   cellFuture: {
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderStyle: "dashed"
+    borderStyle: 'dashed'
   },
   cellToday: {
     borderWidth: 2,
     borderColor: theme.colors.primary
   },
   legend: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: theme.spacing.xs,
     marginTop: theme.spacing.md,
     paddingTop: theme.spacing.md,
@@ -209,4 +209,4 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.skeleton,
     borderRadius: theme.radius.sm
   }
-});
+})

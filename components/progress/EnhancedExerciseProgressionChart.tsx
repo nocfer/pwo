@@ -11,13 +11,13 @@ import {
   useExerciseProgression,
   useExercisePRs,
   useExercisesWithProgression
-} from "@/hooks/data";
-import { useExercises } from "@/hooks/data/useExercises";
-import { haptics } from "@/lib/haptics";
-import { theme } from "@/theme/theme";
-import { Exercise, PersonalRecord } from "@/types";
-import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+} from '@/hooks/data'
+import { useExercises } from '@/hooks/data/useExercises'
+import { haptics } from '@/lib/haptics'
+import { theme } from '@/theme/theme'
+import { Exercise, PersonalRecord } from '@/types'
+import { Ionicons } from '@expo/vector-icons'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Animated,
   Modal,
@@ -26,30 +26,30 @@ import {
   StyleSheet,
   Text,
   View
-} from "react-native";
-import { CompactEmptyState } from "./ProgressEmptyState";
+} from 'react-native'
+import { CompactEmptyState } from './ProgressEmptyState'
 
-type MetricType = "reps" | "weight" | "volume";
-type TimeRange = "7d" | "30d" | "90d";
+type MetricType = 'reps' | 'weight' | 'volume'
+type TimeRange = '7d' | '30d' | '90d'
 
 const METRICS: { key: MetricType; label: string }[] = [
-  { key: "reps", label: "Reps" },
-  { key: "weight", label: "Weight" },
-  { key: "volume", label: "Volume" }
-];
+  { key: 'reps', label: 'Reps' },
+  { key: 'weight', label: 'Weight' },
+  { key: 'volume', label: 'Volume' }
+]
 
 const TIME_RANGES: { key: TimeRange; label: string; days: number }[] = [
-  { key: "7d", label: "7D", days: 7 },
-  { key: "30d", label: "30D", days: 30 },
-  { key: "90d", label: "90D", days: 90 }
-];
+  { key: '7d', label: '7D', days: 7 },
+  { key: '30d', label: '30D', days: 30 },
+  { key: '90d', label: '90D', days: 90 }
+]
 
-const CHART_HEIGHT = 140;
-const BAR_MIN_HEIGHT = 4;
+const CHART_HEIGHT = 140
+const BAR_MIN_HEIGHT = 4
 
 interface ChartProps {
-  selectedExerciseId?: string;
-  onExerciseChange?: (exerciseId: string) => void;
+  selectedExerciseId?: string
+  onExerciseChange?: (exerciseId: string) => void
 }
 
 export function EnhancedExerciseProgressionChart({
@@ -58,34 +58,34 @@ export function EnhancedExerciseProgressionChart({
 }: ChartProps) {
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(
     null
-  );
-  const [showExerciseSelector, setShowExerciseSelector] = useState(false);
-  const [selectedMetric, setSelectedMetric] = useState<MetricType>("reps");
-  const [timeRange, setTimeRange] = useState<TimeRange>("30d");
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  )
+  const [showExerciseSelector, setShowExerciseSelector] = useState(false)
+  const [selectedMetric, setSelectedMetric] = useState<MetricType>('reps')
+  const [timeRange, setTimeRange] = useState<TimeRange>('30d')
+  const fadeAnim = useRef(new Animated.Value(0)).current
 
   // Use external ID if provided, otherwise use internal state
-  const selectedExerciseId = externalSelectedId ?? internalSelectedId;
+  const selectedExerciseId = externalSelectedId ?? internalSelectedId
 
   const { exerciseIds, loading: loadingExerciseIds } =
-    useExercisesWithProgression();
-  const { data: exercises, loading: loadingExercises } = useExercises();
-  const days = TIME_RANGES.find((r) => r.key === timeRange)?.days ?? 30;
+    useExercisesWithProgression()
+  const { data: exercises, loading: loadingExercises } = useExercises()
+  const days = TIME_RANGES.find(r => r.key === timeRange)?.days ?? 30
   const { data: progressionData, loading } = useExerciseProgression(
     selectedExerciseId,
     days
-  );
-  const { prs: exercisePRs } = useExercisePRs(selectedExerciseId ?? "");
+  )
+  const { prs: exercisePRs } = useExercisePRs(selectedExerciseId ?? '')
 
   const exercisesWithProgression = useMemo(
-    () => exercises?.filter((ex) => exerciseIds.includes(ex.id)) ?? [],
+    () => exercises?.filter(ex => exerciseIds.includes(ex.id)) ?? [],
     [exercises, exerciseIds]
-  );
+  )
 
   const selectedExercise = useMemo(
-    () => exercises?.find((ex) => ex.id === selectedExerciseId),
+    () => exercises?.find(ex => ex.id === selectedExerciseId),
     [exercises, selectedExerciseId]
-  );
+  )
 
   // Auto-select first exercise when available and no selection
   useEffect(() => {
@@ -94,9 +94,9 @@ export function EnhancedExerciseProgressionChart({
       !internalSelectedId &&
       exercisesWithProgression.length > 0
     ) {
-      setInternalSelectedId(exercisesWithProgression[0].id);
+      setInternalSelectedId(exercisesWithProgression[0].id)
     }
-  }, [externalSelectedId, internalSelectedId, exercisesWithProgression]);
+  }, [externalSelectedId, internalSelectedId, exercisesWithProgression])
 
   useEffect(() => {
     if (!loading && !loadingExerciseIds && !loadingExercises) {
@@ -104,68 +104,68 @@ export function EnhancedExerciseProgressionChart({
         toValue: 1,
         duration: 250,
         useNativeDriver: true
-      }).start();
+      }).start()
     }
-  }, [loading, loadingExerciseIds, loadingExercises, fadeAnim]);
+  }, [loading, loadingExerciseIds, loadingExercises, fadeAnim])
 
   const handleExerciseSelect = useCallback(
     (exercise: Exercise) => {
       if (onExerciseChange) {
-        onExerciseChange(exercise.id);
+        onExerciseChange(exercise.id)
       } else {
-        setInternalSelectedId(exercise.id);
+        setInternalSelectedId(exercise.id)
       }
-      setShowExerciseSelector(false);
-      haptics.tabSwitch();
+      setShowExerciseSelector(false)
+      haptics.tabSwitch()
     },
     [onExerciseChange]
-  );
+  )
 
   const handleMetricChange = useCallback((metric: MetricType) => {
-    setSelectedMetric(metric);
-    haptics.tabSwitch();
-  }, []);
+    setSelectedMetric(metric)
+    haptics.tabSwitch()
+  }, [])
 
   const handleTimeRangeChange = useCallback((range: TimeRange) => {
-    setTimeRange(range);
-    haptics.tabSwitch();
-  }, []);
+    setTimeRange(range)
+    haptics.tabSwitch()
+  }, [])
 
   const chartData = useMemo(() => {
-    if (!progressionData?.dataPoints.length) return null;
+    if (!progressionData?.dataPoints.length) return null
 
-    const { dataPoints, trend } = progressionData;
-    const values = dataPoints.map((dp) => {
+    const { dataPoints, trend } = progressionData
+    const values = dataPoints.map(dp => {
       switch (selectedMetric) {
-        case "weight":
-          return dp.maxWeight ?? 0;
-        case "volume":
-          return dp.volume ?? 0;
+        case 'weight':
+          return dp.maxWeight ?? 0
+        case 'volume':
+          return dp.volume ?? 0
         default:
-          return dp.reps;
+          return dp.reps
       }
-    });
-    const maxValue = Math.max(...values, 1);
+    })
+    const maxValue = Math.max(...values, 1)
 
     const bars = dataPoints.map((point, index) => {
-      const value = values[index];
-      const heightPercent = (value / maxValue) * 100;
+      const value = values[index]
+      const heightPercent = (value / maxValue) * 100
 
       const isPR = exercisePRs.some((pr: PersonalRecord) => {
-        const prDate = new Date(pr.achievedAt).toISOString().split("T")[0];
+        const prDate = new Date(pr.achievedAt).toISOString().split('T')[0]
         return (
           prDate === point.date &&
-          ((selectedMetric === "reps" && pr.type === "max_reps") ||
-            (selectedMetric === "weight" && pr.type === "max_weight") ||
-            (selectedMetric === "volume" && pr.type === "max_volume"))
-        );
-      });
+          ((selectedMetric === 'reps' && pr.type === 'max_reps') ||
+            (selectedMetric === 'weight' && pr.type === 'max_weight') ||
+            (selectedMetric === 'volume' && pr.type === 'max_volume'))
+        )
+      })
 
-      return { point, value, heightPercent, isPR };
-    });
+      return { point, value, heightPercent, isPR }
+    })
 
-    return { bars, trend };
-  }, [progressionData, selectedMetric, exercisePRs]);
+    return { bars, trend }
+  }, [progressionData, selectedMetric, exercisePRs])
 
   // Skeleton loading state - wait for all data to load
   if (loading || loadingExerciseIds || loadingExercises) {
@@ -173,7 +173,7 @@ export function EnhancedExerciseProgressionChart({
       <View style={styles.card}>
         <View style={styles.skeleton} />
       </View>
-    );
+    )
   }
 
   // Empty state - no exercises with progression
@@ -196,7 +196,7 @@ export function EnhancedExerciseProgressionChart({
           icon="bar-chart-outline"
         />
       </View>
-    );
+    )
   }
 
   return (
@@ -216,17 +216,17 @@ export function EnhancedExerciseProgressionChart({
           <View style={styles.trendBadge}>
             <Ionicons
               name={
-                chartData.trend.direction === "up"
-                  ? "arrow-up"
-                  : chartData.trend.direction === "down"
-                    ? "arrow-down"
-                    : "remove"
+                chartData.trend.direction === 'up'
+                  ? 'arrow-up'
+                  : chartData.trend.direction === 'down'
+                    ? 'arrow-down'
+                    : 'remove'
               }
               size={12}
               color={
-                chartData.trend.direction === "up"
+                chartData.trend.direction === 'up'
                   ? theme.colors.success
-                  : chartData.trend.direction === "down"
+                  : chartData.trend.direction === 'down'
                     ? theme.colors.danger
                     : theme.colors.muted
               }
@@ -236,16 +236,16 @@ export function EnhancedExerciseProgressionChart({
                 styles.trendText,
                 {
                   color:
-                    chartData.trend.direction === "up"
+                    chartData.trend.direction === 'up'
                       ? theme.colors.success
-                      : chartData.trend.direction === "down"
+                      : chartData.trend.direction === 'down'
                         ? theme.colors.danger
                         : theme.colors.muted
                 }
               ]}
             >
-              {chartData.trend.direction === "stable"
-                ? "Stable"
+              {chartData.trend.direction === 'stable'
+                ? 'Stable'
                 : `${chartData.trend.percentChange.toFixed(0)}%`}
             </Text>
           </View>
@@ -267,7 +267,7 @@ export function EnhancedExerciseProgressionChart({
           ]}
           numberOfLines={1}
         >
-          {selectedExercise?.name ?? "Select exercise"}
+          {selectedExercise?.name ?? 'Select exercise'}
         </Text>
         <Ionicons name="chevron-down" size={16} color={theme.colors.muted} />
       </Pressable>
@@ -275,10 +275,10 @@ export function EnhancedExerciseProgressionChart({
       {/* Controls Row - Combined metric and time range */}
       <View style={styles.controlsRow}>
         <View style={styles.segmentedControl}>
-          {METRICS.map((m) => {
+          {METRICS.map(m => {
             const isDisabled =
-              m.key === "weight" && !progressionData?.hasWeightData;
-            const isActive = selectedMetric === m.key;
+              m.key === 'weight' && !progressionData?.hasWeightData
+            const isActive = selectedMetric === m.key
             return (
               <Pressable
                 key={m.key}
@@ -300,13 +300,13 @@ export function EnhancedExerciseProgressionChart({
                   {m.label}
                 </Text>
               </Pressable>
-            );
+            )
           })}
         </View>
 
         <View style={styles.timeRangeControl}>
-          {TIME_RANGES.map((r) => {
-            const isActive = timeRange === r.key;
+          {TIME_RANGES.map(r => {
+            const isActive = timeRange === r.key
             return (
               <Pressable
                 key={r.key}
@@ -322,7 +322,7 @@ export function EnhancedExerciseProgressionChart({
                   {r.label}
                 </Text>
               </Pressable>
-            );
+            )
           })}
         </View>
       </View>
@@ -378,8 +378,8 @@ export function EnhancedExerciseProgressionChart({
                 </View>
                 <Text style={styles.barValue}>{bar.value}</Text>
                 <Text style={styles.barDate}>
-                  {new Date(bar.point.date).toLocaleDateString("en-US", {
-                    day: "numeric"
+                  {new Date(bar.point.date).toLocaleDateString('en-US', {
+                    day: 'numeric'
                   })}
                 </Text>
               </View>
@@ -412,8 +412,8 @@ export function EnhancedExerciseProgressionChart({
             style={styles.exerciseList}
             contentContainerStyle={styles.exerciseListContent}
           >
-            {exercisesWithProgression.map((exercise) => {
-              const isSelected = selectedExerciseId === exercise.id;
+            {exercisesWithProgression.map(exercise => {
+              const isSelected = selectedExerciseId === exercise.id
               return (
                 <Pressable
                   key={exercise.id}
@@ -438,13 +438,13 @@ export function EnhancedExerciseProgressionChart({
                     />
                   )}
                 </Pressable>
-              );
+              )
             })}
           </ScrollView>
         </View>
       </Modal>
     </Animated.View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -455,14 +455,14 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: theme.spacing.md
   },
   titleRow: {
-    flexDirection: "row",
-    alignItems: "center"
+    flexDirection: 'row',
+    alignItems: 'center'
   },
   titleIcon: {
     marginRight: theme.spacing.xs
@@ -472,8 +472,8 @@ const styles = StyleSheet.create({
     color: theme.colors.text
   },
   trendBadge: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 2,
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
@@ -485,9 +485,9 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.semiBold
   },
   exerciseSelector: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     backgroundColor: theme.colors.background,
@@ -507,14 +507,14 @@ const styles = StyleSheet.create({
     color: theme.colors.muted
   },
   controlsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: theme.spacing.md,
     gap: theme.spacing.sm
   },
   segmentedControl: {
-    flexDirection: "row",
+    flexDirection: 'row',
     backgroundColor: theme.colors.background,
     borderRadius: theme.radius.sm,
     padding: 2
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     color: theme.colors.muted
   },
   timeRangeControl: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.spacing.xs
   },
   timeChip: {
@@ -569,26 +569,26 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.sm
   },
   chartScrollContent: {
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
     paddingRight: theme.spacing.sm,
     gap: theme.spacing.sm
   },
   barColumn: {
-    alignItems: "center",
+    alignItems: 'center',
     width: 36
   },
   barArea: {
     height: CHART_HEIGHT,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    position: "relative"
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    position: 'relative'
   },
   bar: {
     width: 20,
     borderRadius: theme.radius.xs
   },
   prBadge: {
-    position: "absolute",
+    position: 'absolute',
     top: -14,
     backgroundColor: theme.colors.accentLight,
     borderRadius: theme.radius.full,
@@ -612,11 +612,11 @@ const styles = StyleSheet.create({
   },
   chartLoadingArea: {
     height: CHART_HEIGHT + 48,
-    justifyContent: "center",
-    alignItems: "center"
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   chartLoadingSkeleton: {
-    width: "100%",
+    width: '100%',
     height: CHART_HEIGHT,
     backgroundColor: theme.colors.skeleton,
     borderRadius: theme.radius.sm
@@ -626,9 +626,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   },
   modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border
@@ -641,8 +641,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: theme.radius.md,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   modalCloseButtonPressed: {
     backgroundColor: theme.colors.background
@@ -655,8 +655,8 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm
   },
   exerciseItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: theme.spacing.md,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.surface,
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
   exerciseCategory: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    textTransform: "capitalize",
+    textTransform: 'capitalize',
     marginTop: 2
   }
-});
+})

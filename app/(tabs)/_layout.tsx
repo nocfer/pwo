@@ -1,45 +1,45 @@
-import { LoadingScreen } from "@/components/common/LoadingScreen";
-import { useAuth } from "@/context/AuthContext";
-import { Redirect, Tabs } from "expo-router";
+import { LoadingScreen } from '@/components/common/LoadingScreen'
+import { useAuth } from '@/context/AuthContext'
+import { Redirect, Tabs } from 'expo-router'
 
-import { haptics } from "@/lib/haptics";
-import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Platform } from "react-native";
+import { haptics } from '@/lib/haptics'
+import { theme } from '@/theme/theme'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { Platform } from 'react-native'
 
-type TabIconName = "home" | "library" | "stats-chart" | "person";
+type TabIconName = 'home' | 'library' | 'stats-chart' | 'person'
 
 const TAB_CONFIG = [
-  { name: "index", title: "Home", icon: "home" as TabIconName },
-  { name: "library", title: "Library", icon: "library" as TabIconName },
-  { name: "progress", title: "Statistics", icon: "stats-chart" as TabIconName },
-  { name: "profile", title: "Profile", icon: "person" as TabIconName }
-] as const;
+  { name: 'index', title: 'Home', icon: 'home' as TabIconName },
+  { name: 'library', title: 'Library', icon: 'library' as TabIconName },
+  { name: 'progress', title: 'Statistics', icon: 'stats-chart' as TabIconName },
+  { name: 'profile', title: 'Profile', icon: 'person' as TabIconName }
+] as const
 
-const tabPressListener = { tabPress: () => haptics.tabSwitch() };
+const tabPressListener = { tabPress: () => haptics.tabSwitch() }
 
 function TabIcon({
   icon,
   color,
   focused
 }: {
-  icon: TabIconName;
-  color: string;
-  focused: boolean;
+  icon: TabIconName
+  color: string
+  focused: boolean
 }) {
-  const name = focused ? icon : (`${icon}-outline` as const);
-  return <Ionicons name={name} color={color} size={26} />;
+  const name = focused ? icon : (`${icon}-outline` as const)
+  return <Ionicons name={name} color={color} size={26} />
 }
 
 export default function TabLayout() {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuth()
 
   if (loading) {
-    return <LoadingScreen message="Loading session..." />;
+    return <LoadingScreen message="Loading session..." />
   }
 
   if (!user) {
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href="/(auth)/sign-in" />
   }
 
   return (
@@ -48,15 +48,15 @@ export default function TabLayout() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.muted,
         headerShown: false,
-        animation: "shift",
+        animation: 'shift',
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.borderLight,
           borderTopWidth: 1,
           paddingTop: theme.spacing.xs,
           paddingBottom:
-            Platform.OS === "ios" ? theme.spacing.xl : theme.spacing.sm,
-          height: Platform.OS === "ios" ? 84 : 60
+            Platform.OS === 'ios' ? theme.spacing.xl : theme.spacing.sm,
+          height: Platform.OS === 'ios' ? 84 : 60
         },
         tabBarLabelStyle: {
           fontFamily: theme.fonts.medium,
@@ -82,5 +82,5 @@ export default function TabLayout() {
         />
       ))}
     </Tabs>
-  );
+  )
 }

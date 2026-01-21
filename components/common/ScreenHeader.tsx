@@ -2,19 +2,19 @@
  * ScreenHeader - Reusable header with optional back button
  */
 
-import { theme } from "@/theme/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { theme } from '@/theme/theme'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { router } from 'expo-router'
+import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native'
 
 type Props = {
-  title: string;
-  subtitle?: string;
-  showBackButton?: boolean;
-  onBack?: () => void;
-  style?: ViewStyle;
-  rightElement?: React.ReactNode;
-};
+  title: string
+  subtitle?: string
+  showBackButton?: boolean
+  onBack?: () => void
+  style?: ViewStyle
+  rightElement?: React.ReactNode
+}
 
 export function ScreenHeader({
   title,
@@ -26,11 +26,11 @@ export function ScreenHeader({
 }: Props) {
   const handleBack = () => {
     if (onBack) {
-      onBack();
+      onBack()
     } else {
-      router.back();
+      router.back()
     }
-  };
+  }
 
   return (
     <View style={[styles.container, style]}>
@@ -53,7 +53,7 @@ export function ScreenHeader({
       </View>
       {rightElement && <View style={styles.rightElement}>{rightElement}</View>}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -61,16 +61,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.md,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm
   },
   backButton: {
     width: 36,
     height: 36,
     borderRadius: theme.radius.sm,
-    alignItems: "center",
-    justifyContent: "center"
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   backButtonPressed: {
     backgroundColor: theme.colors.background
@@ -88,8 +88,8 @@ const styles = StyleSheet.create({
     marginTop: 2
   },
   rightElement: {
-    alignSelf: "center"
+    alignSelf: 'center'
   }
-});
+})
 
-export default ScreenHeader;
+export default ScreenHeader

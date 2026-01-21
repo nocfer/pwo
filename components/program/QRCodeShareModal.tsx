@@ -2,24 +2,24 @@
  * QRCodeShareModal - Modal component for displaying QR code for program sharing
  */
 
-import { encodeProgramForShare } from "@/lib/utils/programShare";
-import { theme } from "@/theme/theme";
-import { Program } from "@/types";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useMemo } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import QRCode from "react-native-qrcode-svg";
+import { encodeProgramForShare } from '@/lib/utils/programShare'
+import { theme } from '@/theme/theme'
+import { Program } from '@/types'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { useMemo } from 'react'
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import QRCode from 'react-native-qrcode-svg'
 
 type Props = {
-  program: Program;
-  visible: boolean;
-  onClose: () => void;
-};
+  program: Program
+  visible: boolean
+  onClose: () => void
+}
 
 export default function QRCodeShareModal({ program, visible, onClose }: Props) {
   const qrData = useMemo(() => {
-    return encodeProgramForShare(program);
-  }, [program]);
+    return encodeProgramForShare(program)
+  }, [program])
 
   return (
     <Modal
@@ -29,7 +29,7 @@ export default function QRCodeShareModal({ program, visible, onClose }: Props) {
       onRequestClose={onClose}
     >
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.modal} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={styles.modal} onPress={e => e.stopPropagation()}>
           <View style={styles.header}>
             <View style={styles.headerContent}>
               <Ionicons
@@ -78,35 +78,35 @@ export default function QRCodeShareModal({ program, visible, onClose }: Props) {
         </Pressable>
       </Pressable>
     </Modal>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: theme.spacing.lg
   },
   modal: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.xl,
-    width: "100%",
+    width: '100%',
     maxWidth: 400,
     ...theme.shadows.lg
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border
   },
   headerContent: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm,
     flex: 1
   },
@@ -123,18 +123,18 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
-    alignItems: "center",
+    alignItems: 'center',
     gap: theme.spacing.md
   },
   programName: {
     ...theme.typography.h3,
     color: theme.colors.text,
-    textAlign: "center"
+    textAlign: 'center'
   },
   programDescription: {
     ...theme.typography.body,
     color: theme.colors.subtext,
-    textAlign: "center"
+    textAlign: 'center'
   },
   qrContainer: {
     padding: theme.spacing.lg,
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   instruction: {
     ...theme.typography.caption,
     color: theme.colors.muted,
-    textAlign: "center",
+    textAlign: 'center',
     marginTop: theme.spacing.sm
   }
-});
+})
