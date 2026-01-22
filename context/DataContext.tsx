@@ -38,7 +38,6 @@ import type {
   HistoryEntry,
   ImportData,
   ImportResult,
-  LegacyProgram,
   Program,
   ProgramProgress,
   SearchFacets,
@@ -47,7 +46,6 @@ import type {
   UsageStats,
   WorkoutProgress
 } from '@/types'
-import { onAuthStateChanged, type User } from 'firebase/auth'
 import React, {
   createContext,
   ReactNode,
@@ -188,107 +186,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const searchCacheRef = useRef<Map<string, any>>(new Map())
   const auditLogRef = useRef<AuditLogEntry[]>([])
 
-  function migrateProgram(p: LegacyProgram): Program {
-    if (!p || typeof p !== 'object') return p as Program
-
-    // Check if this is already a modern Program with blocks
-    const existingBlocks = (p as any).blocks
-    const hasValidBlocks =
-      Array.isArray(existingBlocks) && existingBlocks.length > 0
-
-    // For the new structure, programs should already have blocks
-    // Preserve existing blocks if present, otherwise start with empty array
-    const result: Program = {
-      id: String(p.id ?? ''),
-      name: String(p.name ?? ''),
-      description:
-        typeof p.description === 'string' ? p.description : undefined,
-      blocks: hasValidBlocks ? existingBlocks : [],
-      createdAt: String(p.createdAt ?? new Date().toISOString()),
-      updatedAt: String(p.updatedAt ?? new Date().toISOString()),
-      source: p.source === 'builtin' ? 'builtin' : 'user',
-      // Preserve initialWarmup and defaultRestBetweenExercises if present
-      initialWarmup: (p as any).initialWarmup,
-      defaultRestBetweenExercises: (p as any).defaultRestBetweenExercises
-    }
-
-    // Preserve challengeConfig if present
-    if (p.challengeConfig && typeof p.challengeConfig === 'object') {
-      const config = p.challengeConfig
-      result.challengeConfig = {
-        exerciseId: String(config.exerciseId ?? ''),
-        sets: typeof config.sets === 'number' ? config.sets : 5,
-        targetReps:
-          typeof config.targetReps === 'number' ? config.targetReps : 100,
-        warmUpSeconds:
-          typeof config.warmUpSeconds === 'number' ? config.warmUpSeconds : 180,
-        breakSeconds:
-          typeof config.breakSeconds === 'number' ? config.breakSeconds : 90,
-        weeklyIncreasePercent:
-          typeof config.weeklyIncreasePercent === 'number'
-            ? config.weeklyIncreasePercent
-            : 10
-      }
-    }
-
-    return result
-  }
-
-  // Load exercises & programs (API + seed + user) on mount
-  useEffect(() => {
-    let mounted = true
-
-    // Subscribe to auth state changes
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (currentUser: User | null) => {
-        if (!mounted) return
-
-        try {
-          let apiExercises: Exercise[] = []
-
-          // Try to fetch from API first if available and user is authenticated
-          if (currentUser && isAPIAvailable()) {
-            try {
-              apiExercises = await fetchExercises()
-              console.debug('Loaded exercises from API:', apiExercises.length)
-            } catch (error) {
-              console.warn(
-                'Failed to fetch exercises from API, falling back to local:',
-                error
-              )
-              // Fall back to local storage if API fails
-              apiExercises = []
-            }
-          }
-
-          // Load user exercises from local storage
-          const userExercises = await storage.loadExercises()
-
-          // Merge: API exercises + user exercises
-          const exercisesById = new Map<string, Exercise>()
-          for (const e of apiExercises) exercisesById.set(e.id, e)
-          for (const e of userExercises) exercisesById.set(e.id, e)
-          const mergedExercises = Array.from(exercisesById.values()).sort(
-            (a, b) => a.name.localeCompare(b.name)
-          )
-
-          if (mounted)
-            dispatch({ type: 'SET_EXERCISES', exercises: mergedExercises })
-        } catch (error) {
-          console.error('Error loading exercises:', error)
-          if (mounted)
-            dispatch({ type: 'SET_EXERCISES_LOADING', loading: false })
-        }
-      }
-    )
-
-    return () => {
-      mounted = false
-      unsubscribe()
-    }
-  }, [])
-
   // Load programs (seed + user) on mount
   useEffect(() => {
     let mounted = true
@@ -297,11 +194,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const [seedPrograms, userPrograms] = await Promise.all([
           (async () => {
             try {
-              type ProgramModule = { default: LegacyProgram[] }
+              type ProgramModule = { default: Program[] }
               const mod = await import('@/assets/data/programs.json')
               return (mod as unknown as ProgramModule).default
             } catch {
-              return [] as LegacyProgram[]
+              return [] as Program[]
             }
           })(),
           storage.loadPrograms()
@@ -309,12 +206,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
         const programsById = new Map<string, Program>()
         for (const p of seedPrograms) {
-          const migrated = migrateProgram(p)
-          programsById.set(migrated.id, migrated)
+          programsById.set(p.id, p)
         }
         for (const p of userPrograms) {
-          const migrated = migrateProgram(p)
-          programsById.set(migrated.id, migrated)
+          programsById.set(p.id, p)
         }
         const mergedPrograms = Array.from(programsById.values()).sort((a, b) =>
           a.name.localeCompare(b.name)
@@ -704,11 +599,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const [seedPrograms, userPrograms] = await Promise.all([
           (async () => {
             try {
-              type ProgramModule = { default: LegacyProgram[] }
+              type ProgramModule = { default: Program[] }
               const mod = await import('@/assets/data/programs.json')
               return (mod as unknown as ProgramModule).default
             } catch {
-              return [] as LegacyProgram[]
+              return [] as Program[]
             }
           })(),
           storage.loadPrograms()
@@ -716,12 +611,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
         const programsById = new Map<string, Program>()
         for (const p of seedPrograms) {
-          const migrated = migrateProgram(p)
-          programsById.set(migrated.id, migrated)
+          programsById.set(p.id, p)
         }
         for (const p of userPrograms) {
-          const migrated = migrateProgram(p)
-          programsById.set(migrated.id, migrated)
+          programsById.set(p.id, p)
         }
         const mergedPrograms = Array.from(programsById.values()).sort((a, b) =>
           a.name.localeCompare(b.name)

@@ -30,26 +30,18 @@ export type { Exercise, ExerciseCategory, ExerciseSource } from "./exercise";
 // Program types
 export type {
   ChallengeConfig,
-  LegacyProgram,
-  LegacyProgramBlock,
-  LegacyProgramSession,
   Program,
   ProgramBlock,
   ProgramExerciseBlock,
-  ProgramRestBlock,
   ProgramSession,
-  ProgramSource,
-  ProgramWarmupBlock
+  ProgramSource
 } from "./program";
 
 // Progress types
 export type {
   ChallengeProgress,
-  ExerciseProgress,
-  PersonalRecord,
-  PersonalRecordType,
-  PRHistory,
-  ProgramProgress,
+  ExerciseProgress, PersonalRecord,
+  PersonalRecordType, PRHistory, ProgramProgress,
   ProgressHistory,
   ProgressHistoryEntry,
   SessionProgress, // Legacy alias for WorkoutProgress
@@ -76,12 +68,9 @@ export type {
   EnhancedProgram,
   ExportData,
   FieldValidation,
-  ImportData,
-  ImportedItem,
-  ImportError,
+  ImportData, ImportedItem, ImportError,
   ImportErrorCode,
-  ImportResult,
-  OperationStatus,
+  ImportResult, OperationStatus,
   SearchFacets,
   SearchQuery,
   SearchResult,
@@ -96,3 +85,4 @@ export type {
   ValidationWarning,
   ValidationWarningCode
 } from "./enhanced";
+
