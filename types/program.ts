@@ -1,19 +1,8 @@
 /**
- * Training Program model (multi-exercise sessions)
+ * Training Program model
  */
 
 export type ProgramSource = "builtin" | "user" | "pt";
-
-export type ProgramWarmupBlock = {
-  type: "warmup";
-  seconds: number;
-};
-
-export type ProgramRestBlock = {
-  type: "rest";
-  seconds: number;
-  label?: string;
-};
 
 export type ProgramExerciseBlock = {
   type: "exercise";
@@ -44,10 +33,7 @@ export type ProgramExerciseBlock = {
   restBetweenSets?: number;
 };
 
-export type ProgramBlock =
-  | ProgramWarmupBlock
-  | ProgramExerciseBlock
-  | ProgramRestBlock;
+export type ProgramBlock = ProgramExerciseBlock;
 
 export type ProgramSession = {
   index: number; // 1-based
@@ -96,58 +82,4 @@ export type Program = {
    * Defaults to 60 seconds if not specified.
    */
   defaultRestBetweenExercises?: number;
-};
-
-/**
- * Legacy program block format (used for migration from old data format)
- * Supports old repsPerSet/sets structure for backward compatibility
- */
-export type LegacyProgramBlock = {
-  type: "warmup" | "exercise" | "rest";
-  exerciseId?: string;
-  seconds?: number;
-  label?: string;
-  sets?: number;
-  repsPerSet?: number | number[];
-  restSecondsBetweenSets?: number;
-  targetReps?: number;
-  durationSeconds?: number;
-  note?: string;
-};
-
-/**
- * Legacy program session format (used for migration from old data format)
- */
-export type LegacyProgramSession = {
-  index?: number;
-  name?: string;
-  blocks?: LegacyProgramBlock[];
-};
-
-/**
- * Legacy program format with sessions (used for migration from old data format)
- */
-export type LegacyProgramWithSessions = {
-  id?: string;
-  name?: string;
-  description?: string;
-  sessions?: LegacyProgramSession[];
-  createdAt?: string;
-  updatedAt?: string;
-  source?: ProgramSource;
-  challengeConfig?: Partial<ChallengeConfig>;
-};
-
-/**
- * Legacy program format (used for migration from old data format)
- */
-export type LegacyProgram = {
-  id?: string;
-  name?: string;
-  description?: string;
-  sessions?: LegacyProgramSession[];
-  createdAt?: string;
-  updatedAt?: string;
-  source?: ProgramSource;
-  challengeConfig?: Partial<ChallengeConfig>;
 };
