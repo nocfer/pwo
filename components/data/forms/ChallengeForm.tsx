@@ -41,7 +41,7 @@ export type ChallengeFormProps = {
   onSave: (data: ChallengeFormData) => Promise<void>
   onCancel: () => void
   saving?: boolean
-  exercises: { id: string; name: string; source: 'builtin' | 'user' }[]
+  exercises: { id: string; name: string; source: 'builtin' | 'user' | 'pt' }[]
 }
 
 export function ChallengeForm({

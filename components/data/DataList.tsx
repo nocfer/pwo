@@ -19,7 +19,7 @@ type ListItem = {
   id: string
   name: string
   description?: string
-  source: 'builtin' | 'user'
+  source: 'builtin' | 'user' | 'pt'
   createdAt?: string
   updatedAt?: string
   category?: string

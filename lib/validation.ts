@@ -1096,7 +1096,7 @@ export function validateUniqueName<T extends { name: string; id: string }>(
  * Validates that a source allows modification
  */
 export function validateModificationPermissions(
-  source: 'builtin' | 'user',
+  source: 'builtin' | 'user' | 'pt',
   operation: 'edit' | 'delete'
 ): ValidationResult {
   if (source === 'builtin') {

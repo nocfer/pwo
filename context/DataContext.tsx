@@ -6,8 +6,10 @@
  */
 
 import { generateChallengeSessions } from '@/hooks/data/useChallengeSessions'
+import { createExercise as apiCreateExercise, updateExercise as apiUpdateExercise, fetchExercises, isAPIAvailable } from '@/lib/api'
 import { canSafelyDelete } from '@/lib/dependencyChecker'
 import { dataEvents } from '@/lib/events'
+import { auth } from '@/lib/firebase'
 import { storage } from '@/lib/storage'
 import {
   validateExercise,
@@ -40,6 +42,7 @@ import type {
   UsageStats,
   WorkoutProgress
 } from '@/types'
+import { onAuthStateChanged, type User } from 'firebase/auth'
 import React, {
   createContext,
   ReactNode,
@@ -226,26 +229,38 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return result
   }
 
-  // Load exercises & programs (seed + user) on mount
+  // Load exercises & programs (API + seed + user) on mount
   useEffect(() => {
     let mounted = true
-    ;(async () => {
-      try {
-        const [seedExercises, userExercises] = await Promise.all([
-          (async () => {
-            try {
-              type ExerciseModule = { default: Exercise[] }
-              const mod = await import('@/assets/data/exercises.json')
-              return (mod as unknown as ExerciseModule).default
-            } catch {
-              return [] as Exercise[]
-            }
-          })(),
-          storage.loadExercises()
-        ])
 
+    // Subscribe to auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
+      if (!mounted) return
+
+      try {
+        let apiExercises: Exercise[] = []
+
+        // Try to fetch from API first if available and user is authenticated
+        if (currentUser && isAPIAvailable()) {
+          try {
+            apiExercises = await fetchExercises()
+            console.debug('Loaded exercises from API:', apiExercises.length)
+          } catch (error) {
+            console.warn(
+              'Failed to fetch exercises from API, falling back to local:',
+              error
+            )
+            // Fall back to local storage if API fails
+            apiExercises = []
+          }
+        }
+
+        // Load user exercises from local storage
+        const userExercises = await storage.loadExercises()
+
+        // Merge: API exercises + user exercises
         const exercisesById = new Map<string, Exercise>()
-        for (const e of seedExercises) exercisesById.set(e.id, e)
+        for (const e of apiExercises) exercisesById.set(e.id, e)
         for (const e of userExercises) exercisesById.set(e.id, e)
         const mergedExercises = Array.from(exercisesById.values()).sort(
           (a, b) => a.name.localeCompare(b.name)
@@ -253,10 +268,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
         if (mounted)
           dispatch({ type: 'SET_EXERCISES', exercises: mergedExercises })
-      } catch {
+      } catch (error) {
+        console.error('Error loading exercises:', error)
         if (mounted) dispatch({ type: 'SET_EXERCISES_LOADING', loading: false })
       }
+    })
 
+    return () => {
+      mounted = false
+      unsubscribe()
+    }
+  }, [])
+
+  // Load programs (seed + user) on mount
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
       try {
         const [seedPrograms, userPrograms] = await Promise.all([
           (async () => {
@@ -286,7 +313,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
         if (mounted)
           dispatch({ type: 'SET_PROGRAMS', programs: mergedPrograms })
-      } catch {
+      } catch (error) {
+        console.error('Failed to reload programs:', error)
         if (mounted) dispatch({ type: 'SET_PROGRAMS_LOADING', loading: false })
       }
     })()
@@ -629,24 +657,29 @@ export function DataProvider({ children }: { children: ReactNode }) {
   )
 
   const refreshAll = useCallback(() => {
-    // Reload exercises and programs from storage
+    // Reload exercises and programs from API + storage
     ;(async () => {
       try {
-        const [seedExercises, userExercises] = await Promise.all([
-          (async () => {
-            try {
-              type ExerciseModule = { default: Exercise[] }
-              const mod = await import('@/assets/data/exercises.json')
-              return (mod as unknown as ExerciseModule).default
-            } catch {
-              return [] as Exercise[]
-            }
-          })(),
-          storage.loadExercises()
-        ])
+        let apiExercises: Exercise[] = []
 
+        // Try to fetch from API first if available and user is authenticated
+        const currentUser = auth.currentUser
+        if (currentUser && isAPIAvailable()) {
+          try {
+            apiExercises = await fetchExercises()
+            console.debug('Refreshed exercises from API:', apiExercises.length)
+          } catch (error) {
+            console.warn('Failed to refresh exercises from API:', error)
+            apiExercises = []
+          }
+        }
+
+        // Load user exercises from local storage
+        const userExercises = await storage.loadExercises()
+
+        // Merge: API exercises + user exercises
         const exercisesById = new Map<string, Exercise>()
-        for (const e of seedExercises) exercisesById.set(e.id, e)
+        for (const e of apiExercises) exercisesById.set(e.id, e)
         for (const e of userExercises) exercisesById.set(e.id, e)
         const mergedExercises = Array.from(exercisesById.values()).sort(
           (a, b) => a.name.localeCompare(b.name)
@@ -721,7 +754,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const existing = state.exercises.find(e => e.id === id)
         if (existing) {
           const permissionResult = validateModificationPermissions(
-            existing.source,
+            existing.source as 'builtin' | 'user' | 'pt',
             'edit'
           )
           if (!permissionResult.isValid) {
@@ -745,13 +778,51 @@ export function DataProvider({ children }: { children: ReactNode }) {
         throw new Error(nameValidation.errors[0].message)
       }
 
-      const saved = await storage.upsertExercise({
-        id: input.id ?? '',
-        name: input.name,
-        category: input.category,
-        icon: input.icon,
-        source: 'user'
-      })
+      let saved: Exercise
+
+      // Try to save to API first if available and user is authenticated
+      const currentUser = auth.currentUser
+      if (currentUser && isAPIAvailable()) {
+        try {
+          if (id) {
+            // Update existing exercise
+            saved = await apiUpdateExercise(id, {
+              name: input.name,
+              category: input.category,
+              icon: input.icon
+            })
+            console.debug('Exercise updated via API:', saved.id)
+          } else {
+            // Create new exercise
+            saved = await apiCreateExercise({
+              name: input.name,
+              category: input.category,
+              icon: input.icon,
+              source: 'user'
+            })
+            console.debug('Exercise created via API:', saved.id)
+          }
+        } catch (error) {
+          console.warn('Failed to save exercise via API, falling back to local:', error)
+          // Fall back to local storage if API fails
+          saved = await storage.upsertExercise({
+            id: input.id ?? '',
+            name: input.name,
+            category: input.category,
+            icon: input.icon,
+            source: 'user'
+          })
+        }
+      } else {
+        // Save to local storage if API not available or user not authenticated
+        saved = await storage.upsertExercise({
+          id: input.id ?? '',
+          name: input.name,
+          category: input.category,
+          icon: input.icon,
+          source: 'user'
+        })
+      }
 
       const userExercises = await storage.loadExercises()
       const exercisesById = new Map<string, Exercise>()
@@ -775,7 +846,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (!existing) return
       // Check modification permissions
       const permissionResult = validateModificationPermissions(
-        existing.source,
+        existing.source as 'builtin' | 'user' | 'pt',
         'delete'
       )
       if (!permissionResult.isValid) {

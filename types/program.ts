@@ -2,7 +2,7 @@
  * Training Program model (multi-exercise sessions)
  */
 
-export type ProgramSource = "builtin" | "user";
+export type ProgramSource = "builtin" | "user" | "pt";
 
 export type ProgramWarmupBlock = {
   type: "warmup";

@@ -29,7 +29,7 @@ describe('Exercise Categorization Property Tests', () => {
       name: fc.string({ minLength: 1, maxLength: 100 }),
       icon: fc.string({ minLength: 1, maxLength: 20 }),
       source: fc.constantFrom('builtin', 'user') as fc.Arbitrary<
-        'builtin' | 'user'
+        'builtin' | 'user' | 'pt'
       >,
       createdAt: fc.constant(new Date().toISOString()),
       updatedAt: fc.constant(new Date().toISOString())
@@ -188,7 +188,7 @@ describe('Exercise Categorization Property Tests', () => {
       name: fc.string({ minLength: 1, maxLength: 100 }),
       icon: fc.string({ minLength: 1, maxLength: 20 }),
       source: fc.constantFrom('builtin', 'user') as fc.Arbitrary<
-        'builtin' | 'user'
+        'builtin' | 'user' | 'pt'
       >,
       createdAt: fc.constant(new Date('2023-01-01').toISOString()),
       updatedAt: fc.constant(new Date('2023-01-01').toISOString())

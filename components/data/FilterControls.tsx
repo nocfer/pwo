@@ -70,7 +70,7 @@ export function FilterControls({
     })
   }
 
-  const handleSourceToggle = (source: 'builtin' | 'user') => {
+  const handleSourceToggle = (source: 'builtin' | 'user' | 'pt') => {
     const currentSources = filters.source || []
     const newSources = currentSources.includes(source)
       ? currentSources.filter(s => s !== source)
