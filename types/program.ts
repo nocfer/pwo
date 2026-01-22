@@ -20,7 +20,7 @@ export type ProgramExerciseBlock = {
    */
   durationSeconds?: number;
   /**
-   * Optional short note (e.g. form cue, load, previous sets info after migration).
+   * Optional short note (e.g. form cue, load).
    */
   note?: string;
   /**

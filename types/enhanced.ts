@@ -119,7 +119,6 @@ export type DependencyCheck = {
   dependencies: {
     programs?: Program[];
     challenges?: Program[];
-    sessions?: any[]; // SessionProgress type from progress.ts
   };
   warnings: string[];
 };
@@ -128,7 +127,6 @@ export type DependencyResult = {
   canDelete: boolean;
   dependentPrograms: Program[];
   dependentChallenges: Program[];
-  activeSessions: any[]; // SessionProgress type
   warnings: string[];
 };
 

@@ -140,152 +140,6 @@ function generateId(prefix: string): string {
 }
 
 // ============================================================================
-// Program progress migration helpers
-// ============================================================================
-
-function migrateProgramProgressRecord(raw: any): ProgramProgress | null {
-  if (!raw || typeof raw !== 'object') return null
-
-  const programId = String(raw.programId ?? '')
-  if (!programId) return null
-
-  const nowISO = new Date().toISOString()
-
-  // If already in new shape (has workouts array), normalize lifetime aggregates.
-  if (Array.isArray((raw as any).workouts)) {
-    const workouts = Array.isArray((raw as any).workouts)
-      ? (raw as any).workouts
-      : []
-    const completedWorkouts = workouts.filter(
-      (w: any) => w && typeof w === 'object' && w.completed
-    )
-    const lifetimeWorkoutsCompleted = completedWorkouts.length
-    const lifetimeTimeSpentSeconds = completedWorkouts.reduce(
-      (sum: number, w: any) =>
-        sum + (typeof w.timeSpentSeconds === 'number' ? w.timeSpentSeconds : 0),
-      0
-    )
-    const lastActivityAt = (completedWorkouts as any[]).reduce<string | null>(
-      (latest: string | null, w: any) => {
-        const ts = typeof w.completedAt === 'string' ? w.completedAt : null
-        if (!ts) return latest
-        if (!latest) return ts
-        return new Date(ts) > new Date(latest) ? ts : latest
-      },
-      null
-    )
-    const updatedAt =
-      typeof (raw as any).updatedAt === 'string'
-        ? (raw as any).updatedAt
-        : (lastActivityAt ?? nowISO)
-
-    return {
-      programId,
-      workouts,
-      lifetimeWorkoutsCompleted,
-      lifetimeTimeSpentSeconds,
-      lastActivityAt,
-      updatedAt
-    }
-  }
-
-  // Legacy runs shape → convert to workouts
-  if (Array.isArray((raw as any).runs)) {
-    const runs = (raw as any).runs
-    const workouts: any[] = []
-
-    runs.forEach((run: any) => {
-      const sessions = Array.isArray(run?.sessions) ? run.sessions : []
-      sessions.forEach((session: any, idx: number) => {
-        if (session && typeof session === 'object' && session.completed) {
-          workouts.push({
-            workoutId: `${programId}_workout_${idx}`,
-            programId,
-            completed: session.completed,
-            completedAt: session.completedAt,
-            timeSpentSeconds: session.timeSpentSeconds,
-            exercises: session.exercises || []
-          })
-        }
-      })
-    })
-
-    const lifetimeWorkoutsCompleted = workouts.length
-    const lifetimeTimeSpentSeconds = workouts.reduce(
-      (sum: number, w: any) =>
-        sum + (typeof w.timeSpentSeconds === 'number' ? w.timeSpentSeconds : 0),
-      0
-    )
-    const lastActivityAt = workouts.reduce<string | null>(
-      (latest: string | null, w: any) => {
-        const ts = typeof w.completedAt === 'string' ? w.completedAt : null
-        if (!ts) return latest
-        if (!latest) return ts
-        return new Date(ts) > new Date(latest) ? ts : latest
-      },
-      null
-    )
-    const updatedAt =
-      typeof (raw as any).updatedAt === 'string'
-        ? (raw as any).updatedAt
-        : (lastActivityAt ?? nowISO)
-
-    return {
-      programId,
-      workouts,
-      lifetimeWorkoutsCompleted,
-      lifetimeTimeSpentSeconds,
-      lastActivityAt,
-      updatedAt
-    }
-  }
-
-  // Legacy single-session shape → convert to workouts
-  const sessions = Array.isArray((raw as any).sessions)
-    ? (raw as any).sessions
-    : []
-  const workouts: any[] = sessions
-    .filter((s: any) => s && typeof s === 'object' && s.completed)
-    .map((session: any, idx: number) => ({
-      workoutId: `${programId}_workout_${idx}`,
-      programId,
-      completed: session.completed,
-      completedAt: session.completedAt,
-      timeSpentSeconds: session.timeSpentSeconds,
-      exercises: session.exercises || []
-    }))
-
-  const lifetimeWorkoutsCompleted = workouts.length
-  const lifetimeTimeSpentSeconds = workouts.reduce(
-    (sum: number, w: any) =>
-      sum + (typeof w.timeSpentSeconds === 'number' ? w.timeSpentSeconds : 0),
-    0
-  )
-  const lastActivityAt = workouts.reduce<string | null>(
-    (latest: string | null, w: any) => {
-      const ts = typeof w.completedAt === 'string' ? w.completedAt : null
-      if (!ts) return latest
-      if (!latest) return ts
-      return new Date(ts) > new Date(latest) ? ts : latest
-    },
-    null
-  )
-  const updatedAt =
-    typeof (raw as any).updatedAt === 'string'
-      ? (raw as any).updatedAt
-      : (lastActivityAt ?? nowISO)
-
-  return {
-    programId,
-    workouts,
-    lifetimeWorkoutsCompleted,
-    lifetimeTimeSpentSeconds,
-    lastActivityAt,
-    updatedAt
-  }
-}
-
-// ============================================================================
 // Storage API
 // ============================================================================
 
@@ -540,11 +394,8 @@ export const storage = {
   async loadProgramProgress(
     programId: string
   ): Promise<ProgramProgress | null> {
-    const arr = await read<unknown[]>(KEYS.PROGRAM_PROGRESS, [])
-    const migrated = arr
-      .map(raw => migrateProgramProgressRecord(raw))
-      .filter((p): p is ProgramProgress => p !== null)
-    const match = migrated.find(p => p.programId === programId) ?? null
+    const arr = await read<ProgramProgress[]>(KEYS.PROGRAM_PROGRESS, [])
+    const match = arr.find(p => p.programId === programId) ?? null
     return match
   },
 
@@ -560,11 +411,8 @@ export const storage = {
   },
 
   async loadAllProgramProgress(): Promise<ProgramProgress[]> {
-    const arr = await read<unknown[]>(KEYS.PROGRAM_PROGRESS, [])
-    const migrated = arr
-      .map(raw => migrateProgramProgressRecord(raw))
-      .filter((p): p is ProgramProgress => p !== null)
-    return migrated
+    const arr = await read<ProgramProgress[]>(KEYS.PROGRAM_PROGRESS, [])
+    return arr
   },
 
   // --------------------------------------------------------------------------
