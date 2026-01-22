@@ -6,7 +6,12 @@
  */
 
 import { generateChallengeSessions } from '@/hooks/data/useChallengeSessions'
-import { createExercise as apiCreateExercise, updateExercise as apiUpdateExercise, fetchExercises, isAPIAvailable } from '@/lib/api'
+import {
+  createExercise as apiCreateExercise,
+  updateExercise as apiUpdateExercise,
+  fetchExercises,
+  isAPIAvailable
+} from '@/lib/api'
 import { canSafelyDelete } from '@/lib/dependencyChecker'
 import { dataEvents } from '@/lib/events'
 import { auth } from '@/lib/firebase'
@@ -234,45 +239,49 @@ export function DataProvider({ children }: { children: ReactNode }) {
     let mounted = true
 
     // Subscribe to auth state changes
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
-      if (!mounted) return
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      async (currentUser: User | null) => {
+        if (!mounted) return
 
-      try {
-        let apiExercises: Exercise[] = []
+        try {
+          let apiExercises: Exercise[] = []
 
-        // Try to fetch from API first if available and user is authenticated
-        if (currentUser && isAPIAvailable()) {
-          try {
-            apiExercises = await fetchExercises()
-            console.debug('Loaded exercises from API:', apiExercises.length)
-          } catch (error) {
-            console.warn(
-              'Failed to fetch exercises from API, falling back to local:',
-              error
-            )
-            // Fall back to local storage if API fails
-            apiExercises = []
+          // Try to fetch from API first if available and user is authenticated
+          if (currentUser && isAPIAvailable()) {
+            try {
+              apiExercises = await fetchExercises()
+              console.debug('Loaded exercises from API:', apiExercises.length)
+            } catch (error) {
+              console.warn(
+                'Failed to fetch exercises from API, falling back to local:',
+                error
+              )
+              // Fall back to local storage if API fails
+              apiExercises = []
+            }
           }
+
+          // Load user exercises from local storage
+          const userExercises = await storage.loadExercises()
+
+          // Merge: API exercises + user exercises
+          const exercisesById = new Map<string, Exercise>()
+          for (const e of apiExercises) exercisesById.set(e.id, e)
+          for (const e of userExercises) exercisesById.set(e.id, e)
+          const mergedExercises = Array.from(exercisesById.values()).sort(
+            (a, b) => a.name.localeCompare(b.name)
+          )
+
+          if (mounted)
+            dispatch({ type: 'SET_EXERCISES', exercises: mergedExercises })
+        } catch (error) {
+          console.error('Error loading exercises:', error)
+          if (mounted)
+            dispatch({ type: 'SET_EXERCISES_LOADING', loading: false })
         }
-
-        // Load user exercises from local storage
-        const userExercises = await storage.loadExercises()
-
-        // Merge: API exercises + user exercises
-        const exercisesById = new Map<string, Exercise>()
-        for (const e of apiExercises) exercisesById.set(e.id, e)
-        for (const e of userExercises) exercisesById.set(e.id, e)
-        const mergedExercises = Array.from(exercisesById.values()).sort(
-          (a, b) => a.name.localeCompare(b.name)
-        )
-
-        if (mounted)
-          dispatch({ type: 'SET_EXERCISES', exercises: mergedExercises })
-      } catch (error) {
-        console.error('Error loading exercises:', error)
-        if (mounted) dispatch({ type: 'SET_EXERCISES_LOADING', loading: false })
       }
-    })
+    )
 
     return () => {
       mounted = false
@@ -803,7 +812,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
             console.debug('Exercise created via API:', saved.id)
           }
         } catch (error) {
-          console.warn('Failed to save exercise via API, falling back to local:', error)
+          console.warn(
+            'Failed to save exercise via API, falling back to local:',
+            error
+          )
           // Fall back to local storage if API fails
           saved = await storage.upsertExercise({
             id: input.id ?? '',

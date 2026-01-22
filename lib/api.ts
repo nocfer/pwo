@@ -30,15 +30,22 @@ export class APIError extends Error {
 
 /**
  * Get Firebase auth token for API requests
+ *
+ * Uses Firebase's built-in token caching. The token is only refreshed
+ * when it expires (typically after 1 hour). This is more efficient than
+ * forcing a refresh on every request.
+ *
+ * @param forceRefresh - Force token refresh (default: false)
+ *                       Set to true only if you need a guaranteed fresh token
  */
-async function getAuthToken(): Promise<string> {
+async function getAuthToken(forceRefresh: boolean = false): Promise<string> {
   const user = auth.currentUser
   if (!user) {
     throw new APIError('NO_AUTH', 'User not authenticated')
   }
 
   try {
-    const token = await user.getIdToken(true)
+    const token = await user.getIdToken(forceRefresh)
     return token
   } catch (error) {
     throw new APIError(
