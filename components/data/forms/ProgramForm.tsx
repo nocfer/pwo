@@ -43,7 +43,7 @@ export type ProgramFormProps = {
   onSave: (data: ProgramFormData) => Promise<void>
   onCancel: () => void
   saving?: boolean
-  exercises: { id: string; name: string; source: 'builtin' | 'user' }[]
+  exercises: { id: string; name: string; source: 'builtin' | 'user' | 'pt' }[]
 }
 
 const DEFAULT_WARMUP_SECONDS = 300

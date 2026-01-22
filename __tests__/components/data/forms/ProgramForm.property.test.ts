@@ -62,7 +62,7 @@ describe('Program Session Manipulation Property Tests', () => {
     createdAt: fc.constant(new Date().toISOString()),
     updatedAt: fc.constant(new Date().toISOString()),
     source: fc.constantFrom('builtin', 'user') as fc.Arbitrary<
-      'builtin' | 'user'
+      'builtin' | 'user' | 'pt'
     >
   })
 

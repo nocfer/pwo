@@ -180,7 +180,7 @@ describe('SearchableList Metadata Display Property Tests', () => {
     fc.assert(
       fc.property(
         fc.constantFrom('builtin', 'user'),
-        (source: 'builtin' | 'user') => {
+        (source: 'builtin' | 'user' | 'pt') => {
           const item = {
             id: 'test_id',
             name: 'Test Item',

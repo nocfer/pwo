@@ -4,10 +4,10 @@
  */
 
 import type {
-    ChallengeConfig,
-    Exercise,
-    ExerciseCategory,
-    Program
+  ChallengeConfig,
+  Exercise,
+  ExerciseCategory,
+  Program
 } from "./index";
 
 // ============================================================================
@@ -168,7 +168,7 @@ export type SearchState = {
   query: string;
   filters: {
     category?: ExerciseCategory[];
-    source?: ("builtin" | "user")[];
+    source?: ("builtin" | "user" | "pt" | "pt")[];
     difficulty?: string[];
     tags?: string[];
     dateRange?: DateRange;

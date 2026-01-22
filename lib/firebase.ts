@@ -35,6 +35,15 @@ const firebaseConfig = {
   appId: normalizeEnvValue(process.env.EXPO_PUBLIC_FIREBASE_APP_ID)
 }
 
+// Log Firebase config status (for debugging)
+if (process.env.NODE_ENV === 'development') {
+  const configStatus = Object.entries(firebaseConfig).map(([key, value]) => ({
+    key,
+    configured: Boolean(value)
+  }))
+  console.debug('Firebase config status:', configStatus)
+}
+
 // Validate that all required config values are present
 const requiredKeys: (keyof typeof firebaseConfig)[] = [
   'apiKey',
