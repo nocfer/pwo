@@ -44,7 +44,6 @@ export type {
   PersonalRecordType, PRHistory, ProgramProgress,
   ProgressHistory,
   ProgressHistoryEntry,
-  SessionProgress, // Legacy alias for WorkoutProgress
   SetRecord,
   WeeklyStats,
   WorkoutProgress

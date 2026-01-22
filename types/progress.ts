@@ -127,6 +127,3 @@ export type ProgressHistoryEntry = {
 };
 
 export type ProgressHistory = ProgressHistoryEntry[];
-
-// Legacy types for migration (deprecated)
-export type SessionProgress = WorkoutProgress; // Alias for backward compatibility
