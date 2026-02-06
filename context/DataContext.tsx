@@ -46,6 +46,7 @@ import type {
   UsageStats,
   WorkoutProgress
 } from '@/types'
+import { onAuthStateChanged, type User } from 'firebase/auth'
 import React, {
   createContext,
   ReactNode,
@@ -185,6 +186,61 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Use refs for caches that don't need to trigger re-renders
   const searchCacheRef = useRef<Map<string, any>>(new Map())
   const auditLogRef = useRef<AuditLogEntry[]>([])
+
+  // Load exercises & programs (API + seed + user) on mount
+  useEffect(() => {
+    let mounted = true
+
+    // Subscribe to auth state changes
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      async (currentUser: User | null) => {
+        if (!mounted) return
+
+        try {
+          let apiExercises: Exercise[] = []
+
+          // Try to fetch from API first if available and user is authenticated
+          if (currentUser && isAPIAvailable()) {
+            try {
+              apiExercises = await fetchExercises()
+              console.debug('Loaded exercises from API:', apiExercises.length)
+            } catch (error) {
+              console.warn(
+                'Failed to fetch exercises from API, falling back to local:',
+                error
+              )
+              // Fall back to local storage if API fails
+              apiExercises = []
+            }
+          }
+
+          // Load user exercises from local storage
+          const userExercises = await storage.loadExercises()
+
+          // Merge: API exercises + user exercises
+          const exercisesById = new Map<string, Exercise>()
+          for (const e of apiExercises) exercisesById.set(e.id, e)
+          for (const e of userExercises) exercisesById.set(e.id, e)
+          const mergedExercises = Array.from(exercisesById.values()).sort(
+            (a, b) => a.name.localeCompare(b.name)
+          )
+
+          if (mounted)
+            dispatch({ type: 'SET_EXERCISES', exercises: mergedExercises })
+        } catch (error) {
+          console.error('Error loading exercises:', error)
+          if (mounted)
+            dispatch({ type: 'SET_EXERCISES_LOADING', loading: false })
+        }
+      }
+    )
+
+    return () => {
+      mounted = false
+      unsubscribe()
+    }
+  }, [])
 
   // Load programs (seed + user) on mount
   useEffect(() => {
@@ -730,11 +786,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
 
       const userExercises = await storage.loadExercises()
-      const exercisesById = new Map<string, Exercise>()
-      for (const e of state.exercises) {
-        // keep builtins from current state (already contains seeds)
-        if (e.source === 'builtin') exercisesById.set(e.id, e)
+      
+      // Reload all exercises from API and storage to ensure consistency
+      let apiExercises: Exercise[] = []
+      const user = auth.currentUser
+      if (user && isAPIAvailable()) {
+        try {
+          apiExercises = await fetchExercises()
+        } catch (error) {
+          console.warn('Failed to fetch exercises from API:', error)
+          apiExercises = []
+        }
       }
+      
+      // Merge: API exercises + user exercises
+      const exercisesById = new Map<string, Exercise>()
+      for (const e of apiExercises) exercisesById.set(e.id, e)
       for (const e of userExercises) exercisesById.set(e.id, e)
       const merged = Array.from(exercisesById.values()).sort((a, b) =>
         a.name.localeCompare(b.name)
@@ -773,10 +840,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await storage.deleteExercise(id)
 
       const userExercises = await storage.loadExercises()
-      const merged = [
-        ...state.exercises.filter(e => e.source === 'builtin'),
-        ...userExercises
-      ].sort((a, b) => a.name.localeCompare(b.name))
+      
+      // Reload all exercises from API and storage to ensure consistency
+      let apiExercises: Exercise[] = []
+      const user = auth.currentUser
+      if (user && isAPIAvailable()) {
+        try {
+          apiExercises = await fetchExercises()
+        } catch (error) {
+          console.warn('Failed to fetch exercises from API:', error)
+          apiExercises = []
+        }
+      }
+      
+      // Merge: API exercises + user exercises
+      const exercisesById = new Map<string, Exercise>()
+      for (const e of apiExercises) exercisesById.set(e.id, e)
+      for (const e of userExercises) exercisesById.set(e.id, e)
+      const merged = Array.from(exercisesById.values()).sort((a, b) =>
+        a.name.localeCompare(b.name)
+      )
       dispatch({ type: 'SET_EXERCISES', exercises: merged })
     },
     [state.exercises, state.programs]
