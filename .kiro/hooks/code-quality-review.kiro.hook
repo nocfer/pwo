@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "name": "Code Quality Review",
+  "description": "Analyzes modified source code files for potential improvements including code smells, design patterns, and best practices. Generates suggestions for readability, maintainability, and performance while preserving existing functionality.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review the edited file for potential code quality improvements. Analyze the changes and provide concise, actionable suggestions covering:\n\n1. Code smells — duplicated logic, overly complex functions, long parameter lists, magic numbers\n2. Design patterns — opportunities to apply or improve patterns like composition, separation of concerns, or proper abstraction\n3. Best practices — TypeScript idioms, proper error handling, null safety, consistent naming\n4. Readability — unclear variable names, missing or misleading comments, deeply nested logic\n5. Maintainability — tight coupling, missing type definitions, functions doing too much\n6. Performance — unnecessary re-renders, missing memoization, inefficient data structures or iterations\n\nKeep suggestions focused and practical. Do not rewrite the entire file. Only flag issues that meaningfully impact quality. Respect the existing architecture and patterns used in the project."
+  },
+  "workspaceFolderName": "pwo-expo",
+  "shortName": "code-quality-review"
+}
