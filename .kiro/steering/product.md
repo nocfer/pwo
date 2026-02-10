@@ -22,6 +22,7 @@ Progressive Workout is a React Native fitness application built with Expo that h
 ## Data Model
 
 The app manages three primary data types:
+
 - **Exercises**: Individual movements with categories and metadata
 - **Programs**: Structured workout plans with exercise blocks
 - **Progress**: Historical data, PRs, and completion tracking

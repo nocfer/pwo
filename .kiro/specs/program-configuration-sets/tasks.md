@@ -86,14 +86,14 @@ This implementation plan breaks down the feature into discrete coding tasks that
   - Verify expanded steps include all sets and rest periods
   - Verify step count is correct
 
-- [ ]* 12.1 Write Property Tests - Set Numbering
+- [ ]\* 12.1 Write Property Tests - Set Numbering
   - **Property 2: Set Numbering Accuracy**
   - **Validates: Requirements 4.4**
   - Generate random exercise blocks with 1-10 sets
   - Verify set numbers are sequential from 1 to N
   - Verify each set is labeled correctly
 
-- [ ]* 12.2 Write Property Tests - Rest Period Insertion
+- [ ]\* 12.2 Write Property Tests - Rest Period Insertion
   - **Property 3: Rest Period Insertion**
   - **Validates: Requirements 4.2, 4.3, 4.5, 4.6**
   - Generate random programs with various rest configurations
@@ -101,34 +101,34 @@ This implementation plan breaks down the feature into discrete coding tasks that
   - Verify rest blocks appear between different exercises
   - Verify rest durations match configuration
 
-- [ ]* 12.3 Write Property Tests - Default Rest Application
+- [ ]\* 12.3 Write Property Tests - Default Rest Application
   - **Property 4: Default Rest Application**
   - **Validates: Requirements 2.2, 2.3, 2.4**
   - Generate programs with default rest timer set
   - Verify all exercise transitions use default rest
   - Verify explicit rest overrides default
 
-- [ ]* 12.4 Write Property Tests - Warmup Display
+- [ ]\* 12.4 Write Property Tests - Warmup Display
   - **Property 5: Warmup Display Distinctness**
   - **Validates: Requirements 1.3, 1.5**
   - Generate programs with and without warmup
   - Verify warmup appears first when configured
   - Verify warmup has distinct visual styling
 
-- [ ]* 12.5 Write Property Tests - Configuration Persistence
+- [ ]\* 12.5 Write Property Tests - Configuration Persistence
   - **Property 6: Configuration Persistence Round Trip**
   - **Validates: Requirements 6.1, 6.2, 6.3, 6.4**
   - Generate random program configurations
   - Save and load programs
   - Verify all configuration values match original
 
-- [ ]* 12.6 Write Property Tests - Sensible Defaults
+- [ ]\* 12.6 Write Property Tests - Sensible Defaults
   - **Property 7: Sensible Defaults Application**
   - **Validates: Requirements 7.1, 7.2**
   - Create new exercise blocks without explicit configuration
   - Verify defaults are applied (1 set, 60 sec rest)
 
-- [ ]* 12.7 Write Property Tests - Default Rest Timer
+- [ ]\* 12.7 Write Property Tests - Default Rest Timer
   - **Property 8: Default Rest Timer Application**
   - **Validates: Requirements 7.3**
   - Create new programs without explicit default rest
@@ -143,7 +143,7 @@ This implementation plan breaks down the feature into discrete coding tasks that
   - Test default values are applied correctly
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 7.1, 7.2, 7.3_
 
-- [ ]* 13.1 Write Unit Tests - useWorkoutSteps Hook
+- [ ]\* 13.1 Write Unit Tests - useWorkoutSteps Hook
   - Test block expansion with various set configurations
   - Test rest period insertion between sets
   - Test rest period insertion between exercises
@@ -152,7 +152,7 @@ This implementation plan breaks down the feature into discrete coding tasks that
   - Test edge cases (single set, zero rest, etc.)
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ]* 13.2 Write Unit Tests - Data Persistence
+- [ ]\* 13.2 Write Unit Tests - Data Persistence
   - Test saving program with new configuration fields
   - Test loading program preserves all values
   - Test export/import includes new fields

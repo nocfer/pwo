@@ -5,16 +5,19 @@
 ### Issue 1: "User not authenticated"
 
 **Error:**
+
 ```
 Failed to fetch exercises from API, falling back to local: APIError: User not authenticated
 ```
 
 **Causes:**
+
 - User is not logged in
 - Firebase auth is not initialized
 - Auth state hasn't been set yet
 
 **Solutions:**
+
 1. Ensure user is logged in before API calls
 2. Check Firebase configuration in `.env`
 3. Wait for auth state to be ready (app handles this automatically now)
@@ -25,17 +28,21 @@ Failed to fetch exercises from API, falling back to local: APIError: User not au
 ### Issue 2: "HTTP 401: Unauthorized"
 
 **Error:**
+
 ```
 APIError: HTTP 401
 ```
 
 **Causes:**
+
 - Firebase token is invalid or expired
 - Backend is not validating tokens correctly
 - Token format is wrong
 
 **Solutions:**
+
 1. Check Firebase token is being sent correctly:
+
    ```typescript
    import { auth } from '@/lib/firebase'
    const token = await auth.currentUser?.getIdToken()
@@ -51,23 +58,28 @@ APIError: HTTP 401
 ### Issue 3: "Network error" or "ECONNREFUSED"
 
 **Error:**
+
 ```
 APIError: Network request failed
 ```
 
 **Causes:**
+
 - Backend not running
 - Wrong API URL
 - Firewall blocking connection
 - Network connectivity issue
 
 **Solutions:**
+
 1. Check backend is running:
+
    ```bash
    curl http://localhost:3000/api/v1/exercises
    ```
 
 2. Verify API URL in `.env`:
+
    ```env
    EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3000
    ```
@@ -81,16 +93,20 @@ APIError: Network request failed
 ### Issue 4: "API is disabled or not configured"
 
 **Error:**
+
 ```
 APIError: API is disabled or not configured
 ```
 
 **Causes:**
+
 - `EXPO_PUBLIC_API_ENABLED=false`
 - `EXPO_PUBLIC_API_BASE_URL` not set
 
 **Solutions:**
+
 1. Check `.env` file:
+
    ```env
    EXPO_PUBLIC_API_ENABLED=true
    EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3000
@@ -108,23 +124,28 @@ APIError: API is disabled or not configured
 ### Issue 5: "Request timeout"
 
 **Error:**
+
 ```
 APIError: Request timeout
 ```
 
 **Causes:**
+
 - Backend is slow
 - Network latency
 - Timeout is too short
 
 **Solutions:**
+
 1. Check backend performance
 2. Increase timeout in `.env`:
+
    ```env
    EXPO_PUBLIC_API_TIMEOUT=60000  # 60 seconds
    ```
 
 3. Check network latency:
+
    ```bash
    ping localhost
    ```
@@ -136,24 +157,29 @@ APIError: Request timeout
 ### Issue 6: Exercises not loading from API
 
 **Symptoms:**
+
 - No "Loaded exercises from API" in console
 - Only local exercises appear
 - No error messages
 
 **Causes:**
+
 - User not authenticated
 - API not available
 - API returns empty array
 
 **Solutions:**
+
 1. Check user is logged in
 2. Verify API is enabled:
+
    ```typescript
    import { isAPIAvailable } from '@/lib/api'
    console.log('API available:', isAPIAvailable())
    ```
 
 3. Test API directly:
+
    ```bash
    curl http://localhost:3000/api/v1/exercises \
      -H "Authorization: Bearer $TOKEN"
@@ -166,17 +192,21 @@ APIError: Request timeout
 ### Issue 7: Firebase configuration errors
 
 **Error:**
+
 ```
 Firebase configuration missing: apiKey, authDomain, ...
 ```
 
 **Causes:**
+
 - Environment variables not set
 - Wrong variable names
 - Missing `EXPO_PUBLIC_` prefix
 
 **Solutions:**
+
 1. Check `.env` has all Firebase variables:
+
    ```env
    EXPO_PUBLIC_FIREBASE_API_KEY=...
    EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=...
@@ -195,6 +225,7 @@ Firebase configuration missing: apiKey, authDomain, ...
 ## Debugging Steps
 
 ### Step 1: Check Console Logs
+
 ```typescript
 // In any component
 import { getAPIStatus } from '@/lib/api'
@@ -205,6 +236,7 @@ useEffect(() => {
 ```
 
 ### Step 2: Test API Directly
+
 ```bash
 # Get Firebase token
 TOKEN=$(firebase auth:export --format=json | jq -r '.users[0].customClaims.token')
@@ -215,6 +247,7 @@ curl http://localhost:3000/api/v1/exercises \
 ```
 
 ### Step 3: Check Auth State
+
 ```typescript
 import { auth } from '@/lib/firebase'
 
@@ -228,6 +261,7 @@ useEffect(() => {
 ```
 
 ### Step 4: Monitor Network Requests
+
 1. Open browser DevTools (F12)
 2. Go to Network tab
 3. Look for requests to `/api/v1/exercises`
@@ -235,6 +269,7 @@ useEffect(() => {
 5. Verify Authorization header is present
 
 ### Step 5: Check Backend Logs
+
 ```bash
 # If using Node.js backend
 tail -f logs/app.log
@@ -278,6 +313,7 @@ If you're still having issues:
 ## Useful Commands
 
 ### Test API with cURL
+
 ```bash
 # Get all exercises
 curl http://localhost:3000/api/v1/exercises \
@@ -293,6 +329,7 @@ curl "http://localhost:3000/api/v1/exercises?category=push" \
 ```
 
 ### Check Environment Variables
+
 ```bash
 # In Expo console
 console.log(process.env.EXPO_PUBLIC_API_BASE_URL)
@@ -300,6 +337,7 @@ console.log(process.env.EXPO_PUBLIC_API_ENABLED)
 ```
 
 ### Monitor Firebase Auth
+
 ```typescript
 import { auth } from '@/lib/firebase'
 
@@ -313,6 +351,7 @@ auth.currentUser?.getIdToken().then(token => {
 ```
 
 ### Check API Status
+
 ```typescript
 import { getAPIStatus, isAPIAvailable } from '@/lib/api'
 

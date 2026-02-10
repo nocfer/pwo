@@ -7,6 +7,7 @@ inclusion: always
 ## React Native Styling Fundamentals
 
 ### StyleSheet Usage
+
 - Use `StyleSheet.create()` for all styles to optimize performance
 - Define styles at the bottom of component files for easy reference
 - Reference theme colors and constants from `theme/theme.ts`
@@ -16,6 +17,7 @@ inclusion: always
 - Use `StyleSheet.compose()` for conditional style composition
 
 ### Style Organization
+
 - Group related styles together within `StyleSheet.create()`x
 - Use descriptive style names that reflect their purpose (e.g., `container`, `header`, `title`)
 - Separate layout styles from appearance styles for clarity
@@ -23,6 +25,7 @@ inclusion: always
 - Use theme presets for common patterns (`theme.presets.card`, `theme.presets.buttonPrimary`)
 
 ### Performance Considerations
+
 - Avoid creating new StyleSheet objects on every render
 - Use `useMemo()` for dynamically calculated styles
 - Memoize style objects passed to child components
@@ -32,17 +35,20 @@ inclusion: always
 ## Theme System Architecture
 
 ### Theme Structure
+
 - Centralized theme definitions in `theme/theme.ts`
 - Export theme as a constant object with typed properties
 - Include all design tokens: colors, spacing, typography, shadows, radius, presets
 
 ### Theme Access Patterns
+
 - Import theme directly: `import { theme } from '@/theme/theme'`
 - Use theme values for all styling decisions
 - Never hardcode colors, sizes, or spacing values
 - Use theme presets for common component patterns
 
 ### Design Tokens
+
 - **Colors**: Primary, accent, success, warning, danger, neutral palette
 - **Spacing**: xs (4px), sm (8px), md (12px), lg (16px), xl (24px), xxl (32px)
 - **Typography**: h1, h2, h3, body, bodyBold, caption, captionBold, small
@@ -52,6 +58,7 @@ inclusion: always
 ## Spacing & Sizing System
 
 ### Base Unit & Scale
+
 - Base unit: 4px (fundamental spacing increment)
 - Spacing scale via `theme.spacing`:
   - `xs`: 4px
@@ -62,6 +69,7 @@ inclusion: always
   - `xxl`: 32px
 
 ### Padding & Margins
+
 - Screen content padding: `lg` (16px)
 - Card padding: `lg` (16px)
 - Component internal padding: `md` (12px)
@@ -69,6 +77,7 @@ inclusion: always
 - Gap between list items: `sm` (8px)
 
 ### Component Sizing
+
 - Minimum touch target: 40-44px
 - Standard button height: 44px (md size)
 - Small button height: 36px (sm size)
@@ -81,11 +90,13 @@ inclusion: always
 ## Typography System
 
 ### Font Families
+
 - Primary font: Manrope (modern geometric sans-serif)
 - Weights: Regular (400), Medium (500), SemiBold (600), Bold (700), ExtraBold (800)
 - Access via `theme.fonts.regular`, `theme.fonts.medium`, `theme.fonts.semiBold`, `theme.fonts.bold`, `theme.fonts.extraBold`
 
 ### Typography Scale
+
 ```
 h1:          26px, Bold, lineHeight 32, letterSpacing -0.5
 h2:          20px, SemiBold, lineHeight 26, letterSpacing -0.3
@@ -98,6 +109,7 @@ small:       11px, Medium, lineHeight 14
 ```
 
 ### Text Styling
+
 - Use `numberOfLines` prop to truncate text
 - Apply `ellipsizeMode="tail"` for truncated text
 - Use semantic text colors: `text`, `subtext`, `muted`
@@ -105,12 +117,14 @@ small:       11px, Medium, lineHeight 14
 ## Color System & Palette
 
 ### Primary Colors
+
 - **Primary**: #6366F1 (Indigo-500) - main actions, highlights
 - **Primary Dark**: #4F46E5 (Indigo-600) - hover/pressed states
 - **Primary Light**: #EEF2FF (Indigo-50) - backgrounds, highlights
 - **Primary Muted**: #C7D2FE (Indigo-200) - subtle accents
 
 ### Accent & Status Colors
+
 - **Accent**: #F59E0B (Amber-500) - special emphasis, streaks
 - **Accent Light**: #FEF3C7 (Amber-100) - accent backgrounds
 - **Success**: #10B981 (Emerald-500) - positive actions
@@ -120,6 +134,7 @@ small:       11px, Medium, lineHeight 14
 - **Warning**: #F59E0B (Amber-500) - warnings
 
 ### Neutral Palette
+
 - **Background**: #F8FAFC (Slate-50) - screen backgrounds
 - **Surface**: #FFFFFF - cards, elevated surfaces
 - **Card**: #FFFFFF - card backgrounds (same as surface)
@@ -130,17 +145,20 @@ small:       11px, Medium, lineHeight 14
 - **Border Light**: #F1F5F9 (Slate-100) - subtle dividers
 
 ### Phase Colors (Workout States)
+
 - **Warmup**: #F97316 / #FFF7ED (Orange-500 / Orange-50)
 - **Working**: #6366F1 / #EEF2FF (Indigo-500 / Indigo-50)
 - **Break**: #06B6D4 / #ECFEFF (Cyan-500 / Cyan-50)
 - **Done**: #10B981 / #D1FAE5 (Emerald-500 / Emerald-100)
 
 ### Overlay
+
 - **Overlay**: rgba(15, 23, 42, 0.5) - modal backdrops
 
 ## Shadows & Elevation
 
 ### Shadow Scale
+
 ```
 none: No shadow
 sm:   shadowOpacity 0.04, shadowRadius 3, elevation 1
@@ -149,6 +167,7 @@ lg:   shadowOpacity 0.08, shadowRadius 12, elevation 4
 ```
 
 ### Shadow Usage
+
 - **Cards**: `sm` shadow (primary card style)
 - **Elevated cards**: `md` shadow
 - **Modals**: `md` shadow
@@ -158,6 +177,7 @@ lg:   shadowOpacity 0.08, shadowRadius 12, elevation 4
 ## Border & Corner Radius
 
 ### Radius Scale
+
 ```
 xs:   6px  - small elements, chips
 sm:   10px - icon containers, small cards
@@ -168,6 +188,7 @@ full: 9999px - pills, avatars
 ```
 
 ### Radius Usage
+
 - **Buttons**: `md` (14px)
 - **Input fields**: `md` (14px)
 - **Cards**: `lg` (18px)
@@ -177,6 +198,7 @@ full: 9999px - pills, avatars
 - **Chips/Pills**: `full` (9999px)
 
 ### Border Styles
+
 - Standard border: 1px solid `border` (#E2E8F0)
 - Subtle divider: 1px solid `borderLight` (#F1F5F9)
 - Focus border: 1px solid `primary` (#6366F1)
@@ -184,6 +206,7 @@ full: 9999px - pills, avatars
 ## Component-Specific Styling
 
 ### Buttons
+
 Three variants: `primary`, `secondary`, `ghost`
 Three sizes: `sm`, `md`, `lg`
 
@@ -208,6 +231,7 @@ Ghost:
 ```
 
 ### Input Fields
+
 ```
 - Height: 44px
 - Padding: md (12px) horizontal
@@ -219,6 +243,7 @@ Ghost:
 ```
 
 ### Cards
+
 ```
 Standard Card (theme.presets.card):
 - Background: surface (#FFFFFF)
@@ -231,6 +256,7 @@ Bordered Card (theme.presets.cardBordered):
 ```
 
 ### List Items
+
 ```
 - Background: surface (#FFFFFF)
 - Border radius: md (14px)
@@ -241,6 +267,7 @@ Bordered Card (theme.presets.cardBordered):
 ```
 
 ### Modals
+
 ```
 - Background: surface (#FFFFFF)
 - Border radius: xl (24px) top corners
@@ -250,6 +277,7 @@ Bordered Card (theme.presets.cardBordered):
 ```
 
 ### Tabs
+
 ```
 Container:
 - Background: surface (#FFFFFF)
@@ -266,6 +294,7 @@ Tab Button:
 ```
 
 ### Icon Buttons
+
 ```
 - Size: 40px × 40px
 - Border radius: md (14px)
@@ -274,6 +303,7 @@ Tab Button:
 ```
 
 ### Chips/Badges
+
 ```
 - Padding: xs (4px) vertical, sm (8px) horizontal
 - Border radius: full (9999px)
@@ -284,21 +314,21 @@ Tab Button:
 ## Screen Layout Patterns
 
 ### Standard Screen Structure
+
 ```jsx
-<SafeAreaView style={styles.container} edges={["left", "right", "top"]}>
+<SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
   <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
     <View style={styles.header}>
       <Text style={styles.title}>Screen Title</Text>
       <Text style={styles.subtitle}>Subtitle text</Text>
     </View>
-    <View style={styles.content}>
-      {/* Content sections */}
-    </View>
+    <View style={styles.content}>{/* Content sections */}</View>
   </ScrollView>
 </SafeAreaView>
 ```
 
 ### Header Pattern
+
 ```
 - Padding: lg (16px) horizontal
 - Padding top: lg (16px) or xl (24px)
@@ -308,6 +338,7 @@ Tab Button:
 ```
 
 ### Content Pattern
+
 ```
 - Padding: lg (16px) horizontal
 - Padding bottom: xxl * 2 (64px) for tab bar clearance
@@ -317,16 +348,19 @@ Tab Button:
 ## Animation Guidelines
 
 ### Timing
+
 - **Quick**: 250ms (card animations, fades)
 - **Standard**: 300ms (transitions, slides)
 - **Stagger delay**: 60-80ms between items
 
 ### Animation Values
+
 - Slide distance: 12-16px
 - Scale on press: 0.96-0.98
 - Opacity on press: 0.7-0.9
 
 ### Best Practices
+
 - Always use `useNativeDriver: true` for opacity and transform
 - Keep animations subtle and purposeful
 - Use staggered animations for lists (80ms delay per item)
@@ -335,16 +369,19 @@ Tab Button:
 ## Accessibility
 
 ### Touch Targets
+
 - Minimum size: 40px × 40px
 - Adequate spacing between targets: 8px minimum
 - Use `hitSlop` for small interactive elements
 
 ### Color Contrast
+
 - Text on background: Minimum 4.5:1 ratio
 - UI components: Minimum 3:1 ratio
 - Don't rely on color alone for information
 
 ### Text
+
 - Minimum body text size: 15px
 - Minimum caption size: 13px
 - Adequate line height for readability
@@ -352,6 +389,7 @@ Tab Button:
 ## Theme Presets Reference
 
 Available presets in `theme.presets`:
+
 ```
 card              - Standard card with shadow
 cardBordered      - Card with border, no shadow
