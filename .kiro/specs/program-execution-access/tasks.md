@@ -12,7 +12,7 @@ This implementation adds program execution functionality to make regular program
   - Add TypeScript interfaces for component props
   - _Requirements: 2.1, 4.2_
 
-- [ ]* 1.1 Write property test for program list item actions
+- [ ]\* 1.1 Write property test for program list item actions
   - **Property 2: Inline action button functionality**
   - **Validates: Requirements 2.1, 4.2**
 
@@ -22,11 +22,11 @@ This implementation adds program execution functionality to make regular program
   - Update DataList integration to use ProgramListItem for program types
   - _Requirements: 2.2, 2.3_
 
-- [ ]* 2.1 Write property test for navigation consistency
+- [ ]\* 2.1 Write property test for navigation consistency
   - **Property 1: Program start navigation consistency**
   - **Validates: Requirements 2.2, 4.1**
 
-- [ ]* 2.2 Write property test for edit button navigation
+- [ ]\* 2.2 Write property test for edit button navigation
   - **Property 3: Edit button navigation**
   - **Validates: Requirements 1.4, 2.3**
 
@@ -36,7 +36,7 @@ This implementation adds program execution functionality to make regular program
   - Ensure consistent styling with existing header elements
   - _Requirements: 1.3, 1.4, 4.3_
 
-- [ ]* 3.1 Write unit test for detail screen edit button
+- [ ]\* 3.1 Write unit test for detail screen edit button
   - Test edit button presence on both regular programs and challenges
   - Test navigation to correct edit screens
   - _Requirements: 1.3, 1.4_
@@ -47,7 +47,7 @@ This implementation adds program execution functionality to make regular program
   - Maintain existing behavior for exercise data types
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ]* 4.1 Write property test for program type consistency
+- [ ]\* 4.1 Write property test for program type consistency
   - **Property 6: Program type interaction consistency**
   - **Validates: Requirements 2.4, 4.4**
 
@@ -60,15 +60,15 @@ This implementation adds program execution functionality to make regular program
   - Add proper empty state handling when no programs exist
   - _Requirements: 3.1, 3.3, 3.4_
 
-- [ ]* 6.1 Write property test for home screen program inclusion
+- [ ]\* 6.1 Write property test for home screen program inclusion
   - **Property 7: Home screen program inclusion**
   - **Validates: Requirements 3.1, 3.4**
 
-- [ ]* 6.2 Write property test for home screen program execution
+- [ ]\* 6.2 Write property test for home screen program execution
   - **Property 8: Home screen program execution**
   - **Validates: Requirements 3.2**
 
-- [ ]* 6.3 Write unit test for empty state handling
+- [ ]\* 6.3 Write unit test for empty state handling
   - Test empty state display when no programs exist
   - _Requirements: 3.3_
 
@@ -78,7 +78,7 @@ This implementation adds program execution functionality to make regular program
   - Ensure consistent ordering across app sessions
   - _Requirements: 3.5_
 
-- [ ]* 7.1 Write property test for program prioritization
+- [ ]\* 7.1 Write property test for program prioritization
   - **Property 9: Program prioritization ordering**
   - **Validates: Requirements 3.5**
 
@@ -88,15 +88,15 @@ This implementation adds program execution functionality to make regular program
   - Test navigation back behavior from execution screens
   - _Requirements: 1.5, 1.6, 4.5_
 
-- [ ]* 8.1 Write property test for program execution initialization
+- [ ]\* 8.1 Write property test for program execution initialization
   - **Property 4: Program execution initialization**
   - **Validates: Requirements 1.5**
 
-- [ ]* 8.2 Write property test for multi-session navigation
+- [ ]\* 8.2 Write property test for multi-session navigation
   - **Property 5: Multi-session navigation capability**
   - **Validates: Requirements 1.6**
 
-- [ ]* 8.3 Write property test for navigation back behavior
+- [ ]\* 8.3 Write property test for navigation back behavior
   - **Property 10: Navigation back behavior**
   - **Validates: Requirements 4.5**
 
@@ -106,7 +106,7 @@ This implementation adds program execution functionality to make regular program
   - Verify all navigation flows work correctly
   - _Requirements: All_
 
-- [ ]* 9.1 Write integration tests
+- [ ]\* 9.1 Write integration tests
   - Test complete user flows from library to execution
   - Test navigation consistency across all screens
   - _Requirements: All_

@@ -786,7 +786,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
 
       const userExercises = await storage.loadExercises()
-      
+
       // Reload all exercises from API and storage to ensure consistency
       let apiExercises: Exercise[] = []
       const user = auth.currentUser
@@ -798,7 +798,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           apiExercises = []
         }
       }
-      
+
       // Merge: API exercises + user exercises
       const exercisesById = new Map<string, Exercise>()
       for (const e of apiExercises) exercisesById.set(e.id, e)
@@ -840,7 +840,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await storage.deleteExercise(id)
 
       const userExercises = await storage.loadExercises()
-      
+
       // Reload all exercises from API and storage to ensure consistency
       let apiExercises: Exercise[] = []
       const user = auth.currentUser
@@ -852,7 +852,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           apiExercises = []
         }
       }
-      
+
       // Merge: API exercises + user exercises
       const exercisesById = new Map<string, Exercise>()
       for (const e of apiExercises) exercisesById.set(e.id, e)

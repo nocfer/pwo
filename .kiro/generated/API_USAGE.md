@@ -13,6 +13,7 @@ EXPO_PUBLIC_API_ENABLED=true
 ```
 
 Firebase authentication is automatically initialized from:
+
 ```env
 EXPO_PUBLIC_FIREBASE_API_KEY=...
 EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=...
@@ -143,6 +144,7 @@ if (isAPIAvailable()) {
 ## Authentication
 
 The API SDK automatically:
+
 1. Gets the current Firebase user
 2. Retrieves a fresh ID token
 3. Includes it in the `Authorization: Bearer <token>` header
@@ -165,9 +167,9 @@ import { useExercises } from '@/hooks/data/useExercises'
 
 export function MyComponent() {
   const { data: exercises, loading } = useExercises()
-  
+
   if (loading) return <LoadingScreen />
-  
+
   return (
     <FlatList
       data={exercises}
@@ -186,17 +188,17 @@ import { useAPIExercises } from '@/hooks/data/useAPIExercises'
 
 export function MyComponent() {
   const { data, loading, error, isAPIAvailable } = useAPIExercises()
-  
+
   if (!isAPIAvailable) {
     return <Text>API not available</Text>
   }
-  
+
   if (error) {
     return <Text>Error: {error.message}</Text>
   }
-  
+
   if (loading) return <LoadingScreen />
-  
+
   return (
     <FlatList
       data={data}
@@ -229,7 +231,11 @@ export function useAPIExercises() {
         }
       } catch (err) {
         if (mounted) {
-          setError(err instanceof APIError ? err : new APIError('UNKNOWN', 'Unknown error'))
+          setError(
+            err instanceof APIError
+              ? err
+              : new APIError('UNKNOWN', 'Unknown error')
+          )
         }
       } finally {
         if (mounted) setLoading(false)
@@ -250,34 +256,46 @@ export function useAPIExercises() {
 The API SDK expects the following endpoints on your backend:
 
 ### GET /api/v1/exercises
+
 Fetch all exercises
+
 - **Auth**: Required (Bearer token)
 - **Response**: `Exercise[]`
 
 ### GET /api/v1/exercises/:id
+
 Fetch a single exercise
+
 - **Auth**: Required
 - **Response**: `Exercise`
 
 ### GET /api/v1/exercises?category=:category
+
 Fetch exercises by category
+
 - **Auth**: Required
 - **Response**: `Exercise[]`
 
 ### POST /api/v1/exercises
+
 Create a new exercise (admin only)
+
 - **Auth**: Required
 - **Body**: `Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'>`
 - **Response**: `Exercise`
 
 ### PUT /api/v1/exercises/:id
+
 Update an exercise (admin only)
+
 - **Auth**: Required
 - **Body**: `Partial<Exercise>`
 - **Response**: `Exercise`
 
 ### DELETE /api/v1/exercises/:id
+
 Delete an exercise (admin only)
+
 - **Auth**: Required
 - **Response**: `void`
 
