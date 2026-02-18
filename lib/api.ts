@@ -6,6 +6,7 @@
  */
 
 import { auth } from '@/lib/firebase'
+import type { APIWorkout, APIWorkoutCreateInput } from '@/lib/mappers/workout'
 import type { Exercise } from '@/types'
 
 // Configuration from environment
@@ -203,6 +204,56 @@ export async function updateExercise(
  */
 export async function deleteExercise(id: string): Promise<void> {
   await request<void>(`/api/v1/exercises/${id}`, {
+    method: 'DELETE'
+  })
+}
+
+// ─── Workout API Functions ────────────────────────────────────────────────────
+
+/**
+ * Fetch all workouts from the API
+ */
+export async function fetchWorkouts(): Promise<APIWorkout[]> {
+  return request<APIWorkout[]>('/api/v1/workouts')
+}
+
+/**
+ * Fetch a single workout by ID
+ */
+export async function fetchWorkout(id: string): Promise<APIWorkout> {
+  return request<APIWorkout>(`/api/v1/workouts/${id}`)
+}
+
+/**
+ * Create a new workout
+ */
+export async function createWorkout(
+  workout: APIWorkoutCreateInput
+): Promise<APIWorkout> {
+  return request<APIWorkout>('/api/v1/workouts', {
+    method: 'POST',
+    body: workout
+  })
+}
+
+/**
+ * Update a workout
+ */
+export async function updateWorkout(
+  id: string,
+  workout: APIWorkoutCreateInput
+): Promise<APIWorkout> {
+  return request<APIWorkout>(`/api/v1/workouts/${id}`, {
+    method: 'PUT',
+    body: workout
+  })
+}
+
+/**
+ * Delete a workout
+ */
+export async function deleteWorkout(id: string): Promise<void> {
+  await request<void>(`/api/v1/workouts/${id}`, {
     method: 'DELETE'
   })
 }

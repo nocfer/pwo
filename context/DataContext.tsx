@@ -8,13 +8,18 @@
 import { generateChallengeSessions } from '@/hooks/data/useChallengeSessions'
 import {
   createExercise as apiCreateExercise,
+  createWorkout as apiCreateWorkout,
+  deleteWorkout as apiDeleteWorkout,
   updateExercise as apiUpdateExercise,
+  updateWorkout as apiUpdateWorkout,
   fetchExercises,
+  fetchWorkouts,
   isAPIAvailable
 } from '@/lib/api'
 import { canSafelyDelete } from '@/lib/dependencyChecker'
 import { dataEvents } from '@/lib/events'
 import { auth } from '@/lib/firebase'
+import { programToWorkoutInput, workoutToProgram } from '@/lib/mappers/workout'
 import { storage } from '@/lib/storage'
 import {
   validateExercise,
@@ -242,45 +247,68 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Load programs (seed + user) on mount
+  // Load programs (API + seed) on mount, re-fetch on auth state change
   useEffect(() => {
     let mounted = true
-    ;(async () => {
-      try {
-        const [seedPrograms, userPrograms] = await Promise.all([
-          (async () => {
+
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      async (currentUser: User | null) => {
+        if (!mounted) return
+
+        try {
+          let apiPrograms: Program[] = []
+
+          // Try to fetch from API first if available and user is authenticated
+          if (currentUser && isAPIAvailable()) {
             try {
-              type ProgramModule = { default: Program[] }
-              const mod = await import('@/assets/data/programs.json')
-              return (mod as unknown as ProgramModule).default
-            } catch {
-              return [] as Program[]
+              const workouts = await fetchWorkouts()
+              apiPrograms = workouts.map(workoutToProgram)
+              console.debug('Loaded programs from API:', apiPrograms.length)
+            } catch (error) {
+              console.warn(
+                'Failed to fetch programs from API, falling back to seed only:',
+                error
+              )
+              apiPrograms = []
             }
-          })(),
-          storage.loadPrograms()
-        ])
+          }
 
-        const programsById = new Map<string, Program>()
-        for (const p of seedPrograms) {
-          programsById.set(p.id, p)
-        }
-        for (const p of userPrograms) {
-          programsById.set(p.id, p)
-        }
-        const mergedPrograms = Array.from(programsById.values()).sort((a, b) =>
-          a.name.localeCompare(b.name)
-        )
+          // Load seed programs
+          let seedPrograms: Program[] = []
+          try {
+            type ProgramModule = { default: Program[] }
+            const mod = await import('@/assets/data/programs.json')
+            seedPrograms = (mod as unknown as ProgramModule).default
+          } catch {
+            seedPrograms = []
+          }
 
-        if (mounted)
-          dispatch({ type: 'SET_PROGRAMS', programs: mergedPrograms })
-      } catch (error) {
-        console.error('Failed to reload programs:', error)
-        if (mounted) dispatch({ type: 'SET_PROGRAMS_LOADING', loading: false })
+          // Merge: seed programs first, then API programs (API takes precedence by ID)
+          const programsById = new Map<string, Program>()
+          for (const p of seedPrograms) {
+            programsById.set(p.id, p)
+          }
+          for (const p of apiPrograms) {
+            programsById.set(p.id, p)
+          }
+          const mergedPrograms = Array.from(programsById.values()).sort(
+            (a, b) => a.name.localeCompare(b.name)
+          )
+
+          if (mounted)
+            dispatch({ type: 'SET_PROGRAMS', programs: mergedPrograms })
+        } catch (error) {
+          console.error('Failed to reload programs:', error)
+          if (mounted)
+            dispatch({ type: 'SET_PROGRAMS_LOADING', loading: false })
+        }
       }
-    })()
+    )
 
     return () => {
       mounted = false
+      unsubscribe()
     }
   }, [])
 
@@ -652,24 +680,37 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const [seedPrograms, userPrograms] = await Promise.all([
-          (async () => {
-            try {
-              type ProgramModule = { default: Program[] }
-              const mod = await import('@/assets/data/programs.json')
-              return (mod as unknown as ProgramModule).default
-            } catch {
-              return [] as Program[]
-            }
-          })(),
-          storage.loadPrograms()
-        ])
+        let apiPrograms: Program[] = []
 
+        // Try to fetch from API first if available and user is authenticated
+        const currentUser = auth.currentUser
+        if (currentUser && isAPIAvailable()) {
+          try {
+            const workouts = await fetchWorkouts()
+            apiPrograms = workouts.map(workoutToProgram)
+            console.debug('Refreshed programs from API:', apiPrograms.length)
+          } catch (error) {
+            console.warn('Failed to refresh programs from API:', error)
+            apiPrograms = []
+          }
+        }
+
+        // Load seed programs
+        let seedPrograms: Program[] = []
+        try {
+          type ProgramModule = { default: Program[] }
+          const mod = await import('@/assets/data/programs.json')
+          seedPrograms = (mod as unknown as ProgramModule).default
+        } catch {
+          seedPrograms = []
+        }
+
+        // Merge: seed programs first, then API programs take precedence by ID
         const programsById = new Map<string, Program>()
         for (const p of seedPrograms) {
           programsById.set(p.id, p)
         }
-        for (const p of userPrograms) {
+        for (const p of apiPrograms) {
           programsById.set(p.id, p)
         }
         const mergedPrograms = Array.from(programsById.values()).sort((a, b) =>
@@ -888,23 +929,56 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const saved = await storage.upsertProgram({
-        id: input.id ?? '',
-        name: input.name,
-        description: input.description,
-        blocks: input.blocks,
-        challengeConfig: input.challengeConfig,
-        initialWarmup: input.initialWarmup,
-        defaultRestBetweenExercises: input.defaultRestBetweenExercises,
-        source: 'user'
-      })
+      let saved: Program
 
-      const userPrograms = await storage.loadPrograms()
-      const merged = [
-        ...state.programs.filter(p => p.source === 'builtin'),
-        ...userPrograms
-      ].sort((a, b) => a.name.localeCompare(b.name))
-      dispatch({ type: 'SET_PROGRAMS', programs: merged })
+      const currentUser = auth.currentUser
+      if (currentUser && isAPIAvailable()) {
+        // Build a temporary Program object for the mapper
+        const programForMapper: Program = {
+          id: id ?? '',
+          name: input.name,
+          description: input.description,
+          blocks: input.blocks,
+          challengeConfig: input.challengeConfig,
+          initialWarmup: input.initialWarmup,
+          defaultRestBetweenExercises: input.defaultRestBetweenExercises,
+          source: 'user',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+        const workoutInput = programToWorkoutInput(programForMapper)
+
+        if (id) {
+          const apiWorkout = await apiUpdateWorkout(id, workoutInput)
+          saved = workoutToProgram(apiWorkout)
+          console.debug('Program updated via API:', saved.id)
+        } else {
+          const apiWorkout = await apiCreateWorkout(workoutInput)
+          saved = workoutToProgram(apiWorkout)
+          console.debug('Program created via API:', saved.id)
+        }
+
+        // Re-fetch all programs from API to ensure consistency
+        let apiPrograms: Program[] = []
+        try {
+          const workouts = await fetchWorkouts()
+          apiPrograms = workouts.map(workoutToProgram)
+        } catch (error) {
+          console.warn('Failed to fetch programs from API:', error)
+        }
+
+        const merged = [
+          ...state.programs.filter(p => p.source === 'builtin'),
+          ...apiPrograms
+        ].sort((a, b) => a.name.localeCompare(b.name))
+        dispatch({ type: 'SET_PROGRAMS', programs: merged })
+      } else {
+        // No local storage fallback — API is the sole source of truth for user programs
+        throw new Error(
+          'Cannot save program: user is not authenticated or API is unavailable.'
+        )
+      }
+
       return saved
     },
     [state.programs]
@@ -918,14 +992,31 @@ export function DataProvider({ children }: { children: ReactNode }) {
         throw new Error('Built-in programs cannot be deleted.')
       }
 
-      await storage.deleteProgram(id)
+      const currentUser = auth.currentUser
+      if (currentUser && isAPIAvailable()) {
+        // Delete via API — errors propagate to the caller
+        await apiDeleteWorkout(id)
 
-      const userPrograms = await storage.loadPrograms()
-      const merged = [
-        ...state.programs.filter(p => p.source === 'builtin'),
-        ...userPrograms
-      ].sort((a, b) => a.name.localeCompare(b.name))
-      dispatch({ type: 'SET_PROGRAMS', programs: merged })
+        // Re-fetch all programs from API to ensure consistency
+        let apiPrograms: Program[] = []
+        try {
+          const workouts = await fetchWorkouts()
+          apiPrograms = workouts.map(workoutToProgram)
+        } catch (error) {
+          console.warn('Failed to fetch programs from API:', error)
+        }
+
+        const merged = [
+          ...state.programs.filter(p => p.source === 'builtin'),
+          ...apiPrograms
+        ].sort((a, b) => a.name.localeCompare(b.name))
+        dispatch({ type: 'SET_PROGRAMS', programs: merged })
+      } else {
+        // No local storage fallback — API is the sole source of truth for user programs
+        throw new Error(
+          'Cannot delete program: user is not authenticated or API is unavailable.'
+        )
+      }
     },
     [state.programs]
   )
