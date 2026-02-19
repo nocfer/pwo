@@ -1,5 +1,5 @@
 import { haptics } from '@/lib/haptics'
-import type { EventRecord, Program, SessionState } from '@/types'
+import type { AccumulatedSet, Program } from '@/types'
 import { useAudioPlayer } from 'expo-audio'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useProgramSessionTimer from './useProgramSessionTimer'
@@ -10,9 +10,6 @@ import type { WorkoutStep } from './useWorkoutSteps'
 // ============================================================================
 
 type TimerActions = {
-  recordEvent: (
-    event: Omit<EventRecord, 'ts'> & { ts?: string }
-  ) => Promise<void>
   completeSession: (
     slug: string,
     sessionIndex: number,
@@ -20,11 +17,6 @@ type TimerActions = {
     timeSpentSeconds: number,
     accumulatedSets: AccumulatedSet[]
   ) => Promise<void>
-  saveSessionState: (state: SessionState) => Promise<void>
-  loadSessionState: (
-    slug: string,
-    sessionIndex: number
-  ) => Promise<SessionState | null>
 }
 
 export type WorkoutPhase = 'timed' | 'working' | 'done'
@@ -57,56 +49,6 @@ export type UseWorkoutTimerReturn = {
   repeatStep: () => void
   /** Check if can go back */
   canGoBack: boolean
-}
-
-// ============================================================================
-// Helper functions for event recording
-// ============================================================================
-
-type EventContext = {
-  slug: string
-  sessionIndex: number
-  recordEvent: TimerActions['recordEvent']
-}
-
-/** Records a step completion event based on step type */
-function recordStepCompletion(step: WorkoutStep, ctx: EventContext) {
-  const { slug, sessionIndex, recordEvent } = ctx
-
-  if (step.type === 'warmup') {
-    void recordEvent({ slug, sessionIndex, type: 'warmup_completed' })
-  } else if (step.type === 'rest') {
-    void recordEvent({ slug, sessionIndex, type: 'break_completed' })
-  } else if (step.type === 'exercise') {
-    void recordEvent({
-      slug,
-      sessionIndex,
-      type: 'set_completed',
-      data: {
-        exerciseId: step.exerciseId,
-        reps: step.targetReps,
-        durationSeconds: step.durationSeconds
-      }
-    })
-  }
-}
-
-/** Records a step skipped event based on step type */
-function recordStepSkipped(step: WorkoutStep, ctx: EventContext) {
-  const { slug, sessionIndex, recordEvent } = ctx
-
-  if (step.type === 'warmup') {
-    void recordEvent({ slug, sessionIndex, type: 'warmup_skipped' })
-  } else if (step.type === 'rest') {
-    void recordEvent({ slug, sessionIndex, type: 'break_skipped' })
-  } else if (step.type === 'exercise') {
-    void recordEvent({
-      slug,
-      sessionIndex,
-      type: 'set_skipped',
-      data: { exerciseId: step.exerciseId }
-    })
-  }
 }
 
 // ============================================================================
@@ -237,8 +179,7 @@ export function useWorkoutTimer(opts: {
     getStepStatus,
     onSessionSafeguard
   } = opts
-  const { recordEvent, completeSession, saveSessionState, loadSessionState } =
-    actions
+  const { completeSession } = actions
 
   // ---------------------------------------------------------------------------
   // Audio
@@ -255,7 +196,7 @@ export function useWorkoutTimer(opts: {
   const [stepTimer, setStepTimer] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
-  const [initialElapsedSeconds, setInitialElapsedSeconds] = useState(0)
+  const [initialElapsedSeconds] = useState(0)
 
   // Session-wide elapsed timer (persisted across interruptions)
   const { sessionTimer: sessionElapsedSeconds } = useProgramSessionTimer({
@@ -275,14 +216,6 @@ export function useWorkoutTimer(opts: {
   useEffect(() => {
     currentStepRef.current = currentStep
   }, [currentStep])
-
-  // ---------------------------------------------------------------------------
-  // Event context for helper functions
-  // ---------------------------------------------------------------------------
-  const eventCtx: EventContext = useMemo(
-    () => ({ slug, sessionIndex, recordEvent }),
-    [slug, sessionIndex, recordEvent]
-  )
 
   // ---------------------------------------------------------------------------
   // Step Timer Management
@@ -326,17 +259,37 @@ export function useWorkoutTimer(opts: {
     setShowConfetti(true)
     void haptics.sessionComplete()
     const summary = `${program?.name ?? slug} · Session ${sessionIndex} · ${steps.length} steps`
-    // TODO: Pass actual accumulated sets once session UI tracks them
+
+    // Build accumulated sets from program blocks
+    // Each exercise block gets one set recorded with default reps
+    const accumulatedSets: AccumulatedSet[] = []
+    if (program) {
+      const now = new Date().toISOString()
+      program.blocks.forEach(block => {
+        // Get the first rep target (or 0 if not specified)
+        const reps = Array.isArray(block.targetReps)
+          ? (block.targetReps[0] ?? 0)
+          : (block.targetReps ?? 0)
+
+        accumulatedSets.push({
+          exerciseId: block.exerciseId,
+          reps,
+          isBodyweight: true, // Default to bodyweight unless weight was tracked
+          timestamp: now
+        })
+      })
+    }
+
     await completeSession(
       slug,
       sessionIndex,
       summary,
       sessionElapsedSeconds,
-      []
+      accumulatedSets
     )
   }, [
     completeSession,
-    program?.name,
+    program,
     sessionIndex,
     slug,
     steps.length,
@@ -381,74 +334,9 @@ export function useWorkoutTimer(opts: {
   }, [steps, currentIndex, getStepStatus, onSessionSafeguard, completeWorkout])
 
   // ---------------------------------------------------------------------------
-  // State Persistence
+  // State Persistence (removed - API-only architecture)
+  // Session state is now in-memory only and sent to API on completion
   // ---------------------------------------------------------------------------
-
-  // Load saved state on mount
-  useEffect(() => {
-    if (!program || steps.length === 0) return
-    let active = true
-
-    ;(async () => {
-      const saved = await loadSessionState(slug, sessionIndex)
-      if (!active || !saved) return
-
-      // If session was already completed, start fresh instead of loading done state
-      if (saved.phase === 'done') {
-        setCurrentIndex(0)
-        setPhase('working')
-        setStepTimer(0)
-        setIsPaused(false)
-        setInitialElapsedSeconds(0)
-        return
-      }
-
-      setCurrentIndex(Math.max(0, saved.currentSet - 1))
-      setPhase(saved.timer > 0 ? 'timed' : 'working')
-      setStepTimer(saved.timer)
-      setIsPaused(saved.isPaused)
-      setInitialElapsedSeconds(saved.sessionElapsedSeconds ?? 0)
-
-      if (saved.timer > 0 && !saved.isPaused) {
-        startStepTimer(saved.timer)
-      }
-    })()
-
-    return () => {
-      active = false
-    }
-  }, [
-    program,
-    steps.length,
-    slug,
-    sessionIndex,
-    loadSessionState,
-    startStepTimer
-  ])
-
-  // Persist state on changes
-  useEffect(() => {
-    void saveSessionState({
-      slug,
-      sessionIndex,
-      phase:
-        phase === 'done' ? 'done' : phase === 'timed' ? 'break' : 'working',
-      currentSet: currentIndex + 1,
-      timer: stepTimer,
-      isPaused,
-      warmupDone: true,
-      sessionElapsedSeconds
-    })
-  }, [
-    slug,
-    sessionIndex,
-    phase,
-    currentIndex,
-    stepTimer,
-    isPaused,
-    sessionElapsedSeconds,
-    saveSessionState
-  ])
 
   // ---------------------------------------------------------------------------
   // Derived State
@@ -468,17 +356,13 @@ export function useWorkoutTimer(opts: {
   useEffect(() => {
     if (stepTimer !== 0 || phase !== 'timed') return
 
-    // Record completion for the timed step
-    const finished = timedStepRef.current
-    if (finished) {
-      recordStepCompletion(finished, eventCtx)
-    }
-
+    // Timer completed - advance to next step
+    // (Event recording removed - API-only architecture)
     timedStepRef.current = null
     setIsPaused(false)
     setPhase('working')
     advanceToNextStep()
-  }, [stepTimer, phase, eventCtx, advanceToNextStep])
+  }, [stepTimer, phase, advanceToNextStep])
 
   // Keep phase consistent when no timer is running
   useEffect(() => {
@@ -530,11 +414,6 @@ export function useWorkoutTimer(opts: {
     void skipSound.play()
     void haptics.skipAction()
 
-    // Determine which step to record as skipped
-    const stepToRecord =
-      phase === 'timed' ? (timedStepRef.current ?? currentStep) : currentStep
-    recordStepSkipped(stepToRecord, eventCtx)
-
     // Reset timer state if currently timed
     if (phase === 'timed') {
       clearStepTimer()
@@ -545,14 +424,7 @@ export function useWorkoutTimer(opts: {
     }
 
     advanceToNextStep()
-  }, [
-    currentStep,
-    phase,
-    skipSound,
-    eventCtx,
-    clearStepTimer,
-    advanceToNextStep
-  ])
+  }, [currentStep, phase, skipSound, clearStepTimer, advanceToNextStep])
 
   const handleComplete = useCallback(() => {
     if (!currentStep) return
@@ -560,12 +432,6 @@ export function useWorkoutTimer(opts: {
     // Rest step: start timer silently (no completion sound)
     if (currentStep.type === 'rest') {
       startStepTimer(currentStep.seconds)
-      void recordEvent({
-        slug,
-        sessionIndex,
-        type: 'break_started',
-        data: { label: currentStep.label }
-      })
       void haptics.buttonTap()
       return
     }
@@ -577,7 +443,6 @@ export function useWorkoutTimer(opts: {
     // Warmup step: start timer
     if (currentStep.type === 'warmup') {
       startStepTimer(currentStep.seconds)
-      void recordEvent({ slug, sessionIndex, type: 'warmup_started' })
       void haptics.buttonTap()
       return
     }
@@ -586,42 +451,14 @@ export function useWorkoutTimer(opts: {
     const duration = currentStep.durationSeconds ?? 0
     if (duration > 0) {
       startStepTimer(duration)
-      void recordEvent({
-        slug,
-        sessionIndex,
-        type: 'set_completed',
-        data: {
-          exerciseId: currentStep.exerciseId,
-          started: true,
-          durationSeconds: duration,
-          reps: currentStep.targetReps
-        }
-      })
       void haptics.buttonTap()
       return
     }
 
     // Immediate exercise completion (no timer)
-    void recordEvent({
-      slug,
-      sessionIndex,
-      type: 'set_completed',
-      data: {
-        exerciseId: currentStep.exerciseId,
-        reps: currentStep.targetReps
-      }
-    })
     void haptics.setComplete()
     advanceToNextStep()
-  }, [
-    currentStep,
-    completeSound,
-    slug,
-    sessionIndex,
-    recordEvent,
-    startStepTimer,
-    advanceToNextStep
-  ])
+  }, [currentStep, completeSound, startStepTimer, advanceToNextStep])
 
   // ---------------------------------------------------------------------------
   // Navigation Actions (Free Navigation)
@@ -642,33 +479,11 @@ export function useWorkoutTimer(opts: {
         timedStepRef.current = null
       }
 
-      // Record jump event
-      void recordEvent({
-        slug,
-        sessionIndex,
-        type: 'step_jumped_to',
-        data: {
-          fromIndex: currentIndex,
-          toIndex: targetIndex,
-          fromStepKey: currentStep?.key,
-          toStepKey: steps[targetIndex]?.key
-        }
-      })
-
       void haptics.buttonTap()
       setCurrentIndex(targetIndex)
       setPhase('working')
     },
-    [
-      steps,
-      phase,
-      currentIndex,
-      currentStep,
-      clearStepTimer,
-      recordEvent,
-      slug,
-      sessionIndex
-    ]
+    [steps, phase, clearStepTimer]
   )
 
   /** Go back to the previous step */
@@ -689,31 +504,11 @@ export function useWorkoutTimer(opts: {
       timedStepRef.current = null
     }
 
-    // Record repeat event
-    void recordEvent({
-      slug,
-      sessionIndex,
-      type: 'step_repeated',
-      data: {
-        stepIndex: currentIndex,
-        stepKey: currentStep.key,
-        stepType: currentStep.type
-      }
-    })
-
     void haptics.buttonTap()
 
     // Reset to working phase to re-show the step
     setPhase('working')
-  }, [
-    currentStep,
-    currentIndex,
-    phase,
-    clearStepTimer,
-    recordEvent,
-    slug,
-    sessionIndex
-  ])
+  }, [currentStep, phase, clearStepTimer])
 
   /** Check if can go back */
   const canGoBack = currentIndex > 0 && phase !== 'done'

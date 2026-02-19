@@ -8,6 +8,17 @@
  * this hook should be updated to use them for accurate per-program metrics.
  */
 
+import { useRefreshVersions } from '@/context/DataContext'
+import { useAsyncData } from '@/hooks/useAsyncData'
+import {
+  APIError,
+  type APIProgress,
+  fetchProgress,
+  isAPIAvailable
+} from '@/lib/api'
+import type { Program } from '@/types'
+import { useCallback, useMemo } from 'react'
+
 export type ProgramProgressMetrics = {
   programId: string
   progress: null
@@ -42,7 +53,8 @@ function deriveMetrics(
 
   // Count recent activity entries that match this program's slug
   const matchingActivity = apiProgress.recentActivity.filter(
-    entry => entry.workoutId === program.slug
+    (entry: { workoutId: string; date: string }) =>
+      entry.workoutId === program.id
   )
   const sessionsCompleted = matchingActivity.length
 
@@ -56,15 +68,13 @@ function deriveMetrics(
     string,
     { completed: number; total: number }
   >()
-  program.blocks.forEach(block => {
-    if (block.type === 'exercise') {
-      const current = exerciseCompletion.get(block.exerciseId) || {
-        completed: 0,
-        total: 0
-      }
-      current.total++
-      exerciseCompletion.set(block.exerciseId, current)
+  program.blocks.forEach((block: { exerciseId: string }) => {
+    const current = exerciseCompletion.get(block.exerciseId) || {
+      completed: 0,
+      total: 0
     }
+    current.total++
+    exerciseCompletion.set(block.exerciseId, current)
   })
 
   // Mark exercises as completed if we have at least one matching session
