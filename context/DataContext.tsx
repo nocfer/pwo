@@ -5,7 +5,7 @@
  * when data changes anywhere in the app.
  */
 
-import { generateChallengeSessions } from '@/hooks/data/useChallengeSessions'
+import type { WorkoutLogInput, WorkoutLogSetInput } from '@/lib/api'
 import {
   createExercise as apiCreateExercise,
   createWorkout as apiCreateWorkout,
@@ -14,7 +14,8 @@ import {
   updateWorkout as apiUpdateWorkout,
   fetchExercises,
   fetchWorkouts,
-  isAPIAvailable
+  isAPIAvailable,
+  recordWorkout
 } from '@/lib/api'
 import { canSafelyDelete } from '@/lib/dependencyChecker'
 import { dataEvents } from '@/lib/events'
@@ -28,7 +29,6 @@ import {
 } from '@/lib/validation'
 import type {
   AuditLogEntry,
-  ChallengeProgress,
   DataAction,
   DataEvent,
   DataState,
@@ -38,18 +38,15 @@ import type {
   EnhancedDataState,
   EventRecord,
   Exercise,
-  ExerciseProgress,
   ExportData,
   HistoryEntry,
   ImportData,
   ImportResult,
   Program,
-  ProgramProgress,
   SearchFacets,
   SearchQuery,
   SessionState,
-  UsageStats,
-  WorkoutProgress
+  UsageStats
 } from '@/types'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import React, {
@@ -132,6 +129,7 @@ export const initialState: DataState & EnhancedDataState = {
   programs: [],
   programsLoading: true,
   lastCompletedSlug: null,
+  lastNewPRs: [],
   progressVersion: 0,
   historyVersion: 0,
   completedVersion: 0,
@@ -157,6 +155,8 @@ export function dataReducer(
       return { ...state, programsLoading: action.loading }
     case 'SET_LAST_COMPLETED_SLUG':
       return { ...state, lastCompletedSlug: action.slug }
+    case 'SET_LAST_NEW_PRS':
+      return { ...state, lastNewPRs: action.prs }
     case 'INCREMENT_PROGRESS_VERSION':
       return { ...state, progressVersion: state.progressVersion + 1 }
     case 'INCREMENT_HISTORY_VERSION':
@@ -380,10 +380,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       // Update streak
       await storage.saveStreakHit(slug, dateISO)
 
-      // Get program to determine type and calculate progress
+      // Get program to determine type and build workout log
       const program = state.programs.find(p => p.id === slug)
       if (program) {
-        const isChallenge = Boolean(program.challengeConfig)
         const events = await storage.loadEventsForSlug(slug)
         const sessionEvents = events.filter(
           e => e.sessionIndex === sessionIndex
@@ -391,9 +390,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
         // Use provided time if available, otherwise calculate from events
         let timeSpentSeconds: number
-        const exerciseProgressMap = new Map<string, ExerciseProgress>()
-
-        // If time was provided, use it; otherwise calculate from events
         if (providedTimeSpentSeconds !== undefined) {
           timeSpentSeconds = providedTimeSpentSeconds
         } else {
@@ -419,194 +415,91 @@ export function DataProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Always process exercise progress from events
+        // Build per-exercise sets from session events for the API
+        const exerciseSetsMap = new Map<string, WorkoutLogSetInput[]>()
+
+        // Debug: log what events we found
+        console.log(
+          `[completeSession] Looking for events with slug=${slug}, sessionIndex=${sessionIndex}`
+        )
+        console.log(
+          `[completeSession] Found ${sessionEvents.length} events for session ${sessionIndex}`
+        )
+        console.log(
+          `[completeSession] All events:`,
+          sessionEvents.map(e => ({
+            type: e.type,
+            sessionIndex: e.sessionIndex,
+            data: e.data
+          }))
+        )
+
         for (const event of sessionEvents) {
           if (event.type === 'set_completed') {
             const data = event.data as Record<string, unknown>
             const exerciseId = data?.['exerciseId']
             const reps = data?.['reps']
 
-            if (typeof exerciseId === 'string' && typeof reps === 'number') {
-              const existing = exerciseProgressMap.get(exerciseId) || {
-                exerciseId,
-                repsCompleted: 0,
-                setsCompleted: 0,
-                lastCompletedAt: dateISO
-              }
-              existing.repsCompleted += reps
-              existing.setsCompleted += 1
-              exerciseProgressMap.set(exerciseId, existing)
+            console.log(
+              `[completeSession] Found set_completed: exerciseId=${exerciseId}, reps=${reps}, data=${JSON.stringify(data)}`
+            )
+
+            if (typeof exerciseId === 'string') {
+              const sets = exerciseSetsMap.get(exerciseId) || []
+              const weight =
+                typeof data?.['weight'] === 'number'
+                  ? (data['weight'] as number)
+                  : undefined
+              const isBodyweight =
+                typeof data?.['isBodyweight'] === 'boolean'
+                  ? (data['isBodyweight'] as boolean)
+                  : weight === undefined
+              sets.push({
+                reps: typeof reps === 'number' ? reps : 0,
+                weight,
+                isBodyweight,
+                timestamp: event.ts
+              })
+              exerciseSetsMap.set(exerciseId, sets)
             }
           }
         }
 
-        const exerciseProgress = Array.from(exerciseProgressMap.values())
+        // Construct WorkoutLogInput
+        let exercises = Array.from(exerciseSetsMap.entries()).map(
+          ([exerciseId, sets]) => ({
+            exerciseId,
+            sets,
+            lastCompletedAt: dateISO
+          })
+        )
 
-        // Detect and save personal records for each exercise
-        const sessionId = `${slug}_session_${sessionIndex}`
-        for (const exProgress of exerciseProgress) {
-          try {
-            await storage.detectAndSavePRs(
-              exProgress.exerciseId,
-              exProgress,
-              sessionId
-            )
-          } catch (error) {
-            // Log error but don't fail session completion
-            console.error(
-              `Failed to detect PRs for exercise ${exProgress.exerciseId}:`,
-              error
-            )
+        console.log(
+          `[completeSession] Built ${exercises.length} exercises from events`
+        )
+
+        // Only POST to API if there are exercises with sets
+        if (exercises.length > 0) {
+          const workoutLogInput: WorkoutLogInput = {
+            workoutId: slug,
+            completedAt: dateISO,
+            timeSpentSeconds: Math.max(1, Math.round(timeSpentSeconds)),
+            exercises
           }
-        }
 
-        if (isChallenge && program.challengeConfig) {
-          // Update challenge progress
-          const existing = await storage.loadChallengeProgress(slug)
-          const sessions = generateChallengeSessions(program.challengeConfig)
-
-          let totalRepsCompleted = exerciseProgress.reduce(
-            (sum, e) => sum + e.repsCompleted,
-            0
+          console.log(
+            `[completeSession] Posting workout:`,
+            JSON.stringify(workoutLogInput, null, 2)
           )
 
-          if (existing) {
-            // Update existing progress
-            const workoutId = `${slug}_workout_${sessionIndex}`
-            const workoutProgressIndex = existing.workouts.findIndex(
-              w => w.workoutId === workoutId
-            )
-            const workoutProgress: WorkoutProgress = {
-              workoutId,
-              programId: slug,
-              completed: true,
-              completedAt: dateISO,
-              timeSpentSeconds,
-              exercises: exerciseProgress
-            }
+          // POST workout data to API — errors propagate to caller
+          const response = await recordWorkout(workoutLogInput)
 
-            if (workoutProgressIndex >= 0) {
-              existing.workouts[workoutProgressIndex] = workoutProgress
-            } else {
-              existing.workouts.push(workoutProgress)
-            }
+          // Store new PRs from response for UI display
+          dispatch({ type: 'SET_LAST_NEW_PRS', prs: response.newPRs })
 
-            // Recalculate total reps
-            totalRepsCompleted = existing.workouts
-              .filter(w => w.completed)
-              .reduce((sum, w) => {
-                return (
-                  sum +
-                  w.exercises.reduce((eSum, e) => eSum + e.repsCompleted, 0)
-                )
-              }, 0)
-
-            existing.totalRepsCompleted = totalRepsCompleted
-            existing.lastActivityAt = dateISO
-            existing.updatedAt = dateISO
-
-            // Check if challenge is completed
-            const completedWorkouts = existing.workouts.filter(w => w.completed)
-            if (
-              completedWorkouts.length === sessions.length &&
-              totalRepsCompleted >= program.challengeConfig.targetReps
-            ) {
-              existing.completedAt = dateISO
-            }
-
-            await storage.saveChallengeProgress(existing)
-          } else {
-            // Create new challenge progress
-            const workoutId = `${slug}_workout_${sessionIndex}`
-            const newProgress: ChallengeProgress = {
-              challengeId: slug,
-              startedAt: dateISO,
-              workouts: [
-                {
-                  workoutId,
-                  programId: slug,
-                  completed: true,
-                  completedAt: dateISO,
-                  timeSpentSeconds,
-                  exercises: exerciseProgress
-                }
-              ],
-              totalRepsCompleted,
-              targetReps: program.challengeConfig.targetReps,
-              lastActivityAt: dateISO,
-              updatedAt: dateISO
-            }
-            await storage.saveChallengeProgress(newProgress)
-          }
-
-          // Store history entry
-          await storage.appendProgressHistory({
-            date: dateISO.slice(0, 10),
-            challengeId: slug,
-            workoutsCompleted: 1,
-            totalReps: totalRepsCompleted
-          })
-        } else {
-          // Update program progress (open-ended runs model)
-          const existing = await storage.loadProgramProgress(slug)
-
-          const workoutId = `${slug}_workout_${sessionIndex}`
-          const workoutProgress: WorkoutProgress = {
-            workoutId,
-            programId: slug,
-            completed: true,
-            completedAt: dateISO,
-            timeSpentSeconds,
-            exercises: exerciseProgress
-          }
-
-          if (existing) {
-            const workouts = existing.workouts ?? []
-
-            // Upsert workout
-            const workoutIdx = workouts.findIndex(
-              w => w.workoutId === workoutId
-            )
-            if (workoutIdx >= 0) {
-              workouts[workoutIdx] = workoutProgress
-            } else {
-              workouts.push(workoutProgress)
-            }
-
-            // Recalculate aggregates
-            const completedWorkouts = workouts.filter(w => w.completed)
-            const totalTimeSpentSeconds = completedWorkouts.reduce(
-              (sum, w) => sum + (w.timeSpentSeconds || 0),
-              0
-            )
-
-            existing.workouts = workouts
-            existing.lifetimeWorkoutsCompleted = completedWorkouts.length
-            existing.lifetimeTimeSpentSeconds = totalTimeSpentSeconds
-            existing.lastActivityAt = dateISO
-            existing.updatedAt = dateISO
-
-            await storage.saveProgramProgress(existing)
-          } else {
-            // Create new program progress
-            const newProgress: ProgramProgress = {
-              programId: slug,
-              workouts: [workoutProgress],
-              lifetimeWorkoutsCompleted: 1,
-              lifetimeTimeSpentSeconds: timeSpentSeconds,
-              lastActivityAt: dateISO,
-              updatedAt: dateISO
-            }
-            await storage.saveProgramProgress(newProgress)
-          }
-
-          // Store history entry
-          await storage.appendProgressHistory({
-            date: dateISO.slice(0, 10),
-            programId: slug,
-            workoutsCompleted: 1,
-            timeSpentSeconds
-          })
+          // Increment progressVersion so dependent hooks re-fetch
+          dispatch({ type: 'INCREMENT_PROGRESS_VERSION' })
         }
       }
 
