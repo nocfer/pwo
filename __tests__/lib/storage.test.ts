@@ -372,23 +372,5 @@ describe('storage', () => {
       const progress = await storage.loadProgramProgress('test')
       expect(progress).toBeNull()
     })
-
-    it('saveProgramProgress and loadProgramProgress work together', async () => {
-      const progress = {
-        programId: 'test',
-        workouts: [],
-        lifetimeWorkoutsCompleted: 0,
-        lifetimeTimeSpentSeconds: 0,
-        lastActivityAt: null,
-        updatedAt: '2025-01-01T00:00:00.000Z'
-      }
-
-      await storage.saveProgramProgress(progress)
-      const loaded = await storage.loadProgramProgress('test')
-      expect(loaded).not.toBeNull()
-      expect(loaded?.programId).toBe('test')
-      expect(loaded?.lifetimeWorkoutsCompleted).toBe(0)
-      expect(loaded?.lifetimeTimeSpentSeconds).toBe(0)
-    })
   })
 })

@@ -70,7 +70,6 @@ export type WeeklyStats = {
   totalVolume: number // Sum of (weight x reps) for weighted exercises
   totalReps: number // Sum of all reps (bodyweight + weighted)
   exercisesPerformed: string[] // Unique exercise IDs
-  prsAchieved: number
   currentStreak: number // Consecutive days with workouts ending in this week
 }
 

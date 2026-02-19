@@ -3,9 +3,10 @@
  */
 
 import { useRefreshVersions } from '@/context/DataContext'
-import { useAsyncData } from '@/hooks/useAsyncData'
-import { storage } from '@/lib/storage'
-import { useCallback, useMemo } from 'react'
+import { APIError, fetchConsistency, isAPIAvailable } from '@/lib/api'
+import { mapConsistencyEntries } from '@/lib/mappers/stats'
+import { getWeekStart } from '@/lib/utils/date'
+import { useEffect, useMemo, useState } from 'react'
 
 export type ConsistencyLevel = 0 | 1 | 2 | 3 // 0: none, 1: light, 2: medium, 3: high
 
@@ -55,79 +56,120 @@ export function useConsistencyData(weeks: number = 12): {
 } {
   const { progressVersion } = useRefreshVersions()
 
-  const fetcher = useCallback(async (): Promise<ConsistencyData> => {
-    const workoutCounts = await storage.getConsistencyData(weeks)
+  const [data, setData] = useState<ConsistencyData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const todayISO = formatLocalDate(today)
+  useEffect(() => {
+    let mounted = true
 
-    // Get the start of the current week (Monday)
-    const currentWeekStart = storage.getWeekStart(today)
-
-    // Generate weeks data
-    const weeksData: WeekData[] = []
-    let totalWorkouts = 0
-    let activeDays = 0
-    let maxWorkoutsPerDay = 0
-
-    for (let w = weeks - 1; w >= 0; w--) {
-      const weekStart = new Date(currentWeekStart)
-      weekStart.setDate(weekStart.getDate() - w * 7)
-
-      const days: DayData[] = []
-      let hasPastData = false
-
-      for (let d = 0; d < 7; d++) {
-        const dayDate = new Date(weekStart)
-        dayDate.setDate(dayDate.getDate() + d)
-        const dateISO = formatLocalDate(dayDate)
-
-        const workoutCount = workoutCounts.get(dateISO) ?? 0
-        const isToday = dateISO === todayISO
-        const isFuture = dayDate > today
-
-        if (!isFuture) {
-          hasPastData = true
+    ;(async () => {
+      try {
+        if (!isAPIAvailable()) {
+          if (mounted) {
+            setError(
+              new APIError(
+                'API_DISABLED',
+                'API is not available or not configured'
+              )
+            )
+            setLoading(false)
+          }
+          return
         }
 
-        if (workoutCount > 0 && !isFuture) {
-          totalWorkouts += workoutCount
-          activeDays++
-          maxWorkoutsPerDay = Math.max(maxWorkoutsPerDay, workoutCount)
+        const entries = await fetchConsistency(weeks)
+        const workoutCounts = mapConsistencyEntries(entries)
+
+        if (!mounted) return
+
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const todayISO = formatLocalDate(today)
+
+        // Get the start of the current week (Monday)
+        const currentWeekStart = getWeekStart(today)
+
+        // Generate weeks data
+        const weeksData: WeekData[] = []
+        let totalWorkouts = 0
+        let activeDays = 0
+        let maxWorkoutsPerDay = 0
+
+        for (let w = weeks - 1; w >= 0; w--) {
+          const weekStart = new Date(currentWeekStart)
+          weekStart.setDate(weekStart.getDate() - w * 7)
+
+          const days: DayData[] = []
+          let hasPastData = false
+
+          for (let d = 0; d < 7; d++) {
+            const dayDate = new Date(weekStart)
+            dayDate.setDate(dayDate.getDate() + d)
+            const dateISO = formatLocalDate(dayDate)
+
+            const workoutCount = workoutCounts.get(dateISO) ?? 0
+            const isToday = dateISO === todayISO
+            const isFuture = dayDate > today
+
+            if (!isFuture) {
+              hasPastData = true
+            }
+
+            if (workoutCount > 0 && !isFuture) {
+              totalWorkouts += workoutCount
+              activeDays++
+              maxWorkoutsPerDay = Math.max(maxWorkoutsPerDay, workoutCount)
+            }
+
+            days.push({
+              date: dateISO,
+              workoutCount,
+              level: isFuture ? 0 : getConsistencyLevel(workoutCount),
+              isToday,
+              isFuture
+            })
+          }
+
+          if (hasPastData) {
+            weeksData.push({
+              weekNumber: weeks - w,
+              days
+            })
+          }
         }
 
-        days.push({
-          date: dateISO,
-          workoutCount,
-          level: isFuture ? 0 : getConsistencyLevel(workoutCount),
-          isToday,
-          isFuture
-        })
+        if (mounted) {
+          setData({
+            weeks: weeksData,
+            totalWorkouts,
+            activeDays,
+            maxWorkoutsPerDay
+          })
+          setError(null)
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(
+            err instanceof APIError
+              ? err
+              : new APIError(
+                  'UNKNOWN_ERROR',
+                  'Failed to fetch consistency data',
+                  undefined,
+                  err
+                )
+          )
+        }
+      } finally {
+        if (mounted) setLoading(false)
       }
+    })()
 
-      // Only include weeks that have at least one day in the past
-      // This prevents showing too many future-only weeks
-      if (hasPastData) {
-        weeksData.push({
-          weekNumber: weeks - w,
-          days
-        })
-      }
+    return () => {
+      mounted = false
     }
-
-    return {
-      weeks: weeksData,
-      totalWorkouts,
-      activeDays,
-      maxWorkoutsPerDay
-    }
-  }, [weeks])
-
-  const { data, loading, error } = useAsyncData(fetcher, [
-    progressVersion,
-    weeks
-  ])
+  }, [progressVersion, weeks])
 
   return { data, loading, error }
 }

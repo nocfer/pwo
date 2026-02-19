@@ -44,7 +44,6 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
     stats?.totalTimeSeconds ?? 0,
     'shortWithSuffix'
   )
-  const prsAchieved = stats?.prsAchieved ?? 0
   const streak = stats?.currentStreak ?? 0
 
   const parseLocalDate = (dateStr: string) => {
@@ -65,7 +64,7 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
       })
     : ''
 
-  if (completed === 0 && prsAchieved === 0) {
+  if (completed === 0) {
     return (
       <View style={styles.card}>
         <View style={styles.header}>
@@ -116,11 +115,15 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
             color={theme.colors.phases.working}
           />
           <StatRow
-            icon="trophy"
-            label="PRs"
-            value={prsAchieved > 0 ? `${prsAchieved} new` : 'None yet'}
+            icon="barbell"
+            label="Volume"
+            value={
+              (stats?.totalVolume ?? 0) > 0
+                ? `${stats?.totalVolume?.toLocaleString()} kg`
+                : 'No data'
+            }
             color={theme.colors.accent}
-            highlight={prsAchieved > 0}
+            highlight={(stats?.totalVolume ?? 0) > 0}
           />
         </View>
       </View>
