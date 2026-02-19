@@ -3,6 +3,7 @@
  */
 
 export { useAllProgress, type AggregatedProgress } from './useAllProgress'
+export { useAPIExercises, type UseAPIExercisesState } from './useAPIExercises'
 export { useAPIPrograms, type UseAPIProgramsState } from './useAPIPrograms'
 export {
   useChallengeProgress,

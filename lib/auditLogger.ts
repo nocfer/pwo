@@ -5,7 +5,6 @@
 
 import type { AuditLogEntry, DataType } from '@/types/enhanced'
 import { AuditAction } from '@/types/enhanced'
-import { storage } from './storage'
 
 // ============================================================================
 // Audit Logger Class
@@ -32,31 +31,21 @@ export class AuditLogger {
 
   /**
    * Loads audit log from storage
+   * Note: Audit log is now in-memory only (storage layer removed)
    */
   private async loadAuditLog(): Promise<void> {
-    try {
-      const stored = await storage.getItem('audit_log')
-      if (stored) {
-        this.logEntries = JSON.parse(stored)
-      }
-    } catch (error) {
-      console.warn('Failed to load audit log:', error)
-      this.logEntries = []
-    }
+    // In-memory only - no persistence
+    this.logEntries = []
   }
 
   /**
    * Saves audit log to storage
+   * Note: Audit log is now in-memory only (storage layer removed)
    */
   private async saveAuditLog(): Promise<void> {
-    try {
-      // Keep only the most recent entries to prevent storage bloat
-      const entriesToSave = this.logEntries.slice(-this.maxLogSize)
-      await storage.setItem('audit_log', JSON.stringify(entriesToSave))
-      this.logEntries = entriesToSave
-    } catch (error) {
-      console.error('Failed to save audit log:', error)
-    }
+    // In-memory only - no persistence
+    // Keep only the most recent entries to prevent memory bloat
+    this.logEntries = this.logEntries.slice(-this.maxLogSize)
   }
 
   /**

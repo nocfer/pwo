@@ -5,10 +5,10 @@
  * when data changes anywhere in the app.
  */
 
-import type { WorkoutLogInput, WorkoutLogSetInput } from '@/lib/api'
 import {
   createExercise as apiCreateExercise,
   createWorkout as apiCreateWorkout,
+  deleteExercise as apiDeleteExercise,
   deleteWorkout as apiDeleteWorkout,
   updateExercise as apiUpdateExercise,
   updateWorkout as apiUpdateWorkout,
@@ -18,10 +18,9 @@ import {
   recordWorkout
 } from '@/lib/api'
 import { canSafelyDelete } from '@/lib/dependencyChecker'
-import { dataEvents } from '@/lib/events'
 import { auth } from '@/lib/firebase'
 import { programToWorkoutInput, workoutToProgram } from '@/lib/mappers/workout'
-import { storage } from '@/lib/storage'
+import { buildWorkoutLog } from '@/lib/utils/sessionBuilder'
 import {
   validateExercise,
   validateModificationPermissions,
@@ -30,24 +29,19 @@ import {
 import type {
   AuditLogEntry,
   DataAction,
-  DataEvent,
   DataState,
   DataType,
   DependencyCheck,
   EnhancedDataActions,
   EnhancedDataState,
-  EventRecord,
   Exercise,
   ExportData,
-  HistoryEntry,
-  ImportData,
-  ImportResult,
   Program,
   SearchFacets,
   SearchQuery,
-  SessionState,
   UsageStats
 } from '@/types'
+import type { AccumulatedSet } from '@/types/session'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import React, {
   createContext,
@@ -69,28 +63,13 @@ type DataContextValue = {
       slug: string,
       sessionIndex: number,
       summary: string,
-      timeSpentSeconds?: number
+      timeSpentSeconds: number,
+      accumulatedSets: AccumulatedSet[]
     ) => Promise<void>
-
-    // Record an event
-    recordEvent: (
-      event: Omit<EventRecord, 'ts'> & { ts?: string }
-    ) => Promise<void>
-
-    // Save session state
-    saveSessionState: (state: SessionState) => Promise<void>
-
-    // Load session state
-    loadSessionState: (
-      slug: string,
-      sessionIndex: number
-    ) => Promise<SessionState | null>
 
     // Refresh data
     refreshAll: () => void
     refreshProgress: () => void
-    refreshHistory: () => void
-    refreshCompleted: () => void
 
     // Exercises CRUD
     upsertExercise: (
@@ -192,51 +171,31 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const searchCacheRef = useRef<Map<string, any>>(new Map())
   const auditLogRef = useRef<AuditLogEntry[]>([])
 
-  // Load exercises & programs (API + seed + user) on mount
+  // Load exercises from API on auth state change
   useEffect(() => {
     let mounted = true
 
-    // Subscribe to auth state changes
     const unsubscribe = onAuthStateChanged(
       auth,
       async (currentUser: User | null) => {
         if (!mounted) return
 
+        if (!currentUser) {
+          dispatch({ type: 'SET_EXERCISES', exercises: [] })
+          return
+        }
+
         try {
-          let apiExercises: Exercise[] = []
-
-          // Try to fetch from API first if available and user is authenticated
-          if (currentUser && isAPIAvailable()) {
-            try {
-              apiExercises = await fetchExercises()
-              console.debug('Loaded exercises from API:', apiExercises.length)
-            } catch (error) {
-              console.warn(
-                'Failed to fetch exercises from API, falling back to local:',
-                error
-              )
-              // Fall back to local storage if API fails
-              apiExercises = []
-            }
-          }
-
-          // Load user exercises from local storage
-          const userExercises = await storage.loadExercises()
-
-          // Merge: API exercises + user exercises
-          const exercisesById = new Map<string, Exercise>()
-          for (const e of apiExercises) exercisesById.set(e.id, e)
-          for (const e of userExercises) exercisesById.set(e.id, e)
-          const mergedExercises = Array.from(exercisesById.values()).sort(
-            (a, b) => a.name.localeCompare(b.name)
+          const apiExercises = await fetchExercises()
+          const sorted = apiExercises.sort((a, b) =>
+            a.name.localeCompare(b.name)
           )
-
-          if (mounted)
-            dispatch({ type: 'SET_EXERCISES', exercises: mergedExercises })
+          if (mounted) dispatch({ type: 'SET_EXERCISES', exercises: sorted })
         } catch (error) {
-          console.error('Error loading exercises:', error)
+          console.error('Failed to load exercises from API:', error)
           if (mounted)
             dispatch({ type: 'SET_EXERCISES_LOADING', loading: false })
+          throw error
         }
       }
     )
@@ -247,7 +206,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Load programs (API + seed) on mount, re-fetch on auth state change
+  // Load programs from API on auth state change
   useEffect(() => {
     let mounted = true
 
@@ -256,52 +215,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
       async (currentUser: User | null) => {
         if (!mounted) return
 
+        if (!currentUser) {
+          dispatch({ type: 'SET_PROGRAMS', programs: [] })
+          return
+        }
+
         try {
-          let apiPrograms: Program[] = []
-
-          // Try to fetch from API first if available and user is authenticated
-          if (currentUser && isAPIAvailable()) {
-            try {
-              const workouts = await fetchWorkouts()
-              apiPrograms = workouts.map(workoutToProgram)
-              console.debug('Loaded programs from API:', apiPrograms.length)
-            } catch (error) {
-              console.warn(
-                'Failed to fetch programs from API, falling back to seed only:',
-                error
-              )
-              apiPrograms = []
-            }
-          }
-
-          // Load seed programs
-          let seedPrograms: Program[] = []
-          try {
-            type ProgramModule = { default: Program[] }
-            const mod = await import('@/assets/data/programs.json')
-            seedPrograms = (mod as unknown as ProgramModule).default
-          } catch {
-            seedPrograms = []
-          }
-
-          // Merge: seed programs first, then API programs (API takes precedence by ID)
-          const programsById = new Map<string, Program>()
-          for (const p of seedPrograms) {
-            programsById.set(p.id, p)
-          }
-          for (const p of apiPrograms) {
-            programsById.set(p.id, p)
-          }
-          const mergedPrograms = Array.from(programsById.values()).sort(
-            (a, b) => a.name.localeCompare(b.name)
-          )
-
-          if (mounted)
-            dispatch({ type: 'SET_PROGRAMS', programs: mergedPrograms })
+          const workouts = await fetchWorkouts()
+          const sorted = workouts
+            .map(workoutToProgram)
+            .sort((a, b) => a.name.localeCompare(b.name))
+          if (mounted) dispatch({ type: 'SET_PROGRAMS', programs: sorted })
         } catch (error) {
-          console.error('Failed to reload programs:', error)
+          console.error('Failed to load programs from API:', error)
           if (mounted)
             dispatch({ type: 'SET_PROGRAMS_LOADING', loading: false })
+          throw error
         }
       }
     )
@@ -312,326 +241,76 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Load last completed slug on mount
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const slug = await storage.getLastCompletedSlug()
-        if (mounted) dispatch({ type: 'SET_LAST_COMPLETED_SLUG', slug })
-      } catch {
-        // Ignore
-      }
-    })()
-    return () => {
-      mounted = false
-    }
-  }, [])
-
-  // Subscribe to data events
-  useEffect(() => {
-    const unsubscribe = dataEvents.subscribe((event: DataEvent) => {
-      switch (event.type) {
-        case 'SESSION_COMPLETED':
-          dispatch({ type: 'SET_LAST_COMPLETED_SLUG', slug: event.slug })
-          dispatch({ type: 'INCREMENT_COMPLETED_VERSION' })
-          dispatch({ type: 'INCREMENT_PROGRESS_VERSION' })
-          dispatch({ type: 'INCREMENT_HISTORY_VERSION' })
-          break
-        case 'PROGRESS_UPDATED':
-          dispatch({ type: 'INCREMENT_PROGRESS_VERSION' })
-          break
-        case 'HISTORY_UPDATED':
-          dispatch({ type: 'INCREMENT_HISTORY_VERSION' })
-          break
-        case 'EVENT_RECORDED':
-          if (event.eventType === 'session_completed') {
-            dispatch({ type: 'INCREMENT_COMPLETED_VERSION' })
-          }
-          break
-      }
-    })
-    return unsubscribe
-  }, [])
+  // TODO: lastCompletedSlug will be derived from API data in a future task
 
   // Actions
   const completeSession = useCallback(
     async (
       slug: string,
-      sessionIndex: number,
-      summary: string,
-      providedTimeSpentSeconds?: number
+      _sessionIndex: number,
+      _summary: string,
+      timeSpentSeconds: number,
+      accumulatedSets: AccumulatedSet[]
     ) => {
-      const dateISO = new Date().toISOString()
-      const date = dateISO.slice(0, 10)
+      const completedAt = new Date().toISOString()
 
-      // Record the event
-      await storage.appendEvent({
+      // Build WorkoutLogInput from accumulated sets
+      const workoutLogInput = buildWorkoutLog(
         slug,
-        sessionIndex,
-        type: 'session_completed',
-        ts: dateISO
-      })
+        completedAt,
+        Math.max(1, Math.round(timeSpentSeconds)),
+        accumulatedSets
+      )
 
-      // Append to history
-      const historyEntry: HistoryEntry = { date, summary, sessionIndex }
-      await storage.appendHistory(slug, historyEntry)
+      // POST workout data to API — errors propagate to caller
+      const response = await recordWorkout(workoutLogInput)
 
-      // Update streak
-      await storage.saveStreakHit(slug, dateISO)
+      // Store new PRs from response for UI display
+      dispatch({ type: 'SET_LAST_NEW_PRS', prs: response.newPRs })
 
-      // Get program to determine type and build workout log
-      const program = state.programs.find(p => p.id === slug)
-      if (program) {
-        const events = await storage.loadEventsForSlug(slug)
-        const sessionEvents = events.filter(
-          e => e.sessionIndex === sessionIndex
-        )
+      // Mark this program as last completed
+      dispatch({ type: 'SET_LAST_COMPLETED_SLUG', slug })
 
-        // Use provided time if available, otherwise calculate from events
-        let timeSpentSeconds: number
-        if (providedTimeSpentSeconds !== undefined) {
-          timeSpentSeconds = providedTimeSpentSeconds
-        } else {
-          timeSpentSeconds = 0
-          for (const event of sessionEvents) {
-            if (
-              event.type === 'warmup_started' ||
-              event.type === 'break_started'
-            ) {
-              const data = event.data as Record<string, unknown>
-              const durationSeconds = data?.['durationSeconds']
-              if (typeof durationSeconds === 'number') {
-                timeSpentSeconds += durationSeconds
-              }
-            }
-            if (event.type === 'set_completed') {
-              const data = event.data as Record<string, unknown>
-              const durationSeconds = data?.['durationSeconds']
-              if (typeof durationSeconds === 'number') {
-                timeSpentSeconds += durationSeconds
-              }
-            }
-          }
-        }
-
-        // Build per-exercise sets from session events for the API
-        const exerciseSetsMap = new Map<string, WorkoutLogSetInput[]>()
-
-        // Debug: log what events we found
-        console.log(
-          `[completeSession] Looking for events with slug=${slug}, sessionIndex=${sessionIndex}`
-        )
-        console.log(
-          `[completeSession] Found ${sessionEvents.length} events for session ${sessionIndex}`
-        )
-        console.log(
-          `[completeSession] All events:`,
-          sessionEvents.map(e => ({
-            type: e.type,
-            sessionIndex: e.sessionIndex,
-            data: e.data
-          }))
-        )
-
-        for (const event of sessionEvents) {
-          if (event.type === 'set_completed') {
-            const data = event.data as Record<string, unknown>
-            const exerciseId = data?.['exerciseId']
-            const reps = data?.['reps']
-
-            console.log(
-              `[completeSession] Found set_completed: exerciseId=${exerciseId}, reps=${reps}, data=${JSON.stringify(data)}`
-            )
-
-            if (typeof exerciseId === 'string') {
-              const sets = exerciseSetsMap.get(exerciseId) || []
-              const weight =
-                typeof data?.['weight'] === 'number'
-                  ? (data['weight'] as number)
-                  : undefined
-              const isBodyweight =
-                typeof data?.['isBodyweight'] === 'boolean'
-                  ? (data['isBodyweight'] as boolean)
-                  : weight === undefined
-              sets.push({
-                reps: typeof reps === 'number' ? reps : 0,
-                weight,
-                isBodyweight,
-                timestamp: event.ts
-              })
-              exerciseSetsMap.set(exerciseId, sets)
-            }
-          }
-        }
-
-        // Construct WorkoutLogInput
-        let exercises = Array.from(exerciseSetsMap.entries()).map(
-          ([exerciseId, sets]) => ({
-            exerciseId,
-            sets,
-            lastCompletedAt: dateISO
-          })
-        )
-
-        console.log(
-          `[completeSession] Built ${exercises.length} exercises from events`
-        )
-
-        // Only POST to API if there are exercises with sets
-        if (exercises.length > 0) {
-          const workoutLogInput: WorkoutLogInput = {
-            workoutId: slug,
-            completedAt: dateISO,
-            timeSpentSeconds: Math.max(1, Math.round(timeSpentSeconds)),
-            exercises
-          }
-
-          console.log(
-            `[completeSession] Posting workout:`,
-            JSON.stringify(workoutLogInput, null, 2)
-          )
-
-          // POST workout data to API — errors propagate to caller
-          const response = await recordWorkout(workoutLogInput)
-
-          // Store new PRs from response for UI display
-          dispatch({ type: 'SET_LAST_NEW_PRS', prs: response.newPRs })
-
-          // Increment progressVersion so dependent hooks re-fetch
-          dispatch({ type: 'INCREMENT_PROGRESS_VERSION' })
-        }
-      }
-
-      // Clear session state
-      await storage.clearSessionState(slug, sessionIndex)
-
-      // Emit events to notify subscribers
-      dataEvents.emitSessionCompleted(slug, sessionIndex)
-      dataEvents.emitProgressUpdated(slug)
-      dataEvents.emitHistoryUpdated(slug)
-    },
-    [state.programs]
-  )
-
-  const recordEvent = useCallback(
-    async (event: Omit<EventRecord, 'ts'> & { ts?: string }) => {
-      await storage.appendEvent(event)
-      dataEvents.emitEventRecorded(event.slug, event.type)
+      // Increment progressVersion so dependent hooks re-fetch
+      dispatch({ type: 'INCREMENT_PROGRESS_VERSION' })
     },
     []
   )
 
-  const saveSessionState = useCallback(async (sessionState: SessionState) => {
-    await storage.saveSessionState(sessionState)
-    dataEvents.emitSessionStateChanged(
-      sessionState.slug,
-      sessionState.sessionIndex
-    )
-  }, [])
-
-  const loadSessionState = useCallback(
-    async (slug: string, sessionIndex: number) => {
-      return storage.loadSessionState(slug, sessionIndex)
-    },
-    []
-  )
+  // recordEvent, saveSessionState, loadSessionState removed — session data is now accumulated in-memory
 
   const refreshAll = useCallback(() => {
-    // Reload exercises and programs from API + storage
     ;(async () => {
-      try {
-        let apiExercises: Exercise[] = []
+      const currentUser = auth.currentUser
 
-        // Try to fetch from API first if available and user is authenticated
-        const currentUser = auth.currentUser
-        if (currentUser && isAPIAvailable()) {
-          try {
-            apiExercises = await fetchExercises()
-            console.debug('Refreshed exercises from API:', apiExercises.length)
-          } catch (error) {
-            console.warn('Failed to refresh exercises from API:', error)
-            apiExercises = []
-          }
-        }
-
-        // Load user exercises from local storage
-        const userExercises = await storage.loadExercises()
-
-        // Merge: API exercises + user exercises
-        const exercisesById = new Map<string, Exercise>()
-        for (const e of apiExercises) exercisesById.set(e.id, e)
-        for (const e of userExercises) exercisesById.set(e.id, e)
-        const mergedExercises = Array.from(exercisesById.values()).sort(
-          (a, b) => a.name.localeCompare(b.name)
-        )
-
-        dispatch({ type: 'SET_EXERCISES', exercises: mergedExercises })
-      } catch (error) {
-        console.error('Failed to reload exercises:', error)
-        dispatch({ type: 'SET_EXERCISES_LOADING', loading: false })
+      if (!currentUser) {
+        dispatch({ type: 'SET_EXERCISES', exercises: [] })
+        dispatch({ type: 'SET_PROGRAMS', programs: [] })
+        dispatch({ type: 'REFRESH_ALL' })
+        return
       }
 
-      try {
-        let apiPrograms: Program[] = []
+      const apiExercises = await fetchExercises()
+      const sortedExercises = apiExercises.sort((a, b) =>
+        a.name.localeCompare(b.name)
+      )
+      dispatch({ type: 'SET_EXERCISES', exercises: sortedExercises })
 
-        // Try to fetch from API first if available and user is authenticated
-        const currentUser = auth.currentUser
-        if (currentUser && isAPIAvailable()) {
-          try {
-            const workouts = await fetchWorkouts()
-            apiPrograms = workouts.map(workoutToProgram)
-            console.debug('Refreshed programs from API:', apiPrograms.length)
-          } catch (error) {
-            console.warn('Failed to refresh programs from API:', error)
-            apiPrograms = []
-          }
-        }
+      const workouts = await fetchWorkouts()
+      const sortedPrograms = workouts
+        .map(workoutToProgram)
+        .sort((a, b) => a.name.localeCompare(b.name))
+      dispatch({ type: 'SET_PROGRAMS', programs: sortedPrograms })
 
-        // Load seed programs
-        let seedPrograms: Program[] = []
-        try {
-          type ProgramModule = { default: Program[] }
-          const mod = await import('@/assets/data/programs.json')
-          seedPrograms = (mod as unknown as ProgramModule).default
-        } catch {
-          seedPrograms = []
-        }
-
-        // Merge: seed programs first, then API programs take precedence by ID
-        const programsById = new Map<string, Program>()
-        for (const p of seedPrograms) {
-          programsById.set(p.id, p)
-        }
-        for (const p of apiPrograms) {
-          programsById.set(p.id, p)
-        }
-        const mergedPrograms = Array.from(programsById.values()).sort((a, b) =>
-          a.name.localeCompare(b.name)
-        )
-
-        dispatch({ type: 'SET_PROGRAMS', programs: mergedPrograms })
-      } catch (error) {
-        console.error('Failed to reload programs:', error)
-        dispatch({ type: 'SET_PROGRAMS_LOADING', loading: false })
-      }
+      dispatch({ type: 'REFRESH_ALL' })
     })()
-
-    // Also increment version counters for progress/history
-    dispatch({ type: 'REFRESH_ALL' })
   }, [])
 
   const refreshProgress = useCallback(() => {
     dispatch({ type: 'INCREMENT_PROGRESS_VERSION' })
   }, [])
 
-  const refreshHistory = useCallback(() => {
-    dispatch({ type: 'INCREMENT_HISTORY_VERSION' })
-  }, [])
-
-  const refreshCompleted = useCallback(() => {
-    dispatch({ type: 'INCREMENT_COMPLETED_VERSION' })
-  }, [])
+  // refreshHistory and refreshCompleted consolidated into refreshProgress
 
   const upsertExercise = useCallback(
     async (
@@ -640,6 +319,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
     ) => {
       const id = input.id
+
+      // Require authentication — no local storage fallback
+      const currentUser = auth.currentUser
+      if (!currentUser) {
+        throw new Error('Cannot save exercise: user is not authenticated.')
+      }
 
       // Check modification permissions for existing exercises
       if (id) {
@@ -670,48 +355,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
         throw new Error(nameValidation.errors[0].message)
       }
 
+      // Call API create or update — errors propagate directly to the caller
       let saved: Exercise
-
-      // Try to save to API first if available and user is authenticated
-      const currentUser = auth.currentUser
-      if (currentUser && isAPIAvailable()) {
-        try {
-          if (id) {
-            // Update existing exercise
-            saved = await apiUpdateExercise(id, {
-              name: input.name,
-              category: input.category,
-              icon: input.icon
-            })
-            console.debug('Exercise updated via API:', saved.id)
-          } else {
-            // Create new exercise
-            saved = await apiCreateExercise({
-              name: input.name,
-              category: input.category,
-              icon: input.icon,
-              source: 'user'
-            })
-            console.debug('Exercise created via API:', saved.id)
-          }
-        } catch (error) {
-          console.warn(
-            'Failed to save exercise via API, falling back to local:',
-            error
-          )
-          // Fall back to local storage if API fails
-          saved = await storage.upsertExercise({
-            id: input.id ?? '',
-            name: input.name,
-            category: input.category,
-            icon: input.icon,
-            source: 'user'
-          })
-        }
+      if (id) {
+        saved = await apiUpdateExercise(id, {
+          name: input.name,
+          category: input.category,
+          icon: input.icon
+        })
       } else {
-        // Save to local storage if API not available or user not authenticated
-        saved = await storage.upsertExercise({
-          id: input.id ?? '',
+        saved = await apiCreateExercise({
           name: input.name,
           category: input.category,
           icon: input.icon,
@@ -719,28 +372,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         })
       }
 
-      const userExercises = await storage.loadExercises()
+      // Re-fetch full exercise list from API to ensure consistency
+      const apiExercises = await fetchExercises()
+      const sorted = apiExercises.sort((a, b) => a.name.localeCompare(b.name))
+      dispatch({ type: 'SET_EXERCISES', exercises: sorted })
 
-      // Reload all exercises from API and storage to ensure consistency
-      let apiExercises: Exercise[] = []
-      const user = auth.currentUser
-      if (user && isAPIAvailable()) {
-        try {
-          apiExercises = await fetchExercises()
-        } catch (error) {
-          console.warn('Failed to fetch exercises from API:', error)
-          apiExercises = []
-        }
-      }
-
-      // Merge: API exercises + user exercises
-      const exercisesById = new Map<string, Exercise>()
-      for (const e of apiExercises) exercisesById.set(e.id, e)
-      for (const e of userExercises) exercisesById.set(e.id, e)
-      const merged = Array.from(exercisesById.values()).sort((a, b) =>
-        a.name.localeCompare(b.name)
-      )
-      dispatch({ type: 'SET_EXERCISES', exercises: merged })
       return saved
     },
     [state.exercises]
@@ -771,30 +407,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
         throw new Error(`Cannot delete exercise: ${warnings}`)
       }
 
-      await storage.deleteExercise(id)
-
-      const userExercises = await storage.loadExercises()
-
-      // Reload all exercises from API and storage to ensure consistency
-      let apiExercises: Exercise[] = []
-      const user = auth.currentUser
-      if (user && isAPIAvailable()) {
-        try {
-          apiExercises = await fetchExercises()
-        } catch (error) {
-          console.warn('Failed to fetch exercises from API:', error)
-          apiExercises = []
-        }
+      // Require authentication
+      const currentUser = auth.currentUser
+      if (!currentUser) {
+        throw new Error('Cannot delete exercise: user is not authenticated.')
       }
 
-      // Merge: API exercises + user exercises
-      const exercisesById = new Map<string, Exercise>()
-      for (const e of apiExercises) exercisesById.set(e.id, e)
-      for (const e of userExercises) exercisesById.set(e.id, e)
-      const merged = Array.from(exercisesById.values()).sort((a, b) =>
-        a.name.localeCompare(b.name)
-      )
-      dispatch({ type: 'SET_EXERCISES', exercises: merged })
+      // Call API delete — errors propagate directly to the caller
+      await apiDeleteExercise(id)
+
+      // Re-fetch full exercise list from API to ensure consistency
+      const apiExercises = await fetchExercises()
+      const sorted = apiExercises.sort((a, b) => a.name.localeCompare(b.name))
+      dispatch({ type: 'SET_EXERCISES', exercises: sorted })
     },
     [state.exercises, state.programs]
   )
@@ -914,137 +539,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [state.programs]
   )
 
-  // Enhanced Actions Implementation
-  const bulkDeleteExercises = useCallback(
-    async (ids: string[]) => {
-      const errors: string[] = []
+  // TODO: bulkDeleteExercises removed — re-add when API batch endpoints are available
 
-      for (const id of ids) {
-        try {
-          const existing = state.exercises.find(e => e.id === id)
-          if (!existing) continue
+  // TODO: bulkDeletePrograms removed — re-add when API batch endpoints are available
 
-          if (existing.source === 'builtin') {
-            errors.push(
-              `Built-in exercise "${existing.name}" cannot be deleted.`
-            )
-            continue
-          }
-
-          // Check dependencies
-          const referencedBy = state.programs.find(p =>
-            p.blocks.some(b => b.type === 'exercise' && b.exerciseId === id)
-          )
-
-          if (referencedBy) {
-            errors.push(
-              `Exercise "${existing.name}" is used by program "${referencedBy.name}".`
-            )
-            continue
-          }
-
-          await storage.deleteExercise(id)
-        } catch (error) {
-          errors.push(
-            `Failed to delete exercise ${id}: ${error instanceof Error ? error.message : 'Unknown error'}`
-          )
-        }
-      }
-
-      if (errors.length > 0) {
-        throw new Error(
-          `Bulk delete completed with errors:\n${errors.join('\n')}`
-        )
-      }
-
-      // Refresh exercises list
-      const userExercises = await storage.loadExercises()
-      const merged = [
-        ...state.exercises.filter(e => e.source === 'builtin'),
-        ...userExercises
-      ].sort((a, b) => a.name.localeCompare(b.name))
-      dispatch({ type: 'SET_EXERCISES', exercises: merged })
-    },
-    [state.exercises, state.programs]
-  )
-
-  const bulkDeletePrograms = useCallback(
-    async (ids: string[]) => {
-      const errors: string[] = []
-
-      for (const id of ids) {
-        try {
-          const existing = state.programs.find(p => p.id === id)
-          if (!existing) continue
-
-          if (existing.source === 'builtin') {
-            errors.push(
-              `Built-in program "${existing.name}" cannot be deleted.`
-            )
-            continue
-          }
-
-          await storage.deleteProgram(id)
-        } catch (error) {
-          errors.push(
-            `Failed to delete program ${id}: ${error instanceof Error ? error.message : 'Unknown error'}`
-          )
-        }
-      }
-
-      if (errors.length > 0) {
-        throw new Error(
-          `Bulk delete completed with errors:\n${errors.join('\n')}`
-        )
-      }
-
-      // Refresh programs list
-      const userPrograms = await storage.loadPrograms()
-      const merged = [
-        ...state.programs.filter(p => p.source === 'builtin'),
-        ...userPrograms
-      ].sort((a, b) => a.name.localeCompare(b.name))
-      dispatch({ type: 'SET_PROGRAMS', programs: merged })
-    },
-    [state.programs]
-  )
-
-  const duplicateProgram = useCallback(
-    async (id: string, newName: string): Promise<Program> => {
-      const existing = state.programs.find(p => p.id === id)
-      if (!existing) {
-        throw new Error('Program not found')
-      }
-
-      // Check for name conflicts
-      const nameExists = state.programs.some(p => p.name === newName)
-      if (nameExists) {
-        throw new Error(`A program with the name "${newName}" already exists`)
-      }
-
-      const duplicated: Program = {
-        ...existing,
-        id: '', // Will be generated by storage
-        name: newName,
-        source: 'user',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-
-      const saved = await storage.upsertProgram(duplicated)
-
-      // Refresh programs list
-      const userPrograms = await storage.loadPrograms()
-      const merged = [
-        ...state.programs.filter(p => p.source === 'builtin'),
-        ...userPrograms
-      ].sort((a, b) => a.name.localeCompare(b.name))
-      dispatch({ type: 'SET_PROGRAMS', programs: merged })
-
-      return saved
-    },
-    [state.programs]
-  )
+  // TODO: duplicateProgram removed — re-implement via API create when needed
 
   const searchData = useCallback(
     async (query: SearchQuery) => {
@@ -1238,132 +737,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [state.exercises, state.programs]
   )
 
-  const importData = useCallback(
-    async (importData: ImportData): Promise<ImportResult> => {
-      const result: ImportResult = {
-        success: true,
-        imported: [],
-        skipped: [],
-        errors: [],
-        conflicts: []
-      }
-
-      for (const item of importData.data) {
-        try {
-          switch (importData.type) {
-            case 'exercises':
-              // Check for conflicts
-              const existingExercise = state.exercises.find(
-                e => e.id === item.id || e.name === item.name
-              )
-              if (existingExercise) {
-                result.conflicts.push({
-                  itemId: item.id,
-                  itemName: item.name,
-                  conflictType:
-                    existingExercise.id === item.id
-                      ? 'id_conflict'
-                      : 'name_conflict',
-                  resolution: 'skip'
-                })
-                result.skipped.push({
-                  name: item.name,
-                  type: 'exercises',
-                  reason: 'Name or ID conflict'
-                })
-                continue
-              }
-
-              const savedExercise = await storage.upsertExercise({
-                ...item,
-                id: '', // Generate new ID
-                source: 'user',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-              })
-
-              result.imported.push({
-                id: savedExercise.id,
-                name: savedExercise.name,
-                type: 'exercises',
-                action: 'created'
-              })
-              break
-
-            case 'programs':
-            case 'challenges':
-              // Check for conflicts
-              const existingProgram = state.programs.find(
-                p => p.id === item.id || p.name === item.name
-              )
-              if (existingProgram) {
-                result.conflicts.push({
-                  itemId: item.id,
-                  itemName: item.name,
-                  conflictType:
-                    existingProgram.id === item.id
-                      ? 'id_conflict'
-                      : 'name_conflict',
-                  resolution: 'skip'
-                })
-                result.skipped.push({
-                  name: item.name,
-                  type: importData.type,
-                  reason: 'Name or ID conflict'
-                })
-                continue
-              }
-
-              const savedProgram = await storage.upsertProgram({
-                ...item,
-                id: '', // Generate new ID
-                source: 'user',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-              })
-
-              result.imported.push({
-                id: savedProgram.id,
-                name: savedProgram.name,
-                type: importData.type,
-                action: 'created'
-              })
-              break
-          }
-        } catch (error) {
-          result.errors.push({
-            item,
-            reason: error instanceof Error ? error.message : 'Unknown error',
-            code: 'VALIDATION_FAILED' as any,
-            recoverable: false
-          })
-          result.success = false
-        }
-      }
-
-      // Refresh data after import
-      if (result.imported.length > 0) {
-        if (importData.type === 'exercises') {
-          const userExercises = await storage.loadExercises()
-          const merged = [
-            ...state.exercises.filter(e => e.source === 'builtin'),
-            ...userExercises
-          ].sort((a, b) => a.name.localeCompare(b.name))
-          dispatch({ type: 'SET_EXERCISES', exercises: merged })
-        } else {
-          const userPrograms = await storage.loadPrograms()
-          const merged = [
-            ...state.programs.filter(p => p.source === 'builtin'),
-            ...userPrograms
-          ].sort((a, b) => a.name.localeCompare(b.name))
-          dispatch({ type: 'SET_PROGRAMS', programs: merged })
-        }
-      }
-
-      return result
-    },
-    [state.exercises, state.programs]
-  )
+  // TODO: importData removed — re-implement via API create calls when needed
 
   const validateDependencies = useCallback(
     async (type: DataType, id: string): Promise<DependencyCheck> => {
@@ -1442,24 +816,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     state,
     actions: {
       completeSession,
-      recordEvent,
-      saveSessionState,
-      loadSessionState,
       refreshAll,
       refreshProgress,
-      refreshHistory,
-      refreshCompleted,
       upsertExercise,
       deleteExercise,
       upsertProgram,
       deleteProgram,
-      // Enhanced actions
-      bulkDeleteExercises,
-      bulkDeletePrograms,
-      duplicateProgram,
+      // Enhanced actions (remaining)
       searchData,
       exportData,
-      importData,
       validateDependencies,
       getUsageStats,
       logAuditEntry
