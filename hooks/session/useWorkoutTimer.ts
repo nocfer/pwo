@@ -17,7 +17,8 @@ type TimerActions = {
     slug: string,
     sessionIndex: number,
     summary: string,
-    providedTimeSpentSeconds?: number
+    timeSpentSeconds: number,
+    accumulatedSets: AccumulatedSet[]
   ) => Promise<void>
   saveSessionState: (state: SessionState) => Promise<void>
   loadSessionState: (
@@ -325,7 +326,14 @@ export function useWorkoutTimer(opts: {
     setShowConfetti(true)
     void haptics.sessionComplete()
     const summary = `${program?.name ?? slug} · Session ${sessionIndex} · ${steps.length} steps`
-    await completeSession(slug, sessionIndex, summary, sessionElapsedSeconds)
+    // TODO: Pass actual accumulated sets once session UI tracks them
+    await completeSession(
+      slug,
+      sessionIndex,
+      summary,
+      sessionElapsedSeconds,
+      []
+    )
   }, [
     completeSession,
     program?.name,

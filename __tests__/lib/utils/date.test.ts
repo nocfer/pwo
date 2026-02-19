@@ -3,8 +3,7 @@ import {
   formatDate,
   getMondayBasedDayIndex,
   getWeekStart,
-  isSameWeek,
-  normalizeStreak
+  isSameWeek
 } from '@/lib/utils/date'
 import { describe, expect, it } from 'vitest'
 
@@ -111,49 +110,6 @@ describe('isSameWeek', () => {
     const sun = new Date(2024, 0, 21) // Sunday
     const mon = new Date(2024, 0, 22) // Monday next week
     expect(isSameWeek(sun, mon)).toBe(false)
-  })
-})
-
-describe('normalizeStreak', () => {
-  it('returns existing streak when same week', () => {
-    const streak = [1, 0, 1, 1, 0, 1, 1]
-    const lastDate = new Date(2024, 0, 15) // Monday
-    const today = new Date(2024, 0, 17) // Wednesday same week
-    const result = normalizeStreak(streak, lastDate, today)
-    expect(result).toEqual([1, 0, 1, 1, 0, 1, 1])
-  })
-
-  it('resets streak when different week', () => {
-    const streak = [1, 0, 1, 1, 0, 1, 1]
-    const lastDate = new Date(2024, 0, 15) // Monday week 1
-    const today = new Date(2024, 0, 22) // Monday week 2
-    const result = normalizeStreak(streak, lastDate, today)
-    expect(result).toEqual([0, 0, 0, 0, 0, 0, 0])
-  })
-
-  it('pads short streak to 7 entries', () => {
-    const streak = [1, 0, 1]
-    const lastDate = new Date(2024, 0, 15)
-    const today = new Date(2024, 0, 17)
-    const result = normalizeStreak(streak, lastDate, today)
-    expect(result).toEqual([0, 0, 0, 0, 1, 0, 1])
-  })
-
-  it('handles streak longer than 7 by slicing last 7 entries', () => {
-    const streak = [1, 0, 1, 1, 0, 1, 1, 0, 1]
-    const lastDate = new Date(2024, 0, 15)
-    const today = new Date(2024, 0, 17)
-    const result = normalizeStreak(streak, lastDate, today)
-    // slice(-7) gets last 7: [1, 1, 0, 1, 1, 0, 1]
-    expect(result).toEqual([1, 1, 0, 1, 1, 0, 1])
-  })
-
-  it('resets when week changes even if only 1 day apart', () => {
-    const streak = [1, 1, 1, 1, 1, 1, 1]
-    const lastDate = new Date(2024, 0, 21) // Sunday
-    const today = new Date(2024, 0, 22) // Monday next week
-    const result = normalizeStreak(streak, lastDate, today)
-    expect(result).toEqual([0, 0, 0, 0, 0, 0, 0])
   })
 })
 

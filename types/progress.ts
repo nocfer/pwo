@@ -112,17 +112,3 @@ export type ChallengeProgress = {
   lastActivityAt: string // ISO date of last workout completion
   updatedAt: string // ISO date of last update
 }
-
-/**
- * Historical snapshot for charts and trends
- */
-export type ProgressHistoryEntry = {
-  date: string // ISO date
-  programId?: string // For program progress
-  challengeId?: string // For challenge progress
-  workoutsCompleted: number
-  totalReps?: number // For challenges
-  timeSpentSeconds?: number // For programs
-}
-
-export type ProgressHistory = ProgressHistoryEntry[]

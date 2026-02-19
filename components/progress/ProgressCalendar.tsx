@@ -1,6 +1,6 @@
-import { storage } from '@/lib/storage'
+import { useConsistencyData } from '@/hooks/data/useConsistencyData'
 import { theme } from '@/theme/theme'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
 type Props = {
@@ -16,47 +16,26 @@ export default function ProgressCalendar({
   month,
   year
 }: Props) {
-  const [completedDates, setCompletedDates] = useState<Set<string>>(new Set())
-  const [loading, setLoading] = useState(true)
+  const { data: consistencyData, loading } = useConsistencyData()
 
   const targetDate = useMemo(() => {
     const now = new Date()
     return new Date(year ?? now.getFullYear(), month ?? now.getMonth(), 1)
   }, [month, year])
 
-  useEffect(() => {
-    let mounted = true
+  const completedDates = useMemo(() => {
+    const dates = new Set<string>()
+    if (!consistencyData) return dates
 
-    async function loadCompletedDates() {
-      try {
-        setLoading(true)
-        const history = await storage.getProgressHistory(
-          programId,
-          challengeId,
-          60 // Last 60 days
-        )
-
-        if (!mounted) return
-
-        const dates = new Set<string>()
-        history.forEach(entry => {
-          dates.add(entry.date)
-        })
-
-        setCompletedDates(dates)
-      } catch (e) {
-        console.error('Failed to load calendar data', e)
-      } finally {
-        if (mounted) setLoading(false)
+    for (const week of consistencyData.weeks) {
+      for (const day of week.days) {
+        if (day.workoutCount > 0 && !day.isFuture) {
+          dates.add(day.date)
+        }
       }
     }
-
-    loadCompletedDates()
-
-    return () => {
-      mounted = false
-    }
-  }, [programId, challengeId])
+    return dates
+  }, [consistencyData])
 
   const daysInMonth = new Date(
     targetDate.getFullYear(),

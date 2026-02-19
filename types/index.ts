@@ -5,21 +5,15 @@
 // Storage types
 export type {
   EventRecord,
-  HistoryEntry,
-  HistoryFile,
   SessionState,
   StepCompletionAttempt,
   StepCompletionRecord,
   StepCompletionState,
-  StepStatus,
-  StreakEntry
+  StepStatus
 } from './storage'
 
-// Event types
-export type { DataEvent, DataEventCallback, DataEventType } from './events'
-
 // Session types
-export type { Session, SessionPhase } from './session'
+export type { AccumulatedSet, Session, SessionPhase } from './session'
 
 // Data state types
 export type { DataAction, DataState } from './challenge'
@@ -41,12 +35,10 @@ export type {
 export type {
   ChallengeProgress,
   ExerciseProgress,
+  PRHistory,
   PersonalRecord,
   PersonalRecordType,
-  PRHistory,
   ProgramProgress,
-  ProgressHistory,
-  ProgressHistoryEntry,
   SetRecord,
   WeeklyStats,
   WorkoutProgress
@@ -71,10 +63,10 @@ export type {
   ExportData,
   FieldValidation,
   ImportData,
-  ImportedItem,
   ImportError,
   ImportErrorCode,
   ImportResult,
+  ImportedItem,
   OperationStatus,
   SearchFacets,
   SearchQuery,

@@ -303,17 +303,14 @@ export type OperationStatus = {
 // ============================================================================
 
 export type EnhancedDataActions = {
-  // Bulk operations
-  bulkDeleteExercises: (ids: string[]) => Promise<void>
-  bulkDeletePrograms: (ids: string[]) => Promise<void>
-  duplicateProgram: (id: string, newName: string) => Promise<Program>
-
   // Advanced search
   searchData: (query: SearchQuery) => Promise<SearchResult<any>>
 
-  // Import/Export
+  // Export (reads from state, not storage)
   exportData: (type: DataType, ids?: string[]) => Promise<ExportData>
-  importData: (data: ImportData) => Promise<ImportResult>
+
+  // TODO: bulkDeleteExercises, bulkDeletePrograms, duplicateProgram, importData
+  // removed — these used storage directly. Re-add when API batch endpoints are available.
 
   // Validation
   validateDependencies: (type: DataType, id: string) => Promise<DependencyCheck>

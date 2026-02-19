@@ -5,24 +5,9 @@
  */
 
 import { dataReducer, initialState } from '@/context/DataContext'
-import { storage } from '@/lib/storage'
 import type { Exercise, ExerciseCategory, Program } from '@/types'
 import * as fc from 'fast-check'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-
-// Mock storage
-vi.mock('@/lib/storage', () => ({
-  storage: {
-    upsertExercise: vi.fn(),
-    deleteExercise: vi.fn(),
-    loadExercises: vi.fn(),
-    loadPrograms: vi.fn(),
-    upsertProgram: vi.fn(),
-    deleteProgram: vi.fn()
-  }
-}))
-
-const mockStorage = storage as any
 
 // Generators for property-based testing
 const exerciseCategoryArb = fc.constantFrom(
@@ -94,7 +79,7 @@ describe('DataContext CRUD Operations - Property Tests', () => {
             icon: fc.string({ minLength: 1, maxLength: 20 })
           }),
           async exerciseInput => {
-            // Mock successful creation
+            // Simulate an exercise returned from the API after creation
             const savedExercise: Exercise = {
               id: 'generated_id',
               ...exerciseInput,
@@ -103,19 +88,15 @@ describe('DataContext CRUD Operations - Property Tests', () => {
               updatedAt: new Date().toISOString()
             }
 
-            mockStorage.upsertExercise.mockResolvedValueOnce(savedExercise)
-
-            // Simulate the upsertExercise logic
-            const result = await mockStorage.upsertExercise({
-              id: '',
-              name: exerciseInput.name,
-              category: exerciseInput.category,
-              icon: exerciseInput.icon,
-              source: 'user'
+            // Dispatch to state via reducer
+            const state = dataReducer(initialState, {
+              type: 'SET_EXERCISES',
+              exercises: [savedExercise]
             })
 
-            // Verify the exercise was created with correct properties
-            expect(result).toEqual(savedExercise)
+            // Verify the exercise was stored in state with correct properties
+            expect(state.exercises).toHaveLength(1)
+            const result = state.exercises[0]
             expect(result.source).toBe('user')
             expect(result.name).toBe(exerciseInput.name)
             expect(result.category).toBe(exerciseInput.category)
@@ -239,14 +220,14 @@ describe('DataContext CRUD Operations - Property Tests', () => {
           // Verify no dependencies exist
           expect(referencedBy).toBeUndefined()
 
-          // Mock successful deletion
-          mockStorage.deleteExercise.mockResolvedValueOnce(undefined)
-          await mockStorage.deleteExercise(userExercise.id)
+          // Simulate state after deletion via reducer (API re-fetch returns list without deleted exercise)
+          const stateAfterDelete = dataReducer(state, {
+            type: 'SET_EXERCISES',
+            exercises: []
+          })
 
-          // Verify deletion was called
-          expect(mockStorage.deleteExercise).toHaveBeenCalledWith(
-            userExercise.id
-          )
+          // Verify exercise was removed from state
+          expect(stateAfterDelete.exercises).toHaveLength(0)
         }),
         { numRuns: 50 }
       )

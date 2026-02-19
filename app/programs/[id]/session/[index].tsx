@@ -76,11 +76,13 @@ export default function ProgramSessionRunner() {
           onPress: () => {
             // Force complete the session
             timerRef.current?.setShowConfetti(true)
+            // TODO: Pass actual accumulated sets once session UI tracks them
             void actions.completeSession(
               id,
               index,
               `${program?.name ?? id} · Session ${index}`,
-              timerRef.current?.sessionElapsedSeconds
+              timerRef.current?.sessionElapsedSeconds ?? 0,
+              []
             )
             setShowSafeguardAlert(false)
           }
