@@ -169,6 +169,13 @@ export function useWorkoutTimer(opts: {
   getStepStatus?: StepStatusGetter
   /** Callback when session completion needs safeguard (skipped exercises exist) */
   onSessionSafeguard?: () => void
+  /** Completed sets with actual reps from the session UI */
+  completedSets?: {
+    exerciseId: string
+    actualReps: number
+    setNumber: number
+    totalSets: number
+  }[]
 }): UseWorkoutTimerReturn {
   const {
     slug,
@@ -177,7 +184,8 @@ export function useWorkoutTimer(opts: {
     steps,
     actions,
     getStepStatus,
-    onSessionSafeguard
+    onSessionSafeguard,
+    completedSets = []
   } = opts
   const { completeSession } = actions
 
@@ -260,23 +268,46 @@ export function useWorkoutTimer(opts: {
     void haptics.sessionComplete()
     const summary = `${program?.name ?? slug} · Session ${sessionIndex} · ${steps.length} steps`
 
-    // Build accumulated sets from program blocks
-    // Each exercise block gets one set recorded with default reps
+    // Build accumulated sets from completed sets or program blocks
     const accumulatedSets: AccumulatedSet[] = []
     if (program) {
       const now = new Date().toISOString()
-      program.blocks.forEach(block => {
-        // Get the first rep target (or 0 if not specified)
-        const reps = Array.isArray(block.targetReps)
-          ? (block.targetReps[0] ?? 0)
-          : (block.targetReps ?? 0)
 
-        accumulatedSets.push({
-          exerciseId: block.exerciseId,
-          reps,
-          isBodyweight: true, // Default to bodyweight unless weight was tracked
-          timestamp: now
-        })
+      // Create a map of completed sets by exerciseId for quick lookup
+      const completedByExercise = new Map<string, (typeof completedSets)[0][]>()
+      for (const set of completedSets) {
+        const existing = completedByExercise.get(set.exerciseId) ?? []
+        existing.push(set)
+        completedByExercise.set(set.exerciseId, existing)
+      }
+
+      // For each block, use actual reps if available, otherwise use target reps
+      program.blocks.forEach(block => {
+        const completedSetsForExercise =
+          completedByExercise.get(block.exerciseId) ?? []
+
+        // If we have completed sets for this exercise, use their actual reps
+        if (completedSetsForExercise.length > 0) {
+          completedSetsForExercise.forEach(set => {
+            accumulatedSets.push({
+              exerciseId: block.exerciseId,
+              reps: set.actualReps,
+              isBodyweight: true,
+              timestamp: now
+            })
+          })
+        } else {
+          // Fallback to target reps if no completed sets recorded
+          const reps = Array.isArray(block.targetReps)
+            ? (block.targetReps[0] ?? 0)
+            : (block.targetReps ?? 0)
+          accumulatedSets.push({
+            exerciseId: block.exerciseId,
+            reps,
+            isBodyweight: true,
+            timestamp: now
+          })
+        }
       })
     }
 
@@ -293,7 +324,8 @@ export function useWorkoutTimer(opts: {
     sessionIndex,
     slug,
     steps.length,
-    sessionElapsedSeconds
+    sessionElapsedSeconds,
+    completedSets
   ])
 
   const advanceToNextStep = useCallback(() => {

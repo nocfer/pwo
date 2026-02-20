@@ -15,6 +15,14 @@ type Props = {
   program: Program
   stepCompletion: UseStepCompletionReturn
   onProgramUpdate?: (program: Program) => Promise<void>
+  onCompletedSetsChange?: (
+    sets: Array<{
+      exerciseId: string
+      actualReps: number
+      setNumber: number
+      totalSets: number
+    }>
+  ) => void
 }
 
 export default function ProgramSessionView({
@@ -23,7 +31,8 @@ export default function ProgramSessionView({
   steps,
   program,
   stepCompletion,
-  onProgramUpdate
+  onProgramUpdate,
+  onCompletedSetsChange
 }: Props) {
   const { data: exercises } = useExercises()
 
@@ -42,6 +51,7 @@ export default function ProgramSessionView({
       exerciseNameById={exerciseNameById}
       stepCompletion={stepCompletion}
       onProgramUpdate={onProgramUpdate}
+      onCompletedSetsChange={onCompletedSetsChange}
     />
   )
 }

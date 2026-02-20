@@ -44,6 +44,8 @@ export default function ProgramSessionRunner() {
 
   // Ref to hold the timer for safeguard callback
   const timerRef = useRef<ReturnType<typeof useWorkoutTimer> | null>(null)
+  // Ref to hold completed sets from the session view
+  const completedSetsRef = useRef<any[]>([])
 
   // Handle session completion safeguard (when skipped exercises exist)
   const handleSessionSafeguard = useCallback(() => {
@@ -57,7 +59,8 @@ export default function ProgramSessionRunner() {
     steps,
     actions,
     getStepStatus: stepCompletion.getStepStatus,
-    onSessionSafeguard: handleSessionSafeguard
+    onSessionSafeguard: handleSessionSafeguard,
+    completedSets: completedSetsRef.current
   })
 
   // Keep timer ref in sync
@@ -133,6 +136,9 @@ export default function ProgramSessionRunner() {
         stepCompletion={stepCompletion}
         onProgramUpdate={async updatedProgram => {
           await actions.upsertProgram(updatedProgram)
+        }}
+        onCompletedSetsChange={sets => {
+          completedSetsRef.current = sets
         }}
       />
     </View>
