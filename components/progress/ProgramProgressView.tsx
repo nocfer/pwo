@@ -4,6 +4,7 @@ import { theme } from '@/theme/theme'
 import { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { ProgressViewBase } from './ProgressViewBase'
+import { Program } from '@/types'
 
 type Props = {
   programId: string
@@ -12,7 +13,8 @@ type Props = {
 export default function ProgramProgressView({ programId }: Props) {
   const { data: programs } = usePrograms()
   const program = useMemo(
-    () => programs?.find(p => p.id === programId && !p.challengeConfig),
+    () =>
+      programs?.find((p: Program) => p.id === programId && !p.challengeConfig),
     [programs, programId]
   )
   const { metrics, loading } = useProgramProgress(program || undefined)

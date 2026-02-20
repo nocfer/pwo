@@ -4,6 +4,7 @@
 
 import { useExercises, usePRs } from '@/hooks/data'
 import { theme } from '@/theme/theme'
+import { Exercise } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
 import { useEffect, useMemo, useRef } from 'react'
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native'
@@ -32,7 +33,7 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
 
   const exerciseMap = useMemo(() => {
     const map = new Map<string, { name: string; icon?: string }>()
-    exercises?.forEach(ex => {
+    exercises?.forEach((ex: Exercise) => {
       map.set(ex.id, { name: ex.name, icon: ex.icon })
     })
     return map
