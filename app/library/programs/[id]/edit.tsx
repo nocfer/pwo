@@ -6,6 +6,7 @@ import {
 import { useDataActions } from '@/context/DataContext'
 import { useExercises, usePrograms } from '@/hooks/data'
 import { theme } from '@/theme/theme'
+import { Program } from '@/types'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useMemo, useState } from 'react'
 import { StyleSheet } from 'react-native'
@@ -19,7 +20,8 @@ export default function EditProgramScreen() {
   const [saving, setSaving] = useState(false)
 
   const program = useMemo(
-    () => programs?.find(p => p.id === id && !p.challengeConfig) ?? null,
+    () =>
+      programs?.find((p: Program) => p.id === id && !p.challengeConfig) ?? null,
     [programs, id]
   )
 

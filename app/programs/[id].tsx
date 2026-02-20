@@ -1,15 +1,9 @@
 import { ErrorScreen, LoadingScreen, ScreenHeader } from '@/components'
-import ChallengeView from '@/components/challenge/ChallengeView'
 import ProgramView from '@/components/program/ProgramView'
 import QRCodeShareModal from '@/components/program/QRCodeShareModal'
-import {
-  useChallengeProgress,
-  useChallengeSessions,
-  useProgramProgress,
-  usePrograms
-} from '@/hooks/data'
-import { formatCount } from '@/lib/utils/format'
+import { useProgramProgress, usePrograms } from '@/hooks/data'
 import { theme } from '@/theme/theme'
+import { Program } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useMemo, useState } from 'react'
@@ -23,19 +17,13 @@ export default function ProgramDetail() {
   const [showQRModal, setShowQRModal] = useState(false)
 
   const program = useMemo(
-    () => programs?.find(p => p.id === id) ?? null,
+    () => programs?.find((p: Program) => p.id === id) ?? null,
     [programs, id]
   )
 
   // Get sessions (generated dynamically for challenge programs)
-  const sessions = useChallengeSessions(program)
-  const isChallenge = Boolean(program?.challengeConfig)
-  const { metrics: challengeMetrics } = useChallengeProgress(
-    isChallenge ? program : undefined
-  )
-  const { metrics: programMetrics } = useProgramProgress(
-    !isChallenge ? program : undefined
-  )
+
+  const { metrics: programMetrics } = useProgramProgress(program)
 
   if (loading) {
     return <LoadingScreen />
@@ -46,15 +34,9 @@ export default function ProgramDetail() {
   }
 
   const subtitle = program.description
-    ? program.description
-    : formatCount(sessions.length, 'session')
 
   const handleEditPress = () => {
-    if (isChallenge) {
-      router.push(`/library/challenges/${id}/edit`)
-    } else {
-      router.push(`/library/programs/${id}/edit`)
-    }
+    router.push(`/library/programs/${id}/edit`)
   }
 
   const editButton = (
@@ -100,12 +82,6 @@ export default function ProgramDetail() {
         style={styles.container}
         contentContainerStyle={styles.content}
       >
-        {isChallenge && (
-          <ChallengeView
-            challengeMetrics={challengeMetrics!}
-            program={program}
-          />
-        )}
         {programMetrics && (
           <ProgramView program={program} programMetrics={programMetrics!} />
         )}

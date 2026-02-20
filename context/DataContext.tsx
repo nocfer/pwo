@@ -37,6 +37,7 @@ import type {
   Exercise,
   ExportData,
   Program,
+  ProgramBlock,
   SearchFacets,
   SearchQuery,
   UsageStats
@@ -87,7 +88,6 @@ type DataContextValue = {
         | 'name'
         | 'description'
         | 'blocks'
-        | 'challengeConfig'
         | 'initialWarmup'
         | 'defaultRestBetweenExercises'
       > & {
@@ -432,7 +432,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         | 'name'
         | 'description'
         | 'blocks'
-        | 'challengeConfig'
         | 'initialWarmup'
         | 'defaultRestBetweenExercises'
       > & {
@@ -457,7 +456,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
           name: input.name,
           description: input.description,
           blocks: input.blocks,
-          challengeConfig: input.challengeConfig,
           initialWarmup: input.initialWarmup,
           defaultRestBetweenExercises: input.defaultRestBetweenExercises,
           source: 'user',
@@ -486,7 +484,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
 
         const merged = [
-          ...state.programs.filter(p => p.source === 'builtin'),
+          ...state.programs.filter((p: Program) => p.source === 'builtin'),
           ...apiPrograms
         ].sort((a, b) => a.name.localeCompare(b.name))
         dispatch({ type: 'SET_PROGRAMS', programs: merged })
@@ -564,12 +562,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           items = state.exercises
           break
         case 'programs':
-          items = state.programs.filter((p: Program) => !p.challengeConfig)
-          break
-        case 'challenges':
-          items = state.programs.filter((p: Program) =>
-            Boolean(p.challengeConfig)
-          )
+          items = state.programs
           break
         default:
           items = [...state.exercises, ...state.programs]
@@ -700,26 +693,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       switch (type) {
         case 'exercises':
           data = ids
-            ? state.exercises.filter(e => ids.includes(e.id))
-            : state.exercises.filter(e => e.source === 'user')
+            ? state.exercises.filter((e: Exercise) => ids.includes(e.id))
+            : state.exercises.filter((e: Exercise) => e.source === 'user')
           break
         case 'programs':
           data = ids
-            ? state.programs.filter(
-                p => ids.includes(p.id) && !p.challengeConfig
-              )
-            : state.programs.filter(
-                p => p.source === 'user' && !p.challengeConfig
-              )
-          break
-        case 'challenges':
-          data = ids
-            ? state.programs.filter(
-                p => ids.includes(p.id) && p.challengeConfig
-              )
-            : state.programs.filter(
-                p => p.source === 'user' && p.challengeConfig
-              )
+            ? state.programs.filter((p: Program) => ids.includes(p.id))
+            : state.programs.filter((p: Program) => p.source === 'user')
           break
       }
 
@@ -737,8 +717,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [state.exercises, state.programs]
   )
 
-  // TODO: importData removed — re-implement via API create calls when needed
-
   const validateDependencies = useCallback(
     async (type: DataType, id: string): Promise<DependencyCheck> => {
       const dependencies: DependencyCheck['dependencies'] = {}
@@ -747,7 +725,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       if (type === 'exercises') {
         const referencingPrograms = state.programs.filter(p =>
-          p.blocks.some(b => b.type === 'exercise' && b.exerciseId === id)
+          p.blocks.some(
+            (b: ProgramBlock) => b.type === 'exercise' && b.exerciseId === id
+          )
         )
 
         if (referencingPrograms.length > 0) {
@@ -755,18 +735,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
           canDelete = false
           warnings.push(
             `Exercise is referenced by ${referencingPrograms.length} program(s)`
-          )
-        }
-
-        const referencingChallenges = state.programs.filter(
-          p => p.challengeConfig?.exerciseId === id
-        )
-
-        if (referencingChallenges.length > 0) {
-          dependencies.challenges = referencingChallenges
-          canDelete = false
-          warnings.push(
-            `Exercise is used by ${referencingChallenges.length} challenge(s)`
           )
         }
       }
