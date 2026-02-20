@@ -36,23 +36,6 @@ export type EventRecord = {
   data?: Record<string, unknown>
 }
 
-export type HistoryEntry = {
-  date: string
-  summary: string
-  sessionIndex: number
-}
-
-export type HistoryFile = {
-  slug: string
-  recent: HistoryEntry[]
-}[]
-
-export type StreakEntry = {
-  slug: string
-  streak: number[]
-  updatedAt: string
-}
-
 /**
  * Status of a single step in the workout
  */

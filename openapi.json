@@ -1,0 +1,1549 @@
+{
+  "swagger": "2.0",
+  "info": { "version": "9.6.1", "title": "@fastify/swagger" },
+  "definitions": {},
+  "paths": {
+    "/api/v1/exercises": {
+      "post": {
+        "description": "Create a new exercise",
+        "tags": ["Exercises"],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "name": { "type": "string" },
+                "description": { "type": "string" },
+                "instructions": { "type": "string" },
+                "media": { "type": "string" },
+                "category": {
+                  "anyOf": [
+                    { "type": "string", "enum": ["strength"] },
+                    { "type": "string", "enum": ["cardio"] },
+                    { "type": "string", "enum": ["flexibility"] },
+                    { "type": "string", "enum": ["skill"] }
+                  ]
+                },
+                "icon": { "type": "string" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": ["id", "name", "source", "createdAt", "updatedAt"],
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "category": {
+                  "anyOf": [
+                    { "type": "string", "enum": ["strength"] },
+                    { "type": "string", "enum": ["cardio"] },
+                    { "type": "string", "enum": ["flexibility"] },
+                    { "type": "string", "enum": ["skill"] }
+                  ]
+                },
+                "icon": { "type": "string" },
+                "description": { "type": "string" },
+                "source": {
+                  "description": "The source of the data",
+                  "default": "user",
+                  "anyOf": [
+                    { "type": "string", "enum": ["builtin"] },
+                    { "type": "string", "enum": ["user"] },
+                    { "type": "string", "enum": ["pt"] }
+                  ]
+                },
+                "instructions": { "type": "string" },
+                "media": { "type": "string" },
+                "createdBy": { "type": "string" },
+                "createdAt": { "type": "string" },
+                "updatedAt": { "type": "string" },
+                "deletedAt": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "List all exercises",
+        "tags": ["Exercises"],
+        "parameters": [
+          {
+            "type": "string",
+            "required": false,
+            "in": "query",
+            "name": "expand"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name",
+                  "source",
+                  "createdBy",
+                  "createdAt",
+                  "updatedAt"
+                ],
+                "properties": {
+                  "id": { "type": "string" },
+                  "name": { "type": "string" },
+                  "category": {
+                    "anyOf": [
+                      { "type": "string", "enum": ["strength"] },
+                      { "type": "string", "enum": ["cardio"] },
+                      { "type": "string", "enum": ["flexibility"] },
+                      { "type": "string", "enum": ["skill"] }
+                    ]
+                  },
+                  "icon": { "type": "string" },
+                  "description": { "type": "string" },
+                  "source": {
+                    "description": "The source of the data",
+                    "default": "user",
+                    "anyOf": [
+                      { "type": "string", "enum": ["builtin"] },
+                      { "type": "string", "enum": ["user"] },
+                      { "type": "string", "enum": ["pt"] }
+                    ]
+                  },
+                  "instructions": { "type": "string" },
+                  "media": { "type": "string" },
+                  "createdBy": {
+                    "anyOf": [
+                      { "type": "string" },
+                      {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "authProviderId",
+                          "firstName",
+                          "lastName",
+                          "dob",
+                          "weight",
+                          "height",
+                          "preferences",
+                          "trainers"
+                        ],
+                        "properties": {
+                          "id": { "type": "string" },
+                          "authProviderId": { "type": "string" },
+                          "firstName": { "type": "string" },
+                          "lastName": { "type": "string" },
+                          "dob": { "type": "string" },
+                          "weight": { "exclusiveMinimum": 0, "type": "number" },
+                          "height": { "exclusiveMinimum": 0, "type": "number" },
+                          "preferences": { "type": "object", "properties": {} },
+                          "email": { "format": "email", "type": "string" },
+                          "trainers": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "createdAt": { "type": "string" },
+                  "updatedAt": { "type": "string" },
+                  "deletedAt": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/exercises/{id}": {
+      "delete": {
+        "description": "Delete an exercise",
+        "tags": ["Exercises"],
+        "parameters": [
+          { "type": "string", "required": true, "in": "path", "name": "id" }
+        ],
+        "responses": {
+          "204": { "description": "Default Response", "schema": {} },
+          "404": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": ["message"],
+              "properties": { "message": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Get a exercise by ID",
+        "tags": ["Exercises"],
+        "parameters": [
+          {
+            "type": "string",
+            "required": false,
+            "in": "query",
+            "name": "expand"
+          },
+          { "type": "string", "required": true, "in": "path", "name": "id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "source",
+                "createdBy",
+                "createdAt",
+                "updatedAt"
+              ],
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "category": {
+                  "anyOf": [
+                    { "type": "string", "enum": ["strength"] },
+                    { "type": "string", "enum": ["cardio"] },
+                    { "type": "string", "enum": ["flexibility"] },
+                    { "type": "string", "enum": ["skill"] }
+                  ]
+                },
+                "icon": { "type": "string" },
+                "description": { "type": "string" },
+                "source": {
+                  "description": "The source of the data",
+                  "default": "user",
+                  "anyOf": [
+                    { "type": "string", "enum": ["builtin"] },
+                    { "type": "string", "enum": ["user"] },
+                    { "type": "string", "enum": ["pt"] }
+                  ]
+                },
+                "instructions": { "type": "string" },
+                "media": { "type": "string" },
+                "createdBy": {
+                  "anyOf": [
+                    { "type": "string" },
+                    {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "authProviderId",
+                        "firstName",
+                        "lastName",
+                        "dob",
+                        "weight",
+                        "height",
+                        "preferences",
+                        "trainers"
+                      ],
+                      "properties": {
+                        "id": { "type": "string" },
+                        "authProviderId": { "type": "string" },
+                        "firstName": { "type": "string" },
+                        "lastName": { "type": "string" },
+                        "dob": { "type": "string" },
+                        "weight": { "exclusiveMinimum": 0, "type": "number" },
+                        "height": { "exclusiveMinimum": 0, "type": "number" },
+                        "preferences": { "type": "object", "properties": {} },
+                        "email": { "format": "email", "type": "string" },
+                        "trainers": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "createdAt": { "type": "string" },
+                "updatedAt": { "type": "string" },
+                "deletedAt": { "type": "string" }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": ["message"],
+              "properties": { "message": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Update an exercise",
+        "tags": ["Exercises"],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "description": { "type": "string" },
+                "instructions": { "type": "string" },
+                "media": { "type": "string" }
+              }
+            }
+          },
+          { "type": "string", "required": true, "in": "path", "name": "id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": ["id", "name", "source", "createdAt", "updatedAt"],
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "category": {
+                  "anyOf": [
+                    { "type": "string", "enum": ["strength"] },
+                    { "type": "string", "enum": ["cardio"] },
+                    { "type": "string", "enum": ["flexibility"] },
+                    { "type": "string", "enum": ["skill"] }
+                  ]
+                },
+                "icon": { "type": "string" },
+                "description": { "type": "string" },
+                "source": {
+                  "description": "The source of the data",
+                  "default": "user",
+                  "anyOf": [
+                    { "type": "string", "enum": ["builtin"] },
+                    { "type": "string", "enum": ["user"] },
+                    { "type": "string", "enum": ["pt"] }
+                  ]
+                },
+                "instructions": { "type": "string" },
+                "media": { "type": "string" },
+                "createdBy": { "type": "string" },
+                "createdAt": { "type": "string" },
+                "updatedAt": { "type": "string" },
+                "deletedAt": { "type": "string" }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": ["message"],
+              "properties": { "message": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/consistency": {
+      "get": {
+        "description": "Get consistency heatmap data",
+        "tags": ["Stats"],
+        "parameters": [
+          {
+            "minimum": 1,
+            "maximum": 52,
+            "default": 12,
+            "type": "number",
+            "required": false,
+            "in": "query",
+            "name": "weeks"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["date", "workoutCount"],
+                "properties": {
+                  "date": { "format": "date", "type": "string" },
+                  "workoutCount": { "minimum": 1, "type": "number" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/exercises/{exerciseId}/progression": {
+      "get": {
+        "description": "Get exercise progression data points",
+        "tags": ["Stats"],
+        "parameters": [
+          {
+            "minimum": 1,
+            "maximum": 365,
+            "default": 30,
+            "type": "number",
+            "required": false,
+            "in": "query",
+            "name": "days"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "in": "path",
+            "name": "exerciseId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["date", "reps"],
+                "properties": {
+                  "date": { "format": "date", "type": "string" },
+                  "reps": { "minimum": 0, "type": "number" },
+                  "maxWeight": { "minimum": 0, "type": "number" },
+                  "volume": { "minimum": 0, "type": "number" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/progress": {
+      "get": {
+        "description": "Get aggregated progress overview",
+        "tags": ["Stats"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": [
+                "totalWorkoutsCompleted",
+                "totalTimeSpentSeconds",
+                "totalRepsCompleted",
+                "activeWorkouts",
+                "currentStreak",
+                "recentActivity",
+                "exercisesWithData"
+              ],
+              "properties": {
+                "totalWorkoutsCompleted": { "minimum": 0, "type": "number" },
+                "totalTimeSpentSeconds": { "minimum": 0, "type": "number" },
+                "totalRepsCompleted": { "minimum": 0, "type": "number" },
+                "activeWorkouts": { "minimum": 0, "type": "number" },
+                "currentStreak": { "minimum": 0, "type": "number" },
+                "recentActivity": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["date", "workoutId"],
+                    "properties": {
+                      "date": { "format": "date", "type": "string" },
+                      "workoutId": { "type": "string" }
+                    }
+                  }
+                },
+                "exercisesWithData": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/prs": {
+      "get": {
+        "description": "Get latest personal records",
+        "tags": ["Personal Records"],
+        "parameters": [
+          {
+            "default": 10,
+            "type": "number",
+            "required": false,
+            "in": "query",
+            "name": "limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "userId",
+                  "exerciseId",
+                  "type",
+                  "value",
+                  "achievedAt",
+                  "isCurrent"
+                ],
+                "properties": {
+                  "id": { "type": "string" },
+                  "userId": { "type": "string" },
+                  "exerciseId": { "type": "string" },
+                  "type": {
+                    "anyOf": [
+                      { "type": "string", "enum": ["max_weight"] },
+                      { "type": "string", "enum": ["max_reps"] },
+                      { "type": "string", "enum": ["max_volume"] },
+                      { "type": "string", "enum": ["estimated_1rm"] }
+                    ]
+                  },
+                  "value": { "type": "number" },
+                  "achievedAt": { "format": "date-time", "type": "string" },
+                  "workoutId": { "type": "string" },
+                  "details": {
+                    "type": "object",
+                    "properties": {
+                      "weight": { "minimum": 0, "type": "number" },
+                      "reps": { "minimum": 0, "type": "number" }
+                    }
+                  },
+                  "isCurrent": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/prs/{exerciseId}": {
+      "get": {
+        "description": "Get personal records for a specific exercise",
+        "tags": ["Personal Records"],
+        "parameters": [
+          {
+            "type": "boolean",
+            "required": false,
+            "in": "query",
+            "name": "current"
+          },
+          {
+            "type": "string",
+            "required": true,
+            "in": "path",
+            "name": "exerciseId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "userId",
+                  "exerciseId",
+                  "type",
+                  "value",
+                  "achievedAt",
+                  "isCurrent"
+                ],
+                "properties": {
+                  "id": { "type": "string" },
+                  "userId": { "type": "string" },
+                  "exerciseId": { "type": "string" },
+                  "type": {
+                    "anyOf": [
+                      { "type": "string", "enum": ["max_weight"] },
+                      { "type": "string", "enum": ["max_reps"] },
+                      { "type": "string", "enum": ["max_volume"] },
+                      { "type": "string", "enum": ["estimated_1rm"] }
+                    ]
+                  },
+                  "value": { "type": "number" },
+                  "achievedAt": { "format": "date-time", "type": "string" },
+                  "workoutId": { "type": "string" },
+                  "details": {
+                    "type": "object",
+                    "properties": {
+                      "weight": { "minimum": 0, "type": "number" },
+                      "reps": { "minimum": 0, "type": "number" }
+                    }
+                  },
+                  "isCurrent": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/weekly": {
+      "get": {
+        "description": "Get weekly workout statistics",
+        "tags": ["Stats"],
+        "parameters": [
+          {
+            "format": "date",
+            "type": "string",
+            "required": false,
+            "in": "query",
+            "name": "weekStart"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": [
+                "weekStart",
+                "weekEnd",
+                "workoutsCompleted",
+                "workoutGoal",
+                "totalTimeSeconds",
+                "totalVolume",
+                "totalReps",
+                "exercisesPerformed",
+                "currentStreak"
+              ],
+              "properties": {
+                "weekStart": { "format": "date", "type": "string" },
+                "weekEnd": { "format": "date", "type": "string" },
+                "workoutsCompleted": { "minimum": 0, "type": "number" },
+                "workoutGoal": { "minimum": 0, "type": "number" },
+                "totalTimeSeconds": { "minimum": 0, "type": "number" },
+                "totalVolume": { "minimum": 0, "type": "number" },
+                "totalReps": { "minimum": 0, "type": "number" },
+                "exercisesPerformed": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "currentStreak": { "minimum": 0, "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/workouts": {
+      "post": {
+        "description": "Record a completed workout",
+        "tags": ["Workout Logs"],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "workoutId",
+                "completedAt",
+                "timeSpentSeconds",
+                "exercises"
+              ],
+              "properties": {
+                "workoutId": { "type": "string" },
+                "completedAt": { "format": "date-time", "type": "string" },
+                "timeSpentSeconds": { "minimum": 1, "type": "number" },
+                "exercises": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["exerciseId", "sets", "lastCompletedAt"],
+                    "properties": {
+                      "exerciseId": { "type": "string" },
+                      "sets": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": ["reps", "isBodyweight", "timestamp"],
+                          "properties": {
+                            "reps": { "minimum": 0, "type": "number" },
+                            "weight": { "minimum": 0, "type": "number" },
+                            "isBodyweight": { "type": "boolean" },
+                            "timestamp": {
+                              "format": "date-time",
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "lastCompletedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": ["workoutLog", "newPRs"],
+              "properties": {
+                "workoutLog": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "userId",
+                    "workoutId",
+                    "completedAt",
+                    "timeSpentSeconds",
+                    "exercises"
+                  ],
+                  "properties": {
+                    "id": { "type": "string" },
+                    "userId": { "type": "string" },
+                    "workoutId": { "type": "string" },
+                    "completedAt": { "format": "date-time", "type": "string" },
+                    "timeSpentSeconds": { "minimum": 1, "type": "number" },
+                    "exercises": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "exerciseId",
+                          "repsCompleted",
+                          "setsCompleted",
+                          "sets",
+                          "totalVolume",
+                          "lastCompletedAt"
+                        ],
+                        "properties": {
+                          "exerciseId": { "type": "string" },
+                          "repsCompleted": { "minimum": 0, "type": "number" },
+                          "setsCompleted": { "minimum": 1, "type": "number" },
+                          "sets": {
+                            "minItems": 1,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": ["reps", "isBodyweight", "timestamp"],
+                              "properties": {
+                                "reps": { "minimum": 0, "type": "number" },
+                                "weight": { "minimum": 0, "type": "number" },
+                                "isBodyweight": { "type": "boolean" },
+                                "timestamp": {
+                                  "format": "date-time",
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          "totalVolume": { "minimum": 0, "type": "number" },
+                          "lastCompletedAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "newPRs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["exerciseId", "type", "value"],
+                    "properties": {
+                      "exerciseId": { "type": "string" },
+                      "type": {
+                        "anyOf": [
+                          { "type": "string", "enum": ["max_weight"] },
+                          { "type": "string", "enum": ["max_reps"] },
+                          { "type": "string", "enum": ["max_volume"] },
+                          { "type": "string", "enum": ["estimated_1rm"] }
+                        ]
+                      },
+                      "value": { "type": "number" },
+                      "previousValue": { "type": "number" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "post": {
+        "description": "Create a new user",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": ["firstName", "lastName", "dob", "weight", "height"],
+              "properties": {
+                "firstName": { "type": "string" },
+                "lastName": { "type": "string" },
+                "dob": { "type": "string" },
+                "weight": { "exclusiveMinimum": 0, "type": "number" },
+                "height": { "exclusiveMinimum": 0, "type": "number" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "authProviderId",
+                "firstName",
+                "lastName",
+                "dob",
+                "weight",
+                "height",
+                "preferences",
+                "trainers"
+              ],
+              "properties": {
+                "id": { "type": "string" },
+                "authProviderId": { "type": "string" },
+                "firstName": { "type": "string" },
+                "lastName": { "type": "string" },
+                "dob": { "type": "string" },
+                "weight": { "exclusiveMinimum": 0, "type": "number" },
+                "height": { "exclusiveMinimum": 0, "type": "number" },
+                "preferences": { "type": "object", "properties": {} },
+                "email": { "format": "email", "type": "string" },
+                "trainers": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}": {
+      "delete": {
+        "description": "Delete an user",
+        "tags": ["Users"],
+        "parameters": [
+          { "type": "string", "required": true, "in": "path", "name": "id" }
+        ],
+        "responses": {
+          "204": { "description": "Default Response", "schema": {} },
+          "404": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": ["message"],
+              "properties": { "message": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Get a user by ID",
+        "tags": ["Users"],
+        "parameters": [
+          { "type": "string", "required": true, "in": "path", "name": "id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "authProviderId",
+                "firstName",
+                "lastName",
+                "dob",
+                "weight",
+                "height",
+                "preferences",
+                "trainers"
+              ],
+              "properties": {
+                "id": { "type": "string" },
+                "authProviderId": { "type": "string" },
+                "firstName": { "type": "string" },
+                "lastName": { "type": "string" },
+                "dob": { "type": "string" },
+                "weight": { "exclusiveMinimum": 0, "type": "number" },
+                "height": { "exclusiveMinimum": 0, "type": "number" },
+                "preferences": { "type": "object", "properties": {} },
+                "email": { "format": "email", "type": "string" },
+                "trainers": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": ["message"],
+              "properties": { "message": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Update an user",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": { "format": "email", "type": "string" },
+                "firstName": { "type": "string" },
+                "lastName": { "type": "string" },
+                "dob": { "type": "string" },
+                "weight": { "exclusiveMinimum": 0, "type": "number" },
+                "height": { "exclusiveMinimum": 0, "type": "number" }
+              }
+            }
+          },
+          { "type": "string", "required": true, "in": "path", "name": "id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "authProviderId",
+                "firstName",
+                "lastName",
+                "dob",
+                "weight",
+                "height",
+                "preferences",
+                "trainers"
+              ],
+              "properties": {
+                "id": { "type": "string" },
+                "authProviderId": { "type": "string" },
+                "firstName": { "type": "string" },
+                "lastName": { "type": "string" },
+                "dob": { "type": "string" },
+                "weight": { "exclusiveMinimum": 0, "type": "number" },
+                "height": { "exclusiveMinimum": 0, "type": "number" },
+                "preferences": { "type": "object", "properties": {} },
+                "email": { "format": "email", "type": "string" },
+                "trainers": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": ["message"],
+              "properties": { "message": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workouts": {
+      "post": {
+        "description": "Create a new workout",
+        "tags": ["Workouts"],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "name",
+                "blocks",
+                "initialWarmup",
+                "defaultRestBetweenExercises"
+              ],
+              "properties": {
+                "name": { "type": "string" },
+                "description": { "type": "string" },
+                "blocks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["exerciseId", "reps", "rests"],
+                    "properties": {
+                      "exerciseId": { "type": "string" },
+                      "reps": {
+                        "type": "array",
+                        "items": { "default": 10, "type": "number" }
+                      },
+                      "rests": {
+                        "type": "array",
+                        "items": { "default": 30, "type": "number" }
+                      },
+                      "durations": {
+                        "type": "array",
+                        "items": { "type": "number" }
+                      },
+                      "note": { "type": "string" }
+                    }
+                  }
+                },
+                "initialWarmup": { "default": 180, "type": "number" },
+                "defaultRestBetweenExercises": {
+                  "default": 180,
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "blocks",
+                "source",
+                "initialWarmup",
+                "defaultRestBetweenExercises",
+                "createdAt",
+                "updatedAt"
+              ],
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "description": { "type": "string" },
+                "blocks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["exerciseId", "reps", "rests"],
+                    "properties": {
+                      "exerciseId": { "type": "string" },
+                      "reps": {
+                        "type": "array",
+                        "items": { "default": 10, "type": "number" }
+                      },
+                      "rests": {
+                        "type": "array",
+                        "items": { "default": 30, "type": "number" }
+                      },
+                      "durations": {
+                        "type": "array",
+                        "items": { "type": "number" }
+                      },
+                      "note": { "type": "string" }
+                    }
+                  }
+                },
+                "source": {
+                  "description": "The source of the data",
+                  "default": "user",
+                  "anyOf": [
+                    { "type": "string", "enum": ["builtin"] },
+                    { "type": "string", "enum": ["user"] },
+                    { "type": "string", "enum": ["pt"] }
+                  ]
+                },
+                "challengeConfig": { "type": "object", "properties": {} },
+                "initialWarmup": { "default": 180, "type": "number" },
+                "defaultRestBetweenExercises": {
+                  "default": 180,
+                  "type": "number"
+                },
+                "createdBy": { "type": "string" },
+                "createdAt": { "type": "string" },
+                "updatedAt": { "type": "string" },
+                "deletedAt": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "List all workouts",
+        "tags": ["Workouts"],
+        "parameters": [
+          {
+            "type": "string",
+            "required": false,
+            "in": "query",
+            "name": "expand"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name",
+                  "blocks",
+                  "source",
+                  "initialWarmup",
+                  "defaultRestBetweenExercises",
+                  "createdBy",
+                  "createdAt",
+                  "updatedAt"
+                ],
+                "properties": {
+                  "id": { "type": "string" },
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "blocks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["exerciseId", "reps", "rests"],
+                      "properties": {
+                        "exerciseId": { "type": "string" },
+                        "reps": {
+                          "type": "array",
+                          "items": { "default": 10, "type": "number" }
+                        },
+                        "rests": {
+                          "type": "array",
+                          "items": { "default": 30, "type": "number" }
+                        },
+                        "durations": {
+                          "type": "array",
+                          "items": { "type": "number" }
+                        },
+                        "note": { "type": "string" },
+                        "exercise": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "name",
+                            "source",
+                            "createdAt",
+                            "updatedAt"
+                          ],
+                          "properties": {
+                            "id": { "type": "string" },
+                            "name": { "type": "string" },
+                            "category": {
+                              "anyOf": [
+                                { "type": "string", "enum": ["strength"] },
+                                { "type": "string", "enum": ["cardio"] },
+                                { "type": "string", "enum": ["flexibility"] },
+                                { "type": "string", "enum": ["skill"] }
+                              ]
+                            },
+                            "icon": { "type": "string" },
+                            "description": { "type": "string" },
+                            "source": {
+                              "description": "The source of the data",
+                              "default": "user",
+                              "anyOf": [
+                                { "type": "string", "enum": ["builtin"] },
+                                { "type": "string", "enum": ["user"] },
+                                { "type": "string", "enum": ["pt"] }
+                              ]
+                            },
+                            "instructions": { "type": "string" },
+                            "media": { "type": "string" },
+                            "createdBy": { "type": "string" },
+                            "createdAt": { "type": "string" },
+                            "updatedAt": { "type": "string" },
+                            "deletedAt": { "type": "string" }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "source": {
+                    "description": "The source of the data",
+                    "default": "user",
+                    "anyOf": [
+                      { "type": "string", "enum": ["builtin"] },
+                      { "type": "string", "enum": ["user"] },
+                      { "type": "string", "enum": ["pt"] }
+                    ]
+                  },
+                  "challengeConfig": { "type": "object", "properties": {} },
+                  "initialWarmup": { "default": 180, "type": "number" },
+                  "defaultRestBetweenExercises": {
+                    "default": 180,
+                    "type": "number"
+                  },
+                  "createdBy": {
+                    "anyOf": [
+                      { "type": "string" },
+                      {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "authProviderId",
+                          "firstName",
+                          "lastName",
+                          "dob",
+                          "weight",
+                          "height",
+                          "preferences",
+                          "trainers"
+                        ],
+                        "properties": {
+                          "id": { "type": "string" },
+                          "authProviderId": { "type": "string" },
+                          "firstName": { "type": "string" },
+                          "lastName": { "type": "string" },
+                          "dob": { "type": "string" },
+                          "weight": { "exclusiveMinimum": 0, "type": "number" },
+                          "height": { "exclusiveMinimum": 0, "type": "number" },
+                          "preferences": { "type": "object", "properties": {} },
+                          "email": { "format": "email", "type": "string" },
+                          "trainers": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "createdAt": { "type": "string" },
+                  "updatedAt": { "type": "string" },
+                  "deletedAt": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workouts/{id}": {
+      "delete": {
+        "description": "Delete an workout",
+        "tags": ["Workouts"],
+        "parameters": [
+          { "type": "string", "required": true, "in": "path", "name": "id" }
+        ],
+        "responses": {
+          "204": { "description": "Default Response", "schema": {} },
+          "404": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": ["message"],
+              "properties": { "message": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Get a workout by ID",
+        "tags": ["Workouts"],
+        "parameters": [
+          {
+            "type": "string",
+            "required": false,
+            "in": "query",
+            "name": "expand"
+          },
+          { "type": "string", "required": true, "in": "path", "name": "id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "blocks",
+                "source",
+                "initialWarmup",
+                "defaultRestBetweenExercises",
+                "createdBy",
+                "createdAt",
+                "updatedAt"
+              ],
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "description": { "type": "string" },
+                "blocks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["exerciseId", "reps", "rests"],
+                    "properties": {
+                      "exerciseId": { "type": "string" },
+                      "reps": {
+                        "type": "array",
+                        "items": { "default": 10, "type": "number" }
+                      },
+                      "rests": {
+                        "type": "array",
+                        "items": { "default": 30, "type": "number" }
+                      },
+                      "durations": {
+                        "type": "array",
+                        "items": { "type": "number" }
+                      },
+                      "note": { "type": "string" },
+                      "exercise": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name",
+                          "source",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "properties": {
+                          "id": { "type": "string" },
+                          "name": { "type": "string" },
+                          "category": {
+                            "anyOf": [
+                              { "type": "string", "enum": ["strength"] },
+                              { "type": "string", "enum": ["cardio"] },
+                              { "type": "string", "enum": ["flexibility"] },
+                              { "type": "string", "enum": ["skill"] }
+                            ]
+                          },
+                          "icon": { "type": "string" },
+                          "description": { "type": "string" },
+                          "source": {
+                            "description": "The source of the data",
+                            "default": "user",
+                            "anyOf": [
+                              { "type": "string", "enum": ["builtin"] },
+                              { "type": "string", "enum": ["user"] },
+                              { "type": "string", "enum": ["pt"] }
+                            ]
+                          },
+                          "instructions": { "type": "string" },
+                          "media": { "type": "string" },
+                          "createdBy": { "type": "string" },
+                          "createdAt": { "type": "string" },
+                          "updatedAt": { "type": "string" },
+                          "deletedAt": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                },
+                "source": {
+                  "description": "The source of the data",
+                  "default": "user",
+                  "anyOf": [
+                    { "type": "string", "enum": ["builtin"] },
+                    { "type": "string", "enum": ["user"] },
+                    { "type": "string", "enum": ["pt"] }
+                  ]
+                },
+                "challengeConfig": { "type": "object", "properties": {} },
+                "initialWarmup": { "default": 180, "type": "number" },
+                "defaultRestBetweenExercises": {
+                  "default": 180,
+                  "type": "number"
+                },
+                "createdBy": {
+                  "anyOf": [
+                    { "type": "string" },
+                    {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "authProviderId",
+                        "firstName",
+                        "lastName",
+                        "dob",
+                        "weight",
+                        "height",
+                        "preferences",
+                        "trainers"
+                      ],
+                      "properties": {
+                        "id": { "type": "string" },
+                        "authProviderId": { "type": "string" },
+                        "firstName": { "type": "string" },
+                        "lastName": { "type": "string" },
+                        "dob": { "type": "string" },
+                        "weight": { "exclusiveMinimum": 0, "type": "number" },
+                        "height": { "exclusiveMinimum": 0, "type": "number" },
+                        "preferences": { "type": "object", "properties": {} },
+                        "email": { "format": "email", "type": "string" },
+                        "trainers": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "createdAt": { "type": "string" },
+                "updatedAt": { "type": "string" },
+                "deletedAt": { "type": "string" }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": ["message"],
+              "properties": { "message": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Update an workout",
+        "tags": ["Workouts"],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "name",
+                "blocks",
+                "initialWarmup",
+                "defaultRestBetweenExercises"
+              ],
+              "properties": {
+                "name": { "type": "string" },
+                "description": { "type": "string" },
+                "blocks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["exerciseId", "reps", "rests"],
+                    "properties": {
+                      "exerciseId": { "type": "string" },
+                      "reps": {
+                        "type": "array",
+                        "items": { "default": 10, "type": "number" }
+                      },
+                      "rests": {
+                        "type": "array",
+                        "items": { "default": 30, "type": "number" }
+                      },
+                      "durations": {
+                        "type": "array",
+                        "items": { "type": "number" }
+                      },
+                      "note": { "type": "string" }
+                    }
+                  }
+                },
+                "initialWarmup": { "default": 180, "type": "number" },
+                "defaultRestBetweenExercises": {
+                  "default": 180,
+                  "type": "number"
+                }
+              }
+            }
+          },
+          { "type": "string", "required": true, "in": "path", "name": "id" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "blocks",
+                "source",
+                "initialWarmup",
+                "defaultRestBetweenExercises",
+                "createdAt",
+                "updatedAt"
+              ],
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "description": { "type": "string" },
+                "blocks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["exerciseId", "reps", "rests"],
+                    "properties": {
+                      "exerciseId": { "type": "string" },
+                      "reps": {
+                        "type": "array",
+                        "items": { "default": 10, "type": "number" }
+                      },
+                      "rests": {
+                        "type": "array",
+                        "items": { "default": 30, "type": "number" }
+                      },
+                      "durations": {
+                        "type": "array",
+                        "items": { "type": "number" }
+                      },
+                      "note": { "type": "string" }
+                    }
+                  }
+                },
+                "source": {
+                  "description": "The source of the data",
+                  "default": "user",
+                  "anyOf": [
+                    { "type": "string", "enum": ["builtin"] },
+                    { "type": "string", "enum": ["user"] },
+                    { "type": "string", "enum": ["pt"] }
+                  ]
+                },
+                "challengeConfig": { "type": "object", "properties": {} },
+                "initialWarmup": { "default": 180, "type": "number" },
+                "defaultRestBetweenExercises": {
+                  "default": 180,
+                  "type": "number"
+                },
+                "createdBy": { "type": "string" },
+                "createdAt": { "type": "string" },
+                "updatedAt": { "type": "string" },
+                "deletedAt": { "type": "string" }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "schema": {
+              "type": "object",
+              "required": ["message"],
+              "properties": { "message": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -5,9 +5,8 @@
 
 import { calculateChallengeSessionCount, useExercises } from '@/hooks/data'
 import { formatCount, formatReps, getFirstReps } from '@/lib/utils/format'
-import { ShareableProgramData } from '@/lib/utils/programShare'
 import { theme } from '@/theme/theme'
-import { ChallengeConfig, ProgramBlock } from '@/types'
+import { ChallengeConfig, Program, ProgramBlock } from '@/types'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import React, { useMemo } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -16,7 +15,7 @@ import { AnimatedCard } from '../common'
 import Button from '../common/Button'
 
 type Props = {
-  programData: ShareableProgramData
+  programData: Program
   onConfirm: () => void
   onCancel: () => void
   isImporting?: boolean
@@ -34,9 +33,7 @@ export default function ProgramImportPreview({
   const exerciseIds = useMemo(() => {
     const ids = new Set<string>()
     for (const block of programData.blocks) {
-      if (block.type === 'exercise') {
-        ids.add(block.exerciseId)
-      }
+      ids.add(block.exerciseId)
     }
     if (programData.challengeConfig) {
       ids.add(programData.challengeConfig.exerciseId)
@@ -186,6 +183,7 @@ export default function ProgramImportPreview({
           blocks={programData.blocks}
           exercises={exercises ?? []}
           missingExerciseIds={missingExercises}
+          initialWarmup={programData.initialWarmup}
         />
       )}
       {isChallenge && programData.challengeConfig && (
@@ -442,12 +440,14 @@ type BlocksPreviewProps = {
   blocks: ProgramBlock[]
   exercises: { id: string; name: string }[]
   missingExerciseIds: string[]
+  initialWarmup?: { seconds: number }
 }
 
 function BlocksPreview({
   blocks,
   exercises,
-  missingExerciseIds
+  missingExerciseIds,
+  initialWarmup
 }: BlocksPreviewProps) {
   const exerciseMap = useMemo(() => {
     return new Map(exercises.map(e => [e.id, e.name] as const))
@@ -477,13 +477,24 @@ function BlocksPreview({
         </Text>
 
         <View style={styles.blocksList}>
+          {initialWarmup && (
+            <StepCard
+              title="Warm-up"
+              delayMultiplier={0}
+              style={styles.blockCard}
+            >
+              <Text style={styles.blockMeta}>
+                {initialWarmup.seconds} seconds
+              </Text>
+            </StepCard>
+          )}
           {blocks.map((block, blockIdx) => (
             <BlockPreview
               key={blockIdx}
               block={block}
               exerciseMap={exerciseMap}
               missingExerciseSet={missingExerciseSet}
-              index={blockIdx}
+              index={blockIdx + (initialWarmup ? 1 : 0)}
             />
           ))}
         </View>
@@ -505,33 +516,10 @@ function BlockPreview({
   missingExerciseSet,
   index
 }: BlockPreviewProps) {
-  if (block.type === 'warmup') {
-    return (
-      <StepCard
-        title="Warm-up"
-        delayMultiplier={index}
-        style={styles.blockCard}
-      >
-        <Text style={styles.blockMeta}>{block.seconds} seconds</Text>
-      </StepCard>
-    )
-  }
-
-  if (block.type === 'rest') {
-    return (
-      <StepCard
-        title={block.label || 'Rest'}
-        delayMultiplier={index}
-        style={styles.blockCard}
-      >
-        <Text style={styles.blockMeta}>{block.seconds} seconds</Text>
-      </StepCard>
-    )
-  }
-
-  // Exercise block
   const exerciseName = exerciseMap.get(block.exerciseId) || block.exerciseId
   const isMissing = missingExerciseSet.has(block.exerciseId)
+  const sets = block.sets ?? 1
+  const restBetweenSets = block.restBetweenSets ?? 60
 
   return (
     <StepCard
@@ -559,6 +547,12 @@ function BlockPreview({
         )}
         {!block.targetReps && !block.durationSeconds && (
           <Text style={styles.blockMetaMuted}>Self-guided</Text>
+        )}
+        {sets > 1 && (
+          <Text style={styles.blockMeta}>{formatCount(sets, 'set')}</Text>
+        )}
+        {sets > 1 && (
+          <Text style={styles.blockMeta}>Rest: {restBetweenSets}s</Text>
         )}
       </View>
       {block.note && <Text style={styles.blockNote}>{block.note}</Text>}

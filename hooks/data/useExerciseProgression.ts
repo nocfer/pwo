@@ -1,11 +1,15 @@
 /**
  * useExerciseProgression - Hook for loading exercise progression data for charts
+ *
+ * Fetches exercise progression from the backend Stats API. The API returns
+ * ProgressionPoint[] which matches the frontend ProgressionDataPoint shape,
+ * so no mapper is needed. Local calculateTrend() logic is retained since
+ * the API returns raw data points, not computed trends.
  */
 
 import { useRefreshVersions } from '@/context/DataContext'
-import { useAsyncData } from '@/hooks/useAsyncData'
-import { storage } from '@/lib/storage'
-import { useCallback } from 'react'
+import { APIError, fetchExerciseProgression, isAPIAvailable } from '@/lib/api'
+import { useEffect, useState } from 'react'
 
 export type ProgressionDataPoint = {
   date: string
@@ -36,34 +40,79 @@ export function useExerciseProgression(
 } {
   const { progressVersion } = useRefreshVersions()
 
-  const fetcher =
-    useCallback(async (): Promise<ExerciseProgressionData | null> => {
-      if (!exerciseId) return null
+  const [data, setData] = useState<ExerciseProgressionData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
-      const dataPoints = await storage.getExerciseProgression(exerciseId, days)
+  useEffect(() => {
+    let mounted = true
 
-      if (dataPoints.length === 0) {
-        return {
-          dataPoints: [],
-          trend: { direction: 'stable', delta: 0, percentChange: 0 },
-          hasWeightData: false
+    ;(async () => {
+      if (!exerciseId) {
+        if (mounted) {
+          setData(null)
+          setLoading(false)
         }
+        return
       }
 
-      // Check if any data point has weight data
-      const hasWeightData = dataPoints.some(dp => dp.maxWeight !== undefined)
+      try {
+        if (!isAPIAvailable()) {
+          if (mounted) {
+            setError(
+              new APIError(
+                'API_DISABLED',
+                'API is not available or not configured'
+              )
+            )
+            setLoading(false)
+          }
+          return
+        }
 
-      // Calculate trend based on reps (or weight if available)
-      const trend = calculateTrend(dataPoints, hasWeightData)
+        const dataPoints: ProgressionDataPoint[] =
+          await fetchExerciseProgression(exerciseId, days)
 
-      return { dataPoints, trend, hasWeightData }
-    }, [exerciseId, days])
+        if (!mounted) return
 
-  const { data, loading, error } = useAsyncData(fetcher, [
-    progressVersion,
-    exerciseId,
-    days
-  ])
+        if (dataPoints.length === 0) {
+          setData({
+            dataPoints: [],
+            trend: { direction: 'stable', delta: 0, percentChange: 0 },
+            hasWeightData: false
+          })
+          setError(null)
+          setLoading(false)
+          return
+        }
+
+        const hasWeightData = dataPoints.some(dp => dp.maxWeight !== undefined)
+        const trend = calculateTrend(dataPoints, hasWeightData)
+
+        setData({ dataPoints, trend, hasWeightData })
+        setError(null)
+      } catch (err) {
+        if (mounted) {
+          setError(
+            err instanceof APIError
+              ? err
+              : new APIError(
+                  'UNKNOWN_ERROR',
+                  'Failed to fetch exercise progression',
+                  undefined,
+                  err
+                )
+          )
+        }
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    })()
+
+    return () => {
+      mounted = false
+    }
+  }, [progressVersion, exerciseId, days])
 
   return { data, loading, error }
 }
@@ -110,6 +159,8 @@ function calculateTrend(
 
 /**
  * Hook to get list of exercises that have progression data
+ *
+ * Fetches from the API's progress endpoint and returns the exercisesWithData field.
  */
 export function useExercisesWithProgression(): {
   exerciseIds: string[]
@@ -117,34 +168,41 @@ export function useExercisesWithProgression(): {
 } {
   const { progressVersion } = useRefreshVersions()
 
-  const fetcher = useCallback(async (): Promise<string[]> => {
-    const [programProgress, challengeProgress] = await Promise.all([
-      storage.loadAllProgramProgress(),
-      storage.loadAllChallengeProgress()
-    ])
+  const [exerciseIds, setExerciseIds] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
 
-    const exerciseIds = new Set<string>()
+  useEffect(() => {
+    let mounted = true
 
-    for (const prog of programProgress) {
-      for (const workout of prog.workouts ?? []) {
-        for (const ex of workout.exercises ?? []) {
-          exerciseIds.add(ex.exerciseId)
+    ;(async () => {
+      try {
+        if (!isAPIAvailable()) {
+          if (mounted) {
+            setExerciseIds([])
+            setLoading(false)
+          }
+          return
         }
-      }
-    }
 
-    for (const challenge of challengeProgress) {
-      for (const workout of challenge.workouts ?? []) {
-        for (const ex of workout.exercises ?? []) {
-          exerciseIds.add(ex.exerciseId)
+        const { fetchProgress } = await import('@/lib/api')
+        const progress = await fetchProgress()
+
+        if (mounted) {
+          setExerciseIds(progress.exercisesWithData)
         }
+      } catch {
+        if (mounted) {
+          setExerciseIds([])
+        }
+      } finally {
+        if (mounted) setLoading(false)
       }
+    })()
+
+    return () => {
+      mounted = false
     }
+  }, [progressVersion])
 
-    return Array.from(exerciseIds)
-  }, [])
-
-  const { data, loading } = useAsyncData(fetcher, [progressVersion])
-
-  return { exerciseIds: data ?? [], loading }
+  return { exerciseIds, loading }
 }

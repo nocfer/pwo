@@ -5,11 +5,9 @@
 import { ErrorScreen, ScreenHeader } from '@/components'
 import ProgramImportPreview from '@/components/program/ProgramImportPreview'
 import { useDataActions } from '@/context/DataContext'
-import {
-  decodeProgramFromShare,
-  ShareableProgramData
-} from '@/lib/utils/programShare'
+import { decodeProgramFromShare } from '@/lib/utils/programShare'
 import { theme } from '@/theme/theme'
+import type { Program } from '@/types'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { Alert, StyleSheet } from 'react-native'
@@ -31,11 +29,13 @@ export default function ImportPreviewScreen() {
     )
   }
 
-  let programData: ShareableProgramData
+  let programData: Program
   try {
     // Parse the program data from params
     const parsed = JSON.parse(programDataParam)
-    programData = decodeProgramFromShare(JSON.stringify(parsed))
+    const shareableData = decodeProgramFromShare(JSON.stringify(parsed))
+    // Cast to Program (missing id, createdAt, updatedAt will be generated on import)
+    programData = shareableData as unknown as Program
   } catch (error) {
     return (
       <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>

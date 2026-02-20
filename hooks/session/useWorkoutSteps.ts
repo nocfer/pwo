@@ -169,56 +169,21 @@ export function useWorkoutSteps(
       })
     }
 
-    // Find all exercise blocks to determine which is the last one
-    const exerciseBlockIndices: number[] = []
-    session.blocks.forEach((block, idx) => {
-      if (block.type === 'exercise') {
-        exerciseBlockIndices.push(idx)
-      }
-    })
-    const lastExerciseBlockIndex =
-      exerciseBlockIndices[exerciseBlockIndices.length - 1]
+    // All blocks are now exercise blocks, so find the last one
+    const lastExerciseBlockIndex = session.blocks.length - 1
 
     for (let blockIdx = 0; blockIdx < session.blocks.length; blockIdx++) {
       const block = session.blocks[blockIdx]
 
-      if (block.type === 'warmup') {
-        if (block.seconds > 0) {
-          list.push({
-            key: `warmup-${list.length}`,
-            type: 'warmup',
-            seconds: block.seconds
-          })
-        }
-        continue
-      }
-
-      if (block.type === 'rest') {
-        if (block.seconds > 0) {
-          list.push({
-            key: `rest-${list.length}`,
-            type: 'rest',
-            seconds: block.seconds,
-            label: block.label,
-            // Explicit rest blocks in session are typically between exercises
-            restContext: 'between-exercises'
-          })
-        }
-        continue
-      }
-
       // Exercise block → expand into multiple steps based on sets
       const isLastExercise = blockIdx === lastExerciseBlockIndex
-      // Check if the next block is an explicit rest block to avoid duplication
-      const nextBlock = session.blocks[blockIdx + 1]
-      const hasExplicitRestAfter = nextBlock?.type === 'rest'
       const expandedSteps = expandExerciseBlock(
         block,
         blockIdx,
         isLastExercise,
         defaultRestBetweenExercises,
         list.length,
-        hasExplicitRestAfter
+        false // No explicit rest blocks in new model
       )
       list.push(...expandedSteps)
     }
