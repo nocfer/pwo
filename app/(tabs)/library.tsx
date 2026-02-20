@@ -7,7 +7,7 @@ import { useCallback, useState } from 'react'
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-type CreateType = 'exercise' | 'program' | 'challenge'
+type CreateType = 'exercise' | 'program'
 
 const CREATE_MENU_ITEMS: {
   type: CreateType
@@ -32,14 +32,6 @@ const CREATE_MENU_ITEMS: {
     icon: 'barbell',
     iconColor: theme.colors.success,
     iconBgColor: theme.colors.successLight
-  },
-  {
-    type: 'challenge',
-    title: 'Challenge',
-    subtitle: 'Set a progressive goal',
-    icon: 'trophy',
-    iconColor: theme.colors.accent,
-    iconBgColor: theme.colors.accentLight
   }
 ]
 
@@ -55,9 +47,6 @@ export default function LibraryScreen() {
         break
       case 'program':
         router.navigate('/library/programs/new')
-        break
-      case 'challenge':
-        router.navigate('/library/challenges/new')
         break
     }
   }, [])

@@ -6,6 +6,7 @@ import {
 import { useDataActions } from '@/context/DataContext'
 import { useExercises } from '@/hooks/data'
 import { theme } from '@/theme/theme'
+import { Exercise } from '@/types'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useMemo, useState } from 'react'
 import { StyleSheet } from 'react-native'
@@ -18,7 +19,7 @@ export default function EditExerciseScreen() {
   const [saving, setSaving] = useState(false)
 
   const exercise = useMemo(
-    () => data?.find(e => e.id === id) ?? null,
+    () => data?.find((e: Exercise) => e.id === id) ?? null,
     [data, id]
   )
 

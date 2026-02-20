@@ -6,6 +6,7 @@ import { useStepCompletion } from '@/hooks/session'
 import { useWorkoutSteps } from '@/hooks/session/useWorkoutSteps'
 import { useWorkoutTimer } from '@/hooks/session/useWorkoutTimer'
 import { theme } from '@/theme/theme'
+import { Program } from '@/types'
 import { useLocalSearchParams } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, StyleSheet, View } from 'react-native'
@@ -20,7 +21,7 @@ export default function ProgramSessionRunner() {
   const [showSafeguardAlert, setShowSafeguardAlert] = useState(false)
 
   const program = useMemo(
-    () => programs?.find(p => p.id === id) ?? null,
+    () => programs?.find((p: Program) => p.id === id) ?? null,
     [programs, id]
   )
 

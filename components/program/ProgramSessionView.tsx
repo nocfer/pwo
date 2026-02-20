@@ -4,7 +4,7 @@ import {
   UseWorkoutTimerReturn,
   WorkoutStep
 } from '@/hooks/session'
-import { Program, ProgramSession } from '@/types'
+import { Exercise, Program, ProgramSession } from '@/types'
 import { useMemo } from 'react'
 import { WorkoutExecutionScreen } from './WorkoutExecutionScreen'
 
@@ -16,12 +16,12 @@ type Props = {
   stepCompletion: UseStepCompletionReturn
   onProgramUpdate?: (program: Program) => Promise<void>
   onCompletedSetsChange?: (
-    sets: Array<{
+    sets: {
       exerciseId: string
       actualReps: number
       setNumber: number
       totalSets: number
-    }>
+    }[]
   ) => void
 }
 
@@ -38,7 +38,7 @@ export default function ProgramSessionView({
 
   const exerciseNameById = useMemo(() => {
     const map = new Map<string, string>()
-    ;(exercises ?? []).forEach(e => map.set(e.id, e.name))
+    ;(exercises ?? []).forEach((e: Exercise) => map.set(e.id, e.name))
     return map
   }, [exercises])
 

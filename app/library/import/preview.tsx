@@ -61,7 +61,6 @@ export default function ImportPreviewScreen() {
         name: programData.name,
         description: programData.description,
         blocks: programData.blocks,
-        challengeConfig: programData.challengeConfig,
         initialWarmup: programData.initialWarmup,
         defaultRestBetweenExercises: programData.defaultRestBetweenExercises
       })

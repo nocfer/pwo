@@ -38,18 +38,16 @@ export default function Index() {
     }
   }, [programs, aggregated])
 
-  const { regularPrograms, challenges, allPrograms } = useMemo(() => {
+  const { regularPrograms, allPrograms } = useMemo(() => {
     if (prioritizedPrograms.length === 0) {
-      return { regularPrograms: [], challenges: [], allPrograms: [] }
+      return { regularPrograms: [], allPrograms: [] }
     }
 
     const regular = prioritizedPrograms.filter(p => !p.challengeConfig)
-    const challenge = prioritizedPrograms.filter(p => p.challengeConfig)
-    const all = [...regular, ...challenge]
+    const all = [...regular]
 
     return {
       regularPrograms: regular,
-      challenges: challenge,
       allPrograms: all
     }
   }, [prioritizedPrograms])
@@ -201,7 +199,7 @@ export default function Index() {
                 <View style={styles.browseTextContainer}>
                   <Text style={styles.browseTitle}>Browse Library</Text>
                   <Text style={styles.browseSubtitle}>
-                    Programs, challenges & exercises
+                    Programs & exercises
                   </Text>
                 </View>
               </View>
@@ -220,7 +218,7 @@ export default function Index() {
                 variant="default"
                 icon="barbell-outline"
                 title="No programs yet"
-                description="Create your first program or challenge to get started"
+                description="Create your first program to get started"
                 actionLabel="Go to Library"
                 onAction={() => router.navigate('/(tabs)/library')}
               />
@@ -253,14 +251,6 @@ export default function Index() {
               style={styles.programList}
               showsVerticalScrollIndicator={false}
             >
-              <ProgramSection
-                label="Challenges"
-                programs={challenges}
-                icon="trophy"
-                iconColor={theme.colors.success}
-                iconBgColor={theme.colors.successLight}
-                onSelect={handleProgramSelect}
-              />
               <ProgramSection
                 label="Programs"
                 programs={regularPrograms}
