@@ -28,14 +28,13 @@ import {
 } from '@/lib/validation'
 import type {
   AuditLogEntry,
-  DataAction,
-  DataState,
   DataType,
   DependencyCheck,
   EnhancedDataActions,
   EnhancedDataState,
   Exercise,
   ExportData,
+  PersonalRecord,
   Program,
   ProgramBlock,
   SearchFacets,
@@ -53,6 +52,34 @@ import React, {
   useReducer,
   useRef
 } from 'react'
+
+// ============================================================================
+// Types
+// ============================================================================
+
+interface DataState {
+  exercises: Exercise[]
+  exercisesLoading: boolean
+  programs: Program[]
+  programsLoading: boolean
+  lastCompletedSlug: string | null
+  lastNewPRs: PersonalRecord[]
+  progressVersion: number
+  historyVersion: number
+  completedVersion: number
+}
+
+type DataAction =
+  | { type: 'SET_EXERCISES'; exercises: Exercise[] }
+  | { type: 'SET_EXERCISES_LOADING'; loading: boolean }
+  | { type: 'SET_PROGRAMS'; programs: Program[] }
+  | { type: 'SET_PROGRAMS_LOADING'; loading: boolean }
+  | { type: 'SET_LAST_COMPLETED_SLUG'; slug: string | null }
+  | { type: 'SET_LAST_NEW_PRS'; prs: PersonalRecord[] }
+  | { type: 'INCREMENT_PROGRESS_VERSION' }
+  | { type: 'INCREMENT_HISTORY_VERSION' }
+  | { type: 'INCREMENT_COMPLETED_VERSION' }
+  | { type: 'REFRESH_ALL' }
 
 type DataContextValue = {
   state: DataState & EnhancedDataState
@@ -265,8 +292,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
       // POST workout data to API — errors propagate to caller
       const response = await recordWorkout(workoutLogInput)
 
+      // Transform NewPREntry to PersonalRecord format
+      const personalRecords: PersonalRecord[] = response.newPRs.map(
+        (pr, index) => ({
+          id: `pr_${Date.now()}_${index}`,
+          exerciseId: pr.exerciseId,
+          type: pr.type,
+          value: pr.value,
+          achievedAt: completedAt,
+          details: {
+            weight: undefined,
+            reps: undefined
+          }
+        })
+      )
+
       // Store new PRs from response for UI display
-      dispatch({ type: 'SET_LAST_NEW_PRS', prs: response.newPRs })
+      dispatch({ type: 'SET_LAST_NEW_PRS', prs: personalRecords })
 
       // Mark this program as last completed
       dispatch({ type: 'SET_LAST_COMPLETED_SLUG', slug })
@@ -769,7 +811,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     async (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>): Promise<void> => {
       const auditEntry: AuditLogEntry = {
         ...entry,
-        id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `audit_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
         timestamp: new Date().toISOString()
       }
 
