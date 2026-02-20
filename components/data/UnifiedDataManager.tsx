@@ -1,5 +1,5 @@
 /**
- * UnifiedDataManager - Central component for managing exercises, programs, and challenges
+ * UnifiedDataManager - Central component for managing exercises and programs
  */
 
 import { useDataContext } from '@/context/DataContext'
@@ -48,9 +48,7 @@ export function UnifiedDataManager({
       case 'exercises':
         return state.exercises
       case 'programs':
-        return state.programs.filter(p => !p.challengeConfig)
-      case 'challenges':
-        return state.programs.filter(p => Boolean(p.challengeConfig))
+        return state.programs
       default:
         return []
     }
@@ -139,7 +137,6 @@ export function UnifiedDataManager({
         router.push(`/library/exercises/${item.id}/edit`)
         break
       case 'programs':
-      case 'challenges':
         router.push(`/programs/${item.id}`)
         break
     }
@@ -153,9 +150,6 @@ export function UnifiedDataManager({
         break
       case 'programs':
         router.push(`/library/programs/${item.id}/edit`)
-        break
-      case 'challenges':
-        router.push(`/library/challenges/${item.id}/edit`)
         break
     }
   }
@@ -173,7 +167,6 @@ export function UnifiedDataManager({
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
         {renderTabButton('programs', 'Programs', 'barbell')}
-        {renderTabButton('challenges', 'Challenges', 'trophy')}
         {renderTabButton('exercises', 'Exercises', 'fitness')}
       </View>
 
@@ -246,9 +239,7 @@ export function UnifiedDataManager({
         onSelectionChange={handleSelectionChange}
         onItemPress={handleItemPress}
         onItemEdit={handleItemEdit}
-        showInlineActions={
-          activeTab === 'programs' || activeTab === 'challenges'
-        }
+        showInlineActions={activeTab === 'programs'}
         isLoading={isLoading}
         style={styles.dataList}
       />

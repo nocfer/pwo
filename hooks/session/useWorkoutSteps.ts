@@ -1,4 +1,3 @@
-import { useChallengeSessions } from '@/hooks/data'
 import type { Program, ProgramExerciseBlock } from '@/types'
 import { useMemo } from 'react'
 
@@ -144,13 +143,16 @@ export function useWorkoutSteps(
   program: Program | null | undefined,
   sessionIndex: number | undefined
 ) {
-  // Generate sessions dynamically if this is a challenge program
-  const sessions = useChallengeSessions(program)
-
   const session = useMemo(() => {
     if (!program || !sessionIndex) return null
-    return sessions.find(s => s.index === sessionIndex) ?? null
-  }, [program, sessionIndex, sessions])
+    // Programs now have a single session (index 1)
+    if (sessionIndex !== 1) return null
+    return {
+      index: 1,
+      name: program.name,
+      blocks: program.blocks
+    }
+  }, [program, sessionIndex])
 
   const steps = useMemo<WorkoutStep[]>(() => {
     if (!program || !session) return []

@@ -15,9 +15,6 @@ export type {
 // Session types
 export type { AccumulatedSet, Session, SessionPhase } from './session'
 
-// Data state types
-export type { DataAction, DataState } from './challenge'
-
 // Exercise types
 export type { Exercise, ExerciseCategory, ExerciseSource } from './exercise'
 
