@@ -160,8 +160,8 @@ export default function StatisticsScreen() {
               />
               <StatCard
                 icon="time"
-                label="Active Programs"
-                value={allProgress?.activePrograms ?? 0}
+                label="Active Workouts"
+                value={allProgress?.activeWorkouts ?? 0}
                 color={theme.colors.success}
               />
             </View>

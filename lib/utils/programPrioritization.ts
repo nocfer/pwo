@@ -3,15 +3,22 @@
  *
  * Provides logic to prioritize programs based on recent usage and favorites.
  * Ensures consistent ordering across app sessions.
+ *
+ * All functions accept data as parameters — no storage or API calls are made here.
  */
 
-import { storage } from '@/lib/storage'
 import type { Program } from '@/types'
 
 export interface ProgramWithPriority extends Program {
   lastUsed?: string
   usageCount?: number
   priorityScore: number
+}
+
+/** Shape of recent activity entries from the API progress endpoint */
+export interface RecentActivityEntry {
+  date: string
+  workoutId: string
 }
 
 /**
@@ -52,84 +59,57 @@ function calculatePriorityScore(
 }
 
 /**
- * Get usage statistics for programs from progress data
+ * Derive per-program usage stats from API recent activity data.
+ *
+ * The `recentActivity` array comes from `fetchProgress().recentActivity`
+ * where each entry has a `workoutId` (the program slug/id) and a `date`.
  */
-async function getProgramUsageStats(): Promise<
-  Map<string, { lastUsed?: string; usageCount: number }>
-> {
-  const [programProgress, challengeProgress] = await Promise.all([
-    storage.loadAllProgramProgress(),
-    storage.loadAllChallengeProgress()
-  ])
-
+export function getProgramUsageStats(
+  recentActivity: RecentActivityEntry[]
+): Map<string, { lastUsed?: string; usageCount: number }> {
   const usageStats = new Map<
     string,
     { lastUsed?: string; usageCount: number }
   >()
 
-  // Process regular program progress
-  for (const progress of programProgress) {
-    const programId = progress.programId
-    const workouts = progress.workouts ?? []
-    const completedWorkouts = workouts.filter(w => w.completed)
-    const usageCount = completedWorkouts.length
+  for (const entry of recentActivity) {
+    const existing = usageStats.get(entry.workoutId)
 
-    // Track latest activity
-    let latestActivity: string | undefined
-    for (const workout of completedWorkouts) {
-      if (workout.completedAt) {
-        if (
-          !latestActivity ||
-          new Date(workout.completedAt) > new Date(latestActivity)
-        ) {
-          latestActivity = workout.completedAt
-        }
-      }
-    }
-
-    // Use progress-level lastActivityAt if available and more recent
-    if (progress.lastActivityAt) {
+    if (existing) {
+      existing.usageCount += 1
       if (
-        !latestActivity ||
-        new Date(progress.lastActivityAt) > new Date(latestActivity)
+        !existing.lastUsed ||
+        new Date(entry.date) > new Date(existing.lastUsed)
       ) {
-        latestActivity = progress.lastActivityAt
+        existing.lastUsed = entry.date
       }
+    } else {
+      usageStats.set(entry.workoutId, {
+        lastUsed: entry.date,
+        usageCount: 1
+      })
     }
-
-    usageStats.set(programId, {
-      lastUsed: latestActivity,
-      usageCount
-    })
-  }
-
-  // Process challenge progress
-  for (const progress of challengeProgress) {
-    const challengeId = progress.challengeId
-    const completedWorkouts = progress.workouts.filter(w => w.completed)
-    const usageCount = completedWorkouts.length
-
-    usageStats.set(challengeId, {
-      lastUsed: progress.lastActivityAt || undefined,
-      usageCount
-    })
   }
 
   return usageStats
 }
 
 /**
- * Prioritize programs based on recent usage and activity
- * Returns programs sorted by priority (highest first)
+ * Prioritize programs based on recent usage and activity.
+ * Returns programs sorted by priority (highest first).
+ *
+ * @param programs - The list of programs to prioritize
+ * @param recentActivity - Recent activity entries from the API progress endpoint
  */
-export async function prioritizePrograms(
-  programs: Program[]
-): Promise<ProgramWithPriority[]> {
+export function prioritizePrograms(
+  programs: Program[],
+  recentActivity: RecentActivityEntry[] = []
+): ProgramWithPriority[] {
   if (programs.length === 0) {
     return []
   }
 
-  const usageStats = await getProgramUsageStats()
+  const usageStats = getProgramUsageStats(recentActivity)
 
   // Add priority information to programs
   const programsWithPriority: ProgramWithPriority[] = programs.map(program => {
@@ -152,7 +132,6 @@ export async function prioritizePrograms(
     if (a.priorityScore !== b.priorityScore) {
       return b.priorityScore - a.priorityScore // Higher score first
     }
-    // If same priority, sort by name for consistent ordering
     return a.name.localeCompare(b.name)
   })
 
@@ -162,11 +141,12 @@ export async function prioritizePrograms(
 /**
  * Get the top N prioritized programs for quick access
  */
-export async function getTopPriorityPrograms(
+export function getTopPriorityPrograms(
   programs: Program[],
+  recentActivity: RecentActivityEntry[] = [],
   limit: number = 5
-): Promise<ProgramWithPriority[]> {
-  const prioritized = await prioritizePrograms(programs)
+): ProgramWithPriority[] {
+  const prioritized = prioritizePrograms(programs, recentActivity)
   return prioritized.slice(0, limit)
 }
 
@@ -188,11 +168,14 @@ export function isRecentlyUsed(program: ProgramWithPriority): boolean {
 /**
  * Group programs by usage status for display
  */
-export async function groupProgramsByUsage(programs: Program[]): Promise<{
+export function groupProgramsByUsage(
+  programs: Program[],
+  recentActivity: RecentActivityEntry[] = []
+): {
   recentlyUsed: ProgramWithPriority[]
   other: ProgramWithPriority[]
-}> {
-  const prioritized = await prioritizePrograms(programs)
+} {
+  const prioritized = prioritizePrograms(programs, recentActivity)
 
   const recentlyUsed = prioritized.filter(isRecentlyUsed)
   const other = prioritized.filter(p => !isRecentlyUsed(p))

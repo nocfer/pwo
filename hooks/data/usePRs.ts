@@ -1,12 +1,16 @@
 /**
  * usePRs - Hook for loading and managing personal records
+ *
+ * Fetches personal records from the backend Stats API and maps the response
+ * to frontend PersonalRecord types. Builds prsByExercise and bestPRs maps
+ * from the mapped results.
  */
 
 import { useRefreshVersions } from '@/context/DataContext'
-import { useAsyncData } from '@/hooks/useAsyncData'
-import { storage } from '@/lib/storage'
+import { APIError, fetchExercisePRs, fetchPRs, isAPIAvailable } from '@/lib/api'
+import { mapPR } from '@/lib/mappers/stats'
 import type { PersonalRecord, PersonalRecordType } from '@/types'
-import { useCallback, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 
 export type PRsData = {
   latestPRs: PersonalRecord[]
@@ -21,38 +25,82 @@ export function usePRs(limit: number = 10): {
 } {
   const { progressVersion } = useRefreshVersions()
 
-  const fetcher = useCallback(async (): Promise<PRsData> => {
-    const [latestPRs, allPRHistory] = await Promise.all([
-      storage.getLatestPRs(limit),
-      storage.loadAllPRs()
-    ])
+  const [data, setData] = useState<PRsData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
-    // Build prsByExercise map
-    const prsByExercise = new Map<string, PersonalRecord[]>()
-    for (const history of allPRHistory) {
-      prsByExercise.set(history.exerciseId, history.records)
-    }
+  useEffect(() => {
+    let mounted = true
 
-    // Build bestPRs map (best PR for each type per exercise)
-    const bestPRs = new Map<string, Map<PersonalRecordType, PersonalRecord>>()
-    for (const history of allPRHistory) {
-      const exerciseBest = new Map<PersonalRecordType, PersonalRecord>()
-      for (const pr of history.records) {
-        const existing = exerciseBest.get(pr.type)
-        if (!existing || pr.value > existing.value) {
-          exerciseBest.set(pr.type, pr)
+    ;(async () => {
+      try {
+        if (!isAPIAvailable()) {
+          if (mounted) {
+            setError(
+              new APIError(
+                'API_DISABLED',
+                'API is not available or not configured'
+              )
+            )
+            setLoading(false)
+          }
+          return
         }
+
+        const apiPRs = await fetchPRs(limit)
+        if (mounted) {
+          const latestPRs = apiPRs.map(mapPR)
+
+          // Build prsByExercise map
+          const prsByExercise = new Map<string, PersonalRecord[]>()
+          for (const pr of latestPRs) {
+            const existing = prsByExercise.get(pr.exerciseId) ?? []
+            existing.push(pr)
+            prsByExercise.set(pr.exerciseId, existing)
+          }
+
+          // Build bestPRs map (best PR for each type per exercise)
+          const bestPRs = new Map<
+            string,
+            Map<PersonalRecordType, PersonalRecord>
+          >()
+          for (const pr of latestPRs) {
+            let exerciseBest = bestPRs.get(pr.exerciseId)
+            if (!exerciseBest) {
+              exerciseBest = new Map<PersonalRecordType, PersonalRecord>()
+              bestPRs.set(pr.exerciseId, exerciseBest)
+            }
+            const existing = exerciseBest.get(pr.type)
+            if (!existing || pr.value > existing.value) {
+              exerciseBest.set(pr.type, pr)
+            }
+          }
+
+          setData({ latestPRs, prsByExercise, bestPRs })
+          setError(null)
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(
+            err instanceof APIError
+              ? err
+              : new APIError(
+                  'UNKNOWN_ERROR',
+                  'Failed to fetch PRs',
+                  undefined,
+                  err
+                )
+          )
+        }
+      } finally {
+        if (mounted) setLoading(false)
       }
-      bestPRs.set(history.exerciseId, exerciseBest)
+    })()
+
+    return () => {
+      mounted = false
     }
-
-    return { latestPRs, prsByExercise, bestPRs }
-  }, [limit])
-
-  const { data, loading, error } = useAsyncData(fetcher, [
-    progressVersion,
-    limit
-  ])
+  }, [progressVersion, limit])
 
   return { data, loading, error }
 }
@@ -68,21 +116,79 @@ export function useExercisePRs(exerciseId: string): {
 } {
   const { progressVersion } = useRefreshVersions()
 
-  const fetcher = useCallback(async () => {
-    const [prs, bestPRsMap] = await Promise.all([
-      storage.loadPRsForExercise(exerciseId),
-      storage.getCurrentPRs(exerciseId)
-    ])
-    return { prs, bestPRsMap }
-  }, [exerciseId])
+  const [prs, setPrs] = useState<PersonalRecord[]>([])
+  const [bestPRs, setBestPRs] = useState<
+    Map<PersonalRecordType, PersonalRecord>
+  >(new Map())
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
-  const { data, loading, error } = useAsyncData(fetcher, [progressVersion])
+  useEffect(() => {
+    let mounted = true
 
-  const prs = useMemo(() => data?.prs ?? [], [data])
-  const bestPRs = useMemo(
-    () => data?.bestPRsMap ?? new Map<PersonalRecordType, PersonalRecord>(),
-    [data]
-  )
+    ;(async () => {
+      if (!exerciseId) {
+        if (mounted) {
+          setPrs([])
+          setBestPRs(new Map())
+          setLoading(false)
+        }
+        return
+      }
+
+      try {
+        if (!isAPIAvailable()) {
+          if (mounted) {
+            setError(
+              new APIError(
+                'API_DISABLED',
+                'API is not available or not configured'
+              )
+            )
+            setLoading(false)
+          }
+          return
+        }
+
+        const apiPRs = await fetchExercisePRs(exerciseId, true)
+        if (mounted) {
+          const mapped = apiPRs.map(mapPR)
+
+          // Build bestPRs map (best PR for each type)
+          const best = new Map<PersonalRecordType, PersonalRecord>()
+          for (const pr of mapped) {
+            const existing = best.get(pr.type)
+            if (!existing || pr.value > existing.value) {
+              best.set(pr.type, pr)
+            }
+          }
+
+          setPrs(mapped)
+          setBestPRs(best)
+          setError(null)
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(
+            err instanceof APIError
+              ? err
+              : new APIError(
+                  'UNKNOWN_ERROR',
+                  'Failed to fetch exercise PRs',
+                  undefined,
+                  err
+                )
+          )
+        }
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    })()
+
+    return () => {
+      mounted = false
+    }
+  }, [progressVersion, exerciseId])
 
   return { prs, bestPRs, loading, error }
 }

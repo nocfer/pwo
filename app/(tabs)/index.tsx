@@ -26,13 +26,17 @@ export default function Index() {
     ProgramWithPriority[]
   >([])
 
+  const { data: aggregated } = useAllProgress()
+
   useEffect(() => {
     if (programs) {
-      prioritizePrograms(programs).then(setPrioritizedPrograms)
+      setPrioritizedPrograms(
+        prioritizePrograms(programs, aggregated?.recentActivity ?? [])
+      )
     } else {
       setPrioritizedPrograms([])
     }
-  }, [programs])
+  }, [programs, aggregated])
 
   const { regularPrograms, challenges, allPrograms } = useMemo(() => {
     if (prioritizedPrograms.length === 0) {
@@ -51,7 +55,6 @@ export default function Index() {
   }, [prioritizedPrograms])
 
   const { data: weeklyData } = useWeeklyActivity()
-  const { data: aggregated } = useAllProgress()
 
   const handleProgramSelect = (program: ProgramWithPriority) => {
     setProgramSelectorOpen(false)

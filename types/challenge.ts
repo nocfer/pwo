@@ -16,6 +16,9 @@ export type DataState = {
   progressVersion: number
   historyVersion: number
   completedVersion: number
+
+  // New PRs detected from the last recorded workout
+  lastNewPRs: import('@/lib/api').NewPREntry[]
 }
 
 export type DataAction =
@@ -24,6 +27,7 @@ export type DataAction =
   | { type: 'SET_PROGRAMS'; programs: import('./program').Program[] }
   | { type: 'SET_PROGRAMS_LOADING'; loading: boolean }
   | { type: 'SET_LAST_COMPLETED_SLUG'; slug: string | null }
+  | { type: 'SET_LAST_NEW_PRS'; prs: import('@/lib/api').NewPREntry[] }
   | { type: 'INCREMENT_PROGRESS_VERSION' }
   | { type: 'INCREMENT_HISTORY_VERSION' }
   | { type: 'INCREMENT_COMPLETED_VERSION' }

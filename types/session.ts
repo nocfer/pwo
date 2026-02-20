@@ -12,3 +12,15 @@ export type Session = {
 }
 
 export type SessionPhase = 'warmup' | 'working' | 'break' | 'done'
+
+/**
+ * Represents a single completed set during a workout session.
+ * Accumulated in memory and sent to the API when the session completes.
+ */
+export interface AccumulatedSet {
+  exerciseId: string
+  reps: number
+  weight?: number
+  isBodyweight: boolean
+  timestamp: string // ISO datetime
+}
