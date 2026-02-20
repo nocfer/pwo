@@ -15,7 +15,7 @@ import {
   View,
   ViewStyle
 } from 'react-native'
-import { EmptyState, LoadingScreen } from '../common'
+import { DeleteButton, EmptyState, LoadingScreen } from '../common'
 import { SearchInput } from '../common/SearchInput'
 import { ProgramListItem } from './ProgramListItem'
 
@@ -38,6 +38,7 @@ type Props = {
   onItemPress?: (item: ListItem) => void
   onItemEdit?: (item: ListItem) => void
   onItemLongPress?: (item: ListItem) => void
+  onItemDelete?: (item: ListItem) => void
   selectedItems?: string[]
   onSelectionChange?: (itemIds: string[]) => void
   showSearch?: boolean
@@ -57,6 +58,7 @@ export function SearchableList({
   onItemPress,
   onItemEdit,
   onItemLongPress,
+  onItemDelete,
   selectedItems = [],
   onSelectionChange,
   showSearch = true,
@@ -205,7 +207,23 @@ export function SearchableList({
           )}
         </View>
 
-        <Ionicons name="chevron-forward" size={18} color={theme.colors.muted} />
+        {!selectionMode && item.source === 'user' && onItemDelete && (
+          <DeleteButton
+            variant="icon"
+            size="sm"
+            onPress={() => onItemDelete(item)}
+            accessibilityLabel={`Delete ${item.name}`}
+            style={styles.deleteButton}
+          />
+        )}
+
+        {!selectionMode && (
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={theme.colors.muted}
+          />
+        )}
       </Pressable>
     )
   }
@@ -337,6 +355,9 @@ const styles = StyleSheet.create({
   itemCategory: {
     ...theme.typography.caption,
     color: theme.colors.muted
+  },
+  deleteButton: {
+    marginRight: theme.spacing.xs
   }
 })
 
