@@ -41,6 +41,14 @@ type Props = {
   exerciseNameById: Map<string, string>
   stepCompletion: UseStepCompletionReturn
   onProgramUpdate?: (updatedProgram: Program) => Promise<void>
+  onCompletedSetsChange?: (
+    sets: Array<{
+      exerciseId: string
+      actualReps: number
+      setNumber: number
+      totalSets: number
+    }>
+  ) => void
 }
 
 export function WorkoutExecutionScreen({
@@ -50,7 +58,8 @@ export function WorkoutExecutionScreen({
   program,
   exerciseNameById,
   stepCompletion,
-  onProgramUpdate
+  onProgramUpdate,
+  onCompletedSetsChange
 }: Props) {
   const title = session.name ?? `Session ${session.index}`
   const current = timer.currentStep
@@ -61,7 +70,7 @@ export function WorkoutExecutionScreen({
     stepCompletion
 
   // Track completed sets with actual reps
-  const [, setCompletedSets] = useState<SetCompletion[]>([])
+  const [completedSets, setCompletedSets] = useState<SetCompletion[]>([])
   const [currentReps, setCurrentReps] = useState<number | null>(null)
   const [showUpdatePrompt, setShowUpdatePrompt] = useState(false)
   const [lastCompletion, setLastCompletion] = useState<SetCompletion | null>(
@@ -72,6 +81,20 @@ export function WorkoutExecutionScreen({
   const fadeAnim = useRef(new Animated.Value(0)).current
   const scaleAnim = useRef(new Animated.Value(0.95)).current
   const pulseAnim = useRef(new Animated.Value(1)).current
+
+  // Notify parent when completed sets change
+  useEffect(() => {
+    if (onCompletedSetsChange) {
+      onCompletedSetsChange(
+        completedSets.map(s => ({
+          exerciseId: s.exerciseId,
+          actualReps: s.actualReps,
+          setNumber: s.setNumber,
+          totalSets: s.totalSets
+        }))
+      )
+    }
+  }, [completedSets, onCompletedSetsChange])
 
   // Animate on mount and step change
   useEffect(() => {

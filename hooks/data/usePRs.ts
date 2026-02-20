@@ -127,6 +127,15 @@ export function useExercisePRs(exerciseId: string): {
     let mounted = true
 
     ;(async () => {
+      if (!exerciseId) {
+        if (mounted) {
+          setPrs([])
+          setBestPRs(new Map())
+          setLoading(false)
+        }
+        return
+      }
+
       try {
         if (!isAPIAvailable()) {
           if (mounted) {
