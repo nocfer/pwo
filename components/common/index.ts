@@ -9,6 +9,9 @@ export {
   PulseAnimation
 } from './AnimatedCard'
 export { default as Button } from './Button'
+export { ConfirmationModal } from './ConfirmationModal'
+export { DeleteButton } from './DeleteButton'
+export { DependencyErrorModal } from './DependencyErrorModal'
 export {
   EmptyState,
   NoHistoryEmpty,
