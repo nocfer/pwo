@@ -31,12 +31,14 @@ type Props = {
   initialTab?: DataType
   searchQuery?: string
   style?: ViewStyle
+  onActiveTabChange?: (tab: DataType) => void
 }
 
 export function UnifiedDataManager({
   initialTab = 'programs',
   searchQuery = '',
-  style
+  style,
+  onActiveTabChange
 }: Props) {
   const { state, actions } = useDataContext()
   const [activeTab, setActiveTab] = useState<DataType>(initialTab)
@@ -85,25 +87,38 @@ export function UnifiedDataManager({
     setActiveTab(tab)
     setSelectedItems([])
     setShowFilters(false)
+    onActiveTabChange?.(tab)
   }
 
   const renderTabButton = useCallback(
-    (tab: DataType, label: string, icon: string) => (
+    (
+      tab: DataType,
+      label: string,
+      icon: string,
+      activeColor: string,
+      activeBg: string
+    ) => (
       <TouchableOpacity
         key={tab}
-        style={[styles.tabButton, activeTab === tab && styles.tabButtonActive]}
+        style={[
+          styles.tabButton,
+          activeTab === tab && { backgroundColor: activeBg }
+        ]}
         onPress={() => handleTabChange(tab)}
         activeOpacity={0.7}
       >
         <Ionicons
           name={icon as any}
           size={18}
-          color={activeTab === tab ? theme.colors.primary : theme.colors.muted}
+          color={activeTab === tab ? activeColor : theme.colors.muted}
         />
         <Text
           style={[
             styles.tabButtonText,
-            activeTab === tab && styles.tabButtonTextActive
+            activeTab === tab && {
+              color: activeColor,
+              fontFamily: theme.fonts.semiBold
+            }
           ]}
         >
           {label}
@@ -336,8 +351,20 @@ export function UnifiedDataManager({
     <View style={[styles.container, style]}>
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
-        {renderTabButton('programs', 'Programs', 'barbell')}
-        {renderTabButton('exercises', 'Exercises', 'fitness')}
+        {renderTabButton(
+          'programs',
+          'Programs',
+          'barbell',
+          theme.colors.success,
+          theme.colors.successLight
+        )}
+        {renderTabButton(
+          'exercises',
+          'Exercises',
+          'fitness',
+          theme.colors.primary,
+          theme.colors.primaryLight
+        )}
       </View>
 
       {/* Search and Filters */}
@@ -562,17 +589,10 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.sm,
     gap: theme.spacing.xs
   },
-  tabButtonActive: {
-    backgroundColor: theme.colors.primaryLight
-  },
   tabButtonText: {
     ...theme.typography.caption,
     color: theme.colors.muted,
     fontFamily: theme.fonts.medium
-  },
-  tabButtonTextActive: {
-    color: theme.colors.primary,
-    fontFamily: theme.fonts.semiBold
   },
   controls: {
     paddingHorizontal: theme.spacing.lg,
