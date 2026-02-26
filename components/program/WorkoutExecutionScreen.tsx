@@ -42,12 +42,12 @@ type Props = {
   stepCompletion: UseStepCompletionReturn
   onProgramUpdate?: (updatedProgram: Program) => Promise<void>
   onCompletedSetsChange?: (
-    sets: Array<{
+    sets: {
       exerciseId: string
       actualReps: number
       setNumber: number
       totalSets: number
-    }>
+    }[]
   ) => void
 }
 

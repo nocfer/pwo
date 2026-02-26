@@ -1,3 +1,7 @@
+---
+inclusion: always
+---
+
 # Project Structure
 
 ## Root Directory Organization
@@ -18,67 +22,135 @@ progressive-workout/
 
 ## App Directory (Expo Router)
 
-- `app/(tabs)/` - Tab-based navigation screens (index, challenges, progress, etc.)
-- `app/library/` - CRUD screens for exercises, programs, and challenges
-- `app/programs/` - Program execution and session screens
-- `app/onboarding/` - User onboarding flow
+File-based routing with Expo Router. Each file/folder becomes a route.
+
+- `app/(tabs)/` - Tab-based navigation screens (index, library, progress, profile)
+- `app/(auth)/` - Authentication screens (sign-in, sign-up)
+- `app/library/` - CRUD screens for exercises and programs
+  - `exercises/[id]/edit.tsx` - Edit individual exercises
+  - `programs/[id]/edit.tsx` - Edit individual programs
+  - `import/preview.tsx` - QR code import preview
+  - `scan.tsx` - QR code scanner
+- `app/programs/` - Program execution
+  - `[id].tsx` - Program details and start
+  - `[id]/session/[index].tsx` - Active workout session
+- `app/index.tsx` - Root redirect to auth or tabs
+- `app/_layout.tsx` - Root layout with navigation setup
 
 ## Components Organization
 
-- `components/common/` - Shared UI components (Button, LoadingScreen, etc.)
-- `components/data/` - Data management components (forms, lists, search)
-- `components/progress/` - Progress tracking and visualization
-- `components/program/` - Program-specific components
-- `components/challenge/` - Challenge-specific components
+Organized by feature domain with shared utilities in `common/`.
+
+- `components/common/` - Reusable UI primitives (Button, LoadingScreen, ScreenHeader, etc.)
+- `components/auth/` - Authentication-specific components (AuthLayout, AuthHeader, AuthErrorBanner)
+- `components/data/` - Data management and forms
+  - `forms/` - ExerciseForm, ProgramForm, ProgramEditor
+  - `DataList.tsx`, `SearchableList.tsx` - List rendering
+  - `FilterControls.tsx`, `SortControls.tsx` - Data filtering
+  - `UnifiedDataManager.tsx` - Centralized data CRUD interface
+- `components/progress/` - Progress tracking and charts
+  - `ConsistencyHeatmap.tsx`, `ProgressCalendar.tsx` - Calendar views
+  - `EnhancedExerciseProgressionChart.tsx`, `LineChart.tsx` - Charts
+  - `PersonalRecordsCard.tsx`, `PRItem.tsx` - PR display
+  - `ProgramProgressView.tsx` - Program-level progress
+- `components/program/` - Program execution and display
+  - `ProgramView.tsx` - Program details
+  - `ProgramSessionView.tsx` - Session overview
+  - `WorkoutExecutionScreen.tsx` - Active workout UI
+  - `WorkoutMatrix.tsx` - Exercise block matrix
+  - `QRCodeShareModal.tsx` - QR code generation
+  - `ProgramImportPreview.tsx` - Import preview
+- `components/cards/` - Reusable card components (StepCard)
 
 ## Hooks Structure
 
-- `hooks/data/` - Data fetching and state management hooks
-- `hooks/session/` - Workout session management hooks
-- Root level hooks for general utilities
+Custom hooks for data and session management.
+
+- `hooks/data/` - Data fetching and state management
+  - `usePrograms.ts` - Program CRUD operations
+  - `useExercises.ts` - Exercise CRUD operations
+  - `useProgramProgress.ts` - Progress data fetching
+  - `useWeeklyStats.ts` - Weekly statistics
+  - `index.ts` - Re-exports all data hooks
+- `hooks/session/` - Workout session management
+  - `useWorkoutSteps.ts` - Step progression logic
+  - `useWorkoutTimer.ts` - Timer state and controls
+- Root level hooks - General utilities (useAsync, useDebounce, etc.)
 
 ## Library Organization
 
-- `lib/storage.ts` - Data persistence abstraction
-- `lib/events.ts` - Event system for cross-component communication
+Core business logic and utilities.
+
+- `lib/storage.ts` - AsyncStorage abstraction for data persistence
+- `lib/events.ts` - Event emitter for cross-component communication
 - `lib/validation.ts` - Data validation and business rules
-- `lib/utils/` - Utility functions (date, format, colors, etc.)
+- `lib/api.ts` - API client and network requests
+- `lib/dependencyChecker.ts` - Dependency validation utilities
+- `lib/utils/` - Utility functions
+  - `date.ts` - Date formatting and calculations
+  - `format.ts` - Number and text formatting
+  - `colors.ts` - Color utilities
+  - `sessionBuilder.ts` - Workout session construction
 
 ## Types Structure
 
-- Centralized in `types/index.ts` with re-exports
-- Domain-specific files: `exercise.ts`, `program.ts`, `progress.ts`, etc.
-- Enhanced types for advanced features in `enhanced.ts`
+Centralized TypeScript definitions.
+
+- `types/index.ts` - Main export file with re-exports from domain files
+- Domain-specific files:
+  - `types/exercise.ts` - Exercise types
+  - `types/program.ts` - Program and session types
+  - `types/progress.ts` - Progress and PR types
+  - `types/enhanced.ts` - Advanced feature types
 
 ## Testing Structure
 
-- `__tests__/` mirrors the source directory structure
-- Property-based tests use `.property.test.ts` suffix
-- Integration tests in `__tests__/integration/`
+Tests mirror source structure with property-based testing support.
+
+- `__tests__/` - Test files organized by source directory
+- `__tests__/integration/` - Integration tests for context and data flow
+- Naming conventions:
+  - Unit tests: `ComponentName.test.ts`
+  - Property-based tests: `validation.property.test.ts`
 
 ## Key Conventions
 
 ### File Naming
 
-- React components use PascalCase: `ExerciseForm.tsx`
-- Utilities and hooks use camelCase: `useExercises.ts`
-- Types use camelCase with descriptive names: `exercise.ts`
+- React components: PascalCase (e.g., `ExerciseForm.tsx`, `ProgramView.tsx`)
+- Hooks: camelCase with `use` prefix (e.g., `usePrograms.ts`, `useWorkoutTimer.ts`)
+- Utilities and services: camelCase (e.g., `validation.ts`, `sessionBuilder.ts`)
+- Types: camelCase with descriptive names (e.g., `exercise.ts`, `program.ts`)
 
 ### Import Patterns
 
-- Use `@/` path alias for all internal imports
-- Group imports: external libraries, then internal modules
-- Export components from index files for clean imports
+- Always use `@/` path alias for internal imports (e.g., `@/components/common`, `@/hooks/data`)
+- Group imports in order: external libraries → internal modules → types
+- Export components and utilities from `index.ts` files for clean imports
+- Example: `import { Button, LoadingScreen } from '@/components/common'`
 
 ### Component Structure
 
-- Functional components with TypeScript interfaces
-- Custom hooks for business logic separation
-- Context for global state, local state for component-specific data
+- Functional components with TypeScript interfaces for props
+- Extract business logic into custom hooks
+- Use local state for component-specific data
+- Use Context for global state (DataContext)
+- Props interfaces should be named `{ComponentName}Props`
 
-### Data Flow
+### Data Flow Architecture
 
-- Global state via DataContext with reducer pattern
-- Event-driven updates for cross-component communication
-- Storage abstraction for all data persistence
-- Validation layer before any data mutations
+- **Global state**: DataContext with useReducer pattern for exercises, programs, progress
+- **Event-driven updates**: Event emitter for cross-component communication (e.g., session completion)
+- **Storage abstraction**: All persistence goes through `lib/storage.ts`
+- **Validation layer**: Validate data before mutations using `lib/validation.ts`
+- **Data hooks**: Custom hooks in `hooks/data/` handle fetching and state management
+- **Session management**: Separate hooks in `hooks/session/` for workout-specific logic
+
+### Code Organization Rules
+
+- Keep components focused on UI rendering
+- Move complex logic to custom hooks
+- Use composition over inheritance
+- Avoid prop drilling; use Context for deeply nested data
+- Keep styles in StyleSheet at bottom of component files
+- Use theme constants for all styling decisions
