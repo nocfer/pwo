@@ -107,7 +107,6 @@ export default function EditProgramScreen() {
       {program.source === 'user' && (
         <View style={styles.deleteSection}>
           <DeleteButton
-            variant="text"
             onPress={handleDeletePress}
             disabled={saving || deleting}
             loading={deleting}

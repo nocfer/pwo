@@ -15,7 +15,7 @@ import {
   View,
   ViewStyle
 } from 'react-native'
-import { DeleteButton, EmptyState, LoadingScreen } from '../common'
+import { EmptyState, LoadingScreen, SwipeableListItem } from '../common'
 import { SearchInput } from '../common/SearchInput'
 import { ProgramListItem } from './ProgramListItem'
 
@@ -114,6 +114,7 @@ export function SearchableList({
 
   const renderItem = ({ item }: { item: ListItem }) => {
     const isSelected = selectedItems.includes(item.id)
+    const canDelete = item.source === 'user' && onItemDelete && !selectionMode
 
     // Use ProgramListItem for programs when inline actions are enabled
     if (
@@ -131,7 +132,7 @@ export function SearchableList({
         challengeConfig: item.challengeConfig as Program['challengeConfig']
       }
 
-      return (
+      const content = (
         <ProgramListItem
           program={program}
           onStart={() => onItemPress?.(item)}
@@ -148,15 +149,27 @@ export function SearchableList({
               : undefined
           }
           showMetadata={showMetadata}
+          style={canDelete ? styles.itemNoMargin : undefined}
         />
       )
+
+      if (canDelete) {
+        return (
+          <SwipeableListItem onDelete={() => onItemDelete(item)}>
+            {content}
+          </SwipeableListItem>
+        )
+      }
+
+      return content
     }
 
     // Default exercise item rendering
-    return (
+    const content = (
       <Pressable
         style={({ pressed }) => [
           styles.itemContainer,
+          canDelete && styles.itemNoMargin,
           isSelected && styles.itemSelected,
           pressed && styles.itemPressed
         ]}
@@ -207,16 +220,6 @@ export function SearchableList({
           )}
         </View>
 
-        {!selectionMode && item.source === 'user' && onItemDelete && (
-          <DeleteButton
-            variant="icon"
-            size="sm"
-            onPress={() => onItemDelete(item)}
-            accessibilityLabel={`Delete ${item.name}`}
-            style={styles.deleteButton}
-          />
-        )}
-
         {!selectionMode && (
           <Ionicons
             name="chevron-forward"
@@ -226,6 +229,16 @@ export function SearchableList({
         )}
       </Pressable>
     )
+
+    if (canDelete) {
+      return (
+        <SwipeableListItem onDelete={() => onItemDelete(item)}>
+          {content}
+        </SwipeableListItem>
+      )
+    }
+
+    return content
   }
 
   if (isLoading) {
@@ -356,8 +369,8 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.muted
   },
-  deleteButton: {
-    marginRight: theme.spacing.xs
+  itemNoMargin: {
+    marginBottom: 0
   }
 })
 

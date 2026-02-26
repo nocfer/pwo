@@ -9,6 +9,8 @@ import { auth } from '@/lib/firebase'
 import type { APIWorkout, APIWorkoutCreateInput } from '@/lib/mappers/workout'
 import type { Exercise } from '@/types'
 
+// Use global fetch — expo/fetch is for streaming (SSE) and has issues on iOS in Expo Go
+
 // Configuration from environment
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || ''
 const API_TIMEOUT = parseInt(process.env.EXPO_PUBLIC_API_TIMEOUT || '30000', 10)
@@ -90,20 +92,28 @@ async function request<T>(
       ...options.headers
     }
 
-    // Prepare request options
-    const fetchOptions: RequestInit = {
+    // Prepare request options with timeout via AbortController
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT)
+
+    const fetchOptions: Record<string, any> = {
       method,
       headers,
-      signal: AbortSignal.timeout(API_TIMEOUT)
+      signal: controller.signal
     }
 
-    // Add body if provided
-    if (options.body) {
+    // Add body if provided (avoid null)
+    if (options.body !== undefined) {
       fetchOptions.body = JSON.stringify(options.body)
     }
 
     // Make request
-    const response = await fetch(url, fetchOptions)
+    let response: Response
+    try {
+      response = await fetch(url, fetchOptions as any)
+    } finally {
+      clearTimeout(timeoutId)
+    }
 
     // Handle response
     if (!response.ok) {
