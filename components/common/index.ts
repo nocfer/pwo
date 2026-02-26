@@ -31,3 +31,4 @@ export {
   SkeletonSessionCard,
   SkeletonStreakDots
 } from './Skeleton'
+export { SwipeableListItem } from './SwipeableListItem'
