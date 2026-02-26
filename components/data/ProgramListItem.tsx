@@ -67,14 +67,14 @@ export function ProgramListItem({
           {
             backgroundColor: isChallenge
               ? theme.colors.accentLight
-              : theme.colors.primaryLight
+              : theme.colors.successLight
           }
         ]}
       >
         <Ionicons
           name={isChallenge ? 'trophy' : 'barbell'}
           size={20}
-          color={isChallenge ? theme.colors.accent : theme.colors.primary}
+          color={isChallenge ? theme.colors.accent : theme.colors.success}
         />
       </View>
 

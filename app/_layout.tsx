@@ -15,6 +15,7 @@ import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
 import { StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import Toast from 'react-native-toast-message'
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync()
@@ -71,6 +72,7 @@ export default function RootLayout() {
         <DataProvider>
           <RootLayoutNav />
           <StatusBar style="dark" />
+          <Toast />
         </DataProvider>
       </AuthProvider>
     </GestureHandlerRootView>
