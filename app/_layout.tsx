@@ -29,9 +29,7 @@ function RootLayoutNav() {
         headerTitleStyle: {
           fontFamily: theme.fonts.semiBold
         },
-        contentStyle: {
-          backgroundColor: theme.colors.background
-        }
+        contentStyle: styles.scene
       }}
     >
       <Stack.Screen
@@ -85,6 +83,9 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: theme.colors.background
+  },
+  scene: {
     backgroundColor: theme.colors.background
   }
 })
