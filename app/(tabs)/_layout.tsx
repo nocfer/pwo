@@ -1,35 +1,15 @@
 import { LoadingScreen } from '@/components/common/LoadingScreen'
+import {
+  TAB_CONFIG,
+  TabIconAnimator
+} from '@/components/common/TabIconAnimator'
 import { useAuth } from '@/context/AuthContext'
-import { Redirect, Tabs } from 'expo-router'
-
 import { haptics } from '@/lib/haptics'
 import { theme } from '@/theme/theme'
-import Ionicons from '@expo/vector-icons/Ionicons'
-import { Platform } from 'react-native'
-
-type TabIconName = 'home' | 'library' | 'stats-chart' | 'person'
-
-const TAB_CONFIG = [
-  { name: 'index', title: 'Home', icon: 'home' as TabIconName },
-  { name: 'library', title: 'Library', icon: 'library' as TabIconName },
-  { name: 'progress', title: 'Statistics', icon: 'stats-chart' as TabIconName },
-  { name: 'profile', title: 'Profile', icon: 'person' as TabIconName }
-] as const
+import { Redirect, Tabs } from 'expo-router'
+import { Platform, StyleSheet } from 'react-native'
 
 const tabPressListener = { tabPress: () => haptics.tabSwitch() }
-
-function TabIcon({
-  icon,
-  color,
-  focused
-}: {
-  icon: TabIconName
-  color: string
-  focused: boolean
-}) {
-  const name = focused ? icon : (`${icon}-outline` as const)
-  return <Ionicons name={name} color={color} size={26} />
-}
 
 export default function TabLayout() {
   const { user, loading } = useAuth()
@@ -45,27 +25,11 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.muted,
         headerShown: false,
         animation: 'shift',
-        tabBarStyle: {
-          backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.borderLight,
-          borderTopWidth: 1,
-          paddingTop: theme.spacing.xs,
-          paddingBottom:
-            Platform.OS === 'ios' ? theme.spacing.xl : theme.spacing.sm,
-          height: Platform.OS === 'ios' ? 84 : 60
-        },
-        tabBarLabelStyle: {
-          fontFamily: theme.fonts.medium,
-          fontSize: 11,
-          marginTop: 2
-        },
-        tabBarIconStyle: {
-          marginTop: 2
-        }
+        tabBarStyle: styles.tabBar,
+        tabBarLabelStyle: styles.tabBarLabel,
+        tabBarIconStyle: styles.tabBarIcon
       }}
     >
       {TAB_CONFIG.map(({ name, title, icon }) => (
@@ -75,7 +39,7 @@ export default function TabLayout() {
           options={{
             title,
             tabBarIcon: ({ color, focused }) => (
-              <TabIcon icon={icon} color={color} focused={focused} />
+              <TabIconAnimator icon={icon} color={color} focused={focused} />
             )
           }}
           listeners={tabPressListener}
@@ -84,3 +48,22 @@ export default function TabLayout() {
     </Tabs>
   )
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: theme.colors.surface,
+    borderTopColor: theme.colors.borderLight,
+    borderTopWidth: 1,
+    paddingTop: theme.spacing.xs,
+    paddingBottom: Platform.OS === 'ios' ? theme.spacing.xl : theme.spacing.sm,
+    height: Platform.OS === 'ios' ? 84 : 60
+  },
+  tabBarLabel: {
+    fontFamily: theme.fonts.medium,
+    fontSize: 11,
+    marginTop: 2
+  },
+  tabBarIcon: {
+    marginTop: 2
+  }
+})
