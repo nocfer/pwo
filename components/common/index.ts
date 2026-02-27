@@ -32,3 +32,15 @@ export {
   SkeletonStreakDots
 } from './Skeleton'
 export { SwipeableListItem } from './SwipeableListItem'
+export {
+  ANIMATION_PARAMS,
+  TAB_CONFIG,
+  TAB_SPRING_CONFIG,
+  TabIconAnimator,
+  getIconName
+} from './TabIconAnimator'
+export type {
+  TabConfigEntry,
+  TabIconAnimatorProps,
+  TabIconName
+} from './TabIconAnimator'

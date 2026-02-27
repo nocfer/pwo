@@ -1,5 +1,10 @@
 import Button from '@/components/common/Button'
 import { useAuth } from '@/context/AuthContext'
+import {
+  AnimatedIcon,
+  type IconAnimationConfig,
+  useScreenIconAnimation
+} from '@/hooks/useScreenIconAnimation'
 import { theme } from '@/theme/theme'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useCallback, useMemo, useState } from 'react'
@@ -45,6 +50,16 @@ export default function ProfileScreen() {
   const { user, isAnonymous, signOut } = useAuth()
   const [loggingOut, setLoggingOut] = useState(false)
 
+  const { trigger, staggerDelay } = useScreenIconAnimation({
+    icons: [
+      { type: 'springScale', duration: 600 },
+      { type: 'slideX', duration: 400, delay: 200 },
+      { type: 'rotate', duration: 400, delay: 300 },
+      { type: 'bounceDrop', duration: 500, delay: 400 }
+    ],
+    staggerDelay: 100
+  })
+
   const emailLabel = useMemo(() => {
     if (!user) {
       return 'No account'
@@ -84,7 +99,14 @@ export default function ProfileScreen() {
       >
         <View style={styles.heroCard}>
           <View style={styles.iconContainer}>
-            <Ionicons name="barbell" size={36} color={theme.colors.primary} />
+            <AnimatedIcon
+              config={{ type: 'springScale', duration: 600 }}
+              trigger={trigger}
+              index={0}
+              staggerDelay={staggerDelay}
+            >
+              <Ionicons name="barbell" size={36} color={theme.colors.primary} />
+            </AnimatedIcon>
           </View>
           <Text style={styles.title}>PWO</Text>
           <Text style={styles.subtitle}>Personal Workout Organizer</Text>
@@ -97,6 +119,10 @@ export default function ProfileScreen() {
             iconColor={theme.colors.primary}
             title="Track Your Progress"
             description="Monitor your workout streaks and achievements"
+            animationConfig={{ type: 'slideX', duration: 400, delay: 200 }}
+            trigger={trigger}
+            index={1}
+            staggerDelay={staggerDelay}
           />
           <View style={styles.divider} />
           <FeatureRow
@@ -104,6 +130,10 @@ export default function ProfileScreen() {
             iconColor={theme.colors.success}
             title="Guided Sessions"
             description="Follow structured sessions with timers"
+            animationConfig={{ type: 'rotate', duration: 400, delay: 300 }}
+            trigger={trigger}
+            index={2}
+            staggerDelay={staggerDelay}
           />
           <View style={styles.divider} />
           <FeatureRow
@@ -111,6 +141,10 @@ export default function ProfileScreen() {
             iconColor={theme.colors.accent}
             title="Set Goals"
             description="Define targets and work towards them"
+            animationConfig={{ type: 'bounceDrop', duration: 500, delay: 400 }}
+            trigger={trigger}
+            index={3}
+            staggerDelay={staggerDelay}
           />
         </View>
 
@@ -149,17 +183,38 @@ function FeatureRow({
   icon,
   iconColor,
   title,
-  description
+  description,
+  animationConfig,
+  trigger,
+  index,
+  staggerDelay
 }: {
   icon: keyof typeof Ionicons.glyphMap
   iconColor: string
   title: string
   description: string
+  animationConfig?: IconAnimationConfig
+  trigger?: SharedValue<number>
+  index?: number
+  staggerDelay?: number
 }) {
+  const iconElement = <Ionicons name={icon} size={18} color={iconColor} />
+
   return (
     <View style={styles.featureRow}>
       <View style={[styles.featureIcon, { backgroundColor: `${iconColor}15` }]}>
-        <Ionicons name={icon} size={18} color={iconColor} />
+        {animationConfig && trigger != null && index != null ? (
+          <AnimatedIcon
+            config={animationConfig}
+            trigger={trigger}
+            index={index}
+            staggerDelay={staggerDelay}
+          >
+            {iconElement}
+          </AnimatedIcon>
+        ) : (
+          iconElement
+        )}
       </View>
       <View style={styles.featureContent}>
         <Text style={styles.featureTitle}>{title}</Text>
