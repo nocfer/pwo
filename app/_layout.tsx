@@ -28,6 +28,9 @@ function RootLayoutNav() {
         headerShown: false,
         headerTitleStyle: {
           fontFamily: theme.fonts.semiBold
+        },
+        contentStyle: {
+          backgroundColor: theme.colors.background
         }
       }}
     >

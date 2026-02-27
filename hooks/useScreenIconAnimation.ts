@@ -153,6 +153,9 @@ export interface AnimatedIconProps {
  * Reacts to changes in the `trigger` shared value (from
  * `useScreenIconAnimation`) and runs the configured animation
  * with the appropriate stagger delay.
+ *
+ * After the first animation, subsequent triggers keep content visible
+ * during the reset phase to prevent white flash on rapid tab switches.
  */
 export function AnimatedIcon({
   children,
@@ -166,6 +169,7 @@ export function AnimatedIcon({
   const translateY = useSharedValue(0)
   const translateX = useSharedValue(0)
   const rotate = useSharedValue(0)
+  const hasAnimated = useSharedValue(0)
 
   const duration = config.duration ?? DEFAULT_DURATIONS[config.type]
   const delay = config.delay ?? index * staggerDelay
@@ -179,12 +183,14 @@ export function AnimatedIcon({
     () => trigger.value,
     (current, previous) => {
       if (current !== previous) {
-        // Reset all values to initial state
-        scale.value = 0
-        opacity.value = 0
+        // Keep content visible if already animated once (prevents white flash)
+        const keepVisible = hasAnimated.value === 1
+        scale.value = keepVisible ? 1 : 0
+        opacity.value = keepVisible ? 1 : 0
         translateY.value = 0
         translateX.value = 0
         rotate.value = 0
+        hasAnimated.value = 1
 
         // Run the type-specific animation with stagger delay
         runAnimation(
