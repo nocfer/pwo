@@ -26,10 +26,11 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        animation: 'shift',
+        animation: 'none',
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabBarLabel,
-        tabBarIconStyle: styles.tabBarIcon
+        tabBarIconStyle: styles.tabBarIcon,
+        sceneStyle: styles.scene
       }}
     >
       {TAB_CONFIG.map(({ name, title, icon }) => (
@@ -65,5 +66,8 @@ const styles = StyleSheet.create({
   },
   tabBarIcon: {
     marginTop: 2
+  },
+  scene: {
+    backgroundColor: theme.colors.background
   }
 })
