@@ -1,4 +1,8 @@
 import { UnifiedDataManager } from '@/components/data'
+import {
+  AnimatedIcon,
+  useScreenIconAnimation
+} from '@/hooks/useScreenIconAnimation'
 import { haptics } from '@/lib/haptics'
 import { theme } from '@/theme/theme'
 import type { DataType } from '@/types'
@@ -16,6 +20,14 @@ const TAB_COLORS: Record<DataType, string> = {
 
 export default function LibraryScreen() {
   const [activeTab, setActiveTab] = useState<DataType>('programs')
+
+  const { trigger, staggerDelay } = useScreenIconAnimation({
+    icons: [
+      { type: 'spin', duration: 500 },
+      { type: 'spinPartial', duration: 400 }
+    ],
+    staggerDelay: 100
+  })
 
   const addButtonColor = useMemo(
     () => ({ backgroundColor: TAB_COLORS[activeTab] }),
@@ -49,7 +61,18 @@ export default function LibraryScreen() {
             ]}
             onPress={handleScanQR}
           >
-            <Ionicons name="scan-outline" size={22} color={theme.colors.text} />
+            <AnimatedIcon
+              config={{ type: 'spin', duration: 500 }}
+              trigger={trigger}
+              index={0}
+              staggerDelay={staggerDelay}
+            >
+              <Ionicons
+                name="scan-outline"
+                size={22}
+                color={theme.colors.text}
+              />
+            </AnimatedIcon>
           </Pressable>
           <Pressable
             style={({ pressed }) => [
@@ -59,7 +82,18 @@ export default function LibraryScreen() {
             ]}
             onPress={handleCreateNew}
           >
-            <Ionicons name="add" size={22} color={theme.colors.primaryTextOn} />
+            <AnimatedIcon
+              config={{ type: 'spinPartial', duration: 400 }}
+              trigger={trigger}
+              index={1}
+              staggerDelay={staggerDelay}
+            >
+              <Ionicons
+                name="add"
+                size={22}
+                color={theme.colors.primaryTextOn}
+              />
+            </AnimatedIcon>
           </Pressable>
         </View>
       </View>
