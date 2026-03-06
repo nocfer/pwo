@@ -17,10 +17,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ## Technology Stack & Versions
 
 ### Core Framework & Runtime
-- **React**: 19.1.0
-- **React Native**: 0.81.5
-- **Expo**: ~54.0.27
-- **Expo Router**: ~6.0.17 (file-based routing)
+- **React**: 19.2.0
+- **React Native**: 0.83.2
+- **Expo**: ~55.0.4 (major version bump from ~54.0.27)
+- **Expo Router**: ~55.0.3 (updated with Expo)
 - **TypeScript**: ~5.9.2 (strict mode enabled)
 
 ### Navigation & UI
@@ -30,8 +30,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Victory Native**: 41.20.2 (charting library)
 
 ### State & Data
-- **Firebase**: 12.8.0 (for authentication and data persistence)
+- **Firebase**: 12.10.0 (authentication AND backend API integration)
 - **React Context API**: Primary state management (no Redux/Zustand)
+- **API-Driven Architecture**: All data flows through Firebase backend API
+- **Mappers**: `lib/mappers/` for transforming API responses to frontend types
 
 ### Development & Build
 - **Vitest**: 2.1.0 (testing framework)
@@ -61,28 +63,47 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ```
 pwo/
 ├── app/                    # Expo Router file-based routes
-│   ├── (auth)/            # Auth screens (auth layout group)
-│   ├── (tabs)/            # Bottom tab navigation screens
-│   ├── library/           # Data management sections (programs, exercises, challenges)
-│   ├── programs/          # Program details & execution
-│   └── _layout.tsx        # Root layout
+│   ├── (auth)/            # Auth screens: sign-in, sign-up
+│   ├── (tabs)/            # Bottom tab navigation (home, library, progress, profile)
+│   ├── library/           # Data management: exercises, programs, import/scan
+│   ├── programs/          # Program details & execution (with workout sessions)
+│   ├── index.tsx          # Root redirect (auth state routing)
+│   └── _layout.tsx        # Root layout with auth integration
 ├── components/            # Reusable React components (organized by feature)
-│   ├── common/           # Shared UI components (Button, LoadingScreen, etc.)
-│   ├── auth/             # Auth-specific components
-│   ├── progress/         # Progress tracking visualizations
-│   ├── program/          # Program-related components
-│   ├── data/             # Data management (forms, lists)
-│   ├── challenge/        # Challenge-specific components
-│   └── cards/            # Card components
+│   ├── auth/             # Auth-specific: AuthHeader, AuthLayout, AuthErrorBanner
+│   ├── common/           # Shared UI: Button, IconButton, ConfirmationModal, QRCodeScanner
+│   ├── data/             # Data management: DataList, FilterControls, UnifiedDataManager
+│   ├── data/forms/       # Forms: ExerciseForm, ProgramEditor, ProgramForm
+│   ├── program/          # Program UI: WorkoutMatrix, WorkoutExecutionScreen, QRCodeShareModal
+│   ├── progress/         # Progress visualizations: EnhancedExerciseProgressionChart
+│   └── cards/            # Card components (legacy - challenge cards removed)
 ├── hooks/                # Custom React hooks (organized by feature)
-│   ├── data/            # Data fetching & state hooks
-│   ├── session/         # Workout session management
+│   ├── data/            # Data hooks: useAPIExercises, useAPIPrograms, useAsyncData
+│   ├── session/         # Session hooks: useStepCompletion, useWorkoutTimer
 │   └── index.ts         # Hook exports
-├── lib/                 # Utility functions & services
 ├── context/             # React Context (app-wide state)
-├── theme/               # Theme configuration
-├── __tests__/           # Test files (mirror src structure)
-└── scripts/             # Build and utility scripts
+│   ├── AuthContext.tsx  # Firebase auth state management (NEW)
+│   ├── DataContext.tsx  # API-driven data state management
+│   └── index.ts         # Context exports
+├── lib/                 # Utility functions & services
+│   ├── api.ts          # Firebase-authenticated API client (NEW - replaces old storage)
+│   ├── mappers/        # Data transformation: workout.ts, stats.ts (NEW)
+│   ├── firebase.ts     # Firebase config & init
+│   ├── validation.ts   # Enhanced validation with error codes
+│   ├── dependencyChecker.ts  # Safe deletion checks
+│   ├── auditLogger.ts  # Operation audit logging
+│   ├── haptics.ts      # Haptic feedback
+│   └── utils/          # Utility functions
+├── theme/              # Theme configuration
+├── types/              # TypeScript type definitions
+│   ├── enhanced.ts    # Enhanced types: EnhancedExercise, EnhancedProgram
+│   ├── program.ts
+│   ├── exercise.ts
+│   ├── session.ts
+│   ├── progress.ts    # CHANGED: SessionProgress → WorkoutProgress (simplified)
+│   └── index.ts
+├── __tests__/          # Test files (mirror src structure)
+└── scripts/            # Build and utility scripts
 ```
 
 ---
@@ -99,18 +120,26 @@ pwo/
 ### Component Naming & Structure
 - **Naming**: PascalCase for component files (e.g., `UserProfile.tsx`)
 - **Organization**: Features organized in subdirectories by domain (not by type)
+- **Auth Components**: New `components/auth/` subdirectory for auth-specific UI (headers, layouts, error banners)
+- **Data Components**: New `components/data/` subdirectory for CRUD UI (lists, filters, managers)
+- **Forms**: New `components/data/forms/` subdirectory for reusable form components (ExerciseForm, ProgramEditor)
+- **QR Features**: Components for QR scanning and sharing (QRCodeScanner, QRCodeShareModal)
 - **Exports**: Use named exports; default exports only for screen components in `app/`
 - **Pattern**: Functional components with hooks exclusively
+- **DELETED**: `components/challenge/` directory (challenge system removed entirely)
 
 ### React Hooks Usage
-- **Hooks Library**: 54+ custom hooks already implemented
+- **Hooks Library**: 30 custom hooks (expanded from 25 with new API integration hooks)
+- **API Integration Hooks**: NEW - `useAPIExercises`, `useAPIPrograms` for backend data fetching
+- **Foundation Pattern**: `useAsyncData<T>` - all async operations use this pattern
+- **Auth Hooks**: NEW - `useAuthContext` for accessing auth state and methods
+- **Data Hooks**: `usePrograms`, `useExercises`, `useProgramProgress`, `useSessionCompletion`
+- **Session Hooks**: `useWorkoutSteps`, `useProgramSessionTimer`, `useStepCompletion`
+- **UI Hooks**: `useDeleteConfirmation`, `useScreenIconAnimation`
 - **Context**: React Context API for global state (not Redux)
-- **Patterns Found**:
-  - Data hooks: `usePrograms`, `useProgramProgress`, `useSessionCompletion`, etc.
-  - Session hooks: `useWorkoutSteps`, `useProgramSessionTimer`, `useStepCompletion`
-  - Utility hooks: `useAsyncData`, `useDeleteConfirmation`, `useLiveProgress`
 - **Rule**: Always place hooks in dedicated `hooks/` directory with clear naming
 - **Rule**: Custom hooks should handle data fetching and state management; components should stay presentational
+- **DELETED**: Hooks related to challenges and old event system
 
 ### Code Style & Formatting
 - **Prettier Config** (.prettierrc):
@@ -143,11 +172,14 @@ pwo/
 - **Pattern**: Each top-level screen in `app/` becomes a routable page
 
 ### State Management Patterns
-- **Global State**: React Context with custom hooks
+- **Authentication**: Firebase auth via `AuthContext` with sign-in/sign-up flows
+- **Global State**: React Context with custom hooks for data and session management
+- **API-Driven Data**: All CRUD operations flow through `lib/api.ts` (Firebase backend)
 - **Local State**: useState for component-specific state
-- **Async State**: Custom hooks handle data fetching + caching
-- **Firebase Integration**: Used for auth and data sync
-- **Pattern**: Avoid prop drilling; use context for shared app state
+- **Async State**: Custom hooks handle data fetching from API + caching
+- **Pattern**: Use `AuthContext` for auth state; `DataContext` for exercises/programs/progress
+- **Graceful Degradation**: App falls back to cached data if API unavailable (offline support)
+- **Avoid**: Prop drilling beyond 2 levels; use context instead
 
 ### Error Handling
 - **Error Boundaries**: Expected in app root (check for ErrorBoundary implementation)
@@ -174,10 +206,14 @@ pwo/
 - **Haptics**: Expo Haptics for feedback (celebrate successes, confirm actions)
 
 ### Firebase Integration
-- **Version**: 12.8.0
-- **Use**: Authentication and real-time database
-- **Pattern**: Integrate Firebase hooks with Expo lifecycle
-- **Caution**: Handle Firebase auth state in root layout (_layout.tsx)
+- **Version**: 12.10.0
+- **Use**: Authentication (sign-in, sign-up) AND backend API for all CRUD operations
+- **Architecture**: Firebase becomes primary backend; all data flows through `lib/api.ts`
+- **Auth Flow**: `AuthContext` manages Firebase auth state; screens redirect based on authentication
+- **Error Handling**: Map Firebase error codes to user-friendly messages in `lib/api.ts`
+- **Offline Support**: API client gracefully handles offline state with cached data fallback
+- **Timestamps**: Convert Firebase timestamps immediately; never store raw timestamps in state
+- **Security Rules**: Backend enforces security rules; frontend must respect authenticated user context
 
 ### Deployment
 - **Web**: Via `npm run predeploy` (exports to Expo Web) + `npm run deploy` (gh-pages)
@@ -190,9 +226,11 @@ pwo/
 
 ### TypeScript Configuration & Type Safety
 - **Strict Mode REQUIRED**: All tsconfig.json settings must be honored (strict: true)
-- **Path Aliases**: Always use `@/` prefix for imports (e.g., `@/components/Button`, `@/lib/haptics`)
+- **Path Aliases**: Always use `@/` prefix for imports (e.g., `@/components/Button`, `@/lib/api`)
 - **Type Exports**: Export types with `type` keyword when used in multiple files
 - **Generic Types**: Use proper generic typing in hooks (e.g., `useAsyncData<T>()`)
+- **Enhanced Types**: NEW - Use types from `@/types/enhanced.ts` for API-aligned data: `EnhancedExercise`, `EnhancedProgram`
+- **Validation Types**: NEW - `ValidationResult`, `ValidationError` from `@/lib/validation` for error handling
 - **Avoid `any`**: Never use `any` unless documented with specific reason
 
 ### Import/Export Patterns
@@ -200,9 +238,31 @@ pwo/
 - **Barrel Exports**: Many features use index.ts files as entry points (e.g., `hooks/index.ts`, `hooks/data/index.ts`)
 - **Module Organization**: Always import from the most specific path (e.g., from `hooks/data` not just `hooks`)
 - **Firebase Imports**: Import Firebase services from specific submodules (`firebase/auth`, `firebase/database`)
+- **API Imports**: Import API functions from `@/lib/api` (createExercise, updateExercise, deleteExercise, etc.)
+- **Mappers**: Use `@/lib/mappers/` for transforming API responses to frontend types
+
+### API Client Usage (NEW - CRITICAL)
+- **Pattern**: All backend operations go through `@/lib/api.ts`
+- **Examples**:
+  ```typescript
+  // Exercise CRUD
+  import { createExercise, updateExercise, deleteExercise, getExercises } from '@/lib/api'
+  
+  // Program/Workout CRUD  
+  import { createWorkout, updateWorkout, recordWorkoutProgress } from '@/lib/api'
+  
+  // Error handling
+  const result = await createExercise(data).catch(err => {
+    return { error: mapAPIError(err) }
+  })
+  ```
+- **Error Mapping**: Firebase error codes are mapped in `lib/api.ts`; always check for error property in response
+- **Authentication**: API client automatically includes Firebase auth token in headers
+- **Offline Handling**: API falls back to cached data if network unavailable
 
 ### Error Handling Patterns
 - **Firebase Errors**: Use helper function pattern to map Firebase error codes to user-friendly messages (see AuthContext)
+- **API Errors**: Map error responses from `lib/api.ts` using error code validation
 - **Type Guards**: Always check error type before accessing properties (e.g., check `'code' in error` before accessing)
 - **Async/Await**: Use try/catch blocks for async operations; never use unhandled Promise rejections
 - **Mounted State Tracking**: Use ref to track if component is mounted before setState calls in async operations (critical for memory leaks)
@@ -211,6 +271,7 @@ pwo/
 ### React Hooks Best Practices
 - **useCallback Dependencies**: Explicitly list all dependencies; use `// eslint-disable-next-line react-hooks/exhaustive-deps` only when necessary with code comment explaining why
 - **Generic Hook Patterns**: The codebase has a well-established `useAsyncData<T>` pattern - replicate this for similar async patterns
+- **API Hooks**: NEW - `useAPIExercises` and `useAPIPrograms` follow useAsyncData pattern internally
 - **Hook Cleanup**: Always clean up in useEffect return function, especially for auth state listeners
 - **Ref-Based State**: Use `useRef` for values that shouldn't trigger re-renders (mounting status, fetch IDs)
 
@@ -222,22 +283,48 @@ pwo/
 - **Size Props**: Standard sizes are sm/md/lg; use StyleSheet.create() for style definitions
 - **Press States**: Always handle Pressable press state with proper visual feedback (opacity/scale)
 - **Disabled States**: Disabled props should reduce opacity to 0.5 and disable interactions
+- **Auth Components**: NEW - Use `AuthHeader`, `AuthLayout`, `AuthErrorBanner` for consistent auth UI
 
 ### Custom Hooks Architecture
 - **useAsyncData Pattern**: This is the foundational async hook pattern - use it for ANY async data fetching
   - Template: `useAsyncData<T>(fetcher, deps, { initialData?, skip? })`
   - Always returns: `{ data, loading, error, refetch }`
   - Handles race conditions via fetchIdRef and mounted tracking
+- **API Hooks**: NEW - `useAPIExercises<T>()` and `useAPIPrograms<T>()` wrap API calls with useAsyncData internally
 - **Data Hooks Organization**: Place data-fetching hooks in `hooks/data/` subdirectory
 - **Session Hooks**: Workout-related hooks go in `hooks/session/` subdirectory
 - **Hook Exports**: Always re-export from `hooks/index.ts` for barrel imports
 
 ### React Context Patterns
+- **Authentication Context**: NEW - `AuthContext` manages Firebase auth state (user, isLoading, sign-in/sign-up methods)
+- **Data Context**: `DataContext` for exercises, programs, and progress data (API-synced)
 - **Context + Provider Pattern**: Use createContext with TypeScript context value typing
 - **Helper Functions**: Place auth/error mapping functions INSIDE context file before provider
 - **useContext Hook**: Always check for null context and throw error if not wrapped in provider
 - **Callback Functions**: Use useCallback for all context methods to prevent unnecessary re-renders
-- **Auth State**: Listen to auth state changes in useEffect with proper cleanup (return unsubscribe)
+- **Auth State**: Listen to Firebase auth state changes in useEffect with proper cleanup (return unsubscribe)
+
+### Authentication Flow (NEW - CRITICAL)
+- **Sign-In Screen**: Email/password authentication via Firebase (`app/(auth)/sign-in.tsx`)
+- **Sign-Up Screen**: Account creation with Firebase (`app/(auth)/sign-up.tsx`)
+- **Auth Context**: Manages Firebase auth state; provides sign-in/sign-up/sign-out methods
+- **Root Redirect**: `app/index.tsx` redirects to auth screens if user not authenticated
+- **Error Handling**: Map Firebase auth errors to user-friendly messages (invalid-email, weak-password, etc.)
+- **Persistence**: Firebase automatically handles session persistence across app restarts
+
+### Data Management Components (NEW)
+- **UnifiedDataManager**: Central component for exercises/programs CRUD operations
+- **DataList**: Reusable list component with filtering and sorting
+- **FilterControls**: Filter UI for exercise/program data
+- **SortControls**: Sort order selection
+- **SearchableList**: Integrated search capability
+- **Forms**: `ExerciseForm`, `ProgramEditor` for creating/editing data
+
+### QR Code Features (NEW)
+- **QRCodeScanner**: Component for scanning QR codes using Expo Camera
+- **QRCodeShareModal**: Modal for sharing programs via generated QR codes
+- **ProgramImportPreview**: Preview QR-imported programs before import
+- **Flow**: Scan QR → Preview → Import into local data
 
 ### Haptics Integration
 - **Import Pattern**: `import { haptics } from '@/lib/haptics'`
@@ -247,9 +334,10 @@ pwo/
 ### Form Patterns
 - **Form State**: Use useState for form data; structure as object with typed fields
 - **Validation**: Separate validation logic to `lib/validation` with exported helper functions
+- **Enhanced Validation**: NEW - Validation returns `ValidationResult` with error codes for precise error handling
 - **Field Updates**: Use useCallback with generic typing for field update handlers
 - **Modal Forms**: Wrap forms in Modal and KeyboardAvoidingView for better UX
-- **Save Handlers**: Make onSave async; show loading state while saving; handle errors gracefully
+- **Save Handlers**: Make onSave async; show loading state while saving; handle API errors gracefully
 
 ### Screen Components (in app/ directory)
 - **File Naming**: Use kebab-case for route files with dynamic segments in brackets
@@ -257,6 +345,9 @@ pwo/
 - **Layout Integration**: Most screens use _layout.tsx files to define navigation structure
 - **Route Parameters**: Access via useLocalSearchParams() hook from expo-router
 - **Navigation**: Use navigation/linking helpers from expo-router for deep linking
+- **New Auth Screens**: `app/(auth)/sign-in.tsx`, `app/(auth)/sign-up.tsx`
+- **New Import Flows**: `app/library/scan.tsx`, `app/library/import/preview.tsx`
+- **Removed Screens**: `app/(tabs)/challenges.tsx`, `app/(tabs)/about.tsx` (challenges feature deleted)
 
 ### Performance Patterns
 - **React.memo**: Use for components that receive stable props to prevent unnecessary re-renders
@@ -264,6 +355,7 @@ pwo/
 - **useMemo**: Use sparingly; typically not needed with proper hook dependency management
 - **Lazy Loading**: Consider expo-router dynamic imports for large screen components
 - **Victory Charts**: Pre-configured for performance; don't transform data in render
+- **List Virtualization**: Use `FlatList` with `getItemLayout` for large data lists
 
 ### State Management Anti-Patterns to AVOID
 - **DON'T**: Prop drill more than 2 levels - use Context instead
@@ -271,6 +363,8 @@ pwo/
 - **DON'T**: Call hooks conditionally - always call at top level in same order
 - **DON'T**: Store Firebase timestamps directly - convert to readable format immediately
 - **DON'T**: Create nested Contexts for simple state - flatten and use single context
+- **DON'T**: Use old storage patterns - all data goes through API via `@/lib/api`
+- **DON'T**: Emit events - use direct API calls + context updates instead
 
 ### Expo-Specific Considerations
 - **Platform-Specific Code**: Use Platform.OS === 'web' for web-only features
@@ -282,18 +376,20 @@ pwo/
 ## Testing Rules (Vitest)
 
 ### Test Organization & Structure
-- **Test File Location**: `__tests__/` directory mirrors source structure (e.g., `__tests__/context/DataContext.test.tsx` for `context/DataContext.tsx`)
+- **Test File Location**: `__tests__/` directory mirrors source structure (e.g., `__tests__/context/AuthContext.test.tsx` for `context/AuthContext.tsx`)
 - **Naming Convention**: Use `*.test.ts` for utility tests and `*.test.tsx` for component/context tests
 - **Setup File**: `vitest.setup.ts` loaded for all tests; define global test helpers there
 - **Test Environment**: Node.js environment (not jsdom) - React Native compatible
+- **NOTE**: Old test files for deleted systems (challenge, events, storage) have been removed; new tests needed for API architecture
 
 ### Test Coverage Requirements
 - **Coverage Target**: Configured for `lib/**/*.ts`, `hooks/**/*.ts`, `context/**/*.tsx`
 - **Minimum**: Aim for 80%+ coverage on critical business logic
 - **Core Areas**: Prioritize tests for:
-  - Custom hooks (all hooks in `hooks/` directory)
-  - Validation functions in `lib/validation`
-  - Context providers and their methods
+  - API integration (`lib/api.ts` and mappers)
+  - Custom hooks (all hooks in `hooks/` directory, especially new useAPIExercises/useAPIPrograms)
+  - Validation functions in `lib/validation` with new error codes
+  - Context providers and their methods (AuthContext, DataContext)
   - Async data fetching patterns
 - **UI Components**: Less critical for coverage; focus on functionality over UI snapshot testing
 
@@ -303,21 +399,36 @@ pwo/
   - Test initial state, loading state, error state, success state
   - Verify race condition handling (multiple calls don't cause state updates)
   - Test refetch functionality
+- **API Hooks Pattern**: NEW - Test `useAPIExercises` and `useAPIPrograms` with mocked API responses
+  - Mock `lib/api` functions that fetch from backend
+  - Verify data mappers transform responses correctly
+  - Test error handling for API failures
+  - Test loading states during API calls
 - **Data Hooks Pattern**: Test with mock Firebase/context data
-  - Verify correct data transformations
+  - Verify correct data transformations (via mappers)
   - Test error handling
   - Test loading states
 - **Session Hooks**: Test with mock session/timer state changes
 
 ### Test Patterns for Context
+- **AuthContext Tests**: NEW - Test Firebase auth state management
+  - Mock Firebase auth module
+  - Test sign-in method with success/error cases
+  - Test sign-up method
+  - Test sign-out method
+  - Test auth state listener initialization and cleanup
+- **DataContext Tests**: Test data CRUD operations now going through API
+  - Mock `lib/api` functions
+  - Test context methods properly call API
+  - Test error handling for API failures
+  - Test state updates with API responses
 - **Provider Tests**: Test context initialization and method availability
 - **useContext Hook Tests**: Test error when context not provided
-- **State Changes**: Test that context methods properly update state
-- **Firebase Integration**: Mock Firebase auth methods; test error handling for each Firebase error code
-- **Example Pattern**: See `__tests__/context/DataContext.test.tsx` for reference
 
-### Mock Usage Conventions
+### Mock Usage Conventions (Updated for API Architecture)
 - **Firebase Mocks**: Mock entire `firebase/auth` module; provide mock User and auth methods
+- **API Mocks**: Mock `@/lib/api` module; mock all API functions (createExercise, getExercises, etc.)
+- **Mapper Mocks**: NEW - Mock `@/lib/mappers` for API response transformations
 - **Context Mocks**: When testing components using context, wrap in Provider with mock data
 - **Async Mocks**: Use `vi.fn().mockResolvedValue()` and `vi.fn().mockRejectedValue()`
 - **Cleanup**: Use `afterEach` to reset mocks and clear state between tests
@@ -328,13 +439,15 @@ pwo/
 - **DON'T**: Mock everything; only mock external dependencies (Firebase, API calls)
 - **DON'T**: Write tests that depend on execution order; each test should be independent
 - **DON'T**: Test Redux/state library mechanics; test your custom logic, not the library
+- **DON'T**: Test old storage patterns - they're deleted; focus on API integration tests
 
 ### Integration Testing Guidelines
 - **Unit Tests First**: Focus on unit tests for business logic
+- **API Integration**: Test hooks + API client + mappers working together
 - **Context Integration**: Test hooks consuming context together
 - **Firebase Integration**: Mock Firebase; don't make real API calls in tests
 - **No E2E in Vitest**: Keep to unit/integration; save E2E for e2e test framework
-- **Data Flow**: Test complete data flow from hook to component if necessary
+- **Data Flow**: Test complete data flow from API → mapper → hook → component if necessary
 
 ### Test Assertions
 - **Vitest Syntax**: Use `expect()` assertions from Vitest
@@ -539,26 +652,53 @@ Before committing, verify:
 
 ## Critical Don't-Miss Rules
 
+### Architecture Changes - CRITICAL NEW PATTERNS
+- **OLD Storage Pattern DELETED**: `import { storage } from '@/lib/storage'` - this no longer exists
+- **NEW API Pattern**: All CRUD operations now go through `@/lib/api.ts`
+  ```typescript
+  // OLD (deleted):
+  await storage.saveExercises(exercises)
+  
+  // NEW (required):
+  import { createExercise } from '@/lib/api'
+  await createExercise(exercise)
+  ```
+- **Event System DELETED**: `import { events } from '@/lib/events'` - use context + hooks instead
+- **Authentication REQUIRED**: All users must authenticate via Firebase before accessing app
+- **API-First Mindset**: Think "API backend" not "local storage"
+
+### Data Model Breaking Changes - CRITICAL
+- **SessionProgress → WorkoutProgress**: Old complex `SessionProgress` with runs replaced by simpler `WorkoutProgress`
+- **Field Rename**: `sessionId` → `workoutId` in PersonalRecord and related types
+- **Challenge System DELETED**: Any code using ChallengeProgress, useChallengeProgress, or challenge components will break
+- **Migration Required**: Existing progress data must be migrated from old format to new format
+
 ### Common Implementation Mistakes to AVOID
 - **DON'T use Redux/Zustand**: This project uses React Context API exclusively for state management
 - **DON'T create snapshot tests**: Use behavioral/functional tests instead; snapshots are brittle
 - **DON'T prop drill**: If passing props through more than 2 levels, use Context instead
-- **DON'T forget Firebase error mapping**: Always map Firebase error codes to user-friendly messages
+- **DON'T forget API error mapping**: Map Firebase/API error codes to user-friendly messages
 - **DON'T create new objects in render**: Define constants outside component or use useMemo
 - **DON'T use `any` type**: Always provide proper TypeScript types; use `as never` if truly needed with comment
+- **DON'T use old storage imports**: All data access goes through API now
+- **DON'T emit events**: Old event system is deleted; use direct API calls + context updates
+- **DON'T use deleted components**: Challenge components no longer exist; use new data management components instead
 
 ### Race Condition Prevention
 - **useAsyncData Pattern**: The mounted ref + fetch ID pattern prevents stale state updates
 - **Multiple Async Calls**: Always track fetch ID to prevent earlier calls from overwriting newer data
 - **Auth State**: Use unsubscribe pattern in useEffect cleanup for Firebase listeners
 - **Form Submissions**: Disable submit button during async operations to prevent duplicate submissions
+- **API Calls**: Verify request was the most recent before updating state with response
 
-### Firebase-Specific Rules
-- **Error Codes**: Map ALL Firebase error codes to user messages (auth/invalid-email, auth/weak-password, etc.)
-- **Auth State Listener**: Initialize in root layout; don't create multiple listeners
+### Firebase-Specific Rules (Updated for API Architecture)
+- **Authentication**: Firebase auth is now REQUIRED (not optional)
+- **API Tokens**: Firebase automatically handles auth tokens for API calls in `lib/api.ts`
+- **Error Codes**: Map ALL Firebase error codes to user messages (auth/invalid-email, auth/weak-password, auth/user-not-found, etc.)
+- **Auth State Listener**: Initialize in root layout + AuthContext; don't create multiple listeners
 - **Timestamps**: Convert Firebase timestamps immediately; don't store raw timestamps in state
-- **Offline Handling**: App uses real-time database; handle offline gracefully
-- **Security Rules**: When accessing Firebase data, follow security rules defined in backend
+- **Offline Handling**: App uses API client with graceful fallback; handle offline state
+- **Security Rules**: Backend enforces security rules; frontend must respect authenticated user context
 
 ### Performance Anti-Patterns
 - **DON'T**: Create new functions on every render - use useCallback
@@ -566,6 +706,7 @@ Before committing, verify:
 - **DON'T**: Render large lists without virtualization - use FlatList with keyExtractor
 - **DON'T**: Load all data at once - implement pagination for large datasets
 - **DON'T**: Re-render Victory charts with transformed data - transform outside render
+- **DON'T**: Store API responses unfiltered in state - use mappers to extract only needed data
 
 ### Testing Anti-Patterns
 - **DON'T test implementation details**: Test what users see, not internal state
@@ -573,6 +714,7 @@ Before committing, verify:
 - **DON'T skip async waiting**: Always use `vi.waitFor()` for state updates
 - **DON'T test library code**: Test your custom hooks/logic, not Vitest mechanics
 - **DON'T write flaky tests**: Avoid arbitrary timeouts; use waitFor with explicit conditions
+- **DON'T test old patterns**: Event system and storage patterns are deleted
 
 ### Type Safety Anti-Patterns
 - **DON'T**: Use generic `object` type - define specific shape instead
@@ -580,6 +722,7 @@ Before committing, verify:
 - **DON'T**: Export bare `any` - at least use `any` locally with comment explaining
 - **DON'T**: Skip TypeScript strict mode - it's enabled for a reason
 - **DON'T**: Ignore type errors with `// @ts-ignore` - fix the actual issue instead
+- **DON'T**: Use deleted types: ChallengeProgress, ChallengeSessions, old SessionProgress structure
 
 ### Mobile/Web Compatibility
 - **Web Platform**: Haptics don't work - wrap in try/catch
@@ -587,6 +730,7 @@ Before committing, verify:
 - **iOS/Android**: Always handle safe areas for notches
 - **Keyboard**: Use KeyboardAvoidingView to prevent overlapping inputs
 - **Navigation**: Ensure deep linking works across iOS, Android, and Web
+- **QR Scanner**: Requires camera permissions; graceful degradation on web
 
 ---
 
@@ -639,5 +783,12 @@ Use this when starting new work:
 
 ---
 
-**Last Updated**: 2026-03-06
+**Last Updated**: 2026-03-06 (Updated for v1.1 Architecture - API-Driven + Authentication)
 **Status**: ✅ Complete and Ready for AI Agent Integration
+**Major Changes**: 
+- Storage → API-Driven Architecture (lib/api.ts)
+- Firebase Authentication Required (AuthContext)
+- Challenge System Removed
+- SessionProgress → WorkoutProgress (Data Model Change)
+- 22 New Components, 17 Deleted, 170+ Total Changes
+- Test Coverage: 7 Old Tests Deleted, New Tests Required for API Architecture

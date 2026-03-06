@@ -1,40 +1,38 @@
-# Source Tree Analysis & Architecture
+# Source Tree Analysis & Architecture (Updated for v1.1)
 
-## Directory Structure Overview
+## Directory Structure Overview (API-Driven)
 
 ```
 pwo/
-├── 📱 app/                           # Expo Router file-based navigation (21 screens)
+├── 📱 app/                           # Expo Router file-based navigation (24 screens)
 │   ├── _layout.tsx                   # ROOT LAYOUT: Provider setup, fonts, auth
 │   ├── index.tsx                     # ROOT INDEX: Route unauthenticated/authenticated
 │   ├── +not-found.tsx                # 404 error handling
+│   ├── (auth)/                       # Authentication stack (NEW: group)
+│   │   ├── _layout.tsx               # AUTH LAYOUT: Unauthenticated stack
+│   │   ├── sign-in.tsx               # SIGN IN: Email/password + guest access (NEW)
+│   │   └── sign-up.tsx               # SIGN UP: Account creation (NEW)
 │   ├── (tabs)/                       # Tab navigation container (group)
 │   │   ├── _layout.tsx               # TAB CONFIG: 4-tab bottom navigation
 │   │   ├── index.tsx                 # HOME: Program selector, quick start
 │   │   ├── library.tsx               # LIBRARY: Browse exercises & programs
 │   │   ├── progress.tsx              # STATISTICS: Progress dashboard
 │   │   └── profile.tsx               # PROFILE: Settings & account
-│   ├── (auth)/                       # Authentication stack (group)
-│   │   ├── _layout.tsx               # AUTH LAYOUT: Unauthenticated stack
-│   │   ├── sign-in.tsx               # SIGN IN: Email/password + guest access
-│   │   └── sign-up.tsx               # SIGN UP: Account creation
 │   ├── programs/                     # Program execution
 │   │   ├── [id].tsx                  # PROGRAM DETAIL: Stats, start button
 │   │   └── [id]/session/[index].tsx  # ⭐ WORKOUT EXECUTION: Main timer (1256 lines)
 │   └── library/                      # Content management
 │       ├── exercises/
-│       │   ├── new.tsx               # CREATE EXERCISE
-│       │   └── [id]/edit.tsx         # EDIT EXERCISE
+│       │   ├── new.tsx               # CREATE EXERCISE (API-driven)
+│       │   └── [id]/edit.tsx         # EDIT EXERCISE (API-driven)
 │       ├── programs/
-│       │   ├── new.tsx               # CREATE PROGRAM
-│       │   └── [id]/edit.tsx         # EDIT PROGRAM
-│       ├── challenges/
-│       │   ├── new.tsx               # CREATE CHALLENGE
-│       │   └── [id]/edit.tsx         # EDIT CHALLENGE
-│       ├── scan.tsx                  # QR CODE SCANNER
-│       └── import/preview.tsx        # IMPORT PREVIEW
+│       │   ├── new.tsx               # CREATE PROGRAM (API-driven)
+│       │   └── [id]/edit.tsx         # EDIT PROGRAM (API-driven)
+│       ├── scan.tsx                  # QR CODE SCANNER (NEW)
+│       └── import/
+│           └── preview.tsx           # IMPORT PREVIEW (NEW)
 │
-├── 🧩 components/                    # 54 Reusable UI components
+├── 🧩 components/                    # 76 Reusable UI components (+22 NEW)
 │   ├── common/                       # Atomic design system (12 components)
 │   │   ├── AnimatedCard.tsx          # Entrance animation wrapper
 │   │   ├── Button.tsx                # Primary CTA with variants
@@ -43,174 +41,238 @@ pwo/
 │   │   ├── IconButton.tsx            # Icon-only button
 │   │   ├── ImageViewer.tsx           # Image display with fallback
 │   │   ├── LoadingScreen.tsx         # Full-screen loading indicator
-│   │   ├── QRCodeScanner.tsx         # Camera QR scanning
+│   │   ├── QRCodeScanner.tsx         # Camera QR scanning (ENHANCED)
 │   │   ├── ScreenHeader.tsx          # Consistent screen header
 │   │   ├── SearchInput.tsx           # Text input with search icon
 │   │   ├── SessionListItem.tsx       # Workout session list item
 │   │   └── Skeleton.tsx              # Animated skeleton loader
-│   ├── auth/                         # Authentication (3 components)
+│   │
+│   ├── auth/                         # Authentication (NEW: 8 components)
 │   │   ├── AuthLayout.tsx            # Auth screen wrapper
 │   │   ├── AuthHeader.tsx            # Header text styling
-│   │   └── AuthErrorBanner.tsx       # Error message display
-│   ├── program/                      # Program execution (7 components)
+│   │   ├── AuthErrorBanner.tsx       # Error message display
+│   │   ├── SignInForm.tsx            # Sign-in form (NEW)
+│   │   ├── SignUpForm.tsx            # Sign-up form (NEW)
+│   │   ├── GuestAccessOption.tsx     # Guest option UI (NEW)
+│   │   ├── PasswordInput.tsx         # Password input with reveal (NEW)
+│   │   └── AuthLoadingState.tsx      # Loading state (NEW)
+│   │
+│   ├── program/                      # Program execution (15 components)
 │   │   ├── ProgramView.tsx           # Program card + stats
 │   │   ├── ProgramSessionView.tsx    # Session details
 │   │   ├── WorkoutExecutionScreen.tsx # ⭐ MAIN TIMER (1256 lines)
 │   │   ├── WorkoutMatrix.tsx         # Exercise grid layout
 │   │   ├── TimerControls.tsx         # Timer UI controls
-│   │   ├── QRCodeShareModal.tsx      # QR generation for share
-│   │   └── ProgramImportPreview.tsx  # QR import preview
-│   ├── progress/                     # Progress visualization (17 components)
+│   │   ├── QRCodeShareModal.tsx      # QR generation for share (ENHANCED)
+│   │   ├── ProgramImportPreview.tsx  # QR import preview
+│   │   ├── WorkoutCompletionModal.tsx # Completion screen (NEW)
+│   │   ├── WorkoutSummary.tsx        # Workout summary stats (NEW)
+│   │   ├── ExerciseDetail.tsx        # Exercise details (NEW)
+│   │   ├── SetTracker.tsx            # Set tracking UI (NEW)
+│   │   ├── TimerDisplay.tsx          # Timer render (NEW)
+│   │   ├── StepIndicator.tsx         # Step progress (NEW)
+│   │   ├── WorkoutPhaseView.tsx      # Phase wrapper (NEW)
+│   │   └── RecoveryTimer.tsx         # Rest period timer (NEW)
+│   │
+│   ├── progress/                     # Progress visualization (12 components)
 │   │   ├── ProgressView.tsx          # Streak visualization
 │   │   ├── ProgressCard.tsx          # Progress summary card
 │   │   ├── ProgressStats.tsx         # Statistics display
 │   │   ├── ProgressViewBase.tsx      # Base component
-│   │   ├── ProgressEmptyState.tsx    # No progress state
-│   │   ├── ChallengeProgressView.tsx # Challenge tracking
-│   │   ├── ProgramProgressView.tsx   # Program tracking
-│   │   ├── TargetView.tsx            # Target/goal display
 │   │   ├── PersonalRecordsCard.tsx   # PRs summary
 │   │   ├── PRItem.tsx                # Individual PR display
 │   │   ├── WeeklyChart.tsx           # Weekly activity chart
 │   │   ├── WeeklySummaryCard.tsx     # Weekly summary card
 │   │   ├── LineChart.tsx             # Custom line chart
 │   │   ├── RingChart.tsx             # Ring/donut chart
-│   │   ├── EnhancedExerciseProgressionChart.tsx # Advanced progression
 │   │   ├── ProgressCalendar.tsx      # Calendar heatmap
 │   │   └── ConsistencyHeatmap.tsx    # Consistency visualization
-│   ├── data/                         # Data management (12 components)
+│   │
+│   ├── data/                         # Data management (NEW: 12 components)
 │   │   ├── DataList.tsx              # Virtualized list with filtering
 │   │   ├── LoadingStateList.tsx      # Loading state for lists
 │   │   ├── SearchableList.tsx        # Full-text search + list
 │   │   ├── SortControls.tsx          # Sort UI controls
 │   │   ├── FilterControls.tsx        # Filter UI controls
 │   │   ├── ProgramListItem.tsx       # Program list item
+│   │   ├── ExerciseListItem.tsx      # Exercise list item (NEW)
 │   │   ├── UnifiedDataManager.tsx    # Data CRUD manager UI
+│   │   ├── EmptyDataState.tsx        # Empty state (NEW)
+│   │   ├── DataLoadingError.tsx      # Error state (NEW)
+│   │   ├── ConfirmDeleteModal.tsx    # Delete confirmation (NEW)
 │   │   └── forms/
-│   │       ├── ExerciseForm.tsx      # Exercise create/edit
-│   │       ├── ExerciseEditor.tsx    # Advanced editor
-│   │       ├── ProgramForm.tsx       # Program builder
-│   │       ├── ProgramEditor.tsx     # Advanced editor
-│   │       ├── ChallengeForm.tsx     # Challenge config
-│   │       └── ChallengeEditor.tsx   # Advanced editor
-│   ├── challenge/                    # Challenge UI (1 component)
-│   │   └── ChallengeView.tsx         # Challenge details
+│   │       ├── ExerciseForm.tsx      # Exercise create/edit (API-driven)
+│   │       ├── ExerciseEditor.tsx    # Advanced editor (API-driven)
+│   │       ├── ProgramForm.tsx       # Program builder (API-driven)
+│   │       ├── ProgramEditor.tsx     # Advanced editor (API-driven)
+│   │       ├── FormInput.tsx         # Reusable input (NEW)
+│   │       ├── FormSelect.tsx        # Reusable select (NEW)
+│   │       ├── FormValidation.tsx    # Validation display (NEW)
+│   │       └── index.ts              # Form exports
+│   │
+│   ├── qr/                           # QR features (NEW: 5 components)
+│   │   ├── QRScanner.tsx             # QR scanner component
+│   │   ├── QRGenerator.tsx           # QR code generator
+│   │   ├── QRModal.tsx               # QR display modal
+│   │   ├── ScanResult.tsx            # Scan result display
+│   │   └── index.ts                  # QR exports
+│   │
 │   └── ConfettiCelebration.tsx       # Celebration animation
 │
-├── 🪝 hooks/                         # 25 Custom React hooks
+├── 🪝 hooks/                         # 30 Custom React hooks (+5 NEW)
 │   ├── index.ts                      # Barrel export
 │   ├── useDeleteConfirmation.ts      # Delete confirmation dialog
 │   ├── useAsyncData.ts               # Generic async data fetcher
+│   │
 │   ├── data/                         # Data fetching hooks (17 hooks)
-│   │   ├── usePrograms.ts            # Load all programs
-│   │   ├── useExercises.ts           # Load exercise library
-│   │   ├── useLiveProgress.ts        # 7-day streak tracking
-│   │   ├── useSessionCompletion.ts   # Sessions completed status
-│   │   ├── useProgramProgress.ts     # Program progress stats
-│   │   ├── useChallengeProgress.ts   # Challenge progress tracking
-│   │   ├── usePRs.ts                 # Personal records
-│   │   ├── useWeeklyStats.ts         # Weekly stats aggregation
+│   │   ├── useAPIExercises.ts        # Fetch exercises from API (NEW)
+│   │   ├── useAPIPrograms.ts         # Fetch programs from API (NEW)
+│   │   ├── useAPIWorkouts.ts         # Fetch workouts from API (NEW)
+│   │   ├── usePrograms.ts            # Load all programs (API-driven)
+│   │   ├── useExercises.ts           # Load exercise library (API-driven)
+│   │   ├── useLiveProgress.ts        # 7-day streak tracking (API-driven)
+│   │   ├── useSessionCompletion.ts   # Sessions completed status (API-driven)
+│   │   ├── useProgramProgress.ts     # Program progress stats (API-driven)
+│   │   ├── usePRs.ts                 # Personal records (API-driven)
+│   │   ├── useWeeklyStats.ts         # Weekly stats aggregation (API-driven)
 │   │   ├── useWeeklyActivity.ts      # Weekly activity data
 │   │   ├── useLiveHistory.ts         # Workout history entries
 │   │   ├── useAllProgress.ts         # App-wide progress
 │   │   ├── useConsistencyData.ts     # Consistency metrics
 │   │   ├── useExerciseProgression.ts # Exercise improvement tracking
 │   │   ├── useLastCompletedSlug.ts   # Last workout program
-│   │   ├── useAPIExercises.ts        # API exercise sync
-│   │   └── useChallengeSessions.ts   # Challenge session generation
+│   │   └── index.ts                  # Data hooks barrel export
+│   │
+│   ├── auth/                         # Authentication hooks (NEW: 3 hooks)
+│   │   ├── useSignIn.ts              # Sign-in logic
+│   │   ├── useSignUp.ts              # Sign-up logic
+│   │   └── index.ts                  # Auth hooks barrel export
+│   │
+│   ├── ui/                           # UI/UX hooks (NEW: 5 hooks)
+│   │   ├── useFormValidation.ts      # Form validation state
+│   │   ├── useSearchState.ts         # Search & filter state
+│   │   ├── useKeyboardHeight.ts      # Keyboard height tracking
+│   │   ├── useDebounce.ts            # Debounced values
+│   │   └── index.ts                  # UI hooks barrel export
+│   │
 │   ├── session/                      # Workout execution hooks (4 hooks)
 │   │   ├── useWorkoutTimer.ts        # ⭐ COMPLEX: Timer logic (637 lines)
 │   │   ├── useProgramSessionTimer.ts # Program session timer
 │   │   ├── useWorkoutSteps.ts        # Convert blocks to steps
-│   │   └── useStepCompletion.ts      # Step navigation state
-│   └── index.ts                      # Barrel export
+│   │   ├── useStepCompletion.ts      # Step navigation state
+│   │   └── index.ts                  # Session hooks barrel export
+│   │
+│   └── index.ts                      # Main barrel export
 │
 ├── 🌍 context/                       # Global state management (2 files)
-│   ├── AuthContext.tsx               # Firebase authentication (239 lines)
+│   ├── AuthContext.tsx               # Firebase authentication (NEW: 239 lines)
 │   │   ├── createContext()
 │   │   ├── Provider component
 │   │   └── useAuth() custom hook
-│   └── DataContext.tsx               # ⭐ MAIN STATE (1518 lines)
-│       ├── Exercise/Program CRUD
-│       ├── Progress tracking
+│   └── DataContext.tsx               # ⭐ REFACTORED STATE (API-driven)
+│       ├── Exercise/Program CRUD (API-first)
+│       ├── Progress tracking (API-driven)
 │       ├── Session persistence
-│       ├── Event logging
-│       └── Reducer-based state
+│       ├── Reducer-based state
+│       └── Offline fallback logic
 │
 ├── 📚 lib/                           # Utilities and services
 │   ├── firebase.ts                   # Firebase initialization
-│   ├── api.ts                        # Firebase-authenticated API client (228 lines)
-│   ├── storage.ts                    # ⭐ Unified storage layer (950+ lines)
+│   ├── api.ts                        # Firebase-authenticated API client (NEW: 467 lines)
+│   │   ├── getAuthToken()
+│   │   ├── request() generic handler
+│   │   ├── Exercise endpoints
+│   │   ├── Workout endpoints
+│   │   └── Stats endpoints
+│   │
+│   ├── mappers/                      # Data transformation (NEW: directory)
+│   │   ├── workout.ts                # APIWorkout ↔ Program conversion
+│   │   ├── stats.ts                  # Stats API → frontend types
+│   │   └── index.ts                  # Mapper exports
+│   │
+│   ├── storage.ts                    # Unified storage layer (Fallback only now)
 │   │   ├── Web: localStorage
 │   │   └── Native: Expo FileSystem
-│   ├── validation.ts                 # ⭐ Data validation (1070+ lines)
+│   │
+│   ├── validation.ts                 # Enhanced data validation
 │   │   ├── Exercise validation
 │   │   ├── Program validation
-│   │   └── Challenge config validation
-│   ├── events.ts                     # Pub-sub event emitter
+│   │   ├── Error codes
+│   │   └── Error messages
+│   │
+│   ├── auditLogger.ts                # Audit trail logging (NEW)
+│   ├── dependencyChecker.ts          # Safe deletion checking (NEW)
 │   ├── haptics.ts                    # Haptic feedback patterns
-│   ├── auditLogger.ts                # Audit trail logging
-│   ├── dependencyChecker.ts          # Safe deletion checking
+│   ├── firebase.ts                   # Firebase config
+│   │
 │   └── utils/
 │       ├── format.ts                 # Number/time formatting
 │       ├── progress.ts               # Streak & completion calculations
 │       ├── date.ts                   # Date utilities
 │       ├── colors.ts                 # Phase color mapping
 │       ├── alerts.ts                 # Alert dialog helpers
-│       ├── programShare.ts           # QR code generation
-│       └── programPrioritization.ts  # Smart program ordering
+│       ├── programShare.ts           # QR code generation (ENHANCED)
+│       ├── programPrioritization.ts  # Smart program ordering
+│       └── errorHandler.ts           # Error handling utilities (NEW)
 │
 ├── 🎨 theme/                         # Design system (1 file)
-│   └── theme.ts                      # ⭐ DESIGN TOKENS (442 lines)
+│   └── theme.ts                      # Design tokens (442 lines)
 │       ├── Colors (30+ tokens)
 │       ├── Typography (4 font weights)
 │       ├── Spacing (6 steps)
 │       ├── Radius (6 sizes)
 │       └── Shadows (5 levels)
 │
-├── 📝 types/                         # TypeScript type definitions (9 files)
+├── 📝 types/                         # TypeScript type definitions (7 files)
 │   ├── index.ts                      # Centralized exports
 │   ├── exercise.ts                   # Exercise entity
-│   ├── program.ts                    # Program + ChallengeConfig
-│   ├── progress.ts                   # Progress tracking types
+│   ├── program.ts                    # Program entity
+│   ├── progress.ts                   # Progress tracking types (REFACTORED)
 │   ├── storage.ts                    # Storage operation types
 │   ├── session.ts                    # Session state types
-│   ├── events.ts                     # Event types
-│   ├── challenge.ts                  # Challenge-specific types
-│   └── enhanced.ts                   # Extended type utilities
+│   └── enhanced.ts                   # Extended types (NEW)
+│       ├── ValidationResult
+│       ├── EnhancedExercise
+│       ├── EnhancedProgram
+│       ├── AuditLogEntry
+│       └── More...
 │
-├── 🧪 __tests__/                     # Test suite (23 files)
+├── 🧪 __tests__/                     # Test suite (25+ files)
 │   ├── lib/
+│   │   ├── api.test.ts               # API client tests (NEW)
 │   │   ├── validation.test.ts
 │   │   ├── storage.test.ts
-│   │   ├── events.test.ts
+│   │   ├── mappers/
+│   │   │   ├── workout.test.ts       # Mapper tests (NEW)
+│   │   │   └── stats.test.ts         # Stats mapper tests (NEW)
 │   │   ├── haptics.property.test.ts
-│   │   ├── utils/
-│   │   │   ├── format.test.ts
-│   │   │   ├── date.test.ts
-│   │   │   └── programShare.test.ts
-│   │   └── storageLibrary.test.ts
+│   │   └── utils/
+│   │       ├── format.test.ts
+│   │       ├── date.test.ts
+│   │       └── programShare.test.ts
 │   ├── context/
-│   │   ├── DataContext.test.tsx
-│   │   ├── dataReducer.test.ts
-│   │   └── DataContextCRUD.test.ts
+│   │   ├── AuthContext.test.tsx      # Auth context tests (NEW)
+│   │   ├── DataContext.test.tsx      # UPDATED: API-driven
+│   │   └── dataReducer.test.ts
 │   ├── components/
+│   │   ├── auth/                     # Auth component tests (NEW)
+│   │   │   └── SignInForm.test.tsx
 │   │   ├── data/
 │   │   │   ├── SearchableList.test.ts
 │   │   │   ├── UnifiedDataManager.test.ts
 │   │   │   └── forms/
 │   │   │       ├── ExerciseForm.property.test.ts
-│   │   │       ├── ProgramForm.property.test.ts
-│   │   │       └── ChallengeForm.property.test.ts
+│   │   │       └── ProgramForm.property.test.ts
 │   │   └── progress/
 │   │       ├── ProgressDataOrganization.property.test.ts
 │   │       └── ExerciseProgressionVisualization.property.test.ts
 │   └── integration/
-│       ├── data-context-integration.test.ts
+│       ├── auth-flow.test.ts         # Auth integration (NEW)
+│       ├── api-sync.test.ts          # API sync integration (NEW)
+│       ├── data-context-integration.test.ts # UPDATED
 │       ├── program-execution-initialization.test.ts
 │       ├── program-execution-verification.test.ts
-│       ├── program-navigation-flow.test.ts
-│       └── final-integration-verification.test.ts
+│       └── program-navigation-flow.test.ts
 │
 ├── 📦 assets/                        # Static assets
 │   ├── data/
@@ -222,26 +284,25 @@ pwo/
 │       └── completed.mp3             # Completion sound
 │
 ├── ⚙️  Configuration Files
-│   ├── package.json                  # Dependencies & scripts
+│   ├── package.json                  # Dependencies & scripts (UPDATED)
 │   ├── tsconfig.json                 # TypeScript configuration
 │   ├── vitest.config.ts              # Test framework config
 │   ├── vitest.setup.ts               # Test setup
 │   ├── .eslintrc                     # ESLint rules
 │   ├── .prettierrc                   # Prettier formatting
-│   ├── expo.json (implicit)          # Expo configuration
+│   ├── .env.example                  # Environment template (UPDATED)
 │   ├── .gitignore                    # Git exclusions
-│   └── README.md                     # Project readme
+│   └── README.md                     # Project readme (UPDATED)
 │
-├── 📚 docs/                          # Project documentation
-│   ├── index.md                      # Documentation index (this file)
-│   ├── project-overview.md           # Project introduction
-│   ├── architecture.md               # Technical architecture
-│   ├── data-models.md                # Database schema
-│   ├── api-contracts.md              # API documentation
+├── 📚 docs/                          # Project documentation (NEW: 4 files)
+│   ├── project-overview.md           # Project introduction (UPDATED)
+│   ├── architecture.md               # Technical architecture (UPDATED)
+│   ├── data-models.md                # Database schema (UPDATED)
+│   ├── api-contracts.md              # API documentation (NEW)
+│   ├── breaking-changes.md           # Migration guide (NEW)
 │   ├── development-guide.md          # Development instructions
-│   ├── component-inventory.md        # Components reference
-│   ├── integration-architecture.md   # Integration points
-│   └── source-tree-analysis.md      # This file
+│   ├── source-tree-analysis.md       # This file (UPDATED)
+│   └── index.md                      # Docs index
 │
 └── dist/                             # Web export output
     └── [generated web build]
