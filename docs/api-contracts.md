@@ -1,236 +1,124 @@
-# API Contracts & Integration
+# API Contracts & Backend Integration
 
-## Backend API Structure
+## Overview
 
-Progressive Workout supports an optional backend API for exercise sync, program sharing, and user data synchronization. This API is **feature-flagged** and optional - all features work without it.
-
----
-
-## Firebase Authentication API
-
-### Initialization
-
-**File**: `lib/firebase.ts`
-
-```typescript
-import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-
-const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-}
-
-const app = initializeApp(firebaseConfig)
-export const auth = getAuth(app)
-```
-
-### Authentication Endpoints
-
-#### Sign In (Email/Password)
-
-```typescript
-import { signInWithEmailAndPassword } from 'firebase/auth'
-
-const result = await signInWithEmailAndPassword(
-  auth,
-  email,
-  password
-)
-
-// Returns: UserCredential with user object
-// Throws: FirebaseAuthError with code:
-//   - auth/invalid-email
-//   - auth/user-disabled
-//   - auth/user-not-found
-//   - auth/wrong-password
-//   - auth/too-many-requests
-```
-
-**Error Mapping** (`context/AuthContext.tsx`):
-```typescript
-switch (error.code) {
-  case 'auth/invalid-email':
-    return 'Invalid email address'
-  case 'auth/wrong-password':
-    return 'Incorrect password'
-  case 'auth/user-not-found':
-    return 'No account found with this email'
-  // ... more mappings
-}
-```
-
-#### Sign Up (Create Account)
-
-```typescript
-import { createUserWithEmailAndPassword } from 'firebase/auth'
-
-const result = await createUserWithEmailAndPassword(
-  auth,
-  email,
-  password
-)
-
-// Throws: FirebaseAuthError with code:
-//   - auth/weak-password (< 6 chars)
-//   - auth/email-already-in-use
-//   - auth/invalid-email
-```
-
-#### Sign In as Guest
-
-```typescript
-import { signInAnonymously } from 'firebase/auth'
-
-const result = await signInAnonymously(auth)
-
-// Returns: UserCredential with anonymous user
-// User.isAnonymous === true
-```
-
-#### Link Account (Guest → Registered)
-
-```typescript
-import { 
-  EmailAuthProvider,
-  linkWithCredential
-} from 'firebase/auth'
-
-const credential = EmailAuthProvider.credential(email, password)
-const result = await linkWithCredential(auth.currentUser, credential)
-
-// Throws: FirebaseAuthError with code:
-//   - auth/credential-already-in-use (email used by another account)
-//   - auth/email-already-in-use
-```
-
-#### Sign Out
-
-```typescript
-import { signOut } from 'firebase/auth'
-
-await signOut(auth)
-
-// Returns: void
-// Clears session
-```
-
-#### Get ID Token
-
-```typescript
-const idToken = await auth.currentUser?.getIdToken()
-
-// Returns: JWT token (expires after 1 hour)
-// Cached by Firebase SDK
-// Used for API authentication (Bearer header)
-```
-
-#### Listen to Auth State
-
-```typescript
-import { onAuthStateChanged } from 'firebase/auth'
-
-const unsubscribe = onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log('Authenticated:', user.email)
-  } else {
-    console.log('Not authenticated')
-  }
-})
-
-// Don't forget to call unsubscribe on cleanup
-```
+This document describes the REST API contracts for Progressive Workout's Firebase backend. The API uses Firebase authentication tokens for all requests and follows RESTful principles.
 
 ---
 
-## Optional Backend API
+## Authentication
 
-### Configuration
+### Firebase ID Token
 
-**Enable API**:
-```bash
-EXPO_PUBLIC_API_ENABLED=true
-EXPO_PUBLIC_API_BASE_URL=https://api.example.com
-EXPO_PUBLIC_API_TIMEOUT=30000  # milliseconds
+All API requests require a valid Firebase ID token in the `Authorization` header:
+
 ```
-
-**File**: `lib/api.ts` (228 lines)
-
-### Client Initialization
-
-```typescript
-import { APIClient } from '@/lib/api'
-
-const apiClient = new APIClient({
-  baseURL: process.env.EXPO_PUBLIC_API_BASE_URL,
-  timeout: process.env.EXPO_PUBLIC_API_TIMEOUT || 30000,
-})
-```
-
-### Authentication
-
-All API requests include Firebase ID token:
-
-```typescript
 Authorization: Bearer {firebase_id_token}
 ```
 
-### Endpoints
+**Token Management:**
+- Tokens are obtained via `firebase/auth` SDK
+- Tokens expire after 1 hour
+- Automatic refresh before expiry (see `lib/api.ts`)
+- Force refresh available if needed
 
-#### Exercise Management
-
-##### GET `/api/v1/exercises`
-
-Fetch all exercises (with optional filtering)
-
-**Query Parameters**:
-- `category`: string (optional) - Filter by category (strength, cardio, flexibility, skill)
-- `source`: string (optional) - Filter by source (builtin, user, pt)
-- `limit`: number (optional) - Pagination limit (default: 100)
-- `offset`: number (optional) - Pagination offset (default: 0)
-
-**Response**: 200 OK
-```json
-{
-  "data": [
-    {
-      "id": "bench-press-1",
-      "name": "Barbell Bench Press",
-      "category": "strength",
-      "icon": "barbell",
-      "source": "builtin",
-      "description": "Compound pressing movement",
-      "createdAt": "2026-03-01T00:00:00Z",
-      "updatedAt": "2026-03-01T00:00:00Z"
-    }
-  ],
-  "pagination": {
-    "limit": 100,
-    "offset": 0,
-    "total": 150
-  }
-}
-```
-
-**Errors**:
-- `401 Unauthorized` - Invalid token
-- `400 Bad Request` - Invalid query parameters
-- `500 Internal Server Error` - Server error
+**Error Responses:**
+- `401 Unauthorized` - Invalid or expired token
+- `403 Forbidden` - User lacks permissions for resource
 
 ---
 
-##### GET `/api/v1/exercises/:id`
+## API Client Configuration
 
-Fetch single exercise
+### Environment Variables
 
-**Path Parameters**:
-- `id`: string - Exercise ID
+Configure the API client via environment variables:
 
-**Response**: 200 OK
+```env
+# Firebase configuration
+EXPO_PUBLIC_FIREBASE_API_KEY=your-firebase-api-key
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your-auth-domain
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+
+# API configuration
+EXPO_PUBLIC_API_BASE_URL=https://api.example.com
+EXPO_PUBLIC_API_ENABLED=true
+EXPO_PUBLIC_API_TIMEOUT=30000  # milliseconds
+```
+
+### Client Implementation
+
+**File**: `lib/api.ts`
+
+```typescript
+// Configuration
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL
+const API_TIMEOUT = parseInt(process.env.EXPO_PUBLIC_API_TIMEOUT || '30000', 10)
+const API_ENABLED = process.env.EXPO_PUBLIC_API_ENABLED === 'true'
+
+// Error handling
+export class APIError extends Error {
+  code: string
+  statusCode?: number
+  originalError?: unknown
+}
+
+// Generic request handler
+async function request<T>(
+  endpoint: string,
+  options?: { method?, body?, headers? }
+): Promise<T>
+```
+
+---
+
+## Exercises Endpoints
+
+### List All Exercises
+
+**Request:**
+```
+GET /api/v1/exercises
+```
+
+**Query Parameters:**
+- `category` (optional) - Filter by category (strength, cardio, flexibility, skill)
+- `source` (optional) - Filter by source (builtin, user, pt)
+- `limit` (optional) - Results per page (default: 50)
+- `offset` (optional) - Pagination offset (default: 0)
+
+**Response:**
+```json
+[
+  {
+    "id": "bench-press-1",
+    "name": "Barbell Bench Press",
+    "category": "strength",
+    "icon": "barbell",
+    "source": "builtin",
+    "description": "Compound pressing movement",
+    "instructions": "Feet on floor, shoulders pinned",
+    "createdAt": "2026-03-01T00:00:00Z",
+    "updatedAt": "2026-03-01T00:00:00Z"
+  }
+]
+```
+
+**Status Codes:**
+- `200 OK` - Success
+- `401 Unauthorized` - Invalid token
+- `500 Server Error` - Internal error
+
+---
+
+### Get Single Exercise
+
+**Request:**
+```
+GET /api/v1/exercises/:id
+```
+
+**Response:**
 ```json
 {
   "id": "bench-press-1",
@@ -239,372 +127,778 @@ Fetch single exercise
   "icon": "barbell",
   "source": "builtin",
   "description": "Compound pressing movement",
-  "instructions": "Feet on floor, shoulders pinned, controlled descent",
-  "media": "https://example.com/images/bench-press.jpg",
+  "instructions": "Feet on floor, shoulders pinned",
+  "media": "https://example.com/bench-press.jpg",
   "createdAt": "2026-03-01T00:00:00Z",
   "updatedAt": "2026-03-01T00:00:00Z"
 }
 ```
 
-**Errors**:
+**Status Codes:**
+- `200 OK` - Exercise found
+- `404 Not Found` - Exercise doesn't exist
 - `401 Unauthorized` - Invalid token
-- `404 Not Found` - Exercise not found
-- `500 Internal Server Error` - Server error
 
 ---
 
-##### POST `/api/v1/exercises`
+### Create Exercise
 
-Create new exercise (Admin only)
+**Request:**
+```
+POST /api/v1/exercises
+Authorization: Bearer {token}
+Content-Type: application/json
 
-**Request Body**:
-```json
 {
-  "name": "Dumbbell Bench Press",
+  "name": "Dumbbell Rows",
   "category": "strength",
   "icon": "dumbbell",
-  "description": "Single arm pressing movement",
-  "instructions": "Unilateral press with neutral grip"
+  "description": "Unilateral back builder",
+  "instructions": "Single arm, neutral grip, full range"
 }
 ```
 
-**Response**: 201 Created
+**Required Fields:**
+- `name` - Exercise name (3+ chars, unique per user)
+- `category` - One of: strength, cardio, flexibility, skill
+- `icon` - Valid Ionicons glyph name
+
+**Optional Fields:**
+- `description` - Exercise description
+- `instructions` - Form cues and technique notes
+- `media` - URL to image or video
+
+**Response:**
 ```json
 {
-  "id": "db-bench-1",
-  "name": "Dumbbell Bench Press",
+  "id": "dumbbell-rows-user-123",
+  "name": "Dumbbell Rows",
   "category": "strength",
   "icon": "dumbbell",
-  "source": "api",
-  "description": "Single arm pressing movement",
-  "instructions": "Unilateral press with neutral grip",
+  "source": "user",
+  "description": "Unilateral back builder",
+  "instructions": "Single arm, neutral grip, full range",
   "createdAt": "2026-03-06T12:00:00Z",
   "updatedAt": "2026-03-06T12:00:00Z"
 }
 ```
 
-**Errors**:
+**Status Codes:**
+- `201 Created` - Exercise created
 - `400 Bad Request` - Invalid data
-- `401 Unauthorized` - Invalid token or insufficient permissions
-- `409 Conflict` - Exercise name already exists
-- `500 Internal Server Error` - Server error
+- `409 Conflict` - Duplicate name
+- `401 Unauthorized` - Invalid token
 
 ---
 
-##### PUT `/api/v1/exercises/:id`
+### Update Exercise
 
-Update exercise (Admin only)
+**Request:**
+```
+PUT /api/v1/exercises/:id
+Authorization: Bearer {token}
+Content-Type: application/json
 
-**Path Parameters**:
-- `id`: string - Exercise ID
-
-**Request Body** (partial update):
-```json
 {
   "description": "Updated description",
   "instructions": "Updated instructions"
 }
 ```
 
-**Response**: 200 OK
+**Restrictions:**
+- Cannot update `source` field
+- Can only update exercises with `source: 'user'`
+- Other sources (builtin, pt) are read-only
+
+**Response:**
 ```json
 {
-  "id": "bench-press-1",
-  "name": "Barbell Bench Press",
+  "id": "dumbbell-rows-user-123",
+  "name": "Dumbbell Rows",
   "category": "strength",
-  "icon": "barbell",
+  "icon": "dumbbell",
+  "source": "user",
   "description": "Updated description",
   "instructions": "Updated instructions",
-  "createdAt": "2026-03-01T00:00:00Z",
   "updatedAt": "2026-03-06T12:30:00Z"
 }
 ```
 
-**Errors**:
+**Status Codes:**
+- `200 OK` - Updated
 - `400 Bad Request` - Invalid data
-- `401 Unauthorized` - Invalid token or insufficient permissions
-- `404 Not Found` - Exercise not found
-- `500 Internal Server Error` - Server error
+- `403 Forbidden` - Insufficient permissions
+- `404 Not Found` - Exercise doesn't exist
 
 ---
 
-##### DELETE `/api/v1/exercises/:id`
+### Delete Exercise
 
-Delete exercise (Admin only)
+**Request:**
+```
+DELETE /api/v1/exercises/:id
+Authorization: Bearer {token}
+```
 
-**Path Parameters**:
-- `id`: string - Exercise ID
+**Restrictions:**
+- Can only delete exercises with `source: 'user'`
+- Cannot delete if referenced by programs
+- Dependency check performed server-side
 
-**Response**: 204 No Content
+**Response:**
+```
+204 No Content
+```
 
-**Errors**:
-- `401 Unauthorized` - Invalid token or insufficient permissions
-- `404 Not Found` - Exercise not found
-- `409 Conflict` - Exercise in use (referenced by programs)
-- `500 Internal Server Error` - Server error
+**Status Codes:**
+- `204 No Content` - Deleted
+- `403 Forbidden` - Cannot delete
+- `409 Conflict` - Exercise in use by programs
+- `404 Not Found` - Exercise doesn't exist
 
 ---
+
+## Workouts Endpoints
+
+### List All Workouts
+
+**Request:**
+```
+GET /api/v1/workouts
+```
+
+**Query Parameters:**
+- `source` (optional) - Filter by source (builtin, user, pt)
+- `expand` (optional) - Expand related data (e.g., `expand=blocks.exercise`)
+- `limit` (optional) - Results per page
+- `offset` (optional) - Pagination offset
+
+**Response:**
+```json
+[
+  {
+    "id": "full-body-a",
+    "name": "Full Body A",
+    "description": "Compound-focused full body",
+    "source": "user",
+    "initialWarmup": 300,
+    "defaultRestBetweenExercises": 60,
+    "blocks": [
+      {
+        "exerciseId": "bench-press-1",
+        "reps": [6, 6, 6, 6],
+        "rests": [90, 90, 90],
+        "durations": [0],
+        "note": "Heavy compound"
+      }
+    ],
+    "createdAt": "2026-03-01T12:00:00Z",
+    "updatedAt": "2026-03-01T12:00:00Z"
+  }
+]
+```
+
+**Notes:**
+- Workouts are called "Programs" in the frontend but "Workouts" in the API
+- API uses array-based representation (reps[], rests[], durations[])
+- Frontend mapper converts to scalar representation
+
+---
+
+### Get Single Workout
+
+**Request:**
+```
+GET /api/v1/workouts/:id?expand=blocks.exercise
+```
+
+**Response:**
+```json
+{
+  "id": "full-body-a",
+  "name": "Full Body A",
+  "description": "Compound-focused full body",
+  "source": "user",
+  "initialWarmup": 300,
+  "defaultRestBetweenExercises": 60,
+  "blocks": [
+    {
+      "exerciseId": "bench-press-1",
+      "reps": [6, 6, 6, 6],
+      "rests": [90, 90, 90],
+      "durations": [0],
+      "note": "Heavy compound",
+      "exercise": {
+        "id": "bench-press-1",
+        "name": "Barbell Bench Press",
+        "category": "strength",
+        "icon": "barbell"
+      }
+    }
+  ],
+  "createdAt": "2026-03-01T12:00:00Z",
+  "updatedAt": "2026-03-01T12:00:00Z"
+}
+```
+
+---
+
+### Create Workout
+
+**Request:**
+```
+POST /api/v1/workouts
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "name": "Push Day",
+  "description": "Chest, shoulders, triceps",
+  "initialWarmup": 300,
+  "defaultRestBetweenExercises": 60,
+  "blocks": [
+    {
+      "exerciseId": "bench-press-1",
+      "reps": [8, 8, 8],
+      "rests": [90, 90],
+      "durations": [0]
+    },
+    {
+      "exerciseId": "shoulder-press-1",
+      "reps": [10, 10, 10],
+      "rests": [60, 60],
+      "durations": [0]
+    }
+  ]
+}
+```
+
+**Required Fields:**
+- `name` - Workout name
+- `blocks` - At least one block (array format)
+- `initialWarmup` - Warmup duration in seconds
+- `defaultRestBetweenExercises` - Default rest in seconds
+
+**Block Format:**
+- `exerciseId` - Reference to exercise
+- `reps` - Array of target reps per set
+- `rests` - Array of rest durations (length = reps.length - 1)
+- `durations` - Array for timing blocks (usually [0] for exercises)
+
+**Response:**
+```json
+{
+  "id": "push-day-user-123",
+  "name": "Push Day",
+  "source": "user",
+  "blocks": [ /* ... */ ],
+  "createdAt": "2026-03-06T12:00:00Z",
+  "updatedAt": "2026-03-06T12:00:00Z"
+}
+```
+
+**Status Codes:**
+- `201 Created` - Workout created
+- `400 Bad Request` - Invalid structure
+- `409 Conflict` - Invalid exercise references
+
+---
+
+### Update Workout
+
+**Request:**
+```
+PUT /api/v1/workouts/:id
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "description": "Updated description",
+  "blocks": [ /* updated blocks */ ]
+}
+```
+
+**Response:**
+```json
+{
+  "id": "push-day-user-123",
+  "name": "Push Day",
+  "source": "user",
+  "blocks": [ /* ... */ ],
+  "updatedAt": "2026-03-06T12:30:00Z"
+}
+```
+
+**Status Codes:**
+- `200 OK` - Updated
+- `400 Bad Request` - Invalid data
+- `403 Forbidden` - Insufficient permissions
+
+---
+
+### Delete Workout
+
+**Request:**
+```
+DELETE /api/v1/workouts/:id
+Authorization: Bearer {token}
+```
+
+**Response:**
+```
+204 No Content
+```
+
+**Status Codes:**
+- `204 No Content` - Deleted
+- `403 Forbidden` - Cannot delete
+- `404 Not Found` - Workout doesn't exist
+
+---
+
+## Statistics Endpoints
+
+### Record Workout Completion
+
+**Request:**
+```
+POST /api/v1/stats/workouts
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "workoutId": "full-body-a",
+  "completedAt": "2026-03-06T10:30:00Z",
+  "timeSpentSeconds": 2400,
+  "exercises": [
+    {
+      "exerciseId": "bench-press-1",
+      "sets": [
+        {
+          "reps": 6,
+          "weight": 225,
+          "isBodyweight": false,
+          "timestamp": "2026-03-06T10:05:00Z"
+        },
+        {
+          "reps": 6,
+          "weight": 225,
+          "isBodyweight": false,
+          "timestamp": "2026-03-06T10:08:00Z"
+        }
+      ],
+      "lastCompletedAt": "2026-03-06T10:30:00Z"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "workoutLog": {
+    "id": "log-123",
+    "userId": "user-123",
+    "workoutId": "full-body-a",
+    "completedAt": "2026-03-06T10:30:00Z",
+    "timeSpentSeconds": 2400,
+    "exercises": [
+      {
+        "exerciseId": "bench-press-1",
+        "repsCompleted": 12,
+        "setsCompleted": 2,
+        "totalVolume": 5400,
+        "lastCompletedAt": "2026-03-06T10:30:00Z"
+      }
+    ]
+  },
+  "newPRs": [
+    {
+      "exerciseId": "bench-press-1",
+      "type": "max_weight",
+      "value": 225,
+      "previousValue": 220
+    }
+  ]
+}
+```
+
+**Status Codes:**
+- `201 Created` - Workout recorded
+- `400 Bad Request` - Invalid data
+- `404 Not Found` - Workout doesn't exist
+
+---
+
+### Get Personal Records
+
+**Request:**
+```
+GET /api/v1/stats/prs?limit=20
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+- `limit` (optional) - Max number of PRs to return (default: 50)
+- `exerciseId` (optional) - Filter by exercise
+- `current` (optional) - Only current PRs (true/false)
+
+**Response:**
+```json
+[
+  {
+    "id": "pr-123",
+    "userId": "user-123",
+    "exerciseId": "bench-press-1",
+    "type": "max_weight",
+    "value": 225,
+    "achievedAt": "2026-03-06T10:30:00Z",
+    "workoutId": "full-body-a_workout_0",
+    "details": {
+      "weight": 225,
+      "reps": 6
+    },
+    "isCurrent": true
+  }
+]
+```
+
+---
+
+### Get Exercise-Specific PRs
+
+**Request:**
+```
+GET /api/v1/stats/prs/:exerciseId?current=true
+Authorization: Bearer {token}
+```
+
+**Response:**
+```json
+[
+  {
+    "id": "pr-bench-1",
+    "exerciseId": "bench-press-1",
+    "type": "max_weight",
+    "value": 225,
+    "achievedAt": "2026-03-06T10:30:00Z",
+    "isCurrent": true
+  },
+  {
+    "id": "pr-bench-2",
+    "exerciseId": "bench-press-1",
+    "type": "max_reps",
+    "value": 12,
+    "achievedAt": "2026-03-05T15:00:00Z",
+    "isCurrent": true
+  }
+]
+```
+
+---
+
+### Get Aggregated Progress
+
+**Request:**
+```
+GET /api/v1/stats/progress
+Authorization: Bearer {token}
+```
+
+**Response:**
+```json
+{
+  "totalWorkoutsCompleted": 45,
+  "totalTimeSpentSeconds": 108000,
+  "totalRepsCompleted": 5400,
+  "activeWorkouts": 3,
+  "currentStreak": 12,
+  "recentActivity": [
+    {
+      "date": "2026-03-06",
+      "workoutId": "full-body-a"
+    }
+  ],
+  "exercisesWithData": [
+    "bench-press-1",
+    "squat-1",
+    "deadlift-1"
+  ]
+}
+```
+
+---
+
+### Get Weekly Statistics
+
+**Request:**
+```
+GET /api/v1/stats/weekly?weekStart=2026-03-02
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+- `weekStart` (optional) - ISO date for week start (Monday)
+
+**Response:**
+```json
+{
+  "weekStart": "2026-03-02",
+  "weekEnd": "2026-03-08",
+  "workoutsCompleted": 4,
+  "workoutGoal": 4,
+  "totalTimeSeconds": 9600,
+  "totalVolume": 21600,
+  "totalReps": 480,
+  "exercisesPerformed": ["bench-press-1", "squat-1"],
+  "currentStreak": 4
+}
+```
+
+---
+
+### Get Consistency Data (Heatmap)
+
+**Request:**
+```
+GET /api/v1/stats/consistency?weeks=12
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+- `weeks` (optional) - Number of weeks to return (default: 12)
+
+**Response:**
+```json
+[
+  {
+    "date": "2026-02-01",
+    "workoutCount": 1
+  },
+  {
+    "date": "2026-02-02",
+    "workoutCount": 0
+  },
+  {
+    "date": "2026-02-03",
+    "workoutCount": 1
+  }
+]
+```
+
+**Notes:**
+- `workoutCount` is 0 or 1 (one workout per day max for heatmap)
+- Returns data for the last N weeks
+
+---
+
+### Get Exercise Progression Data
+
+**Request:**
+```
+GET /api/v1/stats/exercises/:exerciseId/progression?days=90
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+- `days` (optional) - Days of history (default: 90)
+
+**Response:**
+```json
+[
+  {
+    "date": "2026-01-05",
+    "reps": 8,
+    "maxWeight": 220,
+    "volume": 1760
+  },
+  {
+    "date": "2026-01-12",
+    "reps": 8,
+    "maxWeight": 225,
+    "volume": 1800
+  }
+]
+```
+
+**Notes:**
+- One data point per workout session
+- Shows progression over time for charts
+
+---
+
+## Error Handling
 
 ### Error Response Format
 
-All API errors follow this format:
+All error responses follow this format:
 
 ```json
 {
   "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Exercise name is required",
-    "details": [
-      {
-        "field": "name",
-        "message": "Required field"
-      }
-    ]
-  }
-}
-```
-
-### Error Codes
-
-| Code | HTTP Status | Meaning |
-|------|------------|---------|
-| `INVALID_TOKEN` | 401 | Firebase token invalid or expired |
-| `INSUFFICIENT_PERMISSIONS` | 403 | User lacks required permissions |
-| `NOT_FOUND` | 404 | Resource not found |
-| `VALIDATION_ERROR` | 400 | Request data validation failed |
-| `CONFLICT` | 409 | Resource conflict (e.g., duplicate name) |
-| `SERVER_ERROR` | 500 | Unexpected server error |
-| `TIMEOUT` | 408 | Request timeout (client-side) |
-
----
-
-## API Client Usage
-
-### Basic Usage
-
-```typescript
-import { APIClient } from '@/lib/api'
-
-const apiClient = new APIClient({
-  baseURL: process.env.EXPO_PUBLIC_API_BASE_URL,
-  timeout: 30000,
-})
-
-// Fetch exercises
-try {
-  const exercises = await apiClient.fetchExercises({
-    category: 'strength',
-    limit: 50,
-  })
-  console.log('Fetched:', exercises.length, 'exercises')
-} catch (error) {
-  console.error('API Error:', error.message)
-}
-
-// Create exercise
-try {
-  const newExercise = await apiClient.createExercise({
-    name: 'New Exercise',
-    category: 'cardio',
-    icon: 'bicycle',
-  })
-  console.log('Created:', newExercise.id)
-} catch (error) {
-  if (error.code === 'VALIDATION_ERROR') {
-    console.error('Validation failed:', error.details)
-  }
-}
-```
-
-### Error Handling
-
-```typescript
-try {
-  const result = await apiClient.updateExercise('id', data)
-} catch (error) {
-  if (error instanceof APIError) {
-    switch (error.code) {
-      case 'INVALID_TOKEN':
-        // Redirect to login
-        break
-      case 'NOT_FOUND':
-        // Show "not found" message
-        break
-      case 'VALIDATION_ERROR':
-        // Show validation errors
-        console.error(error.details)
-        break
-      default:
-        // Show generic error
-        console.error(error.message)
+    "code": "ERROR_CODE",
+    "message": "Human-readable error message",
+    "statusCode": 400,
+    "details": {
+      "field": "value",
+      "violations": ["issue 1", "issue 2"]
     }
   }
 }
 ```
 
-### Custom APIError Class
+### Common Error Codes
+
+| Code | Status | Description |
+|------|--------|-------------|
+| `INVALID_REQUEST` | 400 | Malformed request |
+| `VALIDATION_ERROR` | 400 | Validation failed |
+| `UNAUTHORIZED` | 401 | Invalid/missing token |
+| `FORBIDDEN` | 403 | Insufficient permissions |
+| `NOT_FOUND` | 404 | Resource not found |
+| `CONFLICT` | 409 | Data conflict (e.g., duplicate) |
+| `INTERNAL_ERROR` | 500 | Server error |
+
+### Client Error Handling
+
+**File**: `lib/api.ts`
 
 ```typescript
-class APIError extends Error {
-  code: string                            // Error code
-  statusCode: number                      // HTTP status
-  details?: Record<string, unknown>       // Additional context
-  originalError?: Error                   // Original error
-  
-  constructor(code, message, statusCode, details?, originalError?)
+export class APIError extends Error {
+  code: string
+  statusCode?: number
+  originalError?: unknown
+}
+
+// Usage in components
+try {
+  const exercises = await fetchExercises()
+} catch (error) {
+  if (error instanceof APIError) {
+    switch (error.code) {
+      case 'UNAUTHORIZED':
+        // Handle auth error
+        break
+      case 'TIMEOUT':
+        // Handle timeout
+        break
+      case 'NETWORK_ERROR':
+        // Fall back to local storage
+        break
+    }
+  }
 }
 ```
 
 ---
 
-## Integration Points
+## Data Mappers
 
-### In DataContext
+### Workout/Program Conversion
 
-```typescript
-// Hook to fetch from API (if enabled)
-const { data: apiExercises } = useAPIExercises()
+**File**: `lib/mappers/workout.ts`
 
-// Merge API exercises with local
-const allExercises = [
-  ...localExercises,
-  ...apiExercises,
-]
-```
-
-### In useExercises Hook
+The API uses array-based representation while the frontend uses scalars:
 
 ```typescript
-export function useExercises() {
-  const { exercises } = useContext(DataContext)
-  const { data: apiExercises } = useAPIExercises()
-  
-  return {
-    data: [...exercises, ...apiExercises],
-    loading: exercisesLoading || apiLoading,
-  }
+// API format
+{
+  "blocks": [
+    {
+      "exerciseId": "bench-press-1",
+      "reps": [8, 8, 8],           // Array per set
+      "rests": [90, 90],           // Array between sets
+      "durations": [0]             // Timing array
+    }
+  ]
 }
-```
 
-### Feature Flag
-
-All API calls check the feature flag:
-
-```typescript
-if (process.env.EXPO_PUBLIC_API_ENABLED !== 'true') {
-  return { data: [], loading: false }
+// Frontend format
+{
+  "blocks": [
+    {
+      "type": "exercise",
+      "exerciseId": "bench-press-1",
+      "targetReps": [8],           // Scalar or array
+      "sets": 3,                   // Derived from reps length
+      "restBetweenSets": 90        // Scalar
+    }
+  ]
 }
+
+// Mapper functions
+workoutBlockToProgram(apiBlock): ProgramBlock
+programBlockToWorkout(block): APIWorkoutBlock
 ```
+
+---
+
+## Rate Limiting
+
+**Current**: No rate limiting enforced (subject to change)
+
+**Recommendations**:
+- Implement exponential backoff on failures
+- Cache API responses locally
+- Use version counters to avoid unnecessary requests
+- Batch operations when possible
 
 ---
 
 ## Offline Behavior
 
-When API is unavailable or disabled:
+When API is unavailable:
 
-✅ **Works Offline**:
-- Load local exercises
-- Create/edit/delete programs
-- Track workouts and progress
-- Access all local data
-
-❌ **Requires API**:
-- Sync exercises from server
-- Access professional trainer library
-- Cloud backup/restore
+1. **Failed API call** triggers error with code `NETWORK_ERROR`
+2. **DataContext** automatically falls back to local storage
+3. **User sees stale data** with visual indicator
+4. **Automatic retry** when connection detected
+5. **Cache invalidation** after successful sync
 
 ---
 
-## Authentication Flow Diagram
+## Testing API Integration
 
-```
-User Interaction
-    ↓
-signIn() / signUp() / signInAsGuest()
-    ↓
-Firebase Auth
-    ├─ Validate credentials
-    ├─ Create/retrieve user
-    └─ Generate ID token
-    ↓
-Set auth.currentUser
-    ↓
-Store ID token (cached by Firebase)
-    ↓
-Available for:
-  - API calls (Bearer header)
-  - Session persistence
-  - User identification
+### Mock API for Testing
+
+Use Firebase Emulator Suite for local testing:
+
+```bash
+firebase emulators:start
 ```
 
----
+### Test API Client
 
-## Example Implementations
-
-### Complete Sign-In Flow
+**File**: `__tests__/lib/api.test.ts`
 
 ```typescript
-async function handleSignIn(email: string, password: string) {
-  try {
-    // 1. Authenticate
-    await signIn(email, password)
-    
-    // 2. Get token
-    const token = await auth.currentUser?.getIdToken()
-    
-    // 3. Optional: Sync data from API
-    if (process.env.EXPO_PUBLIC_API_ENABLED) {
-      await syncExercisesFromAPI(token)
-    }
-    
-    // 4. Navigate to app
-    navigation.replace('tabs')
-  } catch (error) {
-    showError(mapFirebaseError(error))
-  }
-}
-```
+// Test API error handling
+it('should handle network errors gracefully', async () => {
+  // Mock fetch to fail
+  const error = await fetchExercises().catch(e => e)
+  expect(error).toBeInstanceOf(APIError)
+  expect(error.code).toBe('NETWORK_ERROR')
+})
 
-### Fetch with Authentication
-
-```typescript
-async function fetchExercisesWithAuth() {
-  const token = await auth.currentUser?.getIdToken()
-  
-  if (!token) throw new Error('Not authenticated')
-  
-  const response = await fetch(
-    `${API_BASE}/api/v1/exercises`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  )
-  
-  if (!response.ok) {
-    throw new APIError(
-      'API_ERROR',
-      'Failed to fetch exercises',
-      response.status
-    )
-  }
-  
-  return response.json()
-}
+// Test authentication
+it('should include auth token in headers', async () => {
+  // Verify token is attached to request
+})
 ```
 
 ---
 
 ## Summary
 
-- **Firebase**: Handles authentication, optional database sync
-- **Optional API**: For exercise library, programs, sync (feature-flagged)
-- **Offline-first**: All features work without API
-- **Token-based**: Firebase ID token used for API auth
-- **Error handling**: Comprehensive error codes and user-friendly messages
-- **Type-safe**: TypeScript contracts for all endpoints
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/v1/exercises` | GET/POST/PUT/DELETE | Exercise CRUD |
+| `/api/v1/workouts` | GET/POST/PUT/DELETE | Workout CRUD |
+| `/api/v1/stats/workouts` | POST | Record completion |
+| `/api/v1/stats/prs` | GET | Get personal records |
+| `/api/v1/stats/progress` | GET | Get aggregated progress |
+| `/api/v1/stats/weekly` | GET | Get weekly stats |
+| `/api/v1/stats/consistency` | GET | Get heatmap data |
+| `/api/v1/stats/exercises/:id/progression` | GET | Get exercise trends |
 
-See [API Client Implementation](../lib/api.ts) for complete code.
-
+All endpoints require authentication via Firebase ID token.

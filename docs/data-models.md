@@ -2,7 +2,7 @@
 
 ## Overview
 
-Progressive Workout uses a **type-driven data model** with TypeScript interfaces. Data is persisted to local storage (web) or Expo FileSystem (native), with optional Firebase Realtime Database sync.
+Progressive Workout uses a **type-driven data model** with TypeScript interfaces. Data is persisted to local storage (web) or Expo FileSystem (native), with **primary API backend** sync via Firebase. This document reflects the **refactored data model** with simplified progress tracking and removal of the challenge system.
 
 ---
 
@@ -30,7 +30,8 @@ type ExerciseCategory = 'strength' | 'cardio' | 'flexibility' | 'skill'
 type ExerciseSource = 'builtin' | 'user' | 'pt'  // builtin=read-only, user=editable, pt=trainer
 ```
 
-**Storage Key**: `pwo.exercises`
+**Storage Key**: `pwo.exercises` (local fallback)
+**API Endpoints**: `GET/POST/PUT/DELETE /api/v1/exercises`
 
 **Permissions**:
 - `builtin`: Read-only (built-in exercises)
@@ -65,7 +66,6 @@ interface Program {
   description?: string                    // Program overview
   blocks: ProgramBlock[]                  // Ordered sequence of workout blocks
   source: ProgramSource                   // Data origin
-  challengeConfig?: ChallengeConfig       // If present, program is a challenge
   initialWarmup?: { seconds: number }     // Default warmup duration
   defaultRestBetweenExercises: number     // Default rest (seconds) between exercises
   createdAt: string
@@ -85,19 +85,10 @@ interface ProgramBlock {
   restBetweenSets?: number                // Rest between sets (seconds)
   note?: string                           // Form cue or loading note
 }
-
-interface ChallengeConfig {
-  exerciseId: string                      // Exercise to use
-  sets: number                            // Sets per workout
-  initialReps?: number                    // Starting reps (if auto-set)
-  targetReps: number                      // Total reps to complete in challenge
-  warmUpSeconds: number                   // Warmup before sets
-  breakSeconds: number                    // Rest between sets
-  weeklyIncreasePercent: number           // Auto-progression (e.g., 10%)
-}
 ```
 
-**Storage Key**: `pwo.programs`
+**Storage Key**: `pwo.programs` (local fallback)
+**API Endpoints**: `GET/POST/PUT/DELETE /api/v1/workouts`
 
 **Example - Regular Program**:
 ```json
@@ -130,55 +121,48 @@ interface ChallengeConfig {
 }
 ```
 
-**Example - Challenge Program**:
-```json
-{
-  "id": "50-pushups-challenge",
-  "name": "50 Pushups Challenge",
-  "source": "builtin",
-  "challengeConfig": {
-    "exerciseId": "pushup-1",
-    "sets": 5,
-    "initialReps": 10,
-    "targetReps": 50,
-    "warmUpSeconds": 60,
-    "breakSeconds": 60,
-    "weeklyIncreasePercent": 10
-  },
-  "blocks": [
-    {"type": "warmup", "durationSeconds": 60},
-    {"type": "exercise", "exerciseId": "pushup-1", "sets": 5, "targetReps": 10},
-    {"type": "rest", "durationSeconds": 60}
-  ],
-  "createdAt": "2026-03-01T00:00:00Z",
-  "updatedAt": "2026-03-01T00:00:00Z"
+---
+
+## Progress Tracking Models (REFACTORED)
+
+### ⚠️ Breaking Change: SessionProgress → WorkoutProgress
+
+**Old Model (DELETED):**
+```typescript
+// ❌ SessionProgress - NO LONGER USED
+interface SessionProgress {
+  sessionId: string
+  programId: string
+  sessions: ProgramRun[]  // Complex nested structure
+  // ... complex fields
 }
 ```
 
----
+**New Model (SIMPLIFIED):**
+```typescript
+interface WorkoutProgress {
+  workoutId: string                       // Unique ID for this workout instance
+  programId: string                       // Reference to program
+  completed: boolean                      // Completion flag
+  completedAt?: string                    // When completed (ISO 8601)
+  timeSpentSeconds?: number               // Total duration
+  exercises: ExerciseProgress[]           // Per-exercise tracking
+}
+```
 
-## Progress Tracking Models
-
-### ProgramProgress
+### WorkoutProgress
 
 **File**: `types/progress.ts`
 
-```typescript
-interface ProgramProgress {
-  programId: string                       // Reference to Program.id
-  workouts: WorkoutProgress[]             // All completed sessions
-  lifetimeWorkoutsCompleted: number       // Total workouts for this program
-  lifetimeTimeSpentSeconds: number        // Total time invested
-  lastActivityAt: string                  // ISO 8601 timestamp
-  updatedAt: string                       // Last update time
-}
+Individual workout completion record:
 
+```typescript
 interface WorkoutProgress {
   workoutId: string                       // Format: "{programId}_workout_{sessionIndex}"
   programId: string                       // Reference to program
   completed: boolean                      // Completion flag
   completedAt?: string                    // When completed (ISO 8601)
-  timeSpentSeconds: number                // Total duration
+  timeSpentSeconds?: number               // Total duration
   exercises: ExerciseProgress[]           // Per-exercise tracking
 }
 
@@ -186,11 +170,65 @@ interface ExerciseProgress {
   exerciseId: string                      // Exercise reference
   repsCompleted: number                   // Total reps (across all sets)
   setsCompleted: number                   // Sets finished
+  sets?: SetRecord[]                      // Detailed per-set tracking
+  totalVolume?: number                    // weight × reps (for weighted)
   lastCompletedAt: string                 // Timestamp
+}
+
+interface SetRecord {
+  reps: number
+  weight?: number                         // kg or lbs (undefined for bodyweight)
+  isBodyweight: boolean
+  timestamp: string                       // ISO date
 }
 ```
 
-**Storage Key**: `pwo.program_progress`
+**Storage Key**: `pwo.progress_history` (local fallback)
+**API Endpoint**: `POST /api/v1/stats/workouts` (to record), `GET /api/v1/stats/progress` (to fetch)
+
+**Example**:
+```json
+{
+  "workoutId": "full-body-a_workout_0",
+  "programId": "full-body-a",
+  "completed": true,
+  "completedAt": "2026-03-06T10:30:00Z",
+  "timeSpentSeconds": 2400,
+  "exercises": [
+    {
+      "exerciseId": "bench-press-1",
+      "repsCompleted": 24,
+      "setsCompleted": 4,
+      "sets": [
+        { "reps": 6, "weight": 225, "isBodyweight": false, "timestamp": "2026-03-06T10:05:00Z" },
+        { "reps": 6, "weight": 225, "isBodyweight": false, "timestamp": "2026-03-06T10:08:00Z" }
+      ],
+      "totalVolume": 5400,
+      "lastCompletedAt": "2026-03-06T10:30:00Z"
+    }
+  ]
+}
+```
+
+### ProgramProgress
+
+**File**: `types/progress.ts`
+
+Aggregate statistics for a program:
+
+```typescript
+interface ProgramProgress {
+  programId: string                       // Reference to Program.id
+  workouts: WorkoutProgress[]             // All completed workouts
+  lifetimeWorkoutsCompleted: number       // Total workouts for this program
+  lifetimeTimeSpentSeconds: number        // Total time invested
+  lastActivityAt: string | null           // ISO 8601 timestamp
+  updatedAt: string                       // Last update time
+}
+```
+
+**Storage Key**: `pwo.program_progress` (local fallback)
+**API Endpoint**: `GET /api/v1/stats/progress`
 
 **Example**:
 ```json
@@ -206,78 +244,30 @@ interface ExerciseProgress {
       "completed": true,
       "completedAt": "2026-03-06T10:30:00Z",
       "timeSpentSeconds": 2400,
-      "exercises": [
-        {
-          "exerciseId": "bench-press-1",
-          "repsCompleted": 24,
-          "setsCompleted": 4,
-          "lastCompletedAt": "2026-03-06T10:30:00Z"
-        }
-      ]
+      "exercises": [ /* ... */ ]
     }
   ]
 }
 ```
-
-### ChallengeProgress
-
-**File**: `types/progress.ts`
-
-```typescript
-interface ChallengeProgress {
-  challengeId: string                     // Reference to Program with challengeConfig
-  workouts: WorkoutProgress[]             // Sessions for this challenge
-  totalRepsCompleted: number              // Accumulator toward target
-  targetReps: number                      // Goal reps
-  completedAt?: string                    // When challenge completed
-  startedAt: string                       // When started
-  lastActivityAt: string                  // Most recent activity
-}
-```
-
-**Storage Key**: `pwo.challenge_progress`
-
-**Example**:
-```json
-{
-  "challengeId": "50-pushups-challenge",
-  "totalRepsCompleted": 150,
-  "targetReps": 50,
-  "startedAt": "2026-03-01T00:00:00Z",
-  "lastActivityAt": "2026-03-06T10:30:00Z",
-  "workouts": [
-    {
-      "workoutId": "50-pushups-challenge_workout_0",
-      "completed": true,
-      "completedAt": "2026-03-01T10:00:00Z",
-      "timeSpentSeconds": 1200,
-      "exercises": [
-        {
-          "exerciseId": "pushup-1",
-          "repsCompleted": 50,
-          "setsCompleted": 5,
-          "lastCompletedAt": "2026-03-01T10:00:00Z"
-        }
-      ]
-    }
-  ]
-}
-```
-
----
 
 ### PersonalRecord
 
 **File**: `types/progress.ts`
+
+Personal best records:
 
 ```typescript
 interface PersonalRecord {
   id: string                              // Unique PR identifier
   exerciseId: string                      // Exercise reference
   type: PersonalRecordType                // Type of record
-  value: number                           // Record value (weight, reps, volume, etc.)
+  value: number                           // Record value
   achievedAt: string                      // When achieved (ISO 8601)
-  workoutId?: string                      // Optional: which workout established it
+  workoutId?: string                      // Optional: which workout
+  details?: {                             // Optional detailed info
+    weight?: number
+    reps?: number
+  }
 }
 
 type PersonalRecordType = 
@@ -287,7 +277,10 @@ type PersonalRecordType =
   | 'estimated_1rm'                       // Estimated one-rep max
 ```
 
-**Storage Key**: `pwo.personal_records`
+**Storage Key**: `pwo.personal_records` (local fallback)
+**API Endpoint**: `GET /api/v1/stats/prs`
+
+**⚠️ Breaking Change**: `sessionId` → `workoutId` in PersonalRecord.workoutId
 
 **Example**:
 ```json
@@ -297,66 +290,10 @@ type PersonalRecordType =
   "type": "max_weight",
   "value": 225,
   "achievedAt": "2026-03-06T10:30:00Z",
-  "workoutId": "full-body-a_workout_0"
-}
-```
-
----
-
-## Event Tracking
-
-### WorkoutEvent
-
-**File**: `types/events.ts`
-
-```typescript
-interface WorkoutEvent {
-  ts: string                              // Timestamp (ISO 8601)
-  slug: string                            // Program ID
-  sessionIndex: number                    // Session number
-  type: WorkoutEventType                  // Event classification
-  data?: Record<string, unknown>          // Event-specific payload
-}
-
-type WorkoutEventType =
-  // Warmup events
-  | 'warmup_started'
-  | 'warmup_paused'
-  | 'warmup_resumed'
-  | 'warmup_skipped'
-  | 'warmup_completed'
-  
-  // Set events
-  | 'set_completed'
-  | 'set_skipped'
-  
-  // Break events
-  | 'break_started'
-  | 'break_paused'
-  | 'break_resumed'
-  | 'break_skipped'
-  | 'break_completed'
-  
-  // Session events
-  | 'session_completed'
-  | 'step_jumped_to'
-  | 'step_repeated'
-```
-
-**Storage Key**: `pwo.events`
-
-**Example**:
-```json
-{
-  "ts": "2026-03-06T10:30:00Z",
-  "slug": "full-body-a",
-  "sessionIndex": 0,
-  "type": "set_completed",
-  "data": {
-    "exerciseId": "bench-press-1",
-    "setNumber": 1,
-    "reps": 8,
-    "weight": 225
+  "workoutId": "full-body-a_workout_0",
+  "details": {
+    "weight": 225,
+    "reps": 6
   }
 }
 ```
@@ -369,30 +306,38 @@ type WorkoutEventType =
 
 **File**: `types/progress.ts`
 
+Aggregated weekly statistics:
+
 ```typescript
 interface WeeklyStats {
   weekStart: string                       // ISO 8601 start of week (Monday)
   weekEnd: string                         // ISO 8601 end of week (Sunday)
   workoutsCompleted: number               // Workouts this week
+  workoutGoal: number                     // Target workouts per week
   totalTimeSeconds: number                // Total workout duration
-  exercisesCompleted: ExerciseStats[]     // Per-exercise stats
-  programIds: string[]                    // Programs trained this week
+  totalVolume: number                     // Sum of (weight × reps × sets)
+  totalReps: number                       // Sum of all reps
+  exercisesPerformed: string[]            // Unique exercise IDs
+  currentStreak: number                   // Consecutive days ending this week
 }
 
 interface ExerciseStats {
   exerciseId: string
   totalReps: number                       // Reps this week
   totalSets: number                       // Sets this week
-  totalVolume: number                     // Volume (weight × reps × sets)
+  totalVolume: number                     // Volume this week
   workoutCount: number                    // Times performed
 }
 ```
 
-**Storage Key**: `pwo.weekly_stats`
+**Storage Key**: `pwo.weekly_stats` (local fallback)
+**API Endpoint**: `GET /api/v1/stats/weekly`
 
 ### ConsistencyData
 
 **File**: `types/progress.ts`
+
+Heatmap and streak data:
 
 ```typescript
 interface ConsistencyData {
@@ -405,7 +350,8 @@ interface ConsistencyData {
 }
 ```
 
-**Storage Key**: `pwo.progress_history`
+**Storage Key**: `pwo.progress_history` (local fallback)
+**API Endpoint**: `GET /api/v1/stats/consistency`
 
 ---
 
@@ -414,6 +360,8 @@ interface ConsistencyData {
 ### WorkoutState
 
 **File**: `types/session.ts`
+
+In-progress workout state (temporary):
 
 ```typescript
 interface WorkoutState {
@@ -438,8 +386,120 @@ interface WorkoutState {
 ```
 
 **Storage Key**: `pwo.sessions`
-
 **Lifecycle**: Saved when user pauses; cleared when workout completed
+
+---
+
+## Enhanced Data Types (NEW)
+
+### File: `types/enhanced.ts`
+
+Extended models with metadata and validation:
+
+```typescript
+// Enhanced Exercise Model
+interface EnhancedExercise extends Exercise {
+  description?: string
+  instructions?: string
+  muscleGroups?: string[]
+  difficulty?: 'beginner' | 'intermediate' | 'advanced'
+  equipment?: string[]
+  tags?: string[]
+  usageCount?: number
+  lastUsed?: string
+}
+
+// Enhanced Program Model
+interface EnhancedProgram extends Program {
+  thumbnail?: string
+  usageCount?: number
+  lastUsed?: string
+  averageRating?: number
+}
+
+// Validation Results
+type ValidationResult = {
+  isValid: boolean
+  errors: ValidationError[]
+  warnings?: ValidationWarning[]
+}
+
+type ValidationError = {
+  field: string
+  message: string
+  code: ValidationErrorCode
+  severity: 'error' | 'warning' | 'info'
+}
+
+enum ValidationErrorCode {
+  REQUIRED_FIELD = 'REQUIRED_FIELD',
+  INVALID_FORMAT = 'INVALID_FORMAT',
+  DUPLICATE_NAME = 'DUPLICATE_NAME',
+  INVALID_REFERENCE = 'INVALID_REFERENCE',
+  INSUFFICIENT_PERMISSIONS = 'INSUFFICIENT_PERMISSIONS',
+  // ... more codes
+}
+
+// Audit Logging
+type AuditLogEntry = {
+  id: string
+  timestamp: string
+  userId?: string
+  action: AuditAction  // CREATE, UPDATE, DELETE, IMPORT, EXPORT
+  entityType: DataType  // 'exercises' | 'programs'
+  entityId: string
+  changes?: Record<string, { from: any; to: any }>
+}
+
+enum AuditAction {
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  DELETE = 'DELETE',
+  IMPORT = 'IMPORT',
+  EXPORT = 'EXPORT'
+}
+```
+
+---
+
+## ❌ DELETED Models
+
+### Challenge System (Completely Removed)
+
+The entire challenge system has been removed:
+
+**Deleted Entities:**
+- ❌ `ChallengeProgress` interface
+- ❌ `ChallengeConfig` interface (on Program)
+- ❌ `ChallengeSessions` type
+- ❌ All challenge-related types and enums
+
+**Deleted Components:**
+- ❌ `components/challenge/` directory
+- ❌ Challenge UI components
+- ❌ Challenge progress tracking
+
+**Migration Path:**
+- Use **Programs** for structured workouts instead
+- Use **PersonalRecords** for achievement tracking
+- Create separate programs for progressive training
+
+---
+
+### Event System (Removed)
+
+The pub-sub event system has been removed:
+
+**Deleted:**
+- ❌ `WorkoutEvent` interface
+- ❌ `WorkoutEventType` enum
+- ❌ `lib/events.ts` event emitter
+- ❌ Event subscription patterns
+
+**New Approach:**
+- Direct API calls via `recordWorkout()` in `lib/api.ts`
+- Context updates via DataContext version counters
+- Optional detailed logging via audit system
 
 ---
 
@@ -449,26 +509,23 @@ interface WorkoutState {
 Program
   ├── blocks[]
   │   └── exerciseId ──→ Exercise
-  └── challengeConfig? ──→ ChallengeConfig
+  └── [challengeConfig removed]
 
 WorkoutProgress
   ├── programId ──→ Program
+  ├── workoutId (simple ID)
   └── exercises[]
       └── exerciseId ──→ Exercise
 
 ProgramProgress
-  └── workouts[] ──→ WorkoutProgress
-
-ChallengeProgress
-  ├── challengeId ──→ Program (with challengeConfig)
-  └── workouts[] ──→ WorkoutProgress
+  └── workouts[] ──→ WorkoutProgress[]
 
 PersonalRecord
-  └── exerciseId ──→ Exercise
+  ├── exerciseId ──→ Exercise
+  └── workoutId ──→ WorkoutProgress (CHANGED from sessionId)
 
-WorkoutEvent
-  ├── slug ──→ Program.id
-  └── data.exerciseId? ──→ Exercise
+WeeklyStats
+  └── exerciseIds ──→ Exercise[]
 ```
 
 ---
@@ -486,10 +543,7 @@ WorkoutEvent
 - `blocks`: Minimum 1 block
 - Exercise references must exist
 - `defaultRestBetweenExercises`: >= 0
-- If `challengeConfig` present:
-  - `exerciseId` must exist
-  - `targetReps` > 0
-  - `weeklyIncreasePercent` > 0
+- ❌ `challengeConfig` no longer supported
 
 ### Progress Constraints
 - `workoutId`: Must match format `{programId}_workout_{index}`
@@ -499,15 +553,34 @@ WorkoutEvent
 
 ---
 
-## Migration & Versioning
+## API Data Transformation (Mappers)
 
-### Schema Version
-Current: v1.0
+### File: `lib/mappers/workout.ts`
 
-### Future Considerations
-- Add `version` field to all model roots for schema tracking
-- Implement migration helpers for data structure changes
-- Maintain backward compatibility with older formats
+Bidirectional conversion between API and frontend models:
+
+```typescript
+// API uses array-based representation
+interface APIWorkoutBlock {
+  exerciseId: string
+  reps: number[]          // [8, 8, 8, 8]
+  rests: number[]         // [90, 90, 90]
+  durations: number[]     // [0]
+}
+
+// Frontend uses scalar representation
+interface ProgramBlock {
+  type: 'exercise'
+  exerciseId: string
+  sets: number            // 4
+  targetReps: number      // 8
+  restBetweenSets: number // 90
+}
+
+// Mapper functions
+workoutBlockToProgram(apiBlock): ProgramBlock
+programToWorkoutBlock(block): APIWorkoutBlock
+```
 
 ---
 
@@ -517,24 +590,53 @@ Current: v1.0
 
 ```json
 {
-  "program": {
-    "id": "full-body-a",
-    "name": "Full Body A",
-    "blocks": [
-      {"type": "warmup", "durationSeconds": 300},
-      {"type": "exercise", "exerciseId": "bench-1", "sets": 4, "targetReps": [6, 8]}
-    ]
-  },
-  "progress": {
-    "workoutsCompleted": 12,
-    "lastWorkout": "2026-03-06T10:30:00Z"
-  },
-  "prs": [
-    {"exercise": "bench-1", "type": "max_weight", "value": 225}
-  ],
-  "events": [
-    {"ts": "2026-03-06T10:30:00Z", "type": "set_completed", "data": {"reps": 8}}
+  "workoutId": "full-body-a_workout_0",
+  "programId": "full-body-a",
+  "completed": true,
+  "completedAt": "2026-03-06T10:30:00Z",
+  "timeSpentSeconds": 2400,
+  "exercises": [
+    {
+      "exerciseId": "bench-press-1",
+      "repsCompleted": 24,
+      "setsCompleted": 4,
+      "totalVolume": 5400,
+      "lastCompletedAt": "2026-03-06T10:30:00Z"
+    }
   ]
+}
+```
+
+---
+
+## Migration Path: Old → New
+
+### SessionProgress → WorkoutProgress
+
+**If you have stored data using the old SessionProgress model:**
+
+1. Extract individual workout records from `sessions` array
+2. Map each to new `WorkoutProgress` format
+3. Flatten nested structure
+4. Update `sessionId` references to `workoutId`
+5. Update PersonalRecord references: `sessionId` → `workoutId`
+
+**Example Migration:**
+```typescript
+// Old data
+{
+  sessionId: "session-1",
+  sessions: [
+    { completed: true, completedAt: "..." }
+  ]
+}
+
+// New data
+{
+  workoutId: "full-body-a_workout_0",
+  programId: "full-body-a",
+  completed: true,
+  completedAt: "..."
 }
 ```
 
@@ -542,10 +644,12 @@ Current: v1.0
 
 ## Conclusion
 
-The data model is designed for:
-- **Flexibility**: Support exercises, programs, challenges, and custom tracking
-- **Traceability**: Detailed event logs for analysis
-- **Offline-first**: All data persists locally
-- **Optional sync**: Firebase integration without requiring it
-- **Type safety**: TypeScript ensures consistency
+The refactored data model:
+- **Simplifies** progress tracking (WorkoutProgress replaces SessionProgress)
+- **Removes complexity** (challenges, event system deleted)
+- **Improves performance** with flattened structures
+- **Maintains type safety** with comprehensive TypeScript
+- **Supports auditing** with validation and audit logging
+- **API-ready** with mappers for backend integration
 
+All data is now stored on the backend API first, with local fallback for offline scenarios.
