@@ -9,27 +9,32 @@ type AnimatedCardProps = {
 }
 
 /**
- * A wrapper component that animates its children with a fade-in and slide-up effect
+ * A wrapper component that animates its children with a fade-in and slide-up effect.
+ * Starts nearly visible (opacity 0.85) to prevent white flash during tab switches.
  */
 export function AnimatedCard({
   children,
   delay = 0,
   style
 }: AnimatedCardProps) {
-  const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(12)).current
+  const fadeAnim = useRef(new Animated.Value(1)).current
+  const slideAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
+    // Start from slightly offset, already visible
+    fadeAnim.setValue(0.85)
+    slideAnim.setValue(6)
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 300,
+        duration: 250,
         delay,
         useNativeDriver: true
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 300,
+        duration: 250,
         delay,
         useNativeDriver: true
       })

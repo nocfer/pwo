@@ -78,12 +78,13 @@ export function EnhancedExerciseProgressionChart({
   const { prs: exercisePRs } = useExercisePRs(selectedExerciseId ?? '')
 
   const exercisesWithProgression = useMemo(
-    () => exercises?.filter(ex => exerciseIds.includes(ex.id)) ?? [],
+    () =>
+      exercises?.filter((ex: Exercise) => exerciseIds.includes(ex.id)) ?? [],
     [exercises, exerciseIds]
   )
 
   const selectedExercise = useMemo(
-    () => exercises?.find(ex => ex.id === selectedExerciseId),
+    () => exercises?.find((ex: Exercise) => ex.id === selectedExerciseId),
     [exercises, selectedExerciseId]
   )
 
@@ -412,7 +413,7 @@ export function EnhancedExerciseProgressionChart({
             style={styles.exerciseList}
             contentContainerStyle={styles.exerciseListContent}
           >
-            {exercisesWithProgression.map(exercise => {
+            {exercisesWithProgression.map((exercise: Exercise) => {
               const isSelected = selectedExerciseId === exercise.id
               return (
                 <Pressable

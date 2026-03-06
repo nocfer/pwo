@@ -15,7 +15,7 @@ import {
   View,
   ViewStyle
 } from 'react-native'
-import { EmptyState, LoadingScreen } from '../common'
+import { EmptyState, LoadingScreen, SwipeableListItem } from '../common'
 import { SearchInput } from '../common/SearchInput'
 import { ProgramListItem } from './ProgramListItem'
 
@@ -38,6 +38,7 @@ type Props = {
   onItemPress?: (item: ListItem) => void
   onItemEdit?: (item: ListItem) => void
   onItemLongPress?: (item: ListItem) => void
+  onItemDelete?: (item: ListItem) => void
   selectedItems?: string[]
   onSelectionChange?: (itemIds: string[]) => void
   showSearch?: boolean
@@ -57,6 +58,7 @@ export function SearchableList({
   onItemPress,
   onItemEdit,
   onItemLongPress,
+  onItemDelete,
   selectedItems = [],
   onSelectionChange,
   showSearch = true,
@@ -112,6 +114,7 @@ export function SearchableList({
 
   const renderItem = ({ item }: { item: ListItem }) => {
     const isSelected = selectedItems.includes(item.id)
+    const canDelete = item.source === 'user' && onItemDelete && !selectionMode
 
     // Use ProgramListItem for programs when inline actions are enabled
     if (
@@ -129,7 +132,7 @@ export function SearchableList({
         challengeConfig: item.challengeConfig as Program['challengeConfig']
       }
 
-      return (
+      const content = (
         <ProgramListItem
           program={program}
           onStart={() => onItemPress?.(item)}
@@ -146,15 +149,27 @@ export function SearchableList({
               : undefined
           }
           showMetadata={showMetadata}
+          style={canDelete ? styles.itemNoMargin : undefined}
         />
       )
+
+      if (canDelete) {
+        return (
+          <SwipeableListItem onDelete={() => onItemDelete(item)}>
+            {content}
+          </SwipeableListItem>
+        )
+      }
+
+      return content
     }
 
     // Default exercise item rendering
-    return (
+    const content = (
       <Pressable
         style={({ pressed }) => [
           styles.itemContainer,
+          canDelete && styles.itemNoMargin,
           isSelected && styles.itemSelected,
           pressed && styles.itemPressed
         ]}
@@ -205,9 +220,25 @@ export function SearchableList({
           )}
         </View>
 
-        <Ionicons name="chevron-forward" size={18} color={theme.colors.muted} />
+        {!selectionMode && (
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={theme.colors.muted}
+          />
+        )}
       </Pressable>
     )
+
+    if (canDelete) {
+      return (
+        <SwipeableListItem onDelete={() => onItemDelete(item)}>
+          {content}
+        </SwipeableListItem>
+      )
+    }
+
+    return content
   }
 
   if (isLoading) {
@@ -337,6 +368,9 @@ const styles = StyleSheet.create({
   itemCategory: {
     ...theme.typography.caption,
     color: theme.colors.muted
+  },
+  itemNoMargin: {
+    marginBottom: 0
   }
 })
 

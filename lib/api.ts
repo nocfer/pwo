@@ -6,7 +6,10 @@
  */
 
 import { auth } from '@/lib/firebase'
+import type { APIWorkout, APIWorkoutCreateInput } from '@/lib/mappers/workout'
 import type { Exercise } from '@/types'
+
+// Use global fetch — expo/fetch is for streaming (SSE) and has issues on iOS in Expo Go
 
 // Configuration from environment
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || ''
@@ -89,20 +92,28 @@ async function request<T>(
       ...options.headers
     }
 
-    // Prepare request options
-    const fetchOptions: RequestInit = {
+    // Prepare request options with timeout via AbortController
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT)
+
+    const fetchOptions: Record<string, any> = {
       method,
       headers,
-      signal: AbortSignal.timeout(API_TIMEOUT)
+      signal: controller.signal
     }
 
-    // Add body if provided
-    if (options.body) {
+    // Add body if provided (avoid null)
+    if (options.body !== undefined) {
       fetchOptions.body = JSON.stringify(options.body)
     }
 
     // Make request
-    const response = await fetch(url, fetchOptions)
+    let response: Response
+    try {
+      response = await fetch(url, fetchOptions as any)
+    } finally {
+      clearTimeout(timeoutId)
+    }
 
     // Handle response
     if (!response.ok) {
@@ -205,6 +216,234 @@ export async function deleteExercise(id: string): Promise<void> {
   await request<void>(`/api/v1/exercises/${id}`, {
     method: 'DELETE'
   })
+}
+
+// ─── Workout API Functions ────────────────────────────────────────────────────
+
+/**
+ * Fetch all workouts from the API
+ */
+export async function fetchWorkouts(): Promise<APIWorkout[]> {
+  return request<APIWorkout[]>('/api/v1/workouts')
+}
+
+/**
+ * Fetch a single workout by ID
+ */
+export async function fetchWorkout(id: string): Promise<APIWorkout> {
+  return request<APIWorkout>(`/api/v1/workouts/${id}`)
+}
+
+/**
+ * Create a new workout
+ */
+export async function createWorkout(
+  workout: APIWorkoutCreateInput
+): Promise<APIWorkout> {
+  return request<APIWorkout>('/api/v1/workouts', {
+    method: 'POST',
+    body: workout
+  })
+}
+
+/**
+ * Update a workout
+ */
+export async function updateWorkout(
+  id: string,
+  workout: APIWorkoutCreateInput
+): Promise<APIWorkout> {
+  return request<APIWorkout>(`/api/v1/workouts/${id}`, {
+    method: 'PUT',
+    body: workout
+  })
+}
+
+/**
+ * Delete a workout
+ */
+export async function deleteWorkout(id: string): Promise<void> {
+  await request<void>(`/api/v1/workouts/${id}`, {
+    method: 'DELETE'
+  })
+}
+
+// ─── Stats API Types ──────────────────────────────────────────────────────────
+
+/** Input for recording a completed workout */
+export interface WorkoutLogInput {
+  workoutId: string
+  completedAt: string // ISO datetime
+  timeSpentSeconds: number // minimum 1
+  exercises: WorkoutLogExerciseInput[]
+}
+
+export interface WorkoutLogExerciseInput {
+  exerciseId: string
+  sets: WorkoutLogSetInput[] // minItems 1
+  lastCompletedAt: string // ISO datetime
+}
+
+export interface WorkoutLogSetInput {
+  reps: number
+  weight?: number // minimum 0
+  isBodyweight: boolean
+  timestamp: string // ISO datetime
+}
+
+/** Response from recording a workout */
+export interface WorkoutLogResponse {
+  workoutLog: {
+    id: string
+    userId: string
+    workoutId: string
+    completedAt: string
+    timeSpentSeconds: number
+    exercises: WorkoutLogExerciseResult[]
+  }
+  newPRs: NewPREntry[]
+}
+
+export interface WorkoutLogExerciseResult {
+  exerciseId: string
+  repsCompleted: number
+  setsCompleted: number
+  sets: WorkoutLogSetInput[]
+  totalVolume: number
+  lastCompletedAt: string
+}
+
+export interface NewPREntry {
+  exerciseId: string
+  type: 'max_weight' | 'max_reps' | 'max_volume' | 'estimated_1rm'
+  value: number
+  previousValue?: number
+}
+
+/** Personal record from API */
+export interface APIPR {
+  id: string
+  userId: string
+  exerciseId: string
+  type: 'max_weight' | 'max_reps' | 'max_volume' | 'estimated_1rm'
+  value: number
+  achievedAt: string // ISO datetime
+  workoutId?: string
+  details?: { weight?: number; reps?: number }
+  isCurrent: boolean
+}
+
+/** Aggregated progress from API */
+export interface APIProgress {
+  totalWorkoutsCompleted: number
+  totalTimeSpentSeconds: number
+  totalRepsCompleted: number
+  activeWorkouts: number
+  currentStreak: number
+  recentActivity: { date: string; workoutId: string }[]
+  exercisesWithData: string[]
+}
+
+/** Weekly stats from API */
+export interface APIWeeklyStats {
+  weekStart: string
+  weekEnd: string
+  workoutsCompleted: number
+  workoutGoal: number
+  totalTimeSeconds: number
+  totalVolume: number
+  totalReps: number
+  exercisesPerformed: string[]
+  currentStreak: number
+}
+
+/** Consistency heatmap entry from API */
+export interface ConsistencyEntry {
+  date: string
+  workoutCount: number
+}
+
+/** Exercise progression data point from API */
+export interface ProgressionPoint {
+  date: string
+  reps: number
+  maxWeight?: number
+  volume?: number
+}
+
+// ─── Stats API Functions ──────────────────────────────────────────────────────
+
+/**
+ * Record a completed workout
+ */
+export async function recordWorkout(
+  input: WorkoutLogInput
+): Promise<WorkoutLogResponse> {
+  return request<WorkoutLogResponse>('/api/v1/stats/workouts', {
+    method: 'POST',
+    body: input
+  })
+}
+
+/**
+ * Fetch personal records
+ */
+export async function fetchPRs(limit?: number): Promise<APIPR[]> {
+  const params = limit !== undefined ? `?limit=${limit}` : ''
+  return request<APIPR[]>(`/api/v1/stats/prs${params}`)
+}
+
+/**
+ * Fetch personal records for a specific exercise
+ */
+export async function fetchExercisePRs(
+  exerciseId: string,
+  current?: boolean
+): Promise<APIPR[]> {
+  const params = current !== undefined ? `?current=${current}` : ''
+  return request<APIPR[]>(
+    `/api/v1/stats/prs/${encodeURIComponent(exerciseId)}${params}`
+  )
+}
+
+/**
+ * Fetch aggregated progress overview
+ */
+export async function fetchProgress(): Promise<APIProgress> {
+  return request<APIProgress>('/api/v1/stats/progress')
+}
+
+/**
+ * Fetch weekly stats
+ */
+export async function fetchWeeklyStats(
+  weekStart?: string
+): Promise<APIWeeklyStats> {
+  const params = weekStart ? `?weekStart=${encodeURIComponent(weekStart)}` : ''
+  return request<APIWeeklyStats>(`/api/v1/stats/weekly${params}`)
+}
+
+/**
+ * Fetch consistency heatmap data
+ */
+export async function fetchConsistency(
+  weeks?: number
+): Promise<ConsistencyEntry[]> {
+  const params = weeks !== undefined ? `?weeks=${weeks}` : ''
+  return request<ConsistencyEntry[]>(`/api/v1/stats/consistency${params}`)
+}
+
+/**
+ * Fetch exercise progression data
+ */
+export async function fetchExerciseProgression(
+  exerciseId: string,
+  days?: number
+): Promise<ProgressionPoint[]> {
+  const params = days !== undefined ? `?days=${days}` : ''
+  return request<ProgressionPoint[]>(
+    `/api/v1/stats/exercises/${encodeURIComponent(exerciseId)}/progression${params}`
+  )
 }
 
 /**

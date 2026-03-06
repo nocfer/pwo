@@ -70,11 +70,13 @@ Exercise updates in list
 ## Console Logs
 
 **Success:**
+
 ```
 Exercise updated via API: exercise-123
 ```
 
 **Fallback:**
+
 ```
 Failed to save exercise via API, falling back to local: APIError: HTTP 500
 ```
@@ -104,12 +106,12 @@ curl --request PUT \
 
 ## Key Differences from Create
 
-| Aspect | Create | Update |
-|--------|--------|--------|
-| Has ID? | No | Yes |
-| Endpoint | POST /api/v1/exercises | PUT /api/v1/exercises/:id |
-| Status | 201 Created | 200 OK |
-| Idempotent | No | Yes |
+| Aspect     | Create                 | Update                    |
+| ---------- | ---------------------- | ------------------------- |
+| Has ID?    | No                     | Yes                       |
+| Endpoint   | POST /api/v1/exercises | PUT /api/v1/exercises/:id |
+| Status     | 201 Created            | 200 OK                    |
+| Idempotent | No                     | Yes                       |
 
 ## Error Handling
 
@@ -129,14 +131,14 @@ try {
 
 ## Common Errors
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| "User not authenticated" | Not logged in | Log in first |
-| "HTTP 401" | Invalid token | Check Firebase config |
-| "HTTP 404" | Exercise not found | Check exercise ID |
-| "HTTP 409" | Name exists | Use different name |
-| "Network error" | Backend down | Start backend |
-| "Validation failed" | Invalid data | Check required fields |
+| Error                    | Cause              | Solution              |
+| ------------------------ | ------------------ | --------------------- |
+| "User not authenticated" | Not logged in      | Log in first          |
+| "HTTP 401"               | Invalid token      | Check Firebase config |
+| "HTTP 404"               | Exercise not found | Check exercise ID     |
+| "HTTP 409"               | Name exists        | Use different name    |
+| "Network error"          | Backend down       | Start backend         |
+| "Validation failed"      | Invalid data       | Check required fields |
 
 ## Files Modified
 

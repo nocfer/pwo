@@ -2,7 +2,7 @@
  * Utility functions barrel export
  */
 
-export { daysBetween, formatDate, normalizeStreak } from './date'
+export { daysBetween, formatDate } from './date'
 export {
   formatCount,
   formatDuration,
@@ -16,5 +16,6 @@ export {
   groupProgramsByUsage,
   isRecentlyUsed,
   prioritizePrograms,
-  type ProgramWithPriority
+  type ProgramWithPriority,
+  type RecentActivityEntry
 } from './programPrioritization'

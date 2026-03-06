@@ -5,7 +5,7 @@
 
 import { useDataActions, useDataContext } from '@/context/DataContext'
 import { useExercises } from '@/hooks/data'
-import type { Program } from '@/types'
+import type { Exercise, Program } from '@/types'
 import { useCallback, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { ProgramForm, type ProgramFormData } from './ProgramForm'
@@ -46,7 +46,7 @@ export function ProgramEditor({
   }, [mode, programId, state.programs])
 
   const exerciseOptions = useMemo(() => {
-    return (exercises || []).map(exercise => ({
+    return (exercises || []).map((exercise: Exercise) => ({
       id: exercise.id,
       name: exercise.name,
       source: exercise.source

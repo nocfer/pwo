@@ -7,6 +7,7 @@ The app now supports full CRUD operations for exercises via your backend API wit
 ## Supported Operations
 
 ### 1. CREATE (POST)
+
 - **Endpoint:** `POST /api/v1/exercises`
 - **Status:** ✅ Implemented
 - **Documentation:** `POST_EXERCISE_INTEGRATION.md`
@@ -21,6 +22,7 @@ const exercise = await actions.upsertExercise({
 ```
 
 ### 2. READ (GET)
+
 - **Endpoint:** `GET /api/v1/exercises`
 - **Status:** ✅ Implemented
 - **Documentation:** `API_INTEGRATION_SUMMARY.md`
@@ -31,6 +33,7 @@ const { data: exercises } = useExercises()
 ```
 
 ### 3. UPDATE (PUT)
+
 - **Endpoint:** `PUT /api/v1/exercises/:id`
 - **Status:** ✅ Implemented
 - **Documentation:** `PUT_EXERCISE_INTEGRATION.md`
@@ -46,6 +49,7 @@ const exercise = await actions.upsertExercise({
 ```
 
 ### 4. DELETE (DELETE)
+
 - **Endpoint:** `DELETE /api/v1/exercises/:id`
 - **Status:** ⏳ Not yet implemented
 - **Next:** Wire up delete operation
@@ -78,33 +82,37 @@ UI Reflects Changes
 
 ## API Endpoints
 
-| Operation | Method | Endpoint | Status |
-|-----------|--------|----------|--------|
-| Create | POST | `/api/v1/exercises` | ✅ |
-| Read All | GET | `/api/v1/exercises` | ✅ |
-| Read One | GET | `/api/v1/exercises/:id` | ✅ |
-| Read by Category | GET | `/api/v1/exercises?category=:cat` | ✅ |
-| Update | PUT | `/api/v1/exercises/:id` | ✅ |
-| Delete | DELETE | `/api/v1/exercises/:id` | ⏳ |
+| Operation        | Method | Endpoint                          | Status |
+| ---------------- | ------ | --------------------------------- | ------ |
+| Create           | POST   | `/api/v1/exercises`               | ✅     |
+| Read All         | GET    | `/api/v1/exercises`               | ✅     |
+| Read One         | GET    | `/api/v1/exercises/:id`           | ✅     |
+| Read by Category | GET    | `/api/v1/exercises?category=:cat` | ✅     |
+| Update           | PUT    | `/api/v1/exercises/:id`           | ✅     |
+| Delete           | DELETE | `/api/v1/exercises/:id`           | ⏳     |
 
 ## Console Logs
 
 ### Create
+
 ```
 Exercise created via API: exercise-123
 ```
 
 ### Read
+
 ```
 Loaded exercises from API: 42
 ```
 
 ### Update
+
 ```
 Exercise updated via API: exercise-123
 ```
 
 ### Fallback (Any Operation)
+
 ```
 Failed to [create/update] exercise via API, falling back to local: APIError: ...
 ```
@@ -202,15 +210,15 @@ Your backend should:
 
 ### Example Status Codes
 
-| Code | Meaning | Example |
-|------|---------|---------|
-| 200 | Success (GET, PUT) | Exercise updated |
-| 201 | Created (POST) | Exercise created |
-| 400 | Bad request | Invalid data |
-| 401 | Unauthorized | Invalid token |
-| 404 | Not found | Exercise not found |
-| 409 | Conflict | Duplicate name |
-| 500 | Server error | Database error |
+| Code | Meaning            | Example            |
+| ---- | ------------------ | ------------------ |
+| 200  | Success (GET, PUT) | Exercise updated   |
+| 201  | Created (POST)     | Exercise created   |
+| 400  | Bad request        | Invalid data       |
+| 401  | Unauthorized       | Invalid token      |
+| 404  | Not found          | Exercise not found |
+| 409  | Conflict           | Duplicate name     |
+| 500  | Server error       | Database error     |
 
 ## Fallback Behavior
 

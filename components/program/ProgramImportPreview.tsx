@@ -3,11 +3,10 @@
  * Shows program details and validates exercise dependencies
  */
 
-import { calculateChallengeSessionCount, useExercises } from '@/hooks/data'
+import { useExercises } from '@/hooks/data'
 import { formatCount, formatReps, getFirstReps } from '@/lib/utils/format'
-import { ShareableProgramData } from '@/lib/utils/programShare'
 import { theme } from '@/theme/theme'
-import { ChallengeConfig, ProgramBlock } from '@/types'
+import { Exercise, Program, ProgramBlock } from '@/types'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import React, { useMemo } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -16,7 +15,7 @@ import { AnimatedCard } from '../common'
 import Button from '../common/Button'
 
 type Props = {
-  programData: ShareableProgramData
+  programData: Program
   onConfirm: () => void
   onCancel: () => void
   isImporting?: boolean
@@ -34,12 +33,7 @@ export default function ProgramImportPreview({
   const exerciseIds = useMemo(() => {
     const ids = new Set<string>()
     for (const block of programData.blocks) {
-      if (block.type === 'exercise') {
-        ids.add(block.exerciseId)
-      }
-    }
-    if (programData.challengeConfig) {
-      ids.add(programData.challengeConfig.exerciseId)
+      ids.add(block.exerciseId)
     }
     return Array.from(ids)
   }, [programData])
@@ -47,21 +41,11 @@ export default function ProgramImportPreview({
   // Check which exercises are missing
   const missingExercises = useMemo(() => {
     if (!exercises) return exerciseIds
-    const exerciseIdSet = new Set(exercises.map(e => e.id))
+    const exerciseIdSet = new Set(exercises.map((e: Exercise) => e.id))
     return exerciseIds.filter(id => !exerciseIdSet.has(id))
   }, [exercises, exerciseIds])
 
   const hasMissingExercises = missingExercises.length > 0
-  const isChallenge = Boolean(programData.challengeConfig)
-
-  // For challenges, calculate session count from config
-  // For regular programs, count the sessions
-  const sessionCount = useMemo(() => {
-    if (isChallenge && programData.challengeConfig) {
-      return calculateChallengeSessionCount(programData.challengeConfig)
-    }
-    return 1 // Regular programs are now single workouts
-  }, [isChallenge, programData.challengeConfig])
 
   // Count exercises in program
   const exerciseCount = exerciseIds.length
@@ -100,15 +84,13 @@ export default function ProgramImportPreview({
           <View style={styles.statsRow}>
             <View style={styles.stat}>
               <Ionicons
-                name={isChallenge ? 'trophy-outline' : 'barbell-outline'}
+                name={'barbell-outline'}
                 size={20}
                 color={theme.colors.primary}
               />
-              <Text style={styles.statLabel}>
-                {isChallenge ? 'Challenge' : 'Program'}
-              </Text>
+              <Text style={styles.statLabel}>{'Program'}</Text>
             </View>
-            {!isChallenge && (
+            {
               <View style={styles.stat}>
                 <Ionicons
                   name="list-outline"
@@ -116,22 +98,10 @@ export default function ProgramImportPreview({
                   color={theme.colors.primary}
                 />
                 <Text style={styles.statLabel}>
-                  {formatCount(sessionCount, 'session')}
+                  {formatCount(1, 'session')}
                 </Text>
               </View>
-            )}
-            {isChallenge && programData.challengeConfig && (
-              <View style={styles.stat}>
-                <Ionicons
-                  name="trending-up-outline"
-                  size={20}
-                  color={theme.colors.primary}
-                />
-                <Text style={styles.statLabel}>
-                  Target: {programData.challengeConfig.targetReps} reps
-                </Text>
-              </View>
-            )}
+            }
             <View style={styles.stat}>
               <Ionicons
                 name="fitness-outline"
@@ -180,22 +150,12 @@ export default function ProgramImportPreview({
           </View>
         </AnimatedCard>
       )}
-
-      {!isChallenge && (
-        <BlocksPreview
-          blocks={programData.blocks}
-          exercises={exercises ?? []}
-          missingExerciseIds={missingExercises}
-        />
-      )}
-      {isChallenge && programData.challengeConfig && (
-        <ChallengeConfigPreview
-          challengeConfig={programData.challengeConfig}
-          exercises={exercises ?? []}
-          missingExerciseIds={missingExercises}
-        />
-      )}
-
+      <BlocksPreview
+        blocks={programData.blocks}
+        exercises={exercises ?? []}
+        missingExerciseIds={missingExercises}
+        initialWarmup={programData.initialWarmup}
+      />
       <View style={styles.actions}>
         <Button
           label="Cancel"
@@ -407,30 +367,6 @@ const styles = StyleSheet.create({
     color: theme.colors.warning,
     marginTop: theme.spacing.xs
   },
-  challengeConfig: {
-    gap: theme.spacing.md,
-    marginTop: theme.spacing.md
-  },
-  challengeRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: theme.spacing.md,
-    paddingVertical: theme.spacing.sm
-  },
-  challengeLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    marginBottom: theme.spacing.xs
-  },
-  challengeValue: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.text
-  },
-  challengeValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm
-  },
   actions: {
     gap: theme.spacing.md,
     marginTop: theme.spacing.md
@@ -442,12 +378,14 @@ type BlocksPreviewProps = {
   blocks: ProgramBlock[]
   exercises: { id: string; name: string }[]
   missingExerciseIds: string[]
+  initialWarmup?: { seconds: number }
 }
 
 function BlocksPreview({
   blocks,
   exercises,
-  missingExerciseIds
+  missingExerciseIds,
+  initialWarmup
 }: BlocksPreviewProps) {
   const exerciseMap = useMemo(() => {
     return new Map(exercises.map(e => [e.id, e.name] as const))
@@ -477,13 +415,24 @@ function BlocksPreview({
         </Text>
 
         <View style={styles.blocksList}>
+          {initialWarmup && (
+            <StepCard
+              title="Warm-up"
+              delayMultiplier={0}
+              style={styles.blockCard}
+            >
+              <Text style={styles.blockMeta}>
+                {initialWarmup.seconds} seconds
+              </Text>
+            </StepCard>
+          )}
           {blocks.map((block, blockIdx) => (
             <BlockPreview
               key={blockIdx}
               block={block}
               exerciseMap={exerciseMap}
               missingExerciseSet={missingExerciseSet}
-              index={blockIdx}
+              index={blockIdx + (initialWarmup ? 1 : 0)}
             />
           ))}
         </View>
@@ -505,33 +454,10 @@ function BlockPreview({
   missingExerciseSet,
   index
 }: BlockPreviewProps) {
-  if (block.type === 'warmup') {
-    return (
-      <StepCard
-        title="Warm-up"
-        delayMultiplier={index}
-        style={styles.blockCard}
-      >
-        <Text style={styles.blockMeta}>{block.seconds} seconds</Text>
-      </StepCard>
-    )
-  }
-
-  if (block.type === 'rest') {
-    return (
-      <StepCard
-        title={block.label || 'Rest'}
-        delayMultiplier={index}
-        style={styles.blockCard}
-      >
-        <Text style={styles.blockMeta}>{block.seconds} seconds</Text>
-      </StepCard>
-    )
-  }
-
-  // Exercise block
   const exerciseName = exerciseMap.get(block.exerciseId) || block.exerciseId
   const isMissing = missingExerciseSet.has(block.exerciseId)
+  const sets = block.sets ?? 1
+  const restBetweenSets = block.restBetweenSets ?? 60
 
   return (
     <StepCard
@@ -560,6 +486,12 @@ function BlockPreview({
         {!block.targetReps && !block.durationSeconds && (
           <Text style={styles.blockMetaMuted}>Self-guided</Text>
         )}
+        {sets > 1 && (
+          <Text style={styles.blockMeta}>{formatCount(sets, 'set')}</Text>
+        )}
+        {sets > 1 && (
+          <Text style={styles.blockMeta}>Rest: {restBetweenSets}s</Text>
+        )}
       </View>
       {block.note && <Text style={styles.blockNote}>{block.note}</Text>}
       {isMissing && (
@@ -568,132 +500,5 @@ function BlockPreview({
         </Text>
       )}
     </StepCard>
-  )
-}
-
-// Component to display challenge configuration row
-type ChallengeConfigRowProps = {
-  icon: keyof typeof Ionicons.glyphMap
-  label: string
-  value: React.ReactNode
-  warning?: React.ReactNode
-}
-
-function ChallengeConfigRow({
-  icon,
-  label,
-  value,
-  warning
-}: ChallengeConfigRowProps) {
-  return (
-    <View style={styles.challengeRow}>
-      <Ionicons name={icon} size={18} color={theme.colors.primary} />
-      <View style={{ flex: 1 }}>
-        <Text style={styles.challengeLabel}>{label}</Text>
-        {typeof value === 'string' ? (
-          <Text style={styles.challengeValue}>{value}</Text>
-        ) : (
-          value
-        )}
-        {warning}
-      </View>
-    </View>
-  )
-}
-
-// Component to display challenge configuration
-type ChallengeConfigPreviewProps = {
-  challengeConfig: ChallengeConfig
-  exercises: { id: string; name: string }[]
-  missingExerciseIds: string[]
-}
-
-function ChallengeConfigPreview({
-  challengeConfig,
-  exercises,
-  missingExerciseIds
-}: ChallengeConfigPreviewProps) {
-  const exerciseMap = useMemo(() => {
-    return new Map(exercises.map(e => [e.id, e.name] as const))
-  }, [exercises])
-
-  const exerciseName =
-    exerciseMap.get(challengeConfig.exerciseId) || challengeConfig.exerciseId
-  const isMissing = missingExerciseIds.includes(challengeConfig.exerciseId)
-
-  return (
-    <AnimatedCard>
-      <View style={styles.card}>
-        <View style={styles.sessionsHeader}>
-          <Ionicons
-            name="trophy-outline"
-            size={20}
-            color={theme.colors.primary}
-          />
-          <Text style={styles.sessionsTitle}>Challenge Configuration</Text>
-        </View>
-        <Text style={styles.sessionsSubtitle}>
-          Sessions are generated dynamically
-        </Text>
-
-        <View style={styles.challengeConfig}>
-          <ChallengeConfigRow
-            icon="fitness-outline"
-            label="Exercise"
-            value={
-              <View style={styles.challengeValueRow}>
-                <Text style={styles.challengeValue}>{exerciseName}</Text>
-                {isMissing && (
-                  <Ionicons
-                    name="warning-outline"
-                    size={16}
-                    color={theme.colors.warning}
-                  />
-                )}
-              </View>
-            }
-            warning={
-              isMissing ? (
-                <Text style={styles.missingExerciseLabel}>
-                  Exercise not in your library
-                </Text>
-              ) : undefined
-            }
-          />
-
-          <ChallengeConfigRow
-            icon="trending-up-outline"
-            label="Target Reps"
-            value={`${challengeConfig.targetReps} reps`}
-          />
-
-          <ChallengeConfigRow
-            icon="repeat-outline"
-            label="Sets per Session"
-            value={formatCount(challengeConfig.sets, 'set')}
-          />
-
-          <ChallengeConfigRow
-            icon="timer-outline"
-            label="Warm-up"
-            value={`${challengeConfig.warmUpSeconds} seconds`}
-          />
-
-          <ChallengeConfigRow
-            icon="time-outline"
-            label="Rest Between Sets"
-            value={`${challengeConfig.breakSeconds} seconds`}
-          />
-
-          {challengeConfig.weeklyIncreasePercent && (
-            <ChallengeConfigRow
-              icon="stats-chart-outline"
-              label="Weekly Increase"
-              value={`${challengeConfig.weeklyIncreasePercent}%`}
-            />
-          )}
-        </View>
-      </View>
-    </AnimatedCard>
   )
 }

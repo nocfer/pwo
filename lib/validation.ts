@@ -1011,7 +1011,6 @@ export function checkExerciseDependencies(
     dependentChallenges: dependentPrograms.filter(p =>
       Boolean(p.challengeConfig)
     ),
-    activeSessions: [], // Would need session data to populate this
     warnings
   }
 }

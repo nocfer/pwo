@@ -69,11 +69,13 @@ Exercise appears in list
 ## Console Logs
 
 **Success:**
+
 ```
 Exercise created via API: exercise-123
 ```
 
 **Fallback:**
+
 ```
 Failed to create exercise via API, falling back to local: APIError: HTTP 500
 ```
@@ -118,13 +120,13 @@ try {
 
 ## Common Errors
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| "User not authenticated" | Not logged in | Log in first |
-| "HTTP 401" | Invalid token | Check Firebase config |
-| "HTTP 409" | Name exists | Use different name |
-| "Network error" | Backend down | Start backend |
-| "Validation failed" | Invalid data | Check required fields |
+| Error                    | Cause         | Solution              |
+| ------------------------ | ------------- | --------------------- |
+| "User not authenticated" | Not logged in | Log in first          |
+| "HTTP 401"               | Invalid token | Check Firebase config |
+| "HTTP 409"               | Name exists   | Use different name    |
+| "Network error"          | Backend down  | Start backend         |
+| "Validation failed"      | Invalid data  | Check required fields |
 
 ## Files Modified
 

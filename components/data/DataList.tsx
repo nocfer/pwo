@@ -36,6 +36,7 @@ type Props = {
   onItemPress?: (item: DataItem) => void
   onItemEdit?: (item: DataItem) => void
   onItemLongPress?: (item: DataItem) => void
+  onItemDelete?: (item: DataItem) => void
   showInlineActions?: boolean
   isLoading?: boolean
   error?: string
@@ -51,6 +52,7 @@ export function DataList({
   onItemPress,
   onItemEdit,
   onItemLongPress,
+  onItemDelete,
   showInlineActions = false,
   isLoading = false,
   error,
@@ -183,6 +185,14 @@ export function DataList({
     }
   }
 
+  const handleItemDelete = (item: ListItem) => {
+    // Find the original DataItem by ID
+    const originalItem = data.find(d => d.id === item.id)
+    if (originalItem) {
+      onItemDelete?.(originalItem)
+    }
+  }
+
   if (isLoading) {
     return <LoadingStateList style={style} />
   }
@@ -219,6 +229,7 @@ export function DataList({
         onItemPress={handleItemPress}
         onItemEdit={handleItemEdit}
         onItemLongPress={handleItemLongPress}
+        onItemDelete={handleItemDelete}
         selectedItems={selectedItems}
         onSelectionChange={onSelectionChange}
         showSearch={false} // Search is handled by parent component
@@ -240,6 +251,7 @@ export function DataList({
       searchPlaceholder={`Search ${dataType.toLowerCase()}...`}
       onItemPress={handleItemPress}
       onItemLongPress={handleItemLongPress}
+      onItemDelete={handleItemDelete}
       selectedItems={selectedItems}
       onSelectionChange={onSelectionChange}
       showSearch={false} // Search is handled by parent component
