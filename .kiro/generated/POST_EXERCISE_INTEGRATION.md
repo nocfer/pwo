@@ -7,6 +7,7 @@ The app now supports creating exercises via the API. When a user creates a new e
 ## How It Works
 
 ### Flow Diagram
+
 ```
 User creates exercise
   ↓
@@ -28,6 +29,7 @@ Check if user is authenticated & API available
 **File: `context/DataContext.tsx`**
 
 The `upsertExercise` action now:
+
 1. Validates exercise data
 2. Checks user authentication and API availability
 3. Attempts to create via API if available
@@ -36,11 +38,12 @@ The `upsertExercise` action now:
 6. Returns the created exercise
 
 **Code:**
+
 ```typescript
 const upsertExercise = useCallback(
   async (input: Pick<Exercise, 'id' | 'name' | 'category' | 'icon'>) => {
     // Validation...
-    
+
     const currentUser = auth.currentUser
     if (currentUser && isAPIAvailable()) {
       try {
@@ -58,7 +61,7 @@ const upsertExercise = useCallback(
     } else {
       saved = await storage.upsertExercise({...})
     }
-    
+
     // Update state...
     return saved
   },
@@ -71,6 +74,7 @@ const upsertExercise = useCallback(
 ### POST /api/v1/exercises
 
 **Request:**
+
 ```bash
 curl --request POST \
   --url http://localhost:3000/api/v1/exercises \
@@ -87,6 +91,7 @@ curl --request POST \
 ```
 
 **Request Body:**
+
 ```typescript
 {
   name: string              // Required: Exercise name
@@ -100,6 +105,7 @@ curl --request POST \
 ```
 
 **Response:**
+
 ```typescript
 {
   id: string              // Generated ID
@@ -117,6 +123,7 @@ curl --request POST \
 ```
 
 **Status Codes:**
+
 - `201` - Exercise created successfully
 - `400` - Invalid request data
 - `401` - Unauthorized (invalid token)
@@ -139,13 +146,13 @@ export function CreateExerciseForm() {
     try {
       setLoading(true)
       setError(null)
-      
+
       const exercise = await actions.upsertExercise({
         name: formData.name,
         category: formData.category,
         icon: formData.icon
       })
-      
+
       console.log('Exercise created:', exercise)
       // Navigate back or show success message
     } catch (err) {
@@ -158,7 +165,7 @@ export function CreateExerciseForm() {
   return (
     <View>
       {error && <Text style={{ color: 'red' }}>{error}</Text>}
-      <ExerciseForm 
+      <ExerciseForm
         onSubmit={handleCreate}
         loading={loading}
       />
@@ -247,16 +254,19 @@ try {
 ## Console Logs
 
 ### Success
+
 ```
 Exercise created via API: exercise-123
 ```
 
 ### Fallback
+
 ```
 Failed to create exercise via API, falling back to local: APIError: HTTP 500
 ```
 
 ### Validation Error
+
 ```
 Validation failed: Exercise name is required
 ```
@@ -277,44 +287,47 @@ Your backend should:
 ### Example Fastify Handler
 
 ```typescript
-fastify.post<{ Body: CreateExerciseRequest }>('/api/v1/exercises', async (request, reply) => {
-  // Verify Firebase token
-  const user = await verifyFirebaseToken(request.headers.authorization)
-  if (!user) {
-    return reply.code(401).send({ message: 'Unauthorized' })
+fastify.post<{ Body: CreateExerciseRequest }>(
+  '/api/v1/exercises',
+  async (request, reply) => {
+    // Verify Firebase token
+    const user = await verifyFirebaseToken(request.headers.authorization)
+    if (!user) {
+      return reply.code(401).send({ message: 'Unauthorized' })
+    }
+
+    // Validate request body
+    if (!request.body.name) {
+      return reply.code(400).send({ message: 'Name is required' })
+    }
+
+    // Check for duplicates
+    const existing = await db.exercises.findOne({ name: request.body.name })
+    if (existing) {
+      return reply.code(409).send({ message: 'Exercise name already exists' })
+    }
+
+    // Create exercise
+    const exercise = {
+      id: generateId(),
+      name: request.body.name,
+      category: request.body.category,
+      icon: request.body.icon,
+      description: request.body.description,
+      instructions: request.body.instructions,
+      media: request.body.media,
+      source: request.body.source || 'user',
+      createdBy: user.uid,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+
+    // Save to database
+    await db.exercises.insertOne(exercise)
+
+    return reply.code(201).send(exercise)
   }
-
-  // Validate request body
-  if (!request.body.name) {
-    return reply.code(400).send({ message: 'Name is required' })
-  }
-
-  // Check for duplicates
-  const existing = await db.exercises.findOne({ name: request.body.name })
-  if (existing) {
-    return reply.code(409).send({ message: 'Exercise name already exists' })
-  }
-
-  // Create exercise
-  const exercise = {
-    id: generateId(),
-    name: request.body.name,
-    category: request.body.category,
-    icon: request.body.icon,
-    description: request.body.description,
-    instructions: request.body.instructions,
-    media: request.body.media,
-    source: request.body.source || 'user',
-    createdBy: user.uid,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-
-  // Save to database
-  await db.exercises.insertOne(exercise)
-
-  return reply.code(201).send(exercise)
-})
+)
 ```
 
 ## Files Modified

@@ -86,7 +86,6 @@ export class DependencyChecker {
       canDelete: dependentPrograms.length === 0,
       dependentPrograms,
       dependentChallenges,
-      activeSessions: [], // Would need session progress data to populate
       warnings
     }
   }
@@ -107,7 +106,6 @@ export class DependencyChecker {
       canDelete: true,
       dependentPrograms: [],
       dependentChallenges: [],
-      activeSessions: [], // Would need session progress data
       warnings
     }
   }
@@ -357,8 +355,7 @@ export function canSafelyDelete(
         canDelete: result.canDelete,
         dependencies: {
           programs: result.dependentPrograms,
-          challenges: result.dependentChallenges,
-          sessions: result.activeSessions
+          challenges: result.dependentChallenges
         },
         warnings: result.warnings
       }
@@ -381,8 +378,7 @@ export function canSafelyDelete(
         canDelete: result.canDelete,
         dependencies: {
           programs: result.dependentPrograms,
-          challenges: result.dependentChallenges,
-          sessions: result.activeSessions
+          challenges: result.dependentChallenges
         },
         warnings: result.warnings
       }

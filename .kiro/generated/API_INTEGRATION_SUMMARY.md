@@ -7,6 +7,7 @@ The app now fetches exercises from your backend API (`/api/v1/exercises`) instea
 ## Changes Made
 
 ### 1. Updated API SDK (`lib/api.ts`)
+
 - Updated all endpoints to use `/api/v1/` prefix to match your backend
 - Endpoints now match your local server structure:
   - `GET /api/v1/exercises` - Fetch all exercises
@@ -17,6 +18,7 @@ The app now fetches exercises from your backend API (`/api/v1/exercises`) instea
   - `DELETE /api/v1/exercises/:id` - Delete exercise (admin)
 
 ### 2. Updated DataContext (`context/DataContext.tsx`)
+
 - Added API imports: `fetchExercises`, `isAPIAvailable`
 - Modified exercise loading logic to:
   1. Check if API is available
@@ -28,15 +30,18 @@ The app now fetches exercises from your backend API (`/api/v1/exercises`) instea
 - Added proper error handling and logging
 
 ### 3. Updated Validation (`lib/validation.ts`)
+
 - Extended `validateModificationPermissions()` to accept 'pt' (personal trainer) source
 - Allows exercises from API with different source types
 
 ### 4. Created useAPIExercises Hook (`hooks/data/useAPIExercises.ts`)
+
 - Provides direct API access for advanced use cases
 - Includes loading, error, and availability states
 - Useful for debugging or specialized components
 
 ### 5. Updated Environment Configuration (`.env`)
+
 - Fixed Firebase environment variables to use `EXPO_PUBLIC_` prefix
 - Existing API configuration already in place:
   - `EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3000`
@@ -46,6 +51,7 @@ The app now fetches exercises from your backend API (`/api/v1/exercises`) instea
 ## How It Works
 
 ### On App Start
+
 1. DataContext initializes
 2. Checks if API is available (`EXPO_PUBLIC_API_ENABLED=true` and `EXPO_PUBLIC_API_BASE_URL` set)
 3. If available, fetches exercises from `/api/v1/exercises` with Firebase auth token
@@ -56,15 +62,18 @@ The app now fetches exercises from your backend API (`/api/v1/exercises`) instea
 8. Updates state and notifies all subscribers
 
 ### On Refresh
+
 - `refreshAll()` action triggers the same flow
 - Useful for manual refresh or pull-to-refresh UI
 
 ### Error Handling
+
 - If API fails, app falls back to local storage only
 - Errors are logged but don't crash the app
 - User can still work with local exercises
 
 ### Authentication
+
 - Firebase auth token is automatically included in all API requests
 - Token is refreshed on each request
 - No manual token management needed
@@ -72,6 +81,7 @@ The app now fetches exercises from your backend API (`/api/v1/exercises`) instea
 ## Usage
 
 ### Standard Usage (Recommended)
+
 ```typescript
 import { useExercises } from '@/hooks/data/useExercises'
 
@@ -82,6 +92,7 @@ export function MyComponent() {
 ```
 
 ### Direct API Usage (Advanced)
+
 ```typescript
 import { useAPIExercises } from '@/hooks/data/useAPIExercises'
 
@@ -92,6 +103,7 @@ export function MyComponent() {
 ```
 
 ### Manual API Calls
+
 ```typescript
 import { fetchExercises, APIError } from '@/lib/api'
 
@@ -107,6 +119,7 @@ try {
 ## Testing
 
 ### Test with cURL
+
 ```bash
 curl --request GET \
   --url http://localhost:3000/api/v1/exercises \
@@ -114,6 +127,7 @@ curl --request GET \
 ```
 
 ### Test in App
+
 1. Ensure backend is running on `http://localhost:3000`
 2. Ensure `EXPO_PUBLIC_API_ENABLED=true` in `.env`
 3. Start the app
@@ -123,6 +137,7 @@ curl --request GET \
 ## Configuration
 
 ### Enable/Disable API
+
 ```env
 # Enable API integration
 EXPO_PUBLIC_API_ENABLED=true
@@ -132,11 +147,13 @@ EXPO_PUBLIC_API_ENABLED=false
 ```
 
 ### Change API Base URL
+
 ```env
 EXPO_PUBLIC_API_BASE_URL=https://api.example.com
 ```
 
 ### Adjust Request Timeout
+
 ```env
 EXPO_PUBLIC_API_TIMEOUT=60000  # 60 seconds
 ```
@@ -144,6 +161,7 @@ EXPO_PUBLIC_API_TIMEOUT=60000  # 60 seconds
 ## Fallback Behavior
 
 If the API is not available or fails:
+
 1. App continues to work with local storage
 2. User-created exercises are still accessible
 3. No data loss occurs

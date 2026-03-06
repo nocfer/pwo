@@ -2,6 +2,10 @@ import { WeeklyChart } from '@/components'
 import { AnimatedCard, EmptyState } from '@/components/common'
 import { useAllProgress, usePrograms, useWeeklyActivity } from '@/hooks/data'
 import {
+  AnimatedIcon,
+  useScreenIconAnimation
+} from '@/hooks/useScreenIconAnimation'
+import {
   prioritizePrograms,
   type ProgramWithPriority
 } from '@/lib/utils/programPrioritization'
@@ -26,32 +30,33 @@ export default function Index() {
     ProgramWithPriority[]
   >([])
 
+  const { data: aggregated } = useAllProgress()
+
   useEffect(() => {
     if (programs) {
-      prioritizePrograms(programs).then(setPrioritizedPrograms)
+      setPrioritizedPrograms(
+        prioritizePrograms(programs, aggregated?.recentActivity ?? [])
+      )
     } else {
       setPrioritizedPrograms([])
     }
-  }, [programs])
+  }, [programs, aggregated])
 
-  const { regularPrograms, challenges, allPrograms } = useMemo(() => {
+  const { regularPrograms, allPrograms } = useMemo(() => {
     if (prioritizedPrograms.length === 0) {
-      return { regularPrograms: [], challenges: [], allPrograms: [] }
+      return { regularPrograms: [], allPrograms: [] }
     }
 
     const regular = prioritizedPrograms.filter(p => !p.challengeConfig)
-    const challenge = prioritizedPrograms.filter(p => p.challengeConfig)
-    const all = [...regular, ...challenge]
+    const all = [...regular]
 
     return {
       regularPrograms: regular,
-      challenges: challenge,
       allPrograms: all
     }
   }, [prioritizedPrograms])
 
   const { data: weeklyData } = useWeeklyActivity()
-  const { data: aggregated } = useAllProgress()
 
   const handleProgramSelect = (program: ProgramWithPriority) => {
     setProgramSelectorOpen(false)
@@ -65,6 +70,16 @@ export default function Index() {
       setProgramSelectorOpen(true)
     }
   }
+
+  const { trigger, staggerDelay } = useScreenIconAnimation({
+    icons: [
+      { type: 'pulse', duration: 500 },
+      { type: 'rotate', duration: 400 },
+      { type: 'bounceY', duration: 450 },
+      { type: 'slideX', duration: 400 }
+    ],
+    staggerDelay: 80
+  })
 
   const hasProgress = aggregated && aggregated.totalWorkoutsCompleted > 0
 
@@ -93,11 +108,18 @@ export default function Index() {
               >
                 <View style={styles.heroContent}>
                   <View style={styles.heroIconContainer}>
-                    <Ionicons
-                      name="play"
-                      size={28}
-                      color={theme.colors.primaryTextOn}
-                    />
+                    <AnimatedIcon
+                      config={{ type: 'pulse', duration: 500 }}
+                      trigger={trigger}
+                      index={0}
+                      staggerDelay={staggerDelay}
+                    >
+                      <Ionicons
+                        name="play"
+                        size={28}
+                        color={theme.colors.primaryTextOn}
+                      />
+                    </AnimatedIcon>
                   </View>
                   <View style={styles.heroTextContainer}>
                     <Text style={styles.heroTitle}>
@@ -133,11 +155,18 @@ export default function Index() {
                   onPress={() => router.navigate('/(tabs)/progress')}
                 >
                   <View style={styles.statIconContainer}>
-                    <Ionicons
-                      name="fitness"
-                      size={20}
-                      color={theme.colors.primary}
-                    />
+                    <AnimatedIcon
+                      config={{ type: 'rotate', duration: 400 }}
+                      trigger={trigger}
+                      index={1}
+                      staggerDelay={staggerDelay}
+                    >
+                      <Ionicons
+                        name="fitness"
+                        size={20}
+                        color={theme.colors.primary}
+                      />
+                    </AnimatedIcon>
                   </View>
                   <Text style={styles.statValue}>
                     {aggregated.totalWorkoutsCompleted}
@@ -158,11 +187,18 @@ export default function Index() {
                       { backgroundColor: theme.colors.accentLight }
                     ]}
                   >
-                    <Ionicons
-                      name="flame"
-                      size={20}
-                      color={theme.colors.accent}
-                    />
+                    <AnimatedIcon
+                      config={{ type: 'bounceY', duration: 450 }}
+                      trigger={trigger}
+                      index={2}
+                      staggerDelay={staggerDelay}
+                    >
+                      <Ionicons
+                        name="flame"
+                        size={20}
+                        color={theme.colors.accent}
+                      />
+                    </AnimatedIcon>
                   </View>
                   <Text style={styles.statValue}>
                     {aggregated.currentStreak}
@@ -189,16 +225,23 @@ export default function Index() {
             >
               <View style={styles.browseContent}>
                 <View style={styles.browseIconContainer}>
-                  <Ionicons
-                    name="grid-outline"
-                    size={22}
-                    color={theme.colors.primary}
-                  />
+                  <AnimatedIcon
+                    config={{ type: 'slideX', duration: 400 }}
+                    trigger={trigger}
+                    index={3}
+                    staggerDelay={staggerDelay}
+                  >
+                    <Ionicons
+                      name="grid-outline"
+                      size={22}
+                      color={theme.colors.primary}
+                    />
+                  </AnimatedIcon>
                 </View>
                 <View style={styles.browseTextContainer}>
                   <Text style={styles.browseTitle}>Browse Library</Text>
                   <Text style={styles.browseSubtitle}>
-                    Programs, challenges & exercises
+                    Programs & exercises
                   </Text>
                 </View>
               </View>
@@ -217,7 +260,7 @@ export default function Index() {
                 variant="default"
                 icon="barbell-outline"
                 title="No programs yet"
-                description="Create your first program or challenge to get started"
+                description="Create your first program to get started"
                 actionLabel="Go to Library"
                 onAction={() => router.navigate('/(tabs)/library')}
               />
@@ -250,14 +293,6 @@ export default function Index() {
               style={styles.programList}
               showsVerticalScrollIndicator={false}
             >
-              <ProgramSection
-                label="Challenges"
-                programs={challenges}
-                icon="trophy"
-                iconColor={theme.colors.success}
-                iconBgColor={theme.colors.successLight}
-                onSelect={handleProgramSelect}
-              />
               <ProgramSection
                 label="Programs"
                 programs={regularPrograms}

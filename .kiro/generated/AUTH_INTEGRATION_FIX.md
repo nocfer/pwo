@@ -26,13 +26,16 @@ Updated the DataContext to:
 ## Changes Made
 
 ### 1. Updated Imports (`context/DataContext.tsx`)
+
 ```typescript
 import { auth } from '@/lib/firebase'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 ```
 
 ### 2. Modified Exercise Loading Effect
+
 **Before:**
+
 ```typescript
 useEffect(() => {
   // Tried to fetch immediately, before auth was ready
@@ -43,23 +46,29 @@ useEffect(() => {
 ```
 
 **After:**
+
 ```typescript
 useEffect(() => {
   // Subscribe to auth state changes
-  const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
-    // Only fetch from API if user is authenticated
-    if (currentUser && isAPIAvailable()) {
-      apiExercises = await fetchExercises()
+  const unsubscribe = onAuthStateChanged(
+    auth,
+    async (currentUser: User | null) => {
+      // Only fetch from API if user is authenticated
+      if (currentUser && isAPIAvailable()) {
+        apiExercises = await fetchExercises()
+      }
+      // Otherwise use local storage only
     }
-    // Otherwise use local storage only
-  })
-  
+  )
+
   return () => unsubscribe()
 }, [])
 ```
 
 ### 3. Updated refreshAll() Function
+
 Added auth check before API calls:
+
 ```typescript
 const currentUser = auth.currentUser
 if (currentUser && isAPIAvailable()) {
@@ -70,6 +79,7 @@ if (currentUser && isAPIAvailable()) {
 ## How It Works Now
 
 ### On App Start
+
 1. App initializes
 2. Firebase auth state listener is set up
 3. If user is already logged in → fetch from API
@@ -78,6 +88,7 @@ if (currentUser && isAPIAvailable()) {
 6. When user logs out → fall back to local storage
 
 ### On Manual Refresh
+
 1. Check if user is currently authenticated
 2. If yes and API available → fetch from API
 3. If no → use local storage only
@@ -85,24 +96,28 @@ if (currentUser && isAPIAvailable()) {
 ## Testing
 
 ### Test 1: Guest/Anonymous User
+
 1. Start app without logging in
 2. Check console: Should NOT see "Loaded exercises from API"
 3. Exercises should load from local storage
 4. No API errors should appear
 
 ### Test 2: Authenticated User
+
 1. Log in with email/password
 2. Check console: Should see "Loaded exercises from API: X"
 3. Exercises should load from API + local storage
 4. No authentication errors
 
 ### Test 3: Manual Refresh
+
 1. Log in
 2. Pull to refresh or call `refreshAll()`
 3. Should fetch from API again
 4. No errors should appear
 
 ### Test 4: API Failure
+
 1. Log in
 2. Stop backend server
 3. Pull to refresh
@@ -113,28 +128,31 @@ if (currentUser && isAPIAvailable()) {
 
 The app now handles these scenarios gracefully:
 
-| Scenario | Behavior |
-|----------|----------|
-| User not authenticated | Use local storage only |
-| API not configured | Use local storage only |
-| API fails | Fall back to local storage |
-| User logs in | Fetch from API |
-| User logs out | Use local storage only |
-| Network error | Fall back to local storage |
+| Scenario               | Behavior                   |
+| ---------------------- | -------------------------- |
+| User not authenticated | Use local storage only     |
+| API not configured     | Use local storage only     |
+| API fails              | Fall back to local storage |
+| User logs in           | Fetch from API             |
+| User logs out          | Use local storage only     |
+| Network error          | Fall back to local storage |
 
 ## Console Logs
 
 ### Success
+
 ```
 Loaded exercises from API: 42
 ```
 
 ### Fallback (No Auth)
+
 ```
 Failed to fetch exercises from API, falling back to local: APIError: User not authenticated
 ```
 
 ### Fallback (API Error)
+
 ```
 Failed to fetch exercises from API, falling back to local: APIError: HTTP 500
 ```

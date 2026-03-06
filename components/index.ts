@@ -31,7 +31,6 @@ export { StepCard } from './cards'
 
 // Progress components
 export {
-  ChallengeProgressView,
   CompactEmptyState,
   ConsistencyHeatmap,
   EnhancedExerciseProgressionChart,
@@ -51,8 +50,6 @@ export {
   WeeklyChartCompact,
   WeeklySummaryCard
 } from './progress'
-
-export { ChallengeView } from './challenge'
 
 // Data management components
 export {

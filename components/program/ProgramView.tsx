@@ -1,7 +1,7 @@
 import { ProgramProgressMetrics, useExercises } from '@/hooks/data'
 import { getFirstReps, getTotalReps } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
-import { Program } from '@/types'
+import { Exercise, Program } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useMemo } from 'react'
@@ -37,19 +37,13 @@ export default function ProgramView({ program, programMetrics }: Props) {
     const exerciseIds = new Set<string>()
 
     program.blocks.forEach(block => {
-      if (block.type === 'exercise') {
-        exerciseIds.add(block.exerciseId)
-        const sets = block.sets ?? 1
-        totalSets += sets
-        totalReps += getTotalReps(block.targetReps, sets)
-        // Add rest between sets
-        if (sets > 1) {
-          restSeconds += (block.restBetweenSets ?? 60) * (sets - 1)
-        }
-      } else if (block.type === 'warmup') {
-        warmupSeconds += block.seconds
-      } else if (block.type === 'rest') {
-        restSeconds += block.seconds
+      exerciseIds.add(block.exerciseId)
+      const sets = block.sets ?? 1
+      totalSets += sets
+      totalReps += getTotalReps(block.targetReps, sets)
+      // Add rest between sets
+      if (sets > 1) {
+        restSeconds += (block.restBetweenSets ?? 60) * (sets - 1)
       }
     })
 
@@ -72,7 +66,7 @@ export default function ProgramView({ program, programMetrics }: Props) {
   // Get unique exercises with details
   const exerciseDetails = useMemo(() => {
     const exerciseMap = new Map(
-      (exercises ?? []).map(e => [e.id, e.name] as const)
+      (exercises ?? []).map((e: Exercise) => [e.id, e.name] as const)
     )
 
     const details: {
@@ -84,9 +78,10 @@ export default function ProgramView({ program, programMetrics }: Props) {
     const seen = new Set<string>()
 
     program.blocks.forEach(block => {
-      if (block.type === 'exercise' && !seen.has(block.exerciseId)) {
+      if (!seen.has(block.exerciseId)) {
         seen.add(block.exerciseId)
-        const name = exerciseMap.get(block.exerciseId) ?? block.exerciseId
+        const name =
+          (exerciseMap.get(block.exerciseId) as string) ?? block.exerciseId
         const sets = block.sets ?? 1
         const reps = getFirstReps(block.targetReps)
         details.push({ id: block.exerciseId, name, sets, reps })

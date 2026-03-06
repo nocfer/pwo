@@ -11,6 +11,10 @@ import {
 } from '@/components'
 import { Button } from '@/components/common'
 import { type AggregatedProgress, useAllProgress } from '@/hooks/data'
+import {
+  AnimatedIcon,
+  useScreenIconAnimation
+} from '@/hooks/useScreenIconAnimation'
 import { haptics } from '@/lib/haptics'
 import { theme } from '@/theme/theme'
 import { Ionicons } from '@expo/vector-icons'
@@ -49,6 +53,16 @@ Generated on ${new Date().toLocaleDateString()}`
 export default function StatisticsScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const { data: allProgress } = useAllProgress()
+
+  const { trigger, staggerDelay } = useScreenIconAnimation({
+    icons: [
+      { type: 'pulse', duration: 500 },
+      { type: 'bounceY', duration: 450 },
+      { type: 'spin', duration: 500 },
+      { type: 'clockwise', duration: 600 }
+    ],
+    staggerDelay: 80
+  })
 
   const sectionAnims = useRef(
     Array.from({ length: SECTION_COUNT }, () => new Animated.Value(0))
@@ -145,24 +159,40 @@ export default function StatisticsScreen() {
                 label="Total Workouts"
                 value={allProgress?.totalWorkoutsCompleted ?? 0}
                 color={theme.colors.primary}
+                animationConfig={{ type: 'pulse', duration: 500 }}
+                trigger={trigger}
+                index={0}
+                staggerDelay={staggerDelay}
               />
               <StatCard
                 icon="flame"
                 label="Current Streak"
                 value={allProgress?.currentStreak ?? 0}
                 color={theme.colors.accent}
+                animationConfig={{ type: 'bounceY', duration: 450 }}
+                trigger={trigger}
+                index={1}
+                staggerDelay={staggerDelay}
               />
               <StatCard
                 icon="barbell"
                 label="Total Reps"
                 value={allProgress?.totalRepsCompleted ?? 0}
                 color={theme.colors.phases.working}
+                animationConfig={{ type: 'spin', duration: 500 }}
+                trigger={trigger}
+                index={2}
+                staggerDelay={staggerDelay}
               />
               <StatCard
                 icon="time"
-                label="Active Programs"
-                value={allProgress?.activePrograms ?? 0}
+                label="Active Workouts"
+                value={allProgress?.activeWorkouts ?? 0}
                 color={theme.colors.success}
+                animationConfig={{ type: 'clockwise', duration: 600 }}
+                trigger={trigger}
+                index={3}
+                staggerDelay={staggerDelay}
               />
             </View>
           </View>
@@ -205,17 +235,32 @@ function StatCard({
   icon,
   label,
   value,
-  color
+  color,
+  animationConfig,
+  trigger,
+  index,
+  staggerDelay
 }: {
   icon: keyof typeof Ionicons.glyphMap
   label: string
   value: number
   color: string
+  animationConfig: import('@/hooks/useScreenIconAnimation').IconAnimationConfig
+  trigger: import('react-native-reanimated').SharedValue<number>
+  index: number
+  staggerDelay: number
 }) {
   return (
     <View style={styles.statCard}>
       <View style={[styles.statIcon, { backgroundColor: `${color}15` }]}>
-        <Ionicons name={icon} size={20} color={color} />
+        <AnimatedIcon
+          config={animationConfig}
+          trigger={trigger}
+          index={index}
+          staggerDelay={staggerDelay}
+        >
+          <Ionicons name={icon} size={20} color={color} />
+        </AnimatedIcon>
       </View>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>

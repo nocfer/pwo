@@ -3,7 +3,6 @@
  */
 
 // Legacy components (kept for backward compatibility)
-export { default as ChallengeProgressView } from './ChallengeProgressView'
 export { default as ProgramProgressView } from './ProgramProgressView'
 export { default as ProgressCalendar } from './ProgressCalendar'
 export { default as ProgressCard } from './ProgressCard'
