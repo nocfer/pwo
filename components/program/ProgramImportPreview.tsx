@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   title: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text
   },
   subtitle: {
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: theme.colors.border
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs
   },
   sessionsTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text
   },
   sessionsSubtitle: {

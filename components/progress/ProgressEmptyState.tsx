@@ -115,13 +115,13 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: theme.spacing.md
   },
   title: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     textAlign: 'center',
     marginBottom: theme.spacing.xs

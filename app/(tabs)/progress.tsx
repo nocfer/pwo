@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     ...theme.shadows.sm
   },
   cardTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     marginBottom: theme.spacing.md
   },

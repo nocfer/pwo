@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
     gap: theme.spacing.md,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     marginBottom: 2
   },
   value: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.primary
   },
   meta: {
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   newBadgeText: {
     ...theme.typography.caption,
-    color: '#FFFFFF',
+    color: theme.colors.textInverse,
     fontFamily: theme.fonts.bold,
     fontSize: 10
   }

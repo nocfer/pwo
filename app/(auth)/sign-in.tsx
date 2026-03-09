@@ -140,7 +140,8 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm
   },
   label: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.text,
     marginLeft: theme.spacing.xs
   },

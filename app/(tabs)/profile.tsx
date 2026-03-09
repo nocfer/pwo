@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     color: theme.colors.muted
   },
   sectionTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     marginBottom: theme.spacing.md
   },

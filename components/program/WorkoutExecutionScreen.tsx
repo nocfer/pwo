@@ -907,7 +907,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.sm
   },
   headerTimerText: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.text,
     fontVariant: ['tabular-nums']
   },
@@ -954,8 +955,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     padding: theme.spacing.xl,
     marginBottom: theme.spacing.lg,
-    borderWidth: 2,
-    ...theme.shadows.md
+    borderWidth: 2
   },
 
   // State container (shared)
@@ -1002,7 +1002,7 @@ const styles = StyleSheet.create({
 
   // Timer state
   timerLabel: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     textAlign: 'center',
     marginBottom: theme.spacing.sm
@@ -1050,7 +1050,8 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl
   },
   setIndicatorText: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primary
   },
   repCounter: {
@@ -1173,8 +1174,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    ...theme.shadows.sm
+    padding: theme.spacing.md
   },
   upNextIcon: {
     width: 36,

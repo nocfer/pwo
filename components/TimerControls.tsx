@@ -94,17 +94,15 @@ const styles = StyleSheet.create({
     minHeight: 48
   },
   buttonPrimary: {
-    backgroundColor: theme.colors.primary,
-    ...theme.shadows.md
+    backgroundColor: theme.colors.primary
   },
   buttonSecondary: {
     borderWidth: 1,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    ...theme.shadows.sm
+    backgroundColor: theme.colors.surface
   },
   buttonPressed: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.surface,
     transform: [{ scale: 0.98 }]
   },
   buttonPrimaryPressed: {

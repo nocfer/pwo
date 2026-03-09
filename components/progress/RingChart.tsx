@@ -72,7 +72,7 @@ export default function RingChart({
           cx={center}
           cy={center}
           r={radius}
-          stroke={theme.colors.card}
+          stroke={theme.colors.surface}
           strokeWidth={strokeWidth}
           fill="none"
         />

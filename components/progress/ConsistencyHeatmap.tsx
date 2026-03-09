@@ -19,11 +19,14 @@ type Props = {
 const CELL_SIZE = 22
 const CELL_GAP = 3
 
+// Max-intensity step beyond theme.colors.success (emerald-600)
+const HEATMAP_INTENSITY_HIGH = '#059669'
+
 const levelColors: Record<ConsistencyLevel, string> = {
   0: theme.colors.background,
   1: theme.colors.successLight,
   2: theme.colors.success,
-  3: '#059669'
+  3: HEATMAP_INTENSITY_HIGH
 }
 
 export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
@@ -136,7 +139,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md
   },
   title: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text
   },
   subtitle: {

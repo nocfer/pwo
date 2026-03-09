@@ -576,8 +576,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.xs,
     marginHorizontal: theme.spacing.lg,
     marginTop: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-    ...theme.shadows.sm
+    marginBottom: theme.spacing.md
   },
   tabButton: {
     flex: 1,
@@ -645,7 +644,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md
   },
   selectionText: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primary
   },
   clearSelectionButton: {
@@ -653,7 +653,8 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xs
   },
   clearSelectionText: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primary
   },
   dataList: {
@@ -672,8 +673,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     paddingBottom: theme.spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    ...theme.shadows.md
+    borderTopColor: theme.colors.border
   },
   bulkToolbarText: {
     ...theme.typography.bodyBold,
@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     maxHeight: '80%',
-    ...theme.shadows.md
+    ...theme.shadows.sm
   },
   iconContainer: {
     alignItems: 'center',
@@ -754,7 +754,8 @@ const styles = StyleSheet.create({
     maxHeight: 200
   },
   blockedItemsTitle: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.text,
     marginBottom: theme.spacing.sm
   },

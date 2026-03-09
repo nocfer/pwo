@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.xl,
     width: '100%',
     maxWidth: 400,
-    ...theme.shadows.md
+    ...theme.shadows.sm
   },
   iconContainer: {
     alignItems: 'center',
