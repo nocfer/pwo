@@ -5,6 +5,7 @@
 Progressive Workout is a React Native mobile application built on Expo with **Firebase-backed API-driven architecture**. The system has undergone a major architectural shift from local storage to centralized API integration. The application follows **component-based UI design** with **context-driven state management**, emphasizing Firebase authentication and API-first data operations.
 
 **Key Architectural Principles:**
+
 - **API-Driven Architecture**: Firebase backend API as primary data layer (optional fallback to local storage)
 - **Component Isolation**: 76 reusable components, organized by feature domain
 - **Context-Driven State**: Centralized state management through React Context API (Auth + Data)
@@ -14,6 +15,7 @@ Progressive Workout is a React Native mobile application built on Expo with **Fi
 - **Type Safety**: Full TypeScript strict mode with comprehensive validation
 
 **Breaking Changes:**
+
 - ⚠️ **Challenge System Removed**: All challenge-related components, types, and data models deleted
 - ⚠️ **SessionProgress → WorkoutProgress**: Simplified workout tracking model
 - ⚠️ **Event System Removed**: Replaced with direct API calls + context updates
@@ -36,15 +38,15 @@ Expo ~55.0.0 (development platform)
 
 ### Core Dependencies
 
-| Category | Technology | Version | Purpose |
-|----------|-----------|---------|---------|
-| **UI Framework** | React | 19.2.0 | Component library |
-| **Native** | React Native | 0.81.5 | Native bridge |
-| **Platform** | Expo | ~55.0.0 | Build + run system |
-| **Routing** | Expo Router | ~6.0.17 | File-based navigation |
-| **Navigation** | React Navigation | 7.1.8 | Screen navigation |
-| **Auth/API** | Firebase | 12.10.0 | Auth + Realtime Database |
-| **Language** | TypeScript | ~5.9.2 | Type safety |
+| Category         | Technology       | Version | Purpose                  |
+| ---------------- | ---------------- | ------- | ------------------------ |
+| **UI Framework** | React            | 19.2.0  | Component library        |
+| **Native**       | React Native     | 0.81.5  | Native bridge            |
+| **Platform**     | Expo             | ~55.0.0 | Build + run system       |
+| **Routing**      | Expo Router      | ~6.0.17 | File-based navigation    |
+| **Navigation**   | React Navigation | 7.1.8   | Screen navigation        |
+| **Auth/API**     | Firebase         | 12.10.0 | Auth + Realtime Database |
+| **Language**     | TypeScript       | ~5.9.2  | Type safety              |
 
 ### UI & Visualization
 
@@ -130,6 +132,7 @@ components/
 ```
 
 **Deleted Component Groups** (17 components removed):
+
 - `components/challenge/` - Challenge execution screens
 - Challenge-related components scattered across other directories
 - Legacy components for old event system
@@ -174,20 +177,21 @@ Handles Firebase authentication and user session management:
 
 ```typescript
 type AuthContextValue = {
-  user: User | null              // Firebase auth user
-  loading: boolean               // Auth state loading
-  error: string | null           // Error messages
-  isAnonymous: boolean           // Anonymous guest flag
-  
-  signIn(email, password)        // Email login
-  signUp(email, password)        // Account creation
-  signInAsGuest()                // Anonymous access
-  linkAccount(email, password)   // Guest → registered
-  signOut()                      // Sign out
+  user: User | null // Firebase auth user
+  loading: boolean // Auth state loading
+  error: string | null // Error messages
+  isAnonymous: boolean // Anonymous guest flag
+
+  signIn(email, password) // Email login
+  signUp(email, password) // Account creation
+  signInAsGuest() // Anonymous access
+  linkAccount(email, password) // Guest → registered
+  signOut() // Sign out
 }
 ```
 
 **Features:**
+
 - Firebase Authentication integration
 - Automatic error code mapping to user messages
 - Session persistence via Firebase
@@ -204,16 +208,16 @@ type DataContextValue = {
   exercises: Exercise[]
   programs: Program[]
   lastCompletedSlug: string | null
-  
+
   // Loading states
   exercisesLoading: boolean
   programsLoading: boolean
-  
+
   // Version counters (for loose coupling)
   progressVersion: number
   historyVersion: number
   completedVersion: number
-  
+
   // Actions
   completeWorkout(workoutId, progress)    // Record API workout
   recordEvent(slug, sessionIndex, event)  // Log detailed events (if needed)
@@ -226,6 +230,7 @@ type DataContextValue = {
 ```
 
 **Key Changes:**
+
 - **API-First**: All data reads/writes go through API first
 - **Reducer pattern** for complex state mutations
 - **CRUD operations** now API-driven with local cache fallback
@@ -255,6 +260,7 @@ Local Storage (optional fallback)
 ### Offline Fallback Strategy
 
 When API is unavailable:
+
 1. **Failed API call** triggers fallback
 2. **Load from local storage** (localStorage/FileSystem)
 3. **User sees stale data** with visual indicator
@@ -276,7 +282,7 @@ async function getAuthToken(forceRefresh?: boolean): Promise<string>
 // Generic request handler
 async function request<T>(
   endpoint: string,
-  options?: { method?, body?, headers? }
+  options?: { method?; body?; headers? }
 ): Promise<T>
 
 // Exercises
@@ -301,11 +307,12 @@ async function fetchConsistency(weeks?): Promise<ConsistencyEntry[]>
 ```
 
 **Error Handling:**
+
 ```typescript
 export class APIError extends Error {
-  code: string              // 'NO_AUTH', 'TIMEOUT', 'NETWORK_ERROR', etc.
-  statusCode?: number       // HTTP status if applicable
-  originalError?: unknown   // Underlying error
+  code: string // 'NO_AUTH', 'TIMEOUT', 'NETWORK_ERROR', etc.
+  statusCode?: number // HTTP status if applicable
+  originalError?: unknown // Underlying error
 }
 ```
 
@@ -321,6 +328,7 @@ lib/mappers/
 
 **Example: `workoutBlockToProgram`**
 Converts API array-based block representation to frontend scalar model:
+
 - `reps: [8, 8, 8]` (API) → `targetReps: [8], sets: 3` (Frontend)
 - `rests: [90]` (API) → `restBetweenSets: 90` (Frontend)
 
@@ -337,7 +345,7 @@ Check Firebase Auth State
     ├─ Authenticated → Load UserContext
     ├─ Guest (Anonymous) → Show Guest UX
     └─ Not Authenticated → Auth Screens
-    
+
 Auth Screens:
 ├── Sign In (email/password)
 ├── Sign Up (new account)
@@ -377,19 +385,22 @@ app/(auth)/
 #### Simplified Progress Tracking
 
 **Old Model (Removed):**
+
 ```typescript
-interface SessionProgress {          // ❌ DELETED
+interface SessionProgress {
+  // ❌ DELETED
   sessionId: string
   programId: string
-  sessions: ProgramRun[]            // Complex nesting
+  sessions: ProgramRun[] // Complex nesting
   // ... complex fields
 }
 ```
 
 **New Model (WorkoutProgress):**
+
 ```typescript
 interface WorkoutProgress {
-  workoutId: string                 // Simple ID
+  workoutId: string // Simple ID
   programId: string
   completed: boolean
   completedAt?: string
@@ -399,7 +410,7 @@ interface WorkoutProgress {
 
 interface ProgramProgress {
   programId: string
-  workouts: WorkoutProgress[]       // Flat array
+  workouts: WorkoutProgress[] // Flat array
   lifetimeWorkoutsCompleted: number
   lifetimeTimeSpentSeconds: number
   lastActivityAt: string | null
@@ -435,8 +446,8 @@ type AuditLogEntry = {
   id: string
   timestamp: string
   userId?: string
-  action: AuditAction  // CREATE, UPDATE, DELETE, IMPORT, EXPORT
-  entityType: DataType  // 'exercises' | 'programs'
+  action: AuditAction // CREATE, UPDATE, DELETE, IMPORT, EXPORT
+  entityType: DataType // 'exercises' | 'programs'
   entityId: string
   changes?: Record<string, { from: any; to: any }>
 }
@@ -445,12 +456,14 @@ type AuditLogEntry = {
 ### Deleted Types
 
 ❌ **Challenge-Related** (completely removed):
+
 - `ChallengeProgress`
 - `ChallengeConfig` (program variant)
 - `ChallengeSessions`
 - All challenge enum types
 
 ❌ **Event System** (removed):
+
 - `WorkoutEvent`
 - `WorkoutEventType`
 - Event system context
@@ -567,15 +580,15 @@ Root
 
 ### Key Screens
 
-| Screen | Purpose | Features |
-|--------|---------|----------|
-| Sign In | User authentication | Email/password, guest access |
-| Sign Up | Account creation | Email registration with validation |
-| Home | Workout quick-start | Program selector, weekly activity feed |
-| Library | Content management | Browse, create, edit exercises/programs, QR import |
-| Progress | Statistics dashboard | Charts, heatmaps, PRs, streaks, weekly stats |
-| Profile | User settings | Auth management, preferences, data export |
-| Workout | Session execution | Timer, navigation, set tracking (1256 lines) |
+| Screen   | Purpose              | Features                                           |
+| -------- | -------------------- | -------------------------------------------------- |
+| Sign In  | User authentication  | Email/password, guest access                       |
+| Sign Up  | Account creation     | Email registration with validation                 |
+| Home     | Workout quick-start  | Program selector, weekly activity feed             |
+| Library  | Content management   | Browse, create, edit exercises/programs, QR import |
+| Progress | Statistics dashboard | Charts, heatmaps, PRs, streaks, weekly stats       |
+| Profile  | User settings        | Auth management, preferences, data export          |
+| Workout  | Session execution    | Timer, navigation, set tracking (1256 lines)       |
 
 ---
 
@@ -590,17 +603,17 @@ WARMUP
   ├─ Timer running
   ├─ Skip button
   └─ Complete → EXERCISE or END
-  
+
 EXERCISE
   ├─ Sets/reps tracking
   ├─ Rep/set skip
   └─ Complete → BREAK or EXERCISE or END
-  
+
 BREAK/REST
   ├─ Timer running
   ├─ Skip rest
   └─ Complete → EXERCISE or END
-  
+
 END
   └─ Call API recordWorkout()
   └─ Update DataContext
@@ -610,6 +623,7 @@ END
 ### Session State Persistence
 
 When workout paused:
+
 1. `DataContext.saveSessionState()` saves to storage
 2. User can close app
 3. On return, `DataContext.loadSessionState()` restores exact state
@@ -635,6 +649,7 @@ WorkoutExecutionScreen (Screen)
 ### Component Composition Patterns
 
 **Container + Presentational:**
+
 ```typescript
 // Container with hooks
 function ProgramProgressView({ programId }) {
@@ -653,22 +668,26 @@ function ProgressCard({ data }) {
 ## Performance Optimizations
 
 ### Code Splitting
+
 - Expo Router automatic per-screen splitting
 - Lazy load screens based on route
 
 ### Caching Strategies
+
 - Firebase ID token cached, refreshed on expiry
 - API responses cached in DataContext with version counters
 - Search results cached with Map data structure
 - Async data cached with useAsyncData hook
 
 ### Rendering Optimizations
+
 - Skeleton screens for loading states
 - Victory Native for optimized charts
 - Platform-specific rendering
 - Memoization of expensive computations
 
 ### Memory Management
+
 - Session state cleared after workout completion
 - Event history paginated (no longer stored locally)
 - Large lists virtualized (FlatList)
@@ -678,23 +697,27 @@ function ProgressCard({ data }) {
 ## Security Considerations
 
 ### Authentication
+
 - Firebase Auth handles credentials securely
 - ID tokens used for API authentication
 - Automatic token refresh before expiry
 - No sensitive data in local storage
 
 ### Authorization
+
 - Source-based permission model (builtin/user/pt)
 - Owner-implicit data access
 - Server-side validation enforced for all API operations
 
 ### Data Validation
+
 - Client-side validation before persistence
 - Type safety via TypeScript strict mode
 - Schema validation for imports
 - Dependency checking before deletions
 
 ### Audit Logging
+
 - AuditLogger tracks all modifications
 - Event logging for compliance
 - Dependency checking prevents orphaned data
@@ -704,6 +727,7 @@ function ProgressCard({ data }) {
 ## API Contracts & Endpoints
 
 ### Exercise Endpoints
+
 ```
 GET /api/v1/exercises
 GET /api/v1/exercises/:id
@@ -714,6 +738,7 @@ DELETE /api/v1/exercises/:id
 ```
 
 ### Workout Endpoints
+
 ```
 GET /api/v1/workouts
 GET /api/v1/workouts/:id
@@ -723,6 +748,7 @@ DELETE /api/v1/workouts/:id
 ```
 
 ### Stats Endpoints
+
 ```
 POST /api/v1/stats/workouts          # Record completed workout
 GET /api/v1/stats/prs                # Fetch personal records
@@ -769,12 +795,14 @@ __tests__/
 ## Deployment Architecture
 
 ### Web Deployment
+
 ```
 expo export -p web  → Generates dist/
 gh-pages deploy     → Publishes to GitHub Pages
 ```
 
 ### Mobile Deployment
+
 ```
 EAS Build (Expo Application Services)
   ├─ iOS → App Store
@@ -783,34 +811,35 @@ EAS Build (Expo Application Services)
 
 ### Environment Configuration
 
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `EXPO_PUBLIC_FIREBASE_API_KEY` | Firebase config | (secret) |
-| `EXPO_PUBLIC_API_BASE_URL` | Backend API URL | https://api.example.com |
-| `EXPO_PUBLIC_API_ENABLED` | Enable API integration | true/false |
-| `EXPO_PUBLIC_API_TIMEOUT` | Request timeout (ms) | 30000 |
+| Variable                       | Purpose                | Example                 |
+| ------------------------------ | ---------------------- | ----------------------- |
+| `EXPO_PUBLIC_FIREBASE_API_KEY` | Firebase config        | (secret)                |
+| `EXPO_PUBLIC_API_BASE_URL`     | Backend API URL        | https://api.example.com |
+| `EXPO_PUBLIC_API_ENABLED`      | Enable API integration | true/false              |
+| `EXPO_PUBLIC_API_TIMEOUT`      | Request timeout (ms)   | 30000                   |
 
 ---
 
 ## Summary of Major Changes
 
-| Aspect | Before | After |
-|--------|--------|-------|
-| **Data Source** | Local storage first | API first with fallback |
-| **Challenges** | Supported feature | ❌ Completely removed |
-| **Progress Model** | SessionProgress (complex) | WorkoutProgress (simple) |
-| **Event System** | Pub-sub EventEmitter | ❌ Removed, API-driven |
-| **Components** | 54 | 76 (+22 new) |
-| **Hooks** | 25 | 30 (+5 new) |
-| **Auth** | Optional Firebase | ✅ Required Firebase Auth |
-| **Validation** | Basic | Enhanced with error codes |
-| **Audit Logging** | None | ✅ Full audit trail |
+| Aspect             | Before                    | After                     |
+| ------------------ | ------------------------- | ------------------------- |
+| **Data Source**    | Local storage first       | API first with fallback   |
+| **Challenges**     | Supported feature         | ❌ Completely removed     |
+| **Progress Model** | SessionProgress (complex) | WorkoutProgress (simple)  |
+| **Event System**   | Pub-sub EventEmitter      | ❌ Removed, API-driven    |
+| **Components**     | 54                        | 76 (+22 new)              |
+| **Hooks**          | 25                        | 30 (+5 new)               |
+| **Auth**           | Optional Firebase         | ✅ Required Firebase Auth |
+| **Validation**     | Basic                     | Enhanced with error codes |
+| **Audit Logging**  | None                      | ✅ Full audit trail       |
 
 ---
 
 ## Conclusion
 
 Progressive Workout's refactored architecture prioritizes:
+
 - **API-Driven Design** for scalability and multi-device sync
 - **Security** through Firebase Auth and server-side validation
 - **Resilience** via graceful offline fallback

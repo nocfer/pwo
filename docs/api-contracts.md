@@ -17,12 +17,14 @@ Authorization: Bearer {firebase_id_token}
 ```
 
 **Token Management:**
+
 - Tokens are obtained via `firebase/auth` SDK
 - Tokens expire after 1 hour
 - Automatic refresh before expiry (see `lib/api.ts`)
 - Force refresh available if needed
 
 **Error Responses:**
+
 - `401 Unauthorized` - Invalid or expired token
 - `403 Forbidden` - User lacks permissions for resource
 
@@ -66,7 +68,7 @@ export class APIError extends Error {
 // Generic request handler
 async function request<T>(
   endpoint: string,
-  options?: { method?, body?, headers? }
+  options?: { method?; body?; headers? }
 ): Promise<T>
 ```
 
@@ -77,17 +79,20 @@ async function request<T>(
 ### List All Exercises
 
 **Request:**
+
 ```
 GET /api/v1/exercises
 ```
 
 **Query Parameters:**
+
 - `category` (optional) - Filter by category (strength, cardio, flexibility, skill)
 - `source` (optional) - Filter by source (builtin, user, pt)
 - `limit` (optional) - Results per page (default: 50)
 - `offset` (optional) - Pagination offset (default: 0)
 
 **Response:**
+
 ```json
 [
   {
@@ -105,6 +110,7 @@ GET /api/v1/exercises
 ```
 
 **Status Codes:**
+
 - `200 OK` - Success
 - `401 Unauthorized` - Invalid token
 - `500 Server Error` - Internal error
@@ -114,11 +120,13 @@ GET /api/v1/exercises
 ### Get Single Exercise
 
 **Request:**
+
 ```
 GET /api/v1/exercises/:id
 ```
 
 **Response:**
+
 ```json
 {
   "id": "bench-press-1",
@@ -135,6 +143,7 @@ GET /api/v1/exercises/:id
 ```
 
 **Status Codes:**
+
 - `200 OK` - Exercise found
 - `404 Not Found` - Exercise doesn't exist
 - `401 Unauthorized` - Invalid token
@@ -144,6 +153,7 @@ GET /api/v1/exercises/:id
 ### Create Exercise
 
 **Request:**
+
 ```
 POST /api/v1/exercises
 Authorization: Bearer {token}
@@ -159,16 +169,19 @@ Content-Type: application/json
 ```
 
 **Required Fields:**
+
 - `name` - Exercise name (3+ chars, unique per user)
 - `category` - One of: strength, cardio, flexibility, skill
 - `icon` - Valid Ionicons glyph name
 
 **Optional Fields:**
+
 - `description` - Exercise description
 - `instructions` - Form cues and technique notes
 - `media` - URL to image or video
 
 **Response:**
+
 ```json
 {
   "id": "dumbbell-rows-user-123",
@@ -184,6 +197,7 @@ Content-Type: application/json
 ```
 
 **Status Codes:**
+
 - `201 Created` - Exercise created
 - `400 Bad Request` - Invalid data
 - `409 Conflict` - Duplicate name
@@ -194,6 +208,7 @@ Content-Type: application/json
 ### Update Exercise
 
 **Request:**
+
 ```
 PUT /api/v1/exercises/:id
 Authorization: Bearer {token}
@@ -206,11 +221,13 @@ Content-Type: application/json
 ```
 
 **Restrictions:**
+
 - Cannot update `source` field
 - Can only update exercises with `source: 'user'`
 - Other sources (builtin, pt) are read-only
 
 **Response:**
+
 ```json
 {
   "id": "dumbbell-rows-user-123",
@@ -225,6 +242,7 @@ Content-Type: application/json
 ```
 
 **Status Codes:**
+
 - `200 OK` - Updated
 - `400 Bad Request` - Invalid data
 - `403 Forbidden` - Insufficient permissions
@@ -235,22 +253,26 @@ Content-Type: application/json
 ### Delete Exercise
 
 **Request:**
+
 ```
 DELETE /api/v1/exercises/:id
 Authorization: Bearer {token}
 ```
 
 **Restrictions:**
+
 - Can only delete exercises with `source: 'user'`
 - Cannot delete if referenced by programs
 - Dependency check performed server-side
 
 **Response:**
+
 ```
 204 No Content
 ```
 
 **Status Codes:**
+
 - `204 No Content` - Deleted
 - `403 Forbidden` - Cannot delete
 - `409 Conflict` - Exercise in use by programs
@@ -263,17 +285,20 @@ Authorization: Bearer {token}
 ### List All Workouts
 
 **Request:**
+
 ```
 GET /api/v1/workouts
 ```
 
 **Query Parameters:**
+
 - `source` (optional) - Filter by source (builtin, user, pt)
 - `expand` (optional) - Expand related data (e.g., `expand=blocks.exercise`)
 - `limit` (optional) - Results per page
 - `offset` (optional) - Pagination offset
 
 **Response:**
+
 ```json
 [
   {
@@ -299,6 +324,7 @@ GET /api/v1/workouts
 ```
 
 **Notes:**
+
 - Workouts are called "Programs" in the frontend but "Workouts" in the API
 - API uses array-based representation (reps[], rests[], durations[])
 - Frontend mapper converts to scalar representation
@@ -308,11 +334,13 @@ GET /api/v1/workouts
 ### Get Single Workout
 
 **Request:**
+
 ```
 GET /api/v1/workouts/:id?expand=blocks.exercise
 ```
 
 **Response:**
+
 ```json
 {
   "id": "full-body-a",
@@ -346,6 +374,7 @@ GET /api/v1/workouts/:id?expand=blocks.exercise
 ### Create Workout
 
 **Request:**
+
 ```
 POST /api/v1/workouts
 Authorization: Bearer {token}
@@ -374,30 +403,36 @@ Content-Type: application/json
 ```
 
 **Required Fields:**
+
 - `name` - Workout name
 - `blocks` - At least one block (array format)
 - `initialWarmup` - Warmup duration in seconds
 - `defaultRestBetweenExercises` - Default rest in seconds
 
 **Block Format:**
+
 - `exerciseId` - Reference to exercise
 - `reps` - Array of target reps per set
 - `rests` - Array of rest durations (length = reps.length - 1)
 - `durations` - Array for timing blocks (usually [0] for exercises)
 
 **Response:**
+
 ```json
 {
   "id": "push-day-user-123",
   "name": "Push Day",
   "source": "user",
-  "blocks": [ /* ... */ ],
+  "blocks": [
+    /* ... */
+  ],
   "createdAt": "2026-03-06T12:00:00Z",
   "updatedAt": "2026-03-06T12:00:00Z"
 }
 ```
 
 **Status Codes:**
+
 - `201 Created` - Workout created
 - `400 Bad Request` - Invalid structure
 - `409 Conflict` - Invalid exercise references
@@ -407,6 +442,7 @@ Content-Type: application/json
 ### Update Workout
 
 **Request:**
+
 ```
 PUT /api/v1/workouts/:id
 Authorization: Bearer {token}
@@ -419,17 +455,21 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "id": "push-day-user-123",
   "name": "Push Day",
   "source": "user",
-  "blocks": [ /* ... */ ],
+  "blocks": [
+    /* ... */
+  ],
   "updatedAt": "2026-03-06T12:30:00Z"
 }
 ```
 
 **Status Codes:**
+
 - `200 OK` - Updated
 - `400 Bad Request` - Invalid data
 - `403 Forbidden` - Insufficient permissions
@@ -439,17 +479,20 @@ Content-Type: application/json
 ### Delete Workout
 
 **Request:**
+
 ```
 DELETE /api/v1/workouts/:id
 Authorization: Bearer {token}
 ```
 
 **Response:**
+
 ```
 204 No Content
 ```
 
 **Status Codes:**
+
 - `204 No Content` - Deleted
 - `403 Forbidden` - Cannot delete
 - `404 Not Found` - Workout doesn't exist
@@ -461,6 +504,7 @@ Authorization: Bearer {token}
 ### Record Workout Completion
 
 **Request:**
+
 ```
 POST /api/v1/stats/workouts
 Authorization: Bearer {token}
@@ -494,6 +538,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "workoutLog": {
@@ -524,6 +569,7 @@ Content-Type: application/json
 ```
 
 **Status Codes:**
+
 - `201 Created` - Workout recorded
 - `400 Bad Request` - Invalid data
 - `404 Not Found` - Workout doesn't exist
@@ -533,17 +579,20 @@ Content-Type: application/json
 ### Get Personal Records
 
 **Request:**
+
 ```
 GET /api/v1/stats/prs?limit=20
 Authorization: Bearer {token}
 ```
 
 **Query Parameters:**
+
 - `limit` (optional) - Max number of PRs to return (default: 50)
 - `exerciseId` (optional) - Filter by exercise
 - `current` (optional) - Only current PRs (true/false)
 
 **Response:**
+
 ```json
 [
   {
@@ -568,12 +617,14 @@ Authorization: Bearer {token}
 ### Get Exercise-Specific PRs
 
 **Request:**
+
 ```
 GET /api/v1/stats/prs/:exerciseId?current=true
 Authorization: Bearer {token}
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -600,12 +651,14 @@ Authorization: Bearer {token}
 ### Get Aggregated Progress
 
 **Request:**
+
 ```
 GET /api/v1/stats/progress
 Authorization: Bearer {token}
 ```
 
 **Response:**
+
 ```json
 {
   "totalWorkoutsCompleted": 45,
@@ -619,11 +672,7 @@ Authorization: Bearer {token}
       "workoutId": "full-body-a"
     }
   ],
-  "exercisesWithData": [
-    "bench-press-1",
-    "squat-1",
-    "deadlift-1"
-  ]
+  "exercisesWithData": ["bench-press-1", "squat-1", "deadlift-1"]
 }
 ```
 
@@ -632,15 +681,18 @@ Authorization: Bearer {token}
 ### Get Weekly Statistics
 
 **Request:**
+
 ```
 GET /api/v1/stats/weekly?weekStart=2026-03-02
 Authorization: Bearer {token}
 ```
 
 **Query Parameters:**
+
 - `weekStart` (optional) - ISO date for week start (Monday)
 
 **Response:**
+
 ```json
 {
   "weekStart": "2026-03-02",
@@ -660,15 +712,18 @@ Authorization: Bearer {token}
 ### Get Consistency Data (Heatmap)
 
 **Request:**
+
 ```
 GET /api/v1/stats/consistency?weeks=12
 Authorization: Bearer {token}
 ```
 
 **Query Parameters:**
+
 - `weeks` (optional) - Number of weeks to return (default: 12)
 
 **Response:**
+
 ```json
 [
   {
@@ -687,6 +742,7 @@ Authorization: Bearer {token}
 ```
 
 **Notes:**
+
 - `workoutCount` is 0 or 1 (one workout per day max for heatmap)
 - Returns data for the last N weeks
 
@@ -695,15 +751,18 @@ Authorization: Bearer {token}
 ### Get Exercise Progression Data
 
 **Request:**
+
 ```
 GET /api/v1/stats/exercises/:exerciseId/progression?days=90
 Authorization: Bearer {token}
 ```
 
 **Query Parameters:**
+
 - `days` (optional) - Days of history (default: 90)
 
 **Response:**
+
 ```json
 [
   {
@@ -722,6 +781,7 @@ Authorization: Bearer {token}
 ```
 
 **Notes:**
+
 - One data point per workout session
 - Shows progression over time for charts
 
@@ -749,15 +809,15 @@ All error responses follow this format:
 
 ### Common Error Codes
 
-| Code | Status | Description |
-|------|--------|-------------|
-| `INVALID_REQUEST` | 400 | Malformed request |
-| `VALIDATION_ERROR` | 400 | Validation failed |
-| `UNAUTHORIZED` | 401 | Invalid/missing token |
-| `FORBIDDEN` | 403 | Insufficient permissions |
-| `NOT_FOUND` | 404 | Resource not found |
-| `CONFLICT` | 409 | Data conflict (e.g., duplicate) |
-| `INTERNAL_ERROR` | 500 | Server error |
+| Code               | Status | Description                     |
+| ------------------ | ------ | ------------------------------- |
+| `INVALID_REQUEST`  | 400    | Malformed request               |
+| `VALIDATION_ERROR` | 400    | Validation failed               |
+| `UNAUTHORIZED`     | 401    | Invalid/missing token           |
+| `FORBIDDEN`        | 403    | Insufficient permissions        |
+| `NOT_FOUND`        | 404    | Resource not found              |
+| `CONFLICT`         | 409    | Data conflict (e.g., duplicate) |
+| `INTERNAL_ERROR`   | 500    | Server error                    |
 
 ### Client Error Handling
 
@@ -838,6 +898,7 @@ programBlockToWorkout(block): APIWorkoutBlock
 **Current**: No rate limiting enforced (subject to change)
 
 **Recommendations**:
+
 - Implement exponential backoff on failures
 - Cache API responses locally
 - Use version counters to avoid unnecessary requests
@@ -890,15 +951,15 @@ it('should include auth token in headers', async () => {
 
 ## Summary
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/v1/exercises` | GET/POST/PUT/DELETE | Exercise CRUD |
-| `/api/v1/workouts` | GET/POST/PUT/DELETE | Workout CRUD |
-| `/api/v1/stats/workouts` | POST | Record completion |
-| `/api/v1/stats/prs` | GET | Get personal records |
-| `/api/v1/stats/progress` | GET | Get aggregated progress |
-| `/api/v1/stats/weekly` | GET | Get weekly stats |
-| `/api/v1/stats/consistency` | GET | Get heatmap data |
-| `/api/v1/stats/exercises/:id/progression` | GET | Get exercise trends |
+| Endpoint                                  | Method              | Purpose                 |
+| ----------------------------------------- | ------------------- | ----------------------- |
+| `/api/v1/exercises`                       | GET/POST/PUT/DELETE | Exercise CRUD           |
+| `/api/v1/workouts`                        | GET/POST/PUT/DELETE | Workout CRUD            |
+| `/api/v1/stats/workouts`                  | POST                | Record completion       |
+| `/api/v1/stats/prs`                       | GET                 | Get personal records    |
+| `/api/v1/stats/progress`                  | GET                 | Get aggregated progress |
+| `/api/v1/stats/weekly`                    | GET                 | Get weekly stats        |
+| `/api/v1/stats/consistency`               | GET                 | Get heatmap data        |
+| `/api/v1/stats/exercises/:id/progression` | GET                 | Get exercise trends     |
 
 All endpoints require authentication via Firebase ID token.

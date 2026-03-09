@@ -37,6 +37,7 @@ nano .env
 ```
 
 **Required Environment Variables**:
+
 ```bash
 EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
 EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
@@ -47,6 +48,7 @@ EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
 ```
 
 **Optional Variables**:
+
 ```bash
 EXPO_PUBLIC_API_ENABLED=true
 EXPO_PUBLIC_API_BASE_URL=https://api.example.com
@@ -103,18 +105,18 @@ npm start
 
 ### Development Commands
 
-| Command | Purpose | Notes |
-|---------|---------|-------|
-| `npm start` | Start dev server | Interactive menu (w/i/a) |
-| `npm run web` | Web-only server | Faster for web dev |
-| `npm run ios` | iOS simulator | Requires XCode |
-| `npm run android` | Android emulator | Requires Android Studio |
-| `npm run compile` | TypeScript check | No emit, type checking only |
-| `npm run lint` | ESLint check | Show linting issues |
-| `npm run lint:fix` | Auto-fix lint | Fix style automatically |
-| `npm test` | Watch mode | Rerun on file changes |
-| `npm run test:run` | Single run | For CI/CD |
-| `npm run test:coverage` | Coverage report | Show coverage stats |
+| Command                 | Purpose          | Notes                       |
+| ----------------------- | ---------------- | --------------------------- |
+| `npm start`             | Start dev server | Interactive menu (w/i/a)    |
+| `npm run web`           | Web-only server  | Faster for web dev          |
+| `npm run ios`           | iOS simulator    | Requires XCode              |
+| `npm run android`       | Android emulator | Requires Android Studio     |
+| `npm run compile`       | TypeScript check | No emit, type checking only |
+| `npm run lint`          | ESLint check     | Show linting issues         |
+| `npm run lint:fix`      | Auto-fix lint    | Fix style automatically     |
+| `npm test`              | Watch mode       | Rerun on file changes       |
+| `npm run test:run`      | Single run       | For CI/CD                   |
+| `npm run test:coverage` | Coverage report  | Show coverage stats         |
 
 ### Typical Development Session
 
@@ -150,20 +152,22 @@ Code is formatted with Prettier (enforced via ESLint):
 
 ```json
 {
-  "semi": false,           // No semicolons
-  "singleQuote": true,     // Single quotes
+  "semi": false, // No semicolons
+  "singleQuote": true, // Single quotes
   "trailingComma": "none", // No trailing commas
-  "arrowParens": "avoid"   // x => x (not (x) => x)
+  "arrowParens": "avoid" // x => x (not (x) => x)
 }
 ```
 
 ### Auto-Format on Save
 
 **VS Code** - Install extensions:
+
 - Prettier - Code formatter
 - ESLint
 
 **Settings (.vscode/settings.json)**:
+
 ```json
 {
   "editor.formatOnSave": true,
@@ -207,6 +211,7 @@ __tests__/
 ```
 
 Test files mirror source structure:
+
 - Source: `lib/validation.ts` → Test: `__tests__/lib/validation.test.ts`
 - Source: `components/Button.tsx` → Test: `__tests__/components/Button.test.tsx`
 
@@ -236,7 +241,7 @@ describe('validateExercise', () => {
     const result = validateExercise({
       name: 'Bench Press',
       category: 'strength',
-      icon: 'barbell',
+      icon: 'barbell'
     })
     expect(result.isValid).toBe(true)
     expect(result.data.name).toBe('Bench Press')
@@ -245,7 +250,7 @@ describe('validateExercise', () => {
   it('rejects missing name', () => {
     const result = validateExercise({
       category: 'strength',
-      icon: 'barbell',
+      icon: 'barbell'
     })
     expect(result.isValid).toBe(false)
     expect(result.errors).toContain('Name required')
@@ -287,7 +292,7 @@ describe('Workout Completion Flow', () => {
       sessionIndex: 0,
       exercises: [...],
     })
-    
+
     expect(progress.completed).toBe(true)
     expect(progress.lifetimeWorkoutsCompleted).toBeGreaterThan(0)
   })
@@ -331,6 +336,7 @@ npm start
 ### VS Code Debugger
 
 **Launch Configuration** (.vscode/launch.json):
+
 ```json
 {
   "version": "0.2.0",
@@ -391,6 +397,7 @@ import { unstable_trace } from 'react'
 5. **Use in screens/components**
 
 **Template**:
+
 ```typescript
 import { View, Text, StyleSheet } from 'react-native'
 import { theme } from '@/theme/theme'
@@ -427,6 +434,7 @@ const styles = StyleSheet.create({
 4. **Add tests**: `__tests__/hooks/useNewData.test.ts`
 
 **Template**:
+
 ```typescript
 import { useContext, useCallback } from 'react'
 import { DataContext } from '@/context/DataContext'
@@ -434,12 +442,13 @@ import useAsyncData from './useAsyncData'
 
 export function useNewData() {
   const { data, loading } = useContext(DataContext)
-  
-  const { data: result, loading: resultLoading, error } = useAsyncData(
-    () => processData(data),
-    [data]
-  )
-  
+
+  const {
+    data: result,
+    loading: resultLoading,
+    error
+  } = useAsyncData(() => processData(data), [data])
+
   return { result, loading: loading || resultLoading, error }
 }
 ```
@@ -452,6 +461,7 @@ export function useNewData() {
 4. **Add navigation**: Link from other screens
 
 **Template**:
+
 ```typescript
 import { View, ScrollView, StyleSheet } from 'react-native'
 import ScreenHeader from '@/components/common/ScreenHeader'
@@ -495,6 +505,7 @@ const styles = StyleSheet.create({
 ### Issue: "Cannot find module '@/...'"
 
 **Solution**: Check path alias in `tsconfig.json`
+
 ```json
 {
   "compilerOptions": {
@@ -508,6 +519,7 @@ const styles = StyleSheet.create({
 ### Issue: Hot reload not working
 
 **Solution**:
+
 ```bash
 # Clear cache and restart
 npm start -- --clear
@@ -517,6 +529,7 @@ npm start -- --clear
 ### Issue: Tests failing after changes
 
 **Solution**:
+
 ```bash
 # Clear Vitest cache
 npm test -- --clearCache
@@ -526,6 +539,7 @@ npm test -- --clearCache
 ### Issue: Firebase auth not working
 
 **Solution**:
+
 ```bash
 # Verify .env file
 cat .env | grep EXPO_PUBLIC_FIREBASE
@@ -537,6 +551,7 @@ npm run compile  # Verify no TypeScript errors
 ### Issue: Port 8081 already in use
 
 **Solution**:
+
 ```bash
 # Kill existing process
 lsof -i :8081 | grep node | awk '{print $2}' | xargs kill -9
@@ -548,6 +563,7 @@ npm start -- --port 8082
 ### Issue: Android emulator not starting
 
 **Solution**:
+
 ```bash
 # List available emulators
 emulator -list-avds
@@ -644,12 +660,14 @@ eas build --platform android --local
 ## Resources & Documentation
 
 ### Official Documentation
+
 - [Expo Docs](https://docs.expo.dev)
 - [React Native Docs](https://reactnative.dev/docs/getting-started)
 - [React Hooks API](https://react.dev/reference/react)
 - [Firebase Docs](https://firebase.google.com/docs)
 
 ### Project Documentation
+
 - [Architecture](./architecture.md)
 - [Data Models](./data-models.md)
 - [API Contracts](./api-contracts.md)
@@ -668,4 +686,3 @@ eas build --platform android --local
 ---
 
 **Happy Coding! 🚀**
-

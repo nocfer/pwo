@@ -1,0 +1,3082 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PWO — Design Direction Mockups</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0b0c10;
+        --surface: #14151a;
+        --surface-elevated: #1c1d24;
+        --text: #ecedf0;
+        --text-inverse: #0b0c10;
+        --subtext: #8c8ea0;
+        --muted: #53556a;
+        --border: #1f2029;
+        --border-light: #2a2b36;
+        --primary: #818cf8;
+        --primary-dark: #6366f1;
+        --primary-light: rgba(129, 140, 248, 0.12);
+        --primary-muted: rgba(129, 140, 248, 0.25);
+        --accent: #fbbf24;
+        --accent-light: rgba(251, 191, 36, 0.12);
+        --success: #34d399;
+        --success-light: rgba(52, 211, 153, 0.12);
+        --danger: #f87171;
+        --danger-light: rgba(248, 113, 113, 0.12);
+        --warmup: #fb923c;
+        --warmup-bg: #1d1813;
+        --working-bg: #1b1b28;
+        --break: #22d3ee;
+        --break-bg: #151d20;
+        --done: #34d399;
+        --done-bg: #161e1b;
+        --overlay: rgba(0, 0, 0, 0.6);
+        --overlay-glass: rgba(20, 21, 26, 0.95);
+        --radius-xs: 4px;
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --sp-xs: 4px;
+        --sp-sm: 8px;
+        --sp-md: 12px;
+        --sp-lg: 16px;
+        --sp-xl: 24px;
+        --sp-xxl: 40px;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'DM Sans', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ── Navigation ── */
+      .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: var(--overlay-glass);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        overflow-x: auto;
+      }
+      .nav h1 {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.3px;
+        white-space: nowrap;
+        margin-right: 8px;
+        color: var(--primary);
+      }
+      .nav-btn {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--subtext);
+        padding: 8px 16px;
+        border-radius: var(--radius-sm);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+      }
+      .nav-btn:hover {
+        border-color: var(--primary);
+        color: var(--text);
+      }
+      .nav-btn.active {
+        background: var(--primary-light);
+        border-color: var(--primary);
+        color: var(--primary);
+      }
+
+      /* ── Sections ── */
+      .section {
+        display: none;
+        padding: 96px 24px 48px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .section.active {
+        display: block;
+      }
+      .section-header {
+        margin-bottom: 32px;
+      }
+      .section-header h2 {
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+        margin-bottom: 8px;
+      }
+      .section-header p {
+        color: var(--subtext);
+        font-size: 16px;
+        max-width: 640px;
+      }
+      .section-header .tag {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: var(--radius-xs);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+      .tag-recommended {
+        background: var(--success-light);
+        color: var(--success);
+      }
+      .tag-alternative {
+        background: var(--primary-light);
+        color: var(--primary);
+      }
+      .tag-tablet {
+        background: var(--accent-light);
+        color: var(--accent);
+      }
+
+      /* ── Phone Frame ── */
+      .phone-frame {
+        width: 375px;
+        height: 812px;
+        background: var(--bg);
+        border-radius: 40px;
+        border: 3px solid var(--border-light);
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 0 80px rgba(0, 0, 0, 0.4);
+        margin: 0 auto;
+      }
+      .status-bar {
+        height: 44px;
+        padding: 14px 24px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .status-bar .time {
+        color: var(--text);
+      }
+      .status-bar .icons {
+        color: var(--text);
+        display: flex;
+        gap: 6px;
+        font-size: 11px;
+      }
+
+      /* ── Shared Components ── */
+      .workout-header {
+        padding: 8px 16px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .workout-header .timer {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+      .workout-header .program-name {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--subtext);
+      }
+      .workout-header .end-btn {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--danger);
+        padding: 6px 12px;
+        border-radius: var(--radius-sm);
+        background: var(--danger-light);
+      }
+      .rest-timer-bar {
+        height: 36px;
+        background: var(--break-bg);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .rest-timer-bar .label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--break);
+      }
+      .rest-timer-bar .countdown {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--break);
+        font-variant-numeric: tabular-nums;
+      }
+      .rest-timer-bar .skip {
+        font-size: 11px;
+        color: var(--subtext);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      /* ── Set Indicators ── */
+      .set-dots {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .set-dot {
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-xs);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .set-dot.done {
+        background: var(--done-bg);
+        color: var(--success);
+      }
+      .set-dot.done::after {
+        content: '✓';
+      }
+      .set-dot.active {
+        background: var(--primary);
+        color: white;
+      }
+      .set-dot.pending {
+        background: var(--surface-elevated);
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+
+      /* ── Exercise Row (compact) ── */
+      .exercise-compact {
+        padding: 14px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .exercise-compact:hover {
+        background: var(--surface-elevated);
+      }
+      .exercise-compact .name {
+        font-size: 16px;
+        font-weight: 500;
+      }
+      .exercise-compact .meta {
+        font-size: 13px;
+        color: var(--subtext);
+        margin-top: 2px;
+      }
+      .exercise-compact.done-row {
+        background: var(--done-bg);
+      }
+      .exercise-compact.done-row .name {
+        color: var(--success);
+      }
+
+      /* ── Exercise Expanded ── */
+      .exercise-expanded {
+        background: var(--surface-elevated);
+        border-bottom: 1px solid var(--border);
+      }
+      .exercise-expanded .header {
+        padding: 14px 16px 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .exercise-expanded .header .name {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.3px;
+        color: var(--primary);
+      }
+      .exercise-expanded .header .media-btn {
+        font-size: 11px;
+        color: var(--subtext);
+        padding: 4px 8px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xs);
+      }
+      .set-row {
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .set-row .set-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--subtext);
+        width: 20px;
+        text-align: center;
+      }
+      .set-input {
+        flex: 1;
+        height: 44px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+      .set-input.focused {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px var(--primary-light);
+      }
+      .set-input .unit {
+        font-size: 11px;
+        color: var(--muted);
+        margin-left: 4px;
+      }
+      .check-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+      }
+      .check-btn.ready {
+        background: var(--primary);
+        color: white;
+      }
+      .check-btn.done {
+        background: var(--success);
+        color: white;
+      }
+      .check-btn.empty {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+      .set-row.completed .set-input {
+        background: var(--done-bg);
+        border-color: transparent;
+        color: var(--success);
+      }
+      .set-row.completed .set-label {
+        color: var(--success);
+      }
+
+      /* ── Direction-specific ── */
+
+      /* Direction B: Bottom sheet */
+      .bottom-sheet-container {
+        position: relative;
+        height: 100%;
+      }
+      .bottom-sheet {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--surface-elevated);
+        border-top-left-radius: var(--radius-xl);
+        border-top-right-radius: var(--radius-xl);
+        padding-top: 8px;
+      }
+      .bottom-sheet .handle {
+        width: 36px;
+        height: 4px;
+        background: var(--muted);
+        border-radius: 2px;
+        margin: 0 auto 12px;
+      }
+
+      /* Direction C: Card stack */
+      .card-exercise {
+        margin: 8px 12px;
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+      .card-exercise.active-card {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 1px var(--primary-light);
+      }
+
+      /* Direction D: Full focus */
+      .full-focus-exercise {
+        padding: 24px 16px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .full-focus-exercise .exercise-title {
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+        margin-bottom: 4px;
+      }
+      .full-focus-exercise .exercise-subtitle {
+        font-size: 13px;
+        color: var(--subtext);
+        margin-bottom: 24px;
+      }
+      .full-focus-set-row {
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .full-focus-set-row .set-num {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-xs);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .full-focus-nav {
+        padding: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--border);
+      }
+      .full-focus-nav button {
+        padding: 12px 20px;
+        border-radius: var(--radius-sm);
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+      }
+      .full-focus-nav .prev {
+        background: var(--surface);
+        color: var(--subtext);
+      }
+      .full-focus-nav .next {
+        background: var(--primary);
+        color: white;
+      }
+      .full-focus-nav .counter {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      /* Direction E: Split Matrix */
+      .split-top {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .split-top .mini-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 4px;
+        font-size: 13px;
+      }
+      .split-top .mini-row .name {
+        font-weight: 500;
+      }
+      .split-top .mini-row .dots {
+        display: flex;
+        gap: 4px;
+      }
+      .split-top .mini-row .dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        font-weight: 600;
+      }
+      .split-top .mini-row .dot.done {
+        background: var(--done-bg);
+        color: var(--success);
+      }
+      .split-top .mini-row .dot.done::after {
+        content: '✓';
+      }
+      .split-top .mini-row .dot.active {
+        background: var(--primary);
+        color: white;
+      }
+      .split-top .mini-row .dot.pending {
+        background: var(--surface-elevated);
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+      .split-top .mini-row.active-row {
+        background: var(--primary-light);
+        border-radius: var(--radius-sm);
+      }
+
+      /* Direction F: Minimal */
+      .minimal-exercise {
+        padding: 20px 16px;
+      }
+      .minimal-exercise .ex-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--subtext);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 16px;
+      }
+      .minimal-set-grid {
+        display: grid;
+        grid-template-columns: auto 1fr 1fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+      .minimal-set-grid .label-col {
+        font-size: 11px;
+        color: var(--muted);
+        padding: 0 4px;
+      }
+      .minimal-set-grid .val {
+        height: 48px;
+        background: var(--surface);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .minimal-set-grid .val.done-val {
+        color: var(--success);
+        background: var(--done-bg);
+      }
+      .minimal-set-grid .check-col {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+
+      /* ── Layout helpers ── */
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: start;
+      }
+      @media (max-width: 900px) {
+        .two-col {
+          grid-template-columns: 1fr;
+        }
+      }
+      .pros-cons {
+        margin-top: 20px;
+      }
+      .pros-cons h4 {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--subtext);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .pros-cons ul {
+        list-style: none;
+        padding: 0;
+      }
+      .pros-cons li {
+        font-size: 14px;
+        color: var(--text);
+        padding: 4px 0;
+      }
+      .pros-cons li::before {
+        margin-right: 8px;
+      }
+      .pros-cons .pros li::before {
+        content: '✓';
+        color: var(--success);
+      }
+      .pros-cons .cons li::before {
+        content: '✗';
+        color: var(--danger);
+      }
+
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 24px;
+        margin-top: 24px;
+      }
+      .comparison-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+      }
+      .comparison-card h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .comparison-card .subtitle {
+        font-size: 13px;
+        color: var(--subtext);
+        margin-bottom: 12px;
+      }
+      .score-bar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 8px;
+      }
+      .score-bar .label {
+        font-size: 11px;
+        color: var(--muted);
+        width: 80px;
+      }
+      .score-bar .bar {
+        flex: 1;
+        height: 6px;
+        background: var(--surface-elevated);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .score-bar .fill {
+        height: 100%;
+        border-radius: 3px;
+      }
+      .score-bar .fill.high {
+        background: var(--success);
+      }
+      .score-bar .fill.med {
+        background: var(--primary);
+      }
+      .score-bar .fill.low {
+        background: var(--accent);
+      }
+
+      .overview-intro {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        margin-bottom: 32px;
+      }
+      .overview-intro h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .overview-intro p {
+        font-size: 14px;
+        color: var(--subtext);
+      }
+
+      .progress-row {
+        width: 100%;
+        height: 3px;
+        background: var(--border);
+        margin-top: 4px;
+      }
+      .progress-row .fill {
+        height: 100%;
+        background: var(--success);
+        border-radius: 2px;
+      }
+
+      .scroll-area {
+        overflow-y: auto;
+        flex: 1;
+      }
+
+      .phone-content {
+        display: flex;
+        flex-direction: column;
+        height: calc(100% - 44px);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <h1>PWO Directions</h1>
+      <button class="nav-btn active" onclick="showSection('overview')">
+        Overview
+      </button>
+      <button class="nav-btn" onclick="showSection('dir-a')">
+        A: Accordion
+      </button>
+      <button class="nav-btn" onclick="showSection('dir-b')">
+        B: Bottom Sheet
+      </button>
+      <button class="nav-btn" onclick="showSection('dir-c')">
+        C: Card Stack
+      </button>
+      <button class="nav-btn" onclick="showSection('dir-d')">
+        D: Full Focus
+      </button>
+      <button class="nav-btn" onclick="showSection('dir-e')">
+        E: Split Matrix
+      </button>
+      <button class="nav-btn" onclick="showSection('dir-f')">
+        F: Minimal Grid
+      </button>
+      <button class="nav-btn" onclick="showSection('compare')">Compare</button>
+    </nav>
+
+    <!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+    <div id="overview" class="section active">
+      <div class="section-header">
+        <h2>Design Direction Exploration</h2>
+        <p>
+          Six layout approaches for the PWO workout execution screen, all using
+          the same dark-first design system with DM Sans, tuned indigo, and
+          minimalistic aesthetics.
+        </p>
+      </div>
+
+      <div class="overview-intro">
+        <h3>What stays the same across all directions</h3>
+        <p>
+          Color palette, typography, spacing scale, 48pt touch targets, set
+          indicators, rest timer persistence, non-linear navigation support, and
+          pre-fill logic. The difference is <strong>how</strong> the exercise
+          list and set logging area are arranged on screen.
+        </p>
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <span class="tag tag-recommended">Recommended</span>
+          <h3>A: Matrix Accordion</h3>
+          <div class="subtitle">Expand-in-place with compact overview</div>
+          <p style="font-size: 13px; color: var(--subtext)">
+            Exercises stack vertically. Tap to expand inline. Compact rows show
+            set dots. One exercise expanded at a time.
+          </p>
+          <div class="score-bar">
+            <span class="label">Visibility</span>
+            <div class="bar">
+              <div class="fill high" style="width: 90%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Focus</span>
+            <div class="bar">
+              <div class="fill med" style="width: 75%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Navigation</span>
+            <div class="bar">
+              <div class="fill high" style="width: 95%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Simplicity</span>
+            <div class="bar">
+              <div class="fill high" style="width: 90%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="comparison-card">
+          <span class="tag tag-alternative">Alternative</span>
+          <h3>B: Bottom Sheet</h3>
+          <div class="subtitle">Full matrix visible, sheet for logging</div>
+          <p style="font-size: 13px; color: var(--subtext)">
+            Matrix always visible at top. Active exercise logging slides up from
+            bottom in a draggable sheet.
+          </p>
+          <div class="score-bar">
+            <span class="label">Visibility</span>
+            <div class="bar">
+              <div class="fill high" style="width: 95%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Focus</span>
+            <div class="bar">
+              <div class="fill med" style="width: 70%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Navigation</span>
+            <div class="bar">
+              <div class="fill high" style="width: 85%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Simplicity</span>
+            <div class="bar">
+              <div class="fill med" style="width: 65%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="comparison-card">
+          <span class="tag tag-alternative">Alternative</span>
+          <h3>C: Card Stack</h3>
+          <div class="subtitle">Each exercise as a discrete card</div>
+          <p style="font-size: 13px; color: var(--subtext)">
+            Exercises as rounded cards with clear boundaries. Active card
+            highlighted. More visual separation between exercises.
+          </p>
+          <div class="score-bar">
+            <span class="label">Visibility</span>
+            <div class="bar">
+              <div class="fill med" style="width: 75%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Focus</span>
+            <div class="bar">
+              <div class="fill high" style="width: 85%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Navigation</span>
+            <div class="bar">
+              <div class="fill med" style="width: 80%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Simplicity</span>
+            <div class="bar">
+              <div class="fill med" style="width: 70%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="comparison-card">
+          <span class="tag tag-alternative">Alternative</span>
+          <h3>D: Full Focus</h3>
+          <div class="subtitle">One exercise at a time, swipe between</div>
+          <p style="font-size: 13px; color: var(--subtext)">
+            Maximum screen space for active exercise. Swipe or tap arrows to
+            navigate. Mini-map for overview.
+          </p>
+          <div class="score-bar">
+            <span class="label">Visibility</span>
+            <div class="bar">
+              <div class="fill low" style="width: 40%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Focus</span>
+            <div class="bar">
+              <div class="fill high" style="width: 95%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Navigation</span>
+            <div class="bar">
+              <div class="fill low" style="width: 50%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Simplicity</span>
+            <div class="bar">
+              <div class="fill high" style="width: 85%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="comparison-card">
+          <span class="tag tag-alternative">Alternative</span>
+          <h3>E: Split Matrix</h3>
+          <div class="subtitle">Persistent mini-matrix + detail below</div>
+          <p style="font-size: 13px; color: var(--subtext)">
+            Compact matrix always visible at top. Active exercise detail area
+            below. Clear separation of overview vs detail.
+          </p>
+          <div class="score-bar">
+            <span class="label">Visibility</span>
+            <div class="bar">
+              <div class="fill high" style="width: 85%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Focus</span>
+            <div class="bar">
+              <div class="fill high" style="width: 85%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Navigation</span>
+            <div class="bar">
+              <div class="fill high" style="width: 90%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Simplicity</span>
+            <div class="bar">
+              <div class="fill med" style="width: 70%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="comparison-card">
+          <span class="tag tag-alternative">Alternative</span>
+          <h3>F: Minimal Grid</h3>
+          <div class="subtitle">Ultra-clean grid-based set logging</div>
+          <p style="font-size: 13px; color: var(--subtext)">
+            Large numeric inputs in a structured grid. Maximum minimalism.
+            Numbers as the primary visual element.
+          </p>
+          <div class="score-bar">
+            <span class="label">Visibility</span>
+            <div class="bar">
+              <div class="fill med" style="width: 65%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Focus</span>
+            <div class="bar">
+              <div class="fill high" style="width: 90%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Navigation</span>
+            <div class="bar">
+              <div class="fill med" style="width: 60%"></div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <span class="label">Simplicity</span>
+            <div class="bar">
+              <div class="fill high" style="width: 95%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ DIRECTION A: ACCORDION ═══════════════════ -->
+    <div id="dir-a" class="section">
+      <div class="section-header">
+        <span class="tag tag-recommended">Recommended</span>
+        <h2>Direction A: Matrix Accordion</h2>
+        <p>
+          The natural evolution of PWO's existing WorkoutMatrix. Exercises stack
+          vertically with set indicators. Tap any exercise to expand inline for
+          set logging. One expanded at a time.
+        </p>
+      </div>
+      <div class="two-col">
+        <div class="phone-frame">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <span class="icons">● ● ●</span>
+          </div>
+          <div class="phone-content">
+            <div class="workout-header">
+              <span class="timer">12:34</span>
+              <span class="program-name">Push Day A</span>
+              <span class="end-btn">End</span>
+            </div>
+            <div class="rest-timer-bar">
+              <span class="label">Rest</span>
+              <span class="countdown">1:42</span>
+              <span class="skip">Skip</span>
+            </div>
+            <div class="scroll-area">
+              <!-- Completed exercise -->
+              <div class="exercise-compact done-row">
+                <div>
+                  <div class="name">Bench Press</div>
+                  <div class="meta">4/4 sets · 225 lbs</div>
+                </div>
+                <div class="set-dots">
+                  <div class="set-dot done"></div>
+                  <div class="set-dot done"></div>
+                  <div class="set-dot done"></div>
+                  <div class="set-dot done"></div>
+                </div>
+              </div>
+
+              <!-- Active exercise — EXPANDED -->
+              <div class="exercise-expanded">
+                <div class="header">
+                  <span class="name">Incline DB Press</span>
+                  <span class="media-btn">▶ Demo</span>
+                </div>
+                <div class="set-row completed">
+                  <span class="set-label">1</span>
+                  <div
+                    class="set-input"
+                    style="
+                      background: var(--done-bg);
+                      border-color: transparent;
+                      color: var(--success);
+                    "
+                  >
+                    8 <span class="unit">reps</span>
+                  </div>
+                  <div
+                    class="set-input"
+                    style="
+                      background: var(--done-bg);
+                      border-color: transparent;
+                      color: var(--success);
+                    "
+                  >
+                    70 <span class="unit">lbs</span>
+                  </div>
+                  <div class="check-btn done">✓</div>
+                </div>
+                <div class="set-row completed">
+                  <span class="set-label">2</span>
+                  <div
+                    class="set-input"
+                    style="
+                      background: var(--done-bg);
+                      border-color: transparent;
+                      color: var(--success);
+                    "
+                  >
+                    8 <span class="unit">reps</span>
+                  </div>
+                  <div
+                    class="set-input"
+                    style="
+                      background: var(--done-bg);
+                      border-color: transparent;
+                      color: var(--success);
+                    "
+                  >
+                    70 <span class="unit">lbs</span>
+                  </div>
+                  <div class="check-btn done">✓</div>
+                </div>
+                <div class="set-row">
+                  <span class="set-label" style="color: var(--primary)">3</span>
+                  <div class="set-input focused">
+                    8 <span class="unit">reps</span>
+                  </div>
+                  <div class="set-input">70 <span class="unit">lbs</span></div>
+                  <div class="check-btn ready">✓</div>
+                </div>
+                <div class="set-row">
+                  <span class="set-label">4</span>
+                  <div class="set-input">8 <span class="unit">reps</span></div>
+                  <div class="set-input">70 <span class="unit">lbs</span></div>
+                  <div class="check-btn empty">○</div>
+                </div>
+                <div style="padding: 4px 16px 12px">
+                  <div class="progress-row">
+                    <div class="fill" style="width: 50%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pending exercises -->
+              <div class="exercise-compact">
+                <div>
+                  <div class="name">Cable Flyes</div>
+                  <div class="meta">0/3 sets</div>
+                </div>
+                <div class="set-dots">
+                  <div class="set-dot pending">1</div>
+                  <div class="set-dot pending">2</div>
+                  <div class="set-dot pending">3</div>
+                </div>
+              </div>
+              <div class="exercise-compact">
+                <div>
+                  <div class="name">Lateral Raises</div>
+                  <div class="meta">0/4 sets</div>
+                </div>
+                <div class="set-dots">
+                  <div class="set-dot pending">1</div>
+                  <div class="set-dot pending">2</div>
+                  <div class="set-dot pending">3</div>
+                  <div class="set-dot pending">4</div>
+                </div>
+              </div>
+              <div class="exercise-compact">
+                <div>
+                  <div class="name">Tricep Pushdowns</div>
+                  <div class="meta">0/3 sets</div>
+                </div>
+                <div class="set-dots">
+                  <div class="set-dot pending">1</div>
+                  <div class="set-dot pending">2</div>
+                  <div class="set-dot pending">3</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="pros-cons">
+            <div class="pros">
+              <h4>Strengths</h4>
+              <ul>
+                <li>
+                  Full workout overview always visible — scroll to see all
+                  exercises
+                </li>
+                <li>Tap any exercise or set dot for instant navigation</li>
+                <li>Minimal cognitive load — familiar list pattern</li>
+                <li>
+                  Set dots provide at-a-glance progress for every exercise
+                </li>
+                <li>Compact rows maximize exercises visible without scroll</li>
+                <li>Natural extension of existing WorkoutMatrix component</li>
+              </ul>
+            </div>
+            <div class="cons" style="margin-top: 16px">
+              <h4>Trade-offs</h4>
+              <ul>
+                <li>Expanded area pushes exercises below the fold</li>
+                <li>Scroll position shifts when expanding/collapsing</li>
+                <li>
+                  Less screen space for active set inputs than full-focus
+                  approaches
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div
+            style="
+              margin-top: 24px;
+              padding: 16px;
+              background: var(--surface);
+              border-radius: var(--radius-md);
+              border: 1px solid var(--border);
+            "
+          >
+            <h4
+              style="
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--primary);
+                margin-bottom: 8px;
+              "
+            >
+              Implementation notes
+            </h4>
+            <p style="font-size: 13px; color: var(--subtext)">
+              Evolves the existing <code>WorkoutMatrix.tsx</code> component. Add
+              expand/collapse animation (LayoutAnimation or Reanimated). Set
+              dots become tappable navigation targets. Scroll-to behavior
+              centers expanded exercise.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ DIRECTION B: BOTTOM SHEET ═══════════════════ -->
+    <div id="dir-b" class="section">
+      <div class="section-header">
+        <span class="tag tag-alternative">Alternative</span>
+        <h2>Direction B: Bottom Sheet</h2>
+        <p>
+          The full matrix stays visible at the top. When you tap an exercise, a
+          bottom sheet slides up with the set logging area. The sheet can be
+          swiped down to see more of the matrix.
+        </p>
+      </div>
+      <div class="two-col">
+        <div class="phone-frame">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <span class="icons">● ● ●</span>
+          </div>
+          <div class="phone-content" style="position: relative">
+            <div class="workout-header">
+              <span class="timer">12:34</span>
+              <span class="program-name">Push Day A</span>
+              <span class="end-btn">End</span>
+            </div>
+            <!-- Matrix rows visible behind sheet -->
+            <div>
+              <div class="exercise-compact done-row">
+                <div>
+                  <div class="name">Bench Press</div>
+                  <div class="meta">4/4 sets</div>
+                </div>
+                <div class="set-dots">
+                  <div class="set-dot done"></div>
+                  <div class="set-dot done"></div>
+                  <div class="set-dot done"></div>
+                  <div class="set-dot done"></div>
+                </div>
+              </div>
+              <div
+                class="exercise-compact"
+                style="background: var(--primary-light)"
+              >
+                <div>
+                  <div class="name" style="color: var(--primary)">
+                    Incline DB Press
+                  </div>
+                  <div class="meta">2/4 sets</div>
+                </div>
+                <div class="set-dots">
+                  <div class="set-dot done"></div>
+                  <div class="set-dot done"></div>
+                  <div class="set-dot active">3</div>
+                  <div class="set-dot pending">4</div>
+                </div>
+              </div>
+              <div class="exercise-compact">
+                <div>
+                  <div class="name">Cable Flyes</div>
+                  <div class="meta">0/3 sets</div>
+                </div>
+                <div class="set-dots">
+                  <div class="set-dot pending">1</div>
+                  <div class="set-dot pending">2</div>
+                  <div class="set-dot pending">3</div>
+                </div>
+              </div>
+              <div class="exercise-compact">
+                <div>
+                  <div class="name">Lateral Raises</div>
+                  <div class="meta">0/4 sets</div>
+                </div>
+                <div class="set-dots">
+                  <div class="set-dot pending">1</div>
+                  <div class="set-dot pending">2</div>
+                  <div class="set-dot pending">3</div>
+                  <div class="set-dot pending">4</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Sheet -->
+            <div class="bottom-sheet" style="height: 380px">
+              <div class="handle"></div>
+              <div style="padding: 0 16px">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 12px;
+                  "
+                >
+                  <span
+                    style="
+                      font-size: 18px;
+                      font-weight: 600;
+                      color: var(--primary);
+                    "
+                    >Incline DB Press</span
+                  >
+                  <span
+                    class="media-btn"
+                    style="
+                      font-size: 11px;
+                      color: var(--subtext);
+                      padding: 4px 8px;
+                      border: 1px solid var(--border);
+                      border-radius: 4px;
+                    "
+                    >▶ Demo</span
+                  >
+                </div>
+                <div
+                  class="rest-timer-bar"
+                  style="
+                    margin: 0 -16px 12px;
+                    border-top: 1px solid var(--border);
+                  "
+                >
+                  <span class="label">Rest</span>
+                  <span class="countdown">1:42</span>
+                  <span class="skip">Skip</span>
+                </div>
+              </div>
+              <div class="set-row completed">
+                <span class="set-label">1</span>
+                <div
+                  class="set-input"
+                  style="
+                    background: var(--done-bg);
+                    border-color: transparent;
+                    color: var(--success);
+                  "
+                >
+                  8 <span class="unit">reps</span>
+                </div>
+                <div
+                  class="set-input"
+                  style="
+                    background: var(--done-bg);
+                    border-color: transparent;
+                    color: var(--success);
+                  "
+                >
+                  70 <span class="unit">lbs</span>
+                </div>
+                <div class="check-btn done">✓</div>
+              </div>
+              <div class="set-row completed">
+                <span class="set-label">2</span>
+                <div
+                  class="set-input"
+                  style="
+                    background: var(--done-bg);
+                    border-color: transparent;
+                    color: var(--success);
+                  "
+                >
+                  8 <span class="unit">reps</span>
+                </div>
+                <div
+                  class="set-input"
+                  style="
+                    background: var(--done-bg);
+                    border-color: transparent;
+                    color: var(--success);
+                  "
+                >
+                  70 <span class="unit">lbs</span>
+                </div>
+                <div class="check-btn done">✓</div>
+              </div>
+              <div class="set-row">
+                <span class="set-label" style="color: var(--primary)">3</span>
+                <div class="set-input focused">
+                  8 <span class="unit">reps</span>
+                </div>
+                <div class="set-input">70 <span class="unit">lbs</span></div>
+                <div class="check-btn ready">✓</div>
+              </div>
+              <div class="set-row">
+                <span class="set-label">4</span>
+                <div class="set-input">8 <span class="unit">reps</span></div>
+                <div class="set-input">70 <span class="unit">lbs</span></div>
+                <div class="check-btn empty">○</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="pros-cons">
+            <div class="pros">
+              <h4>Strengths</h4>
+              <ul>
+                <li>
+                  Full matrix always visible — best overview of all exercises
+                </li>
+                <li>
+                  Clear separation between navigation (matrix) and action
+                  (sheet)
+                </li>
+                <li>
+                  Swipe sheet down to see full matrix, up for more logging space
+                </li>
+                <li>Maps app-like familiar pattern on mobile</li>
+              </ul>
+            </div>
+            <div class="cons" style="margin-top: 16px">
+              <h4>Trade-offs</h4>
+              <ul>
+                <li>
+                  More complex implementation (gesture handling, snap points)
+                </li>
+                <li>
+                  Sheet partially covers matrix — can't see all exercises and
+                  log at once
+                </li>
+                <li>
+                  Two distinct areas to understand (more initial cognitive load)
+                </li>
+                <li>Bottom sheet gesture conflicts with scroll inside sheet</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ DIRECTION C: CARD STACK ═══════════════════ -->
+    <div id="dir-c" class="section">
+      <div class="section-header">
+        <span class="tag tag-alternative">Alternative</span>
+        <h2>Direction C: Card Stack</h2>
+        <p>
+          Each exercise is a discrete rounded card. The active card expands to
+          show set rows. Completed cards collapse to a thin summary. Cards have
+          clear visual boundaries.
+        </p>
+      </div>
+      <div class="two-col">
+        <div class="phone-frame">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <span class="icons">● ● ●</span>
+          </div>
+          <div class="phone-content">
+            <div class="workout-header">
+              <span class="timer">12:34</span>
+              <span class="program-name">Push Day A</span>
+              <span class="end-btn">End</span>
+            </div>
+            <div class="rest-timer-bar">
+              <span class="label">Rest</span>
+              <span class="countdown">1:42</span>
+              <span class="skip">Skip</span>
+            </div>
+            <div class="scroll-area" style="padding: 4px 0">
+              <!-- Completed card -->
+              <div class="card-exercise">
+                <div
+                  style="
+                    padding: 14px 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  "
+                >
+                  <div>
+                    <div
+                      style="
+                        font-size: 16px;
+                        font-weight: 500;
+                        color: var(--success);
+                      "
+                    >
+                      Bench Press
+                    </div>
+                    <div style="font-size: 13px; color: var(--subtext)">
+                      4/4 · 225 lbs peak
+                    </div>
+                  </div>
+                  <div class="set-dots">
+                    <div class="set-dot done"></div>
+                    <div class="set-dot done"></div>
+                    <div class="set-dot done"></div>
+                    <div class="set-dot done"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Active card -->
+              <div class="card-exercise active-card">
+                <div
+                  style="
+                    padding: 14px 16px 8px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  "
+                >
+                  <span
+                    style="
+                      font-size: 18px;
+                      font-weight: 600;
+                      color: var(--primary);
+                    "
+                    >Incline DB Press</span
+                  >
+                  <span
+                    class="media-btn"
+                    style="
+                      font-size: 11px;
+                      color: var(--subtext);
+                      padding: 4px 8px;
+                      border: 1px solid var(--border);
+                      border-radius: 4px;
+                    "
+                    >▶ Demo</span
+                  >
+                </div>
+                <div class="set-row completed">
+                  <span class="set-label">1</span>
+                  <div
+                    class="set-input"
+                    style="
+                      background: var(--done-bg);
+                      border-color: transparent;
+                      color: var(--success);
+                    "
+                  >
+                    8 <span class="unit">reps</span>
+                  </div>
+                  <div
+                    class="set-input"
+                    style="
+                      background: var(--done-bg);
+                      border-color: transparent;
+                      color: var(--success);
+                    "
+                  >
+                    70 <span class="unit">lbs</span>
+                  </div>
+                  <div class="check-btn done">✓</div>
+                </div>
+                <div class="set-row">
+                  <span class="set-label" style="color: var(--primary)">2</span>
+                  <div class="set-input focused">
+                    8 <span class="unit">reps</span>
+                  </div>
+                  <div class="set-input">70 <span class="unit">lbs</span></div>
+                  <div class="check-btn ready">✓</div>
+                </div>
+                <div class="set-row">
+                  <span class="set-label">3</span>
+                  <div class="set-input">8 <span class="unit">reps</span></div>
+                  <div class="set-input">70 <span class="unit">lbs</span></div>
+                  <div class="check-btn empty">○</div>
+                </div>
+                <div style="padding: 8px 16px 14px">
+                  <div class="progress-row">
+                    <div class="fill" style="width: 33%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pending cards -->
+              <div class="card-exercise">
+                <div
+                  style="
+                    padding: 14px 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  "
+                >
+                  <div>
+                    <div style="font-size: 16px; font-weight: 500">
+                      Cable Flyes
+                    </div>
+                    <div style="font-size: 13px; color: var(--subtext)">
+                      0/3 sets
+                    </div>
+                  </div>
+                  <div class="set-dots">
+                    <div class="set-dot pending">1</div>
+                    <div class="set-dot pending">2</div>
+                    <div class="set-dot pending">3</div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-exercise">
+                <div
+                  style="
+                    padding: 14px 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  "
+                >
+                  <div>
+                    <div style="font-size: 16px; font-weight: 500">
+                      Lateral Raises
+                    </div>
+                    <div style="font-size: 13px; color: var(--subtext)">
+                      0/4 sets
+                    </div>
+                  </div>
+                  <div class="set-dots">
+                    <div class="set-dot pending">1</div>
+                    <div class="set-dot pending">2</div>
+                    <div class="set-dot pending">3</div>
+                    <div class="set-dot pending">4</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="pros-cons">
+            <div class="pros">
+              <h4>Strengths</h4>
+              <ul>
+                <li>
+                  Clear visual separation — each exercise is a distinct unit
+                </li>
+                <li>Feels premium and polished with rounded cards</li>
+                <li>Easy to scan — card boundaries guide the eye</li>
+                <li>
+                  Good for exercises with different set counts (visual weight
+                  varies)
+                </li>
+              </ul>
+            </div>
+            <div class="cons" style="margin-top: 16px">
+              <h4>Trade-offs</h4>
+              <ul>
+                <li>
+                  Card margins consume vertical space — fewer exercises visible
+                </li>
+                <li>
+                  Borders + margins + padding = more visual noise (less
+                  minimalist)
+                </li>
+                <li>Similar to accordion but with more chrome</li>
+                <li>Horizontal space wasted on card padding</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ DIRECTION D: FULL FOCUS ═══════════════════ -->
+    <div id="dir-d" class="section">
+      <div class="section-header">
+        <span class="tag tag-alternative">Alternative</span>
+        <h2>Direction D: Full Focus</h2>
+        <p>
+          One exercise fills the entire screen. Maximum space for set inputs.
+          Navigate between exercises with prev/next buttons or swipe. A mini
+          progress bar shows overall workout progress.
+        </p>
+      </div>
+      <div class="two-col">
+        <div class="phone-frame">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <span class="icons">● ● ●</span>
+          </div>
+          <div class="phone-content">
+            <div class="workout-header">
+              <span class="timer">12:34</span>
+              <span class="program-name">Push Day A</span>
+              <span class="end-btn">End</span>
+            </div>
+            <div class="rest-timer-bar">
+              <span class="label">Rest</span>
+              <span class="countdown">1:42</span>
+              <span class="skip">Skip</span>
+            </div>
+            <!-- Mini progress dots -->
+            <div
+              style="
+                display: flex;
+                gap: 4px;
+                padding: 12px 16px;
+                justify-content: center;
+              "
+            >
+              <div
+                style="
+                  width: 8px;
+                  height: 8px;
+                  border-radius: 4px;
+                  background: var(--success);
+                "
+              ></div>
+              <div
+                style="
+                  width: 24px;
+                  height: 8px;
+                  border-radius: 4px;
+                  background: var(--primary);
+                "
+              ></div>
+              <div
+                style="
+                  width: 8px;
+                  height: 8px;
+                  border-radius: 4px;
+                  background: var(--muted);
+                "
+              ></div>
+              <div
+                style="
+                  width: 8px;
+                  height: 8px;
+                  border-radius: 4px;
+                  background: var(--muted);
+                "
+              ></div>
+              <div
+                style="
+                  width: 8px;
+                  height: 8px;
+                  border-radius: 4px;
+                  background: var(--muted);
+                "
+              ></div>
+            </div>
+
+            <div
+              class="full-focus-exercise"
+              style="flex: 1; display: flex; flex-direction: column"
+            >
+              <div
+                class="exercise-title"
+                style="
+                  font-size: 24px;
+                  font-weight: 600;
+                  letter-spacing: -0.5px;
+                "
+              >
+                Incline DB Press
+              </div>
+              <div
+                class="exercise-subtitle"
+                style="
+                  font-size: 13px;
+                  color: var(--subtext);
+                  margin-bottom: 24px;
+                  display: flex;
+                  gap: 12px;
+                  align-items: center;
+                "
+              >
+                <span>Set 3 of 4</span>
+                <span style="color: var(--muted)">·</span>
+                <span style="color: var(--primary); cursor: pointer"
+                  >▶ Demo</span
+                >
+              </div>
+
+              <div style="flex: 1">
+                <div
+                  class="full-focus-set-row"
+                  style="
+                    padding: 16px 0;
+                    border-bottom: 1px solid var(--border);
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                  "
+                >
+                  <div
+                    class="full-focus-set-num"
+                    style="
+                      width: 32px;
+                      height: 32px;
+                      border-radius: 4px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 13px;
+                      font-weight: 600;
+                      background: var(--done-bg);
+                      color: var(--success);
+                    "
+                  >
+                    ✓
+                  </div>
+                  <div style="flex: 1; display: flex; gap: 12px">
+                    <div style="flex: 1; color: var(--success)">8 reps</div>
+                    <div style="flex: 1; color: var(--success)">70 lbs</div>
+                  </div>
+                </div>
+                <div
+                  class="full-focus-set-row"
+                  style="
+                    padding: 16px 0;
+                    border-bottom: 1px solid var(--border);
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                  "
+                >
+                  <div
+                    style="
+                      width: 32px;
+                      height: 32px;
+                      border-radius: 4px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 13px;
+                      font-weight: 600;
+                      background: var(--done-bg);
+                      color: var(--success);
+                    "
+                  >
+                    ✓
+                  </div>
+                  <div style="flex: 1; display: flex; gap: 12px">
+                    <div style="flex: 1; color: var(--success)">8 reps</div>
+                    <div style="flex: 1; color: var(--success)">70 lbs</div>
+                  </div>
+                </div>
+                <div
+                  class="full-focus-set-row"
+                  style="
+                    padding: 16px 0;
+                    border-bottom: 1px solid var(--border);
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    background: var(--primary-light);
+                    margin: 0 -16px;
+                    padding-left: 16px;
+                    padding-right: 16px;
+                    border-radius: var(--radius-sm);
+                  "
+                >
+                  <div
+                    style="
+                      width: 32px;
+                      height: 32px;
+                      border-radius: 4px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 13px;
+                      font-weight: 600;
+                      background: var(--primary);
+                      color: white;
+                    "
+                  >
+                    3
+                  </div>
+                  <div style="flex: 1; display: flex; gap: 12px">
+                    <div class="set-input focused" style="flex: 1">
+                      8 <span class="unit">reps</span>
+                    </div>
+                    <div class="set-input" style="flex: 1">
+                      70 <span class="unit">lbs</span>
+                    </div>
+                  </div>
+                  <div
+                    class="check-btn ready"
+                    style="width: 48px; height: 48px; font-size: 20px"
+                  >
+                    ✓
+                  </div>
+                </div>
+                <div
+                  class="full-focus-set-row"
+                  style="
+                    padding: 16px 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                  "
+                >
+                  <div
+                    style="
+                      width: 32px;
+                      height: 32px;
+                      border-radius: 4px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 13px;
+                      font-weight: 600;
+                      background: var(--surface-elevated);
+                      color: var(--muted);
+                      border: 1px solid var(--border);
+                    "
+                  >
+                    4
+                  </div>
+                  <div
+                    style="
+                      flex: 1;
+                      display: flex;
+                      gap: 12px;
+                      color: var(--muted);
+                    "
+                  >
+                    <div style="flex: 1">8 reps</div>
+                    <div style="flex: 1">70 lbs</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="full-focus-nav"
+              style="
+                padding: 16px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-top: 1px solid var(--border);
+              "
+            >
+              <button
+                style="
+                  padding: 12px 20px;
+                  border-radius: 8px;
+                  font-family: inherit;
+                  font-size: 14px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  border: none;
+                  background: var(--surface);
+                  color: var(--subtext);
+                "
+              >
+                ← Bench Press
+              </button>
+              <span style="font-size: 13px; color: var(--muted)">2 / 5</span>
+              <button
+                style="
+                  padding: 12px 20px;
+                  border-radius: 8px;
+                  font-family: inherit;
+                  font-size: 14px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  border: none;
+                  background: var(--primary);
+                  color: white;
+                "
+              >
+                Cable Flyes →
+              </button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="pros-cons">
+            <div class="pros">
+              <h4>Strengths</h4>
+              <ul>
+                <li>Maximum screen space for the active exercise</li>
+                <li>Zero distraction — total focus on current task</li>
+                <li>Generous touch targets and input areas</li>
+                <li>Clean, simple mental model (one thing at a time)</li>
+              </ul>
+            </div>
+            <div class="cons" style="margin-top: 16px">
+              <h4>Trade-offs</h4>
+              <ul>
+                <li>
+                  No workout overview — can't see other exercises without
+                  navigating
+                </li>
+                <li>
+                  Arbitrary navigation requires extra taps (open menu or swipe
+                  multiple times)
+                </li>
+                <li>
+                  Conflicts with "set of tasks" mental model — feels sequential
+                </li>
+                <li>Mini dots insufficient for 6+ exercises</li>
+                <li>Doesn't build on existing WorkoutMatrix component</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ DIRECTION E: SPLIT MATRIX ═══════════════════ -->
+    <div id="dir-e" class="section">
+      <div class="section-header">
+        <span class="tag tag-alternative">Alternative</span>
+        <h2>Direction E: Split Matrix</h2>
+        <p>
+          A persistent compact matrix stays pinned at the top of the screen. The
+          active exercise detail fills the remaining space below. Tap any row in
+          the mini-matrix to switch exercises.
+        </p>
+      </div>
+      <div class="two-col">
+        <div class="phone-frame">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <span class="icons">● ● ●</span>
+          </div>
+          <div class="phone-content">
+            <div class="workout-header">
+              <span class="timer">12:34</span>
+              <span class="program-name">Push Day A</span>
+              <span class="end-btn">End</span>
+            </div>
+
+            <!-- Persistent mini-matrix -->
+            <div class="split-top">
+              <div class="mini-row">
+                <span class="name" style="color: var(--success)"
+                  >Bench Press</span
+                >
+                <div class="dots">
+                  <div class="dot done"></div>
+                  <div class="dot done"></div>
+                  <div class="dot done"></div>
+                  <div class="dot done"></div>
+                </div>
+              </div>
+              <div class="mini-row active-row">
+                <span class="name" style="color: var(--primary)"
+                  >Incline DB Press</span
+                >
+                <div class="dots">
+                  <div class="dot done"></div>
+                  <div class="dot done"></div>
+                  <div class="dot active">3</div>
+                  <div class="dot pending">4</div>
+                </div>
+              </div>
+              <div class="mini-row">
+                <span class="name">Cable Flyes</span>
+                <div class="dots">
+                  <div class="dot pending">1</div>
+                  <div class="dot pending">2</div>
+                  <div class="dot pending">3</div>
+                </div>
+              </div>
+              <div class="mini-row">
+                <span class="name">Lateral Raises</span>
+                <div class="dots">
+                  <div class="dot pending">1</div>
+                  <div class="dot pending">2</div>
+                  <div class="dot pending">3</div>
+                  <div class="dot pending">4</div>
+                </div>
+              </div>
+              <div class="mini-row">
+                <span class="name">Tricep Pushdowns</span>
+                <div class="dots">
+                  <div class="dot pending">1</div>
+                  <div class="dot pending">2</div>
+                  <div class="dot pending">3</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rest-timer-bar">
+              <span class="label">Rest</span>
+              <span class="countdown">1:42</span>
+              <span class="skip">Skip</span>
+            </div>
+
+            <!-- Active exercise detail -->
+            <div
+              style="
+                flex: 1;
+                background: var(--surface-elevated);
+                padding: 16px;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 16px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: var(--primary);
+                  "
+                  >Incline DB Press</span
+                >
+                <span
+                  class="media-btn"
+                  style="
+                    font-size: 11px;
+                    color: var(--subtext);
+                    padding: 4px 8px;
+                    border: 1px solid var(--border);
+                    border-radius: 4px;
+                  "
+                  >▶ Demo</span
+                >
+              </div>
+              <div class="set-row completed" style="padding: 10px 0">
+                <span class="set-label">1</span>
+                <div
+                  class="set-input"
+                  style="
+                    background: var(--done-bg);
+                    border-color: transparent;
+                    color: var(--success);
+                  "
+                >
+                  8 <span class="unit">reps</span>
+                </div>
+                <div
+                  class="set-input"
+                  style="
+                    background: var(--done-bg);
+                    border-color: transparent;
+                    color: var(--success);
+                  "
+                >
+                  70 <span class="unit">lbs</span>
+                </div>
+                <div class="check-btn done">✓</div>
+              </div>
+              <div class="set-row completed" style="padding: 10px 0">
+                <span class="set-label">2</span>
+                <div
+                  class="set-input"
+                  style="
+                    background: var(--done-bg);
+                    border-color: transparent;
+                    color: var(--success);
+                  "
+                >
+                  8 <span class="unit">reps</span>
+                </div>
+                <div
+                  class="set-input"
+                  style="
+                    background: var(--done-bg);
+                    border-color: transparent;
+                    color: var(--success);
+                  "
+                >
+                  70 <span class="unit">lbs</span>
+                </div>
+                <div class="check-btn done">✓</div>
+              </div>
+              <div class="set-row" style="padding: 10px 0">
+                <span class="set-label" style="color: var(--primary)">3</span>
+                <div class="set-input focused">
+                  8 <span class="unit">reps</span>
+                </div>
+                <div class="set-input">70 <span class="unit">lbs</span></div>
+                <div class="check-btn ready">✓</div>
+              </div>
+              <div class="set-row" style="padding: 10px 0">
+                <span class="set-label">4</span>
+                <div class="set-input">8 <span class="unit">reps</span></div>
+                <div class="set-input">70 <span class="unit">lbs</span></div>
+                <div class="check-btn empty">○</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="pros-cons">
+            <div class="pros">
+              <h4>Strengths</h4>
+              <ul>
+                <li>
+                  Best of both worlds — overview AND detail always visible
+                </li>
+                <li>One-tap arbitrary navigation via mini-matrix</li>
+                <li>No layout shifts when switching exercises</li>
+                <li>
+                  Mini-matrix set dots provide global progress at a glance
+                </li>
+                <li>Active exercise has dedicated, stable space</li>
+              </ul>
+            </div>
+            <div class="cons" style="margin-top: 16px">
+              <h4>Trade-offs</h4>
+              <ul>
+                <li>Mini-matrix consumes ~35% of screen height</li>
+                <li>
+                  Less vertical space for set rows (problematic with 5+ sets)
+                </li>
+                <li>
+                  Two scrollable areas (matrix and detail) can confuse scroll
+                  gestures
+                </li>
+                <li>
+                  Mini-matrix text is small — may be hard to read in gym
+                  conditions
+                </li>
+                <li>More complex layout to implement and maintain</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ DIRECTION F: MINIMAL GRID ═══════════════════ -->
+    <div id="dir-f" class="section">
+      <div class="section-header">
+        <span class="tag tag-alternative">Alternative</span>
+        <h2>Direction F: Minimal Grid</h2>
+        <p>
+          Ultra-minimalist approach. Large numbers in a structured grid. No
+          borders on inputs — just typography. The exercise name is treated as a
+          section header in small caps. Maximum content, minimum chrome.
+        </p>
+      </div>
+      <div class="two-col">
+        <div class="phone-frame">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <span class="icons">● ● ●</span>
+          </div>
+          <div class="phone-content">
+            <div class="workout-header">
+              <span class="timer">12:34</span>
+              <span class="program-name">Push Day A</span>
+              <span class="end-btn">End</span>
+            </div>
+            <div class="rest-timer-bar">
+              <span class="label">Rest</span>
+              <span class="countdown">1:42</span>
+              <span class="skip">Skip</span>
+            </div>
+            <div class="scroll-area">
+              <!-- Completed exercise (minimal) -->
+              <div
+                class="minimal-exercise"
+                style="border-bottom: 1px solid var(--border)"
+              >
+                <div class="ex-name" style="color: var(--success)">
+                  Bench Press
+                  <span
+                    style="
+                      float: right;
+                      text-transform: none;
+                      letter-spacing: 0;
+                      color: var(--subtext);
+                    "
+                    >4/4</span
+                  >
+                </div>
+                <div class="minimal-set-grid">
+                  <div class="label-col"></div>
+                  <div class="label-col" style="text-align: center">Reps</div>
+                  <div class="label-col" style="text-align: center">Weight</div>
+                  <div class="label-col"></div>
+
+                  <div class="label-col">1</div>
+                  <div class="val done-val">8</div>
+                  <div class="val done-val">225</div>
+                  <div
+                    class="check-col"
+                    style="
+                      background: var(--done-bg);
+                      color: var(--success);
+                      border-radius: 8px;
+                    "
+                  >
+                    ✓
+                  </div>
+
+                  <div class="label-col">2</div>
+                  <div class="val done-val">8</div>
+                  <div class="val done-val">225</div>
+                  <div
+                    class="check-col"
+                    style="
+                      background: var(--done-bg);
+                      color: var(--success);
+                      border-radius: 8px;
+                    "
+                  >
+                    ✓
+                  </div>
+
+                  <div class="label-col">3</div>
+                  <div class="val done-val">6</div>
+                  <div class="val done-val">225</div>
+                  <div
+                    class="check-col"
+                    style="
+                      background: var(--done-bg);
+                      color: var(--success);
+                      border-radius: 8px;
+                    "
+                  >
+                    ✓
+                  </div>
+
+                  <div class="label-col">4</div>
+                  <div class="val done-val">6</div>
+                  <div class="val done-val">225</div>
+                  <div
+                    class="check-col"
+                    style="
+                      background: var(--done-bg);
+                      color: var(--success);
+                      border-radius: 8px;
+                    "
+                  >
+                    ✓
+                  </div>
+                </div>
+              </div>
+
+              <!-- Active exercise (minimal) -->
+              <div
+                class="minimal-exercise"
+                style="
+                  border-bottom: 1px solid var(--border);
+                  background: var(--surface);
+                "
+              >
+                <div class="ex-name" style="color: var(--primary)">
+                  Incline DB Press
+                  <span
+                    style="
+                      float: right;
+                      text-transform: none;
+                      letter-spacing: 0;
+                      color: var(--subtext);
+                    "
+                    >2/4 ·
+                    <span style="color: var(--primary); cursor: pointer"
+                      >▶ Demo</span
+                    ></span
+                  >
+                </div>
+                <div class="minimal-set-grid">
+                  <div class="label-col"></div>
+                  <div class="label-col" style="text-align: center">Reps</div>
+                  <div class="label-col" style="text-align: center">Weight</div>
+                  <div class="label-col"></div>
+
+                  <div class="label-col" style="color: var(--success)">1</div>
+                  <div class="val done-val">8</div>
+                  <div class="val done-val">70</div>
+                  <div
+                    class="check-col"
+                    style="
+                      background: var(--done-bg);
+                      color: var(--success);
+                      border-radius: 8px;
+                    "
+                  >
+                    ✓
+                  </div>
+
+                  <div class="label-col" style="color: var(--success)">2</div>
+                  <div class="val done-val">8</div>
+                  <div class="val done-val">70</div>
+                  <div
+                    class="check-col"
+                    style="
+                      background: var(--done-bg);
+                      color: var(--success);
+                      border-radius: 8px;
+                    "
+                  >
+                    ✓
+                  </div>
+
+                  <div
+                    class="label-col"
+                    style="color: var(--primary); font-weight: 600"
+                  >
+                    3
+                  </div>
+                  <div
+                    class="val"
+                    style="border: 2px solid var(--primary); font-size: 20px"
+                  >
+                    8
+                  </div>
+                  <div class="val" style="font-size: 20px">70</div>
+                  <div
+                    class="check-col"
+                    style="
+                      background: var(--primary);
+                      color: white;
+                      border-radius: 8px;
+                      font-size: 20px;
+                    "
+                  >
+                    ✓
+                  </div>
+
+                  <div class="label-col">4</div>
+                  <div class="val" style="color: var(--muted)">8</div>
+                  <div class="val" style="color: var(--muted)">70</div>
+                  <div
+                    class="check-col"
+                    style="
+                      background: var(--surface-elevated);
+                      color: var(--muted);
+                      border-radius: 8px;
+                    "
+                  >
+                    ○
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pending exercise (collapsed minimal) -->
+              <div
+                class="minimal-exercise"
+                style="border-bottom: 1px solid var(--border)"
+              >
+                <div class="ex-name">
+                  Cable Flyes
+                  <span
+                    style="
+                      float: right;
+                      text-transform: none;
+                      letter-spacing: 0;
+                      color: var(--subtext);
+                    "
+                    >0/3</span
+                  >
+                </div>
+              </div>
+              <div
+                class="minimal-exercise"
+                style="border-bottom: 1px solid var(--border)"
+              >
+                <div class="ex-name">
+                  Lateral Raises
+                  <span
+                    style="
+                      float: right;
+                      text-transform: none;
+                      letter-spacing: 0;
+                      color: var(--subtext);
+                    "
+                    >0/4</span
+                  >
+                </div>
+              </div>
+              <div class="minimal-exercise">
+                <div class="ex-name">
+                  Tricep Pushdowns
+                  <span
+                    style="
+                      float: right;
+                      text-transform: none;
+                      letter-spacing: 0;
+                      color: var(--subtext);
+                    "
+                    >0/3</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="pros-cons">
+            <div class="pros">
+              <h4>Strengths</h4>
+              <ul>
+                <li>Most minimalistic — pure numbers and typography</li>
+                <li>Grid layout makes data scannable like a spreadsheet</li>
+                <li>
+                  Completed exercises show actual logged values (useful
+                  reference)
+                </li>
+                <li>Large tap targets on grid cells</li>
+                <li>Feels like a professional training log</li>
+              </ul>
+            </div>
+            <div class="cons" style="margin-top: 16px">
+              <h4>Trade-offs</h4>
+              <ul>
+                <li>
+                  No set indicator dots — loses the matrix overview pattern
+                </li>
+                <li>
+                  Showing all sets for completed exercises uses significant
+                  space
+                </li>
+                <li>Spreadsheet feel may be too cold / clinical</li>
+                <li>Harder to distinguish active vs pending at a glance</li>
+                <li>
+                  Doesn't scale well if exercises have different numbers of sets
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ COMPARE ═══════════════════ -->
+    <div id="compare" class="section">
+      <div class="section-header">
+        <h2>Comparison Matrix</h2>
+        <p>
+          How each direction scores against PWO's core requirements: non-linear
+          navigation, gym readability, minimalism, and implementation
+          feasibility.
+        </p>
+      </div>
+
+      <div style="overflow-x: auto">
+        <table
+          style="
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 700px;
+          "
+        >
+          <thead>
+            <tr style="border-bottom: 2px solid var(--border-light)">
+              <th
+                style="
+                  text-align: left;
+                  padding: 12px 8px;
+                  color: var(--subtext);
+                  font-weight: 600;
+                  font-size: 12px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                "
+              >
+                Criteria
+              </th>
+              <th
+                style="
+                  padding: 12px 8px;
+                  color: var(--primary);
+                  font-weight: 600;
+                "
+              >
+                A
+              </th>
+              <th
+                style="
+                  padding: 12px 8px;
+                  color: var(--subtext);
+                  font-weight: 600;
+                "
+              >
+                B
+              </th>
+              <th
+                style="
+                  padding: 12px 8px;
+                  color: var(--subtext);
+                  font-weight: 600;
+                "
+              >
+                C
+              </th>
+              <th
+                style="
+                  padding: 12px 8px;
+                  color: var(--subtext);
+                  font-weight: 600;
+                "
+              >
+                D
+              </th>
+              <th
+                style="
+                  padding: 12px 8px;
+                  color: var(--subtext);
+                  font-weight: 600;
+                "
+              >
+                E
+              </th>
+              <th
+                style="
+                  padding: 12px 8px;
+                  color: var(--subtext);
+                  font-weight: 600;
+                "
+              >
+                F
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--border)">
+              <td style="padding: 12px 8px; font-weight: 500">
+                Non-linear navigation
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--accent);
+                "
+              >
+                ★☆☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border)">
+              <td style="padding: 12px 8px; font-weight: 500">
+                Workout overview
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--accent);
+                "
+              >
+                ★☆☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border)">
+              <td style="padding: 12px 8px; font-weight: 500">
+                Gym readability
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border)">
+              <td style="padding: 12px 8px; font-weight: 500">Minimalism</td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border)">
+              <td style="padding: 12px 8px; font-weight: 500">
+                Implementation ease
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--accent);
+                "
+              >
+                ★☆☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border)">
+              <td style="padding: 12px 8px; font-weight: 500">
+                Builds on WorkoutMatrix
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--success);
+                "
+              >
+                ★★★
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--accent);
+                "
+              >
+                ★☆☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--primary);
+                "
+              >
+                ★★☆
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  color: var(--accent);
+                "
+              >
+                ★☆☆
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="padding: 12px 8px; font-weight: 700; color: var(--text)"
+              >
+                Overall fit
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  font-weight: 700;
+                  color: var(--success);
+                "
+              >
+                18
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  font-weight: 600;
+                  color: var(--subtext);
+                "
+              >
+                14
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  font-weight: 600;
+                  color: var(--subtext);
+                "
+              >
+                15
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  font-weight: 600;
+                  color: var(--subtext);
+                "
+              >
+                12
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  font-weight: 600;
+                  color: var(--subtext);
+                "
+              >
+                15
+              </td>
+              <td
+                style="
+                  padding: 12px 8px;
+                  text-align: center;
+                  font-weight: 600;
+                  color: var(--subtext);
+                "
+              >
+                14
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div
+        style="
+          margin-top: 32px;
+          padding: 20px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+        "
+      >
+        <h3
+          style="
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+          "
+        >
+          Recommendation
+        </h3>
+        <p style="font-size: 14px; color: var(--subtext)">
+          <strong style="color: var(--text)"
+            >Direction A (Matrix Accordion)</strong
+          >
+          is the strongest fit for PWO. It builds directly on the existing
+          WorkoutMatrix, supports fully arbitrary navigation through tappable
+          set dots and exercise rows, maintains a scrollable overview of the
+          entire workout, and achieves the minimalist aesthetic with the least
+          visual chrome. It's also the simplest to implement — an evolution of
+          existing code rather than a new pattern.
+        </p>
+        <p style="font-size: 14px; color: var(--subtext); margin-top: 8px">
+          <strong style="color: var(--text)">Direction E (Split Matrix)</strong>
+          is the strongest alternative if you want the overview to be always
+          visible without scrolling, at the cost of reduced detail area height
+          and more complex layout management.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      function showSection(id) {
+        document
+          .querySelectorAll('.section')
+          .forEach(s => s.classList.remove('active'))
+        document
+          .querySelectorAll('.nav-btn')
+          .forEach(b => b.classList.remove('active'))
+        document.getElementById(id).classList.add('active')
+        event.target.classList.add('active')
+        window.scrollTo(0, 0)
+      }
+    </script>
+  </body>
+</html>
