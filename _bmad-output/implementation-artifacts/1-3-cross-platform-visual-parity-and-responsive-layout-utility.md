@@ -1,6 +1,6 @@
 # Story 1.3: Cross-Platform Visual Parity & Responsive Layout Utility
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -19,42 +19,42 @@ So that I have a consistent experience regardless of device.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `hooks/useResponsiveLayout.ts` breakpoint hook (AC: #2, #3, #5)
-  - [ ] 1.1 Create `hooks/useResponsiveLayout.ts` using `useWindowDimensions` from `react-native`
-  - [ ] 1.2 Define breakpoint thresholds as constants: `COMPACT_MAX = 375`, `REGULAR_MAX = 430`
-  - [ ] 1.3 Return breakpoint name (`'compact' | 'regular' | 'expanded'`), boolean helpers (`isCompact`, `isExpanded`)
-  - [ ] 1.4 Return `containerStyle` object: `{ maxWidth: 480, alignSelf: 'center', width: '100%', paddingHorizontal: 24 }` for expanded, `{}` for regular/compact
-  - [ ] 1.5 Return `compactAdjustments` for compact breakpoint: `{ spacingReduction: 1, fontSizeReduction: 1 }` — these are the step-down values components use to scale theme tokens
-  - [ ] 1.6 Memoize return value with `useMemo` keyed on `width` to prevent re-renders when height changes
-  - [ ] 1.7 Export barrel from `hooks/index.ts`
-- [ ] Task 2: Create `components/common/MaxWidthContainer.tsx` (AC: #2, #3)
-  - [ ] 2.1 Create `MaxWidthContainer` component accepting `children` and optional `style` prop
-  - [ ] 2.2 Use `useResponsiveLayout` hook internally to get `containerStyle`
-  - [ ] 2.3 On expanded breakpoint (> 430pt): apply `maxWidth: 480`, `alignSelf: 'center'`, `width: '100%'`, `paddingHorizontal: spacing.xl` (24)
-  - [ ] 2.4 On regular and compact breakpoints: render children with no layout constraint (passthrough)
-  - [ ] 2.5 Export from `components/common/` barrel if one exists, or use named export
-  - [ ] 2.6 Props interface: `MaxWidthContainerProps = { children: React.ReactNode; style?: ViewStyle }`
-  - [ ] 2.7 Component must be a simple `View` wrapper — no ScrollView, no SafeAreaView
-- [ ] Task 3: Verify phase background cross-platform parity (AC: #4)
-  - [ ] 3.1 Confirm `theme.colors.phases.*Bg` values are all solid hex (already verified: `warmupBg #1D1813`, `workingBg #1B1B28`, `breakBg #151D20`, `doneBg #161E1B`)
-  - [ ] 3.2 Grep all `.tsx` files for any direct rgba usage applied as phase or workout-row backgrounds — flag any that bypass theme tokens
-  - [ ] 3.3 If any rgba phase backgrounds found in components, replace with the corresponding solid hex from theme tokens
-- [ ] Task 4: Verify cross-platform visual parity on existing screens (AC: #1)
-  - [ ] 4.1 Verify `theme/theme.ts` contains no `Platform.OS` branching — all tokens are platform-agnostic (already confirmed)
-  - [ ] 4.2 Verify shadow `boxShadow` property in `shadows.sm` is present for web rendering (already present: `'0 1px 3px rgba(0, 0, 0, 0.3)'`)
-  - [ ] 4.3 Check `app/_layout.tsx` for any platform-conditional styling that could cause visual divergence
-  - [ ] 4.4 Verify DM Sans fonts load on all three platforms (already done in Story 1.1 — `@expo-google-fonts/dm-sans` with 4 weights)
-- [ ] Task 5: Write unit tests (AC: #6)
-  - [ ] 5.1 Create `__tests__/hooks/useResponsiveLayout.test.ts` testing all 3 breakpoints
-  - [ ] 5.2 Test compact breakpoint (width 360): returns `isCompact: true`, `compactAdjustments` with reduction values
-  - [ ] 5.3 Test regular breakpoint (width 390): returns `isCompact: false`, `isExpanded: false`, empty containerStyle
-  - [ ] 5.4 Test expanded breakpoint (width 768): returns `isExpanded: true`, containerStyle with maxWidth 480 and xl padding
-  - [ ] 5.5 Test boundary values: 374, 375, 430, 431
-  - [ ] 5.6 Create `__tests__/components/common/MaxWidthContainer.test.tsx` verifying the component renders children and applies container styles on expanded breakpoint
-- [ ] Task 6: Run tests and verify compilation (AC: #6)
-  - [ ] 6.1 Run `npm run compile` — zero NEW TS errors from this story's changes (pre-existing errors from Story 1.2 scope are expected)
-  - [ ] 6.2 Run `npm run test:run` — new tests pass
-  - [ ] 6.3 Run `npm run lint:fix` — all new files Prettier-compliant
+- [x] Task 1: Create `hooks/useResponsiveLayout.ts` breakpoint hook (AC: #2, #3, #5)
+  - [x] 1.1 Create `hooks/useResponsiveLayout.ts` using `useWindowDimensions` from `react-native`
+  - [x] 1.2 Define breakpoint thresholds as constants: `COMPACT_MAX = 375`, `REGULAR_MAX = 430`
+  - [x] 1.3 Return breakpoint name (`'compact' | 'regular' | 'expanded'`), boolean helpers (`isCompact`, `isExpanded`)
+  - [x] 1.4 Return `containerStyle` object: `{ maxWidth: 480, alignSelf: 'center', width: '100%', paddingHorizontal: 24 }` for expanded, `{}` for regular/compact
+  - [x] 1.5 Return `compactAdjustments` for compact breakpoint: `{ spacingReduction: 1, fontSizeReduction: 1 }` — these are the step-down values components use to scale theme tokens
+  - [x] 1.6 Memoize return value with `useMemo` keyed on `width` to prevent re-renders when height changes
+  - [x] 1.7 Export barrel from `hooks/index.ts`
+- [x] Task 2: Create `components/common/MaxWidthContainer.tsx` (AC: #2, #3)
+  - [x] 2.1 Create `MaxWidthContainer` component accepting `children` and optional `style` prop
+  - [x] 2.2 Use `useResponsiveLayout` hook internally to get `containerStyle`
+  - [x] 2.3 On expanded breakpoint (> 430pt): apply `maxWidth: 480`, `alignSelf: 'center'`, `width: '100%'`, `paddingHorizontal: spacing.xl` (24)
+  - [x] 2.4 On regular and compact breakpoints: render children with no layout constraint (passthrough)
+  - [x] 2.5 Export from `components/common/` barrel if one exists, or use named export
+  - [x] 2.6 Props interface: `MaxWidthContainerProps = { children: React.ReactNode; style?: ViewStyle }`
+  - [x] 2.7 Component must be a simple `View` wrapper — no ScrollView, no SafeAreaView
+- [x] Task 3: Verify phase background cross-platform parity (AC: #4)
+  - [x] 3.1 Confirm `theme.colors.phases.*Bg` values are all solid hex (already verified: `warmupBg #1D1813`, `workingBg #1B1B28`, `breakBg #151D20`, `doneBg #161E1B`)
+  - [x] 3.2 Grep all `.tsx` files for any direct rgba usage applied as phase or workout-row backgrounds — flag any that bypass theme tokens
+  - [x] 3.3 If any rgba phase backgrounds found in components, replace with the corresponding solid hex from theme tokens
+- [x] Task 4: Verify cross-platform visual parity on existing screens (AC: #1)
+  - [x] 4.1 Verify `theme/theme.ts` contains no `Platform.OS` branching — all tokens are platform-agnostic (already confirmed)
+  - [x] 4.2 Verify shadow `boxShadow` property in `shadows.sm` is present for web rendering (already present: `'0 1px 3px rgba(0, 0, 0, 0.3)'`)
+  - [x] 4.3 Check `app/_layout.tsx` for any platform-conditional styling that could cause visual divergence
+  - [x] 4.4 Verify DM Sans fonts load on all three platforms (already done in Story 1.1 — `@expo-google-fonts/dm-sans` with 4 weights)
+- [x] Task 5: Write unit tests (AC: #6)
+  - [x] 5.1 Create `__tests__/hooks/useResponsiveLayout.test.ts` testing all 3 breakpoints
+  - [x] 5.2 Test compact breakpoint (width 360): returns `isCompact: true`, `compactAdjustments` with reduction values
+  - [x] 5.3 Test regular breakpoint (width 390): returns `isCompact: false`, `isExpanded: false`, empty containerStyle
+  - [x] 5.4 Test expanded breakpoint (width 768): returns `isExpanded: true`, containerStyle with maxWidth 480 and xl padding
+  - [x] 5.5 Test boundary values: 374, 375, 430, 431
+  - [x] 5.6 Create `__tests__/components/common/MaxWidthContainer.test.tsx` verifying the component renders children and applies container styles on expanded breakpoint
+- [x] Task 6: Run tests and verify compilation (AC: #6)
+  - [x] 6.1 Run `npm run compile` — zero NEW TS errors from this story's changes (pre-existing errors from Story 1.2 scope are expected)
+  - [x] 6.2 Run `npm run test:run` — new tests pass
+  - [x] 6.3 Run `npm run lint:fix` — all new files Prettier-compliant
 
 ## Dev Notes
 
@@ -223,10 +223,35 @@ Items this story adds:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude claude-4.6-opus (Cursor)
 
 ### Debug Log References
 
+- Vitest could not parse `react-native/index.js` (Flow-typed). Fixed by adding `resolve.alias` for `react-native` in `vitest.config.ts` pointing to `__mocks__/react-native.ts`.
+
 ### Completion Notes List
 
+- Created `useResponsiveLayout` hook with 3 breakpoints (compact < 375, regular 375-430, expanded > 430), memoized on width only
+- Created `MaxWidthContainer` component as a simple View wrapper that applies container constraints on expanded breakpoint
+- Verified all phase backgrounds are solid hex — no rgba phase backgrounds found in any component
+- Verified cross-platform parity: no Platform.OS in theme, boxShadow present for web, no platform-conditional styling in root layout, DM Sans fonts loaded with 4 weights
+- Created 17 passing tests: 13 for useResponsiveLayout (3 breakpoints + boundary values), 4 for MaxWidthContainer (render, expanded style, regular passthrough, custom style merge)
+- Zero new TS errors introduced (2 pre-existing errors remain from earlier stories)
+- All new files Prettier-compliant (unchanged by lint:fix)
+- Updated vitest.setup.ts and vitest.config.ts to properly mock react-native for Vitest/Vite compatibility
+
 ### File List
+
+- `hooks/useResponsiveLayout.ts` (new) — Responsive breakpoint hook
+- `hooks/index.ts` (modified) — Added barrel export for useResponsiveLayout
+- `components/common/MaxWidthContainer.tsx` (new) — Layout wrapper component
+- `__mocks__/react-native.ts` (new) — React Native mock for Vitest
+- `__tests__/hooks/useResponsiveLayout.test.ts` (new) — Hook unit tests (13 tests)
+- `__tests__/components/common/MaxWidthContainer.test.tsx` (new) — Component unit tests (4 tests)
+- `vitest.config.ts` (modified) — Added react-native resolve alias
+- `vitest.setup.ts` (modified) — Removed inline react-native mock (now via alias)
+
+### Change Log
+
+- **2026-03-09:** Implemented Story 1.3 — Added responsive layout hook (`useResponsiveLayout`) with compact/regular/expanded breakpoints, `MaxWidthContainer` component for constraining content on wide screens, verified cross-platform visual parity (phase hex colors, no Platform.OS branching, web shadows, font loading), created first project test files (17 tests passing), configured Vitest react-native mocking infrastructure.
+- **2026-03-09:** **Code Review Fix** — Adversarial review found 3 MEDIUM + 2 LOW issues, all fixed: (1) Added `as const` to react-native mock `useWindowDimensions` return for type safety; (2) Added memoization-bypass documentation comment in hook test explaining useMemo is bypassed for pure logic testing; (3) Improved MaxWidthContainer test to verify component type and exact children pass-through instead of truthy checks; (4) Added full state assertions to 375 boundary test (compactAdjustments, containerStyle); (5) Added clarifying comment to vitest.config.ts react-native resolve alias. All 17 tests passing, zero new TS errors.
