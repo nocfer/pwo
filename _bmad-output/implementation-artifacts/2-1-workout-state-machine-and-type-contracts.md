@@ -399,11 +399,13 @@ Claude claude-4.6-opus (Cursor)
 **Issues Found:** 2 High, 2 Medium, 3 Low (across Story 2-1 + 2-2 joint review)
 
 **Fixes Applied:**
+
 - **[H2] COMPLETE_WORKOUT reducer impurity:** Added `completedAt: number` parameter to the action type. Reducer now uses `action.completedAt` instead of `Date.now()`, making it a true pure function. Provider injects `Date.now()` at dispatch time. Tests updated with exact assertions.
 - **[M1] Magic numbers in [index]-v2.tsx styles:** Replaced hardcoded `fontSize`/`fontWeight`/`marginTop` values with `theme.typography.bodyBold`, `theme.typography.caption`, `theme.typography.body`, `theme.spacing.xs`, `theme.spacing.xxl`.
 - **[M2] Missing eslint-disable justification:** Added explanation comment for `react-hooks/exhaustive-deps` suppression in `useMemo` for `initialState`.
 
 **Low issues noted (no fix required):**
+
 - L1: Duplicate `createMockWorkoutState` factory across test files (DRY violation)
 - L2: `WorkoutExecutionContext.test.tsx` at 319 lines (~300 budget)
 - L3: `let` used in reducer for CONFIRM_SET/SKIP_SET handlers
