@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md
   },
   message: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     textAlign: 'center'
   },
@@ -136,8 +136,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.xl,
     backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.lg,
-    ...theme.shadows.md
+    borderRadius: theme.radius.lg
   },
   buttonPressed: {
     opacity: 0.9
@@ -159,8 +158,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     padding: theme.spacing.sm,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.full,
-    ...theme.shadows.md
+    borderRadius: theme.radius.full
   },
   closeButtonPressed: {
     opacity: 0.8

@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   monthYear: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     fontFamily: theme.fonts.bold
   },

@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm
   },
   sectionTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs
   },
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   exerciseProgress: {
     height: 6,
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.sm,
     overflow: 'hidden',
     marginBottom: theme.spacing.xs

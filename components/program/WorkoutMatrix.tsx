@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.md
   },
   headerTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text
   },
   progressContainer: {
@@ -492,7 +492,8 @@ const styles = StyleSheet.create({
     borderRadius: 2
   },
   progressLabel: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.muted,
     minWidth: 28
   },
@@ -550,7 +551,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.phases.break
   },
   indexText: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.muted
   },
   indexTextActive: {
@@ -632,11 +634,13 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.95 }]
   },
   setTextCurrent: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primaryTextOn
   },
   setTextPending: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.muted
   },
   repeatBadge: {

@@ -260,8 +260,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    ...theme.shadows.sm
+    padding: theme.spacing.lg
   },
   heroCard: {
     flexDirection: 'row',
@@ -269,8 +268,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    ...theme.shadows.md
+    padding: theme.spacing.lg
   },
   heroCardPressed: {
     opacity: 0.9,
@@ -296,7 +294,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs
   },
   heroTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.primaryTextOn
   },
   heroSubtitle: {
@@ -324,11 +322,12 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full
   },
   statPillText: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primary
   },
   sectionTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     marginBottom: theme.spacing.md
   },
@@ -356,7 +355,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   exerciseIndexText: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.muted
   },
   exerciseInfo: {

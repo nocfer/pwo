@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.xs
   },
   title: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text
   },
   trendBadge: {

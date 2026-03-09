@@ -43,8 +43,8 @@ development_status:
   # Epic 1: Dark Theme & Design System Foundation
   epic-1: in-progress
   1-1-replace-theme-tokens-with-dark-first-design-system: done
-  1-2-hardcoded-color-audit-and-component-token-migration: backlog
-  1-3-cross-platform-visual-parity-and-responsive-layout-utility: backlog
+  1-2-hardcoded-color-audit-and-component-token-migration: done
+  1-3-cross-platform-visual-parity-and-responsive-layout-utility: ready-for-dev
   epic-1-retrospective: optional
 
   # Epic 2: Core Workout Logging Experience

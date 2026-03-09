@@ -13,14 +13,13 @@ type ConfettiCelebrationProps = {
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 
+const CELEBRATION_EXTRA_COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3']
+
 const CONFETTI_COLORS = [
   theme.colors.primary,
   theme.colors.success,
   theme.colors.warning,
-  '#FF6B6B', // coral
-  '#4ECDC4', // teal
-  '#FFE66D', // yellow
-  '#95E1D3' // mint
+  ...CELEBRATION_EXTRA_COLORS
 ]
 
 export function ConfettiCelebration({
@@ -128,8 +127,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xl,
     paddingVertical: theme.spacing.xl,
     paddingHorizontal: theme.spacing.xxl,
-    alignItems: 'center',
-    ...theme.shadows.lg
+    alignItems: 'center'
   },
   message: {
     ...theme.typography.h1,

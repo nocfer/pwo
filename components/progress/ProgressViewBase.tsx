@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm
   },
   sectionTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs
   },
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs
   },
   nextSessionValue: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.primary,
     fontFamily: theme.fonts.bold
   },

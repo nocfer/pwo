@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     maxHeight: '80%',
-    ...theme.shadows.md
+    ...theme.shadows.sm
   },
   iconContainer: {
     alignItems: 'center',
@@ -161,7 +161,8 @@ const styles = StyleSheet.create({
     maxHeight: 200
   },
   programListTitle: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.text,
     marginBottom: theme.spacing.sm
   },
