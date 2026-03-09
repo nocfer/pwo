@@ -7,6 +7,7 @@
 
 import { ConfirmationModal } from '@/components/common/ConfirmationModal'
 import { MaxWidthContainer } from '@/components/common/MaxWidthContainer'
+import { ExerciseAccordionItem } from '@/components/workout/ExerciseAccordionItem'
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader'
 import { WorkoutExecutionProvider } from '@/context/WorkoutExecutionContext'
 import { useExercises, usePrograms } from '@/hooks/data'
@@ -19,7 +20,7 @@ import { theme } from '@/theme/theme'
 import type { Program, SetStatus } from '@/types'
 import type { ExerciseState, WorkoutState } from '@/types/workout'
 import { useLocalSearchParams, useNavigation } from 'expo-router'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { BackHandler, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 function buildInitialState(
@@ -63,8 +64,10 @@ function buildInitialState(
   }
 }
 
+const ESTIMATED_ROW_HEIGHT = 80
+
 function WorkoutSessionContent() {
-  const { state } = useWorkoutExecution()
+  const { state, expandExercise } = useWorkoutExecution()
   const { elapsedMs } = useElapsedTimer({
     startedAt: state.startedAt,
     isCompleted: state.isCompleted,
@@ -78,6 +81,20 @@ function WorkoutSessionContent() {
     cancelEnd
   } = useEndWorkout()
   const navigation = useNavigation()
+  const scrollRef = useRef<ScrollView>(null)
+
+  const handleExpandExercise = useCallback(
+    (exerciseIndex: number) => {
+      expandExercise(exerciseIndex)
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({
+          y: exerciseIndex * ESTIMATED_ROW_HEIGHT,
+          animated: true
+        })
+      }, 100)
+    },
+    [expandExercise]
+  )
 
   const handleBackPress = useCallback(() => {
     if (state.isCompleted) return false
@@ -113,7 +130,11 @@ function WorkoutSessionContent() {
   }
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <ScrollView
+      ref={scrollRef}
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+    >
       <MaxWidthContainer>
         <WorkoutHeader
           programName={state.sessionName}
@@ -123,18 +144,14 @@ function WorkoutSessionContent() {
         />
 
         {state.exercises.map((ex, idx) => (
-          <View
+          <ExerciseAccordionItem
             key={ex.exerciseId}
-            style={[
-              styles.exerciseCard,
-              idx === state.expandedExerciseIndex && styles.exerciseCardActive
-            ]}
-          >
-            <Text style={styles.exerciseName}>{ex.exerciseName}</Text>
-            <Text style={styles.setCount}>
-              {ex.sets.length} set{ex.sets.length !== 1 ? 's' : ''}
-            </Text>
-          </View>
+            exercise={ex}
+            exerciseIndex={idx}
+            isExpanded={idx === state.expandedExerciseIndex}
+            onToggle={() => handleExpandExercise(idx)}
+            onSetDotPress={(_setIndex: number) => handleExpandExercise(idx)}
+          />
         ))}
       </MaxWidthContainer>
 
@@ -217,25 +234,6 @@ const styles = StyleSheet.create({
     color: theme.colors.success,
     textAlign: 'center',
     marginTop: theme.spacing.xxl
-  },
-  exerciseCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm
-  },
-  exerciseCardActive: {
-    borderWidth: 1,
-    borderColor: theme.colors.primary
-  },
-  exerciseName: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.text
-  },
-  setCount: {
-    ...theme.typography.caption,
-    color: theme.colors.subtext,
-    marginTop: theme.spacing.xs
   },
   loadingText: {
     ...theme.typography.body,

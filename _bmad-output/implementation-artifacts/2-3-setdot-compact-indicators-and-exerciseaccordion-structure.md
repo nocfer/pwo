@@ -1,6 +1,6 @@
 # Story 2.3: SetDot Compact Indicators & ExerciseAccordion Structure
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -24,49 +24,49 @@ So that I always know where I stand in my workout without expanding every exerci
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `components/workout/SetDot.tsx` — Atomic set indicator (AC: #2, #3, #4, #9)
-  - [ ] 1.1 Define `SetDotProps` type: `{ setNumber: number, status: SetStatus, onPress: () => void }`
-  - [ ] 1.2 Render 28pt circle with status-based styling; wrap in `Pressable` with `hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}` for 48pt touch target
-  - [ ] 1.3 `pending` state: `surfaceElevated` background, 1px `border` color border, `muted` number text
-  - [ ] 1.4 `active` state: `primary` fill background, `primaryTextOn` (white) number text
-  - [ ] 1.5 `completed` state: `phases.doneBg` background, `success` checkmark icon (use Unicode ✓ or Text glyph — no external icon library required)
-  - [ ] 1.6 `skipped` state: dashed border via `borderStyle: 'dashed'`, `muted` border color, `muted` dash text ("–")
-  - [ ] 1.7 Add `accessibilityRole="button"` with `accessibilityLabel` for each state: "Set {n}, pending", "Set {n}, current", "Set {n}, completed", "Set {n}, skipped"
-  - [ ] 1.8 Add `accessibilityHint="Double tap to navigate to this set"`
+- [x] Task 1: Create `components/workout/SetDot.tsx` — Atomic set indicator (AC: #2, #3, #4, #9)
+  - [x] 1.1 Define `SetDotProps` type: `{ setNumber: number, status: SetStatus, onPress: () => void }`
+  - [x] 1.2 Render 28pt circle with status-based styling; wrap in `Pressable` with `hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}` for 48pt touch target
+  - [x] 1.3 `pending` state: `surfaceElevated` background, 1px `border` color border, `muted` number text
+  - [x] 1.4 `active` state: `primary` fill background, `primaryTextOn` (white) number text
+  - [x] 1.5 `completed` state: `phases.doneBg` background, `success` checkmark icon (use Unicode ✓ or Text glyph — no external icon library required)
+  - [x] 1.6 `skipped` state: dashed border via `borderStyle: 'dashed'`, `muted` border color, `muted` dash text ("–")
+  - [x] 1.7 Add `accessibilityRole="button"` with `accessibilityLabel` for each state: "Set {n}, pending", "Set {n}, current", "Set {n}, completed", "Set {n}, skipped"
+  - [x] 1.8 Add `accessibilityHint="Double tap to navigate to this set"`
 
-- [ ] Task 2: Create `components/workout/ExerciseAccordionItem.tsx` — Single exercise row (AC: #1, #6, #7, #8, #9)
-  - [ ] 2.1 Define `ExerciseAccordionItemProps` type: `{ exercise: ExerciseState, exerciseIndex: number, isExpanded: boolean, onToggle: () => void, onSetDotPress: (setIndex: number) => void, scrollRef?: React.RefObject<ScrollView> }`
-  - [ ] 2.2 **Compact view:** Horizontal row with exercise name (`bodyBold` typography, `text` color), set meta (`caption`, `subtext`), and `SetDot` row
-  - [ ] 2.3 Set meta format: `"{completed}/{total} · {lastWeight} lbs"` — compute completed count from sets array; use last confirmed weight if available, else first set weight if > 0
-  - [ ] 2.4 **Expanded view:** `surfaceElevated` background, exercise name as `h2` typography, placeholder area for SetRows (actual SetRow component comes in Story 2.4)
-  - [ ] 2.5 **Completed exercise:** Compact row with `success` color exercise name, all SetDots showing completed state
-  - [ ] 2.6 **Compact-active:** Compact row with `primaryLight` background tint to indicate it contains the active set
-  - [ ] 2.7 Wrap in `Pressable` for row toggle (tap compact row to expand/collapse)
-  - [ ] 2.8 Accessibility: `accessibilityLabel="{exerciseName}, {completed} of {total} sets complete, tap to expand"` for compact; `accessibilityLabel="{exerciseName}, expanded"` for expanded
-  - [ ] 2.9 Row styling: `surface` background, `radius.md` corners, `spacing.md` padding, `spacing.xs` (4pt) margin bottom
+- [x] Task 2: Create `components/workout/ExerciseAccordionItem.tsx` — Single exercise row (AC: #1, #6, #7, #8, #9)
+  - [x] 2.1 Define `ExerciseAccordionItemProps` type: `{ exercise: ExerciseState, exerciseIndex: number, isExpanded: boolean, onToggle: () => void, onSetDotPress: (setIndex: number) => void }` — scrollRef managed at parent route level for cleaner component API
+  - [x] 2.2 **Compact view:** Horizontal row with exercise name (`bodyBold` typography, `text` color), set meta (`caption`, `subtext`), and `SetDot` row
+  - [x] 2.3 Set meta format: `"{completed}/{total} · {lastWeight} lbs"` — compute completed count from sets array; use last confirmed weight if available, else first set weight if > 0
+  - [x] 2.4 **Expanded view:** `surfaceElevated` background, exercise name as `h2` typography, placeholder area for SetRows (actual SetRow component comes in Story 2.4)
+  - [x] 2.5 **Completed exercise:** Compact row with `success` color exercise name, all SetDots showing completed state
+  - [x] 2.6 **Compact-active:** Compact row with `primaryLight` background tint to indicate it contains the active set
+  - [x] 2.7 Wrap in `Pressable` for row toggle (tap compact row to expand/collapse)
+  - [x] 2.8 Accessibility: `accessibilityLabel="{exerciseName}, {completed} of {total} sets complete, tap to expand"` for compact; `accessibilityLabel="{exerciseName}, expanded"` for expanded
+  - [x] 2.9 Row styling: `surface` background, `radius.md` corners, `spacing.md` padding, `spacing.xs` (4pt) margin bottom
 
-- [ ] Task 3: Implement accordion animation with `react-native-reanimated` (AC: #7)
-  - [ ] 3.1 Use `useSharedValue` for content height, `useDerivedValue` with `withTiming` for animated height
-  - [ ] 3.2 Measure expanded content height via `onLayout` callback on inner content `View`
-  - [ ] 3.3 `Animated.View` wraps expanded content with `overflow: 'hidden'` and animated height style
-  - [ ] 3.4 Animation config: `withTiming(targetHeight, { duration: 250 })` — 250ms matches UX spec transition timing
-  - [ ] 3.5 When `isExpanded` goes false → animate height to 0; when true → animate to measured content height
-  - [ ] 3.6 Compact content is always rendered (never animated); only the expanded detail area animates
+- [x] Task 3: Implement accordion animation with `react-native-reanimated` (AC: #7)
+  - [x] 3.1 Use `useSharedValue` for content height, `useDerivedValue` with `withTiming` for animated height
+  - [x] 3.2 Measure expanded content height via `onLayout` callback on inner content `View`
+  - [x] 3.3 `Animated.View` wraps expanded content with `overflow: 'hidden'` and animated height style
+  - [x] 3.4 Animation config: `withTiming(targetHeight, { duration: 250 })` — 250ms matches UX spec transition timing
+  - [x] 3.5 When `isExpanded` goes false → animate height to 0; when true → animate to measured content height
+  - [x] 3.6 Compact content is always rendered (never animated); only the expanded detail area animates
 
-- [ ] Task 4: Wire ExerciseAccordion into `[index]-v2.tsx` route (AC: #5, #6)
-  - [ ] 4.1 Replace the placeholder exercise cards with `ExerciseAccordionItem` components
-  - [ ] 4.2 Pass `isExpanded={idx === state.expandedExerciseIndex}` from workout state
-  - [ ] 4.3 `onToggle` calls `expandExercise(idx)` from context
-  - [ ] 4.4 `onSetDotPress` calls `expandExercise(idx)` from context (scroll-to comes with this)
-  - [ ] 4.5 Add `ScrollView` ref and `scrollTo` behavior: when exercise expands, call `scrollTo({ y: expandedPosition, animated: true })` after a short delay (100ms) to allow layout to settle
-  - [ ] 4.6 Keep v2 route under ~300 lines — extract `WorkoutSessionContent` to its own file if needed
+- [x] Task 4: Wire ExerciseAccordion into `[index]-v2.tsx` route (AC: #5, #6)
+  - [x] 4.1 Replace the placeholder exercise cards with `ExerciseAccordionItem` components
+  - [x] 4.2 Pass `isExpanded={idx === state.expandedExerciseIndex}` from workout state
+  - [x] 4.3 `onToggle` calls `expandExercise(idx)` from context
+  - [x] 4.4 `onSetDotPress` calls `expandExercise(idx)` from context (scroll-to comes with this)
+  - [x] 4.5 Add `ScrollView` ref and `scrollTo` behavior: when exercise expands, call `scrollTo({ y: expandedPosition, animated: true })` after a short delay (100ms) to allow layout to settle
+  - [x] 4.6 Keep v2 route under ~300 lines — extract `WorkoutSessionContent` to its own file if needed
 
-- [ ] Task 5: Write tests (AC: #10, #11)
-  - [ ] 5.1 Create `__tests__/components/workout/SetDot.test.tsx` — test all 4 states render correct accessibility labels; test onPress callback fires
-  - [ ] 5.2 Create `__tests__/components/workout/ExerciseAccordionItem.test.tsx` — test compact render (exercise name, set meta, dots), test expanded state, test completed exercise styling, test onToggle fires, test accessibility labels
-  - [ ] 5.3 Verify no new TypeScript compilation errors (`npm run compile`)
-  - [ ] 5.4 Verify all tests pass (`npm run test:run`)
-  - [ ] 5.5 Verify all new files pass Prettier (`npm run lint:fix`)
+- [x] Task 5: Write tests (AC: #10, #11)
+  - [x] 5.1 Create `__tests__/components/workout/SetDot.test.tsx` — test all 4 states render correct accessibility labels; test onPress callback fires
+  - [x] 5.2 Create `__tests__/components/workout/ExerciseAccordionItem.test.tsx` — test compact render (exercise name, set meta, dots), test expanded state, test completed exercise styling, test onToggle fires, test accessibility labels
+  - [x] 5.3 Verify no new TypeScript compilation errors (`npm run compile`)
+  - [x] 5.4 Verify all tests pass (`npm run test:run`)
+  - [x] 5.5 Verify all new files pass Prettier (`npm run lint:fix`)
 
 ## Dev Notes
 
@@ -423,14 +423,50 @@ const styles = StyleSheet.create({
 - [Source: _bmad-output/implementation-artifacts/2-1-workout-state-machine-and-type-contracts.md] — Reducer behavior, type contracts, findNextPendingSet, previous story learnings
 - [Source: _bmad-output/implementation-artifacts/2-2-workout-header-and-elapsed-timer.md] — WorkoutHeader component, v2 route structure, theme token corrections
 
+## Change Log
+
+- **2026-03-09:** Implemented Story 2.3 — SetDot atomic indicator component, ExerciseAccordionItem with reanimated height animation, wired into v2 route, added 21 new tests (90 total)
+- **2026-03-09:** Code review fixes (6 issues) — Extracted test helpers to shared utility (AC10 fix), extracted ExpandedContent component to eliminate JSX duplication, merged duplicate handler functions, made set index forwarding explicit, extracted ESTIMATED_ROW_HEIGHT constant, updated task 2.1 spec
+
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude claude-4.6-opus (Cursor Agent)
 
 ### Debug Log References
 
+- SetDot JSX required explicit `import React from 'react'` for node test environment compatibility
+- ExerciseAccordionItem tests required mocking React's `useCallback` as passthrough since components are called as functions (not via React renderer) in the node test environment
+- Tree traversal for component tests needed recursive resolution of React elements (function-typed nodes) to mock objects — added depth-limited `resolveNode` helper
+
 ### Completion Notes List
 
+- ✅ Created `SetDot.tsx` (100 lines) — all 4 states with correct styling, accessibility labels, 48pt touch target via hitSlop
+- ✅ Created `ExerciseAccordionItem.tsx` (216 lines) — compact/expanded/completed/compact-active views, reanimated height animation (250ms withTiming), set meta computation, accessibility labels
+- ✅ Updated `[index]-v2.tsx` (250 lines) — replaced placeholder exercise cards with ExerciseAccordionItem, added ScrollView ref with scroll-to-expanded behavior
+- ✅ Added 10 SetDot tests — all 4 state accessibility labels, content rendering (numbers/checkmark/dash), hitSlop verification, onPress callback
+- ✅ Added 11 ExerciseAccordionItem tests — compact rendering (name/meta/dots), completed exercise styling, accessibility labels, onToggle/onSetDotPress interactions, compact-active state
+- ✅ All 90 tests pass (69 existing + 21 new), no regressions
+- ✅ No new TypeScript compilation errors (only pre-existing Epic 1 errors remain)
+- ✅ All files pass Prettier formatting
+
+### Code Review Fixes Applied
+
+- [H1] Extracted 65-line tree traversal helpers to `__tests__/helpers/mockNodeTraversal.ts` — test file reduced from 334→272 lines (AC10 satisfied)
+- [H2] Extracted duplicated expanded content JSX into `ExpandedContent` component — single source of truth for Story 2.4 placeholder replacement
+- [M1] Merged identical `handleToggle`/`handleSetDotPress` into single `handleExpandExercise` function
+- [M2] Made set index forwarding explicit: `(_setIndex: number) => handleExpandExercise(idx)` — visible contract for Story 2.4
+- [M3] Extracted magic number `80` to `ESTIMATED_ROW_HEIGHT` named constant
+- [M4] Updated task 2.1 spec to document scrollRef design decision (parent-level management)
+
 ### File List
+
+- `components/workout/SetDot.tsx` — NEW (100 lines)
+- `components/workout/ExerciseAccordionItem.tsx` — NEW (216 lines, review: extracted ExpandedContent component)
+- `app/programs/[id]/session/[index]-v2.tsx` — MODIFIED (250 lines, review: merged handlers, added ESTIMATED_ROW_HEIGHT constant)
+- `__tests__/components/workout/SetDot.test.tsx` — NEW (127 lines, 10 tests)
+- `__tests__/components/workout/ExerciseAccordionItem.test.tsx` — NEW (272 lines, 11 tests, review: extracted helpers to shared utility)
+- `__tests__/helpers/mockNodeTraversal.ts` — NEW (66 lines, review: shared test tree traversal utilities)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED (status → review)
+- `_bmad-output/implementation-artifacts/2-3-setdot-compact-indicators-and-exerciseaccordion-structure.md` — MODIFIED (task checkboxes, dev record, file list, status, review fixes)

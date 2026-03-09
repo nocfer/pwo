@@ -371,6 +371,7 @@ No blocking issues encountered during implementation.
 **Issues Found:** 3 High, 4 Medium, 3 Low (joint review with Story 2-1)
 
 **Fixes Applied:**
+
 - **[H1] Navigation trapped after completion (Bug):** Added `state.isCompleted` guard to both `BackHandler` and `beforeRemove` listeners in `[index]-v2.tsx`. Users can now navigate away after workout completion.
 - **[H3] Hook tests not testing actual hooks:** Rewrote `useElapsedTimer.test.ts` and `useEndWorkout.test.ts` to call the actual hooks with mocked React primitives and context, following the project's established `useResponsiveLayout.test.ts` pattern. Added 5 new tests (69 total).
 - **[M3] useElapsedTimer `getNow` instability:** Replaced inline `getNow` variable with `useRef`-based `nowRef`, removing the function reference from the `useEffect` dependency array. Prevents infinite re-render if a consumer passes an inline `now` function.

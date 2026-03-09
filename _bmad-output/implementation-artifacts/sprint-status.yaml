@@ -51,8 +51,8 @@ development_status:
   epic-2: in-progress
   2-1-workout-state-machine-and-type-contracts: done
   2-2-workout-header-and-elapsed-timer: done
-  2-3-setdot-compact-indicators-and-exerciseaccordion-structure: ready-for-dev
-  2-4-setrow-and-numerickeypad-for-set-logging: backlog
+  2-3-setdot-compact-indicators-and-exerciseaccordion-structure: done
+  2-4-setrow-and-numerickeypad-for-set-logging: ready-for-dev
   2-5-set-confirmation-and-non-linear-navigation: backlog
   2-6-edit-completed-sets: backlog
   2-7-pre-fill-engine-last-logged-and-program-targets: backlog
