@@ -14,7 +14,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './')
+      '@': path.resolve(__dirname, './'),
+      // Test-only mock — Vite resolves react-native imports to our mock during vitest runs
+      'react-native': path.resolve(__dirname, './__mocks__/react-native.ts')
     }
   }
 })

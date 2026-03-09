@@ -8,10 +8,7 @@ vi.mock('expo-file-system/legacy', () => ({
   writeAsStringAsync: vi.fn()
 }))
 
-// Mock react-native Platform
-vi.mock('react-native', () => ({
-  Platform: { OS: 'web' }
-}))
+// react-native is mocked via resolve alias in vitest.config.ts → __mocks__/react-native.ts
 
 // Mock expo-haptics
 vi.mock('expo-haptics', () => ({

@@ -174,7 +174,7 @@ Claude claude-4.6-opus (Cursor)
 ### Debug Log References
 
 - `npm run compile`: 2 pre-existing errors only (SharedValue in profile.tsx, haptics.notifyWarning in ConfirmationModal.tsx). Zero errors from this story's migration.
-- `npm run test:run`: Exit code 1 — "No test files found" (expected; __tests__/ is empty per Story 1.1)
+- `npm run test:run`: Exit code 1 — "No test files found" (expected; **tests**/ is empty per Story 1.1)
 - `npm run lint:fix`: All files Prettier-compliant (all showed "unchanged" after formatting)
 - Shadow migration: Applied decision tree — modals/overlays kept shadows.sm (ConfirmationModal, DependencyErrorModal, QRCodeShareModal, UnifiedDataManager.bulkErrorModal); content containers/decorative elements had shadows removed entirely (8 files total after code review fix)
 - UnifiedDataManager.tsx had 2 shadow usages: tabContainer (removed — content container, fixed in review) and bulkErrorModal (kept as shadows.sm — modal element, consistent with decision tree)
