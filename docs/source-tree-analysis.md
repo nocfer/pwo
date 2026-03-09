@@ -314,32 +314,32 @@ pwo/
 
 ### Core Application Entry Points
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `app/_layout.tsx` | ~100 | Root layout: Providers, font loading |
-| `app/index.tsx` | ~50 | Auth routing decision |
-| `context/DataContext.tsx` | 1518 | **Main state management** |
-| `context/AuthContext.tsx` | 239 | Authentication state |
-| `lib/storage.ts` | 950+ | **Persistence layer** |
-| `lib/validation.ts` | 1070+ | **Data validation** |
+| File                      | Lines | Purpose                              |
+| ------------------------- | ----- | ------------------------------------ |
+| `app/_layout.tsx`         | ~100  | Root layout: Providers, font loading |
+| `app/index.tsx`           | ~50   | Auth routing decision                |
+| `context/DataContext.tsx` | 1518  | **Main state management**            |
+| `context/AuthContext.tsx` | 239   | Authentication state                 |
+| `lib/storage.ts`          | 950+  | **Persistence layer**                |
+| `lib/validation.ts`       | 1070+ | **Data validation**                  |
 
 ### UI Components
 
-| Component | Lines | Purpose |
-|-----------|-------|---------|
-| `WorkoutExecutionScreen.tsx` | 1256 | **Main workout timer UI** |
-| `useWorkoutTimer.ts` | 637+ | **Workout timer logic** |
-| Form Components | ~400 each | Exercise/Program/Challenge creation |
-| Progress Components | 100-500 each | Charts, heatmaps, statistics |
+| Component                    | Lines        | Purpose                             |
+| ---------------------------- | ------------ | ----------------------------------- |
+| `WorkoutExecutionScreen.tsx` | 1256         | **Main workout timer UI**           |
+| `useWorkoutTimer.ts`         | 637+         | **Workout timer logic**             |
+| Form Components              | ~400 each    | Exercise/Program/Challenge creation |
+| Progress Components          | 100-500 each | Charts, heatmaps, statistics        |
 
 ### Configuration & Utilities
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `theme/theme.ts` | 442 | Design tokens and styling |
-| `vitest.config.ts` | ~20 | Test configuration |
-| `tsconfig.json` | ~10 | TypeScript configuration |
-| `package.json` | ~80 | Dependencies and scripts |
+| File               | Lines | Purpose                   |
+| ------------------ | ----- | ------------------------- |
+| `theme/theme.ts`   | 442   | Design tokens and styling |
+| `vitest.config.ts` | ~20   | Test configuration        |
+| `tsconfig.json`    | ~10   | TypeScript configuration  |
+| `package.json`     | ~80   | Dependencies and scripts  |
 
 ---
 
@@ -393,36 +393,39 @@ pwo/
 
 ## Key Statistics
 
-| Metric | Count |
-|--------|-------|
-| **Total Files** | 140+ |
-| **Components** | 54 |
-| **Hooks** | 25 |
-| **Screens** | 21 |
-| **Test Files** | 23 |
-| **Type Files** | 9 |
-| **Total Lines (Core)** | ~6,500 |
-| **Lines (DataContext)** | 1,518 |
-| **Lines (Storage)** | 950+ |
-| **Lines (Validation)** | 1,070+ |
-| **Theme Tokens** | 30+ |
-| **API Endpoints** | 6 |
-| **Storage Keys** | 11 |
+| Metric                  | Count  |
+| ----------------------- | ------ |
+| **Total Files**         | 140+   |
+| **Components**          | 54     |
+| **Hooks**               | 25     |
+| **Screens**             | 21     |
+| **Test Files**          | 23     |
+| **Type Files**          | 9      |
+| **Total Lines (Core)**  | ~6,500 |
+| **Lines (DataContext)** | 1,518  |
+| **Lines (Storage)**     | 950+   |
+| **Lines (Validation)**  | 1,070+ |
+| **Theme Tokens**        | 30+    |
+| **API Endpoints**       | 6      |
+| **Storage Keys**        | 11     |
 
 ---
 
 ## Performance Considerations
 
 ### Code Splitting
+
 - **Expo Router**: Automatic per-screen splitting
 - **Lazy Routes**: Load on demand
 
 ### Caching
+
 - **Firebase Tokens**: Cached by SDK, auto-refresh on expiry
 - **Async Data**: Cached with `useAsyncData` hook
 - **Search Results**: Cached in Map data structure
 
 ### Rendering
+
 - **Skeleton Screens**: For loading states
 - **Victory Native**: Optimized charts
 - **Platform-Specific**: iOS/Android optimizations
@@ -432,23 +435,27 @@ pwo/
 ## Project Characteristics
 
 ### Architecture Pattern
+
 - **Layered**: Screens → Components → Hooks → Context → Storage
 - **Feature-Based**: Components organized by domain, not type
 - **Context-Driven**: Centralized state with custom hooks
 
 ### Code Organization
+
 - **Single Responsibility**: Each file has one purpose
 - **Barrel Exports**: index.ts files aggregate exports
 - **Type Safety**: TypeScript strict mode enabled
 - **Path Aliases**: @/ prefix for clean imports
 
 ### State Management
+
 - **React Context API**: No Redux/Zustand
 - **Custom Hooks**: Encapsulate data fetching
 - **Version Counters**: Loose coupling between components
 - **Reducer Pattern**: Complex state mutations
 
 ### Data Persistence
+
 - **Offline-First**: All features work locally
 - **Unified Storage**: Single API for web/native
 - **Optional Firebase**: Cloud sync when authenticated
@@ -459,6 +466,7 @@ pwo/
 ## Conclusion
 
 The source tree is organized for:
+
 - **Developer Experience**: Clear structure, easy to find files
 - **Maintainability**: Changes isolated to relevant areas
 - **Scalability**: New features add to existing patterns
@@ -466,9 +474,9 @@ The source tree is organized for:
 - **Type Safety**: Comprehensive TypeScript coverage
 
 **Navigation Tips**:
+
 1. **New feature?** → Check similar component/hook
 2. **Add component?** → Put in `components/domain/`
 3. **Add logic?** → Put in `hooks/` or `lib/`
 4. **Add types?** → Put in `types/`
 5. **Need test?** → Mirror structure in `__tests__/`
-

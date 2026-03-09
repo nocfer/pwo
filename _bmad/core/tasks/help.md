@@ -18,16 +18,21 @@ description: 'Analyzes what is done and the users query and offers advice on wha
 ## DISPLAY RULES
 
 ### Command-Based Workflows
+
 When `command` field has a value:
+
 - Show the command prefixed with `/` (e.g., `/bmad-bmm-create-prd`)
 
 ### Agent-Based Workflows
+
 When `command` field is empty:
+
 - User loads agent first via `/agent-command`
 - Then invokes by referencing the `code` field or describing the `name` field
 - Do NOT show a slash command — show the code value and agent load instruction instead
 
 Example presentation for empty command:
+
 ```
 Explain Concept (EC)
 Load: /tech-writer, then ask to "EC about [topic]"
@@ -45,6 +50,7 @@ Detect the active module from conversation context, recent workflows, or user qu
 ## INPUT ANALYSIS
 
 Determine what was just completed:
+
 - Explicit completion stated by user
 - Workflow completed in current conversation
 - Artifacts found matching `outputs` patterns

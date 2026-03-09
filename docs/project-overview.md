@@ -6,30 +6,32 @@
 
 ### Quick Facts
 
-| Property | Value |
-|----------|-------|
-| **Project Type** | Mobile Application (React Native/Expo) |
-| **Platforms** | iOS, Android, Web |
-| **Language** | TypeScript 5.9.2 |
-| **Framework** | React 19.2.0 + Expo ~55.0.0 |
-| **State Management** | React Context API + Firebase |
-| **Backend** | Firebase (Authentication + Realtime Database) |
-| **API Integration** | REST API with Firebase auth tokens |
-| **Version** | 1.1.0 (Post-refactor) |
-| **Repository Type** | Monolith |
-| **Status** | ⚠️ Major architectural refactor (v1.0 → v1.1) |
+| Property             | Value                                         |
+| -------------------- | --------------------------------------------- |
+| **Project Type**     | Mobile Application (React Native/Expo)        |
+| **Platforms**        | iOS, Android, Web                             |
+| **Language**         | TypeScript 5.9.2                              |
+| **Framework**        | React 19.2.0 + Expo ~55.0.0                   |
+| **State Management** | React Context API + Firebase                  |
+| **Backend**          | Firebase (Authentication + Realtime Database) |
+| **API Integration**  | REST API with Firebase auth tokens            |
+| **Version**          | 1.1.0 (Post-refactor)                         |
+| **Repository Type**  | Monolith                                      |
+| **Status**           | ⚠️ Major architectural refactor (v1.0 → v1.1) |
 
 ---
 
 ## Core Features (Updated)
 
 ### 📱 Workout Execution
+
 - **Real-time Timer**: Track warmups, work intervals, and rest periods
 - **Free Navigation**: Jump between any step during workout execution
 - **Session Persistence**: Pause and resume workouts across app sessions
 - **Detailed Tracking**: Sets, reps, weight, duration recording (simplified from events)
 
 ### 💪 Workout Programs
+
 - **Custom Programs**: Build personalized workout programs with exercises and blocks
 - **Predefined Programs**: Access built-in workout programs
 - **QR Code Sharing**: Share programs via QR codes for quick import (NEW)
@@ -37,6 +39,7 @@
 - **API-Driven**: Programs synced via backend API
 
 ### 🏋️ Exercise Library
+
 - **Exercise Management**: Create, edit, and manage exercise database
 - **Categories**: Organize by strength, cardio, flexibility, skill
 - **Icons & Media**: Visual identification with Ionicons
@@ -44,6 +47,7 @@
 - **API-Synced**: All exercises stored on backend
 
 ### 📊 Progress Tracking & Analytics
+
 - **Personal Records (PRs)**: Track max weight, max reps, volume, estimated 1RM
 - **Weekly Statistics**: Aggregate stats by week
 - **Consistency Heatmap**: Visualize workout consistency over time
@@ -52,6 +56,7 @@
 - **Exercise Trends**: Progression data for specific exercises
 
 ### 👤 User Management (NEW)
+
 - **Firebase Auth**: Email/password authentication
 - **Guest Access**: Try app without account
 - **Account Linking**: Convert guest to registered user
@@ -59,6 +64,7 @@
 - **Profile Management**: User settings and preferences
 
 ### 🗑️ Removed Features
+
 - ❌ **Challenges** - Completely removed (use Programs instead)
 - ❌ **Event System** - Replaced with direct API calls
 
@@ -69,21 +75,25 @@
 ### Core Dependencies
 
 #### Frontend Framework
+
 - **React**: 19.2.0 - UI library
 - **React Native**: 0.81.5 - Native mobile framework
 - **Expo**: ~55.0.0 - Development platform
 
 #### Routing & Navigation
+
 - **Expo Router**: ~6.0.17 - File-based routing
 - **React Navigation**: 7.1.8 - Navigation library
 - **React Navigation Bottom Tabs**: 7.4.0 - Tab navigation
 
 #### Backend & Data
+
 - **Firebase**: 12.10.0 - Authentication + Realtime Database + Analytics
 - **React Context API**: Built-in state management
 - **Custom REST Client**: `lib/api.ts` for API integration
 
 #### UI Components & Styling
+
 - **Victory Native**: 41.20.2 - Charts and data visualization
 - **Expo Vector Icons**: 15.0.3 - Icon library (Ionicons)
 - **Expo Linear Gradient**: ~15.0.8 - Gradient backgrounds
@@ -92,6 +102,7 @@
 - **React Native Confetti Cannon**: 1.5.2 - Celebration animation
 
 #### Platform Features
+
 - **Expo Camera**: ~17.0.10 - QR code scanning (NEW)
 - **Expo Haptics**: ~15.0.8 - Haptic feedback (mobile)
 - **Expo Audio**: ~1.1.0 - Sound effects
@@ -99,17 +110,18 @@
 - **Expo Fonts**: ~14.0.10 - Custom fonts (Google Fonts)
 
 #### Typography
+
 - **Google Fonts**: DM Sans, Inter, Manrope, Plus Jakarta Sans, Sora
 
 ### Development Tools
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| **TypeScript** | ~5.9.2 | Type safety |
-| **ESLint** | 9.25.0 | Code linting |
-| **Prettier** | Via plugin | Code formatting |
-| **Vitest** | 2.1.0 | Unit testing |
-| **Fast-check** | 4.5.3 | Property-based testing |
+| Tool           | Version    | Purpose                |
+| -------------- | ---------- | ---------------------- |
+| **TypeScript** | ~5.9.2     | Type safety            |
+| **ESLint**     | 9.25.0     | Code linting           |
+| **Prettier**   | Via plugin | Code formatting        |
+| **Vitest**     | 2.1.0      | Unit testing           |
+| **Fast-check** | 4.5.3      | Property-based testing |
 
 ---
 
@@ -149,6 +161,7 @@ Local Storage (Offline fallback)
 ## Key Characteristics
 
 ### Architecture Pattern (NEW: API-Driven)
+
 - **Firebase-backed API** as primary data source
 - **React Context API** for global state management
 - **Custom API hooks** with automatic caching and retry logic
@@ -156,6 +169,7 @@ Local Storage (Offline fallback)
 - **Graceful offline fallback** to local storage
 
 ### Authentication (NEW: Required)
+
 - **Firebase Authentication** (email/password)
 - **Guest access** via anonymous auth
 - **Account linking** to upgrade guest → registered
@@ -163,12 +177,14 @@ Local Storage (Offline fallback)
 - **Session persistence** across app restarts
 
 ### Data Persistence (CHANGED: API-first)
+
 - **Primary: Backend API** (Firebase REST)
 - **Secondary: Local storage** (offline fallback)
 - **Automatic sync** when connection restored
 - **Multi-device sync** for authenticated users
 
 ### Offline-First Design (UPDATED)
+
 - All features work without internet connection
 - Local cache updates immediately
 - API sync happens in background
@@ -176,12 +192,14 @@ Local Storage (Offline fallback)
 - Automatic retry when connection restored
 
 ### Type Safety
+
 - **TypeScript strict mode** enabled
 - **Comprehensive type definitions** for all data models
 - **Path aliases** (`@/`) for clean imports
 - **Validation system** with error codes
 
 ### Performance Optimizations
+
 - **Code splitting**: Expo Router automatic per-screen
 - **Lazy loading**: Data loaded on demand via API
 - **Caching**: Firebase tokens, API responses, async data
@@ -189,6 +207,7 @@ Local Storage (Offline fallback)
 - **Memoization**: Expensive computations cached
 
 ### Data Validation (NEW)
+
 - **Enhanced validation** with error codes and detailed messages
 - **Dependency checking** to prevent orphaned data
 - **Audit logging** for all modifications
@@ -200,17 +219,17 @@ Local Storage (Offline fallback)
 
 ### Breaking Changes ⚠️
 
-| Aspect | v1.0 | v1.1 |
-|--------|------|------|
-| **Architecture** | Local storage first | ✅ API-driven |
-| **Authentication** | Optional | ✅ Required (Firebase) |
-| **Challenge System** | Supported | ❌ Removed |
-| **Progress Model** | SessionProgress | ✅ WorkoutProgress (simplified) |
-| **Event System** | Pub-sub EventEmitter | ❌ Removed (API-driven) |
-| **Components** | 54 | ✅ 76 (+22 new) |
-| **Hooks** | 25 | ✅ 30 (+5 new) |
-| **Auth Screens** | None | ✅ Sign-in, Sign-up |
-| **QR Features** | None | ✅ Scanner + Generator |
+| Aspect               | v1.0                 | v1.1                            |
+| -------------------- | -------------------- | ------------------------------- |
+| **Architecture**     | Local storage first  | ✅ API-driven                   |
+| **Authentication**   | Optional             | ✅ Required (Firebase)          |
+| **Challenge System** | Supported            | ❌ Removed                      |
+| **Progress Model**   | SessionProgress      | ✅ WorkoutProgress (simplified) |
+| **Event System**     | Pub-sub EventEmitter | ❌ Removed (API-driven)         |
+| **Components**       | 54                   | ✅ 76 (+22 new)                 |
+| **Hooks**            | 25                   | ✅ 30 (+5 new)                  |
+| **Auth Screens**     | None                 | ✅ Sign-in, Sign-up             |
+| **QR Features**      | None                 | ✅ Scanner + Generator          |
 
 ### New Features ✅
 
@@ -234,6 +253,7 @@ Local Storage (Offline fallback)
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+ (recommended 20 LTS)
 - npm or yarn
 - Expo CLI (`npm install -g expo-cli`)
@@ -260,18 +280,18 @@ npm start
 
 ### Development Commands
 
-| Command | Purpose |
-|---------|---------|
-| `npm start` | Start Expo development server |
-| `npm run ios` | Run on iOS simulator |
-| `npm run android` | Run on Android emulator |
-| `npm run web` | Run in web browser |
-| `npm run compile` | Check TypeScript compilation |
-| `npm run lint` | Check code style |
-| `npm run lint:fix` | Auto-fix code style issues |
-| `npm test` | Run tests (watch mode) |
-| `npm run test:run` | Run tests once (CI mode) |
-| `npm run test:coverage` | Generate coverage report |
+| Command                 | Purpose                       |
+| ----------------------- | ----------------------------- |
+| `npm start`             | Start Expo development server |
+| `npm run ios`           | Run on iOS simulator          |
+| `npm run android`       | Run on Android emulator       |
+| `npm run web`           | Run in web browser            |
+| `npm run compile`       | Check TypeScript compilation  |
+| `npm run lint`          | Check code style              |
+| `npm run lint:fix`      | Auto-fix code style issues    |
+| `npm test`              | Run tests (watch mode)        |
+| `npm run test:run`      | Run tests once (CI mode)      |
+| `npm run test:coverage` | Generate coverage report      |
 
 ---
 
@@ -318,18 +338,18 @@ See **[Breaking Changes Guide](./breaking-changes.md)** for detailed migration s
 
 ## Project Statistics
 
-| Metric | Value | Change |
-|--------|-------|--------|
-| **Total Components** | 76 | +22 |
-| **Total Hooks** | 30 | +5 |
-| **Total Screens** | 21 | - |
-| **Auth Screens** | 3 | +3 (NEW) |
-| **Total Tests** | 25+ | - |
-| **Lines of TypeScript** | ~15,000+ | +2,000+ |
-| **Type Coverage** | 100% | Strict mode |
-| **React Version** | 19.2.0 | +0.1.0 |
-| **Expo Version** | ~55.0.0 | +1.0.0 |
-| **Firebase Version** | 12.10.0 | +2.10.0 |
+| Metric                  | Value    | Change      |
+| ----------------------- | -------- | ----------- |
+| **Total Components**    | 76       | +22         |
+| **Total Hooks**         | 30       | +5          |
+| **Total Screens**       | 21       | -           |
+| **Auth Screens**        | 3        | +3 (NEW)    |
+| **Total Tests**         | 25+      | -           |
+| **Lines of TypeScript** | ~15,000+ | +2,000+     |
+| **Type Coverage**       | 100%     | Strict mode |
+| **React Version**       | 19.2.0   | +0.1.0      |
+| **Expo Version**        | ~55.0.0  | +1.0.0      |
+| **Firebase Version**    | 12.10.0  | +2.10.0     |
 
 ---
 
@@ -347,6 +367,7 @@ See **[Breaking Changes Guide](./breaking-changes.md)** for detailed migration s
 ## Support & Questions
 
 For detailed technical information:
+
 - **Architecture questions** → See [Architecture](./architecture.md)
 - **Data model questions** → See [Data Models](./data-models.md)
 - **API integration** → See [API Contracts](./api-contracts.md)
@@ -355,5 +376,5 @@ For detailed technical information:
 
 ---
 
-*For API-driven architecture details, refer to the generated architecture and data models documentation.*
-*Version 1.1.0 - Refactored to API-driven with Firebase backend integration.*
+_For API-driven architecture details, refer to the generated architecture and data models documentation._
+_Version 1.1.0 - Refactored to API-driven with Firebase backend integration._

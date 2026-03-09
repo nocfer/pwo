@@ -15,11 +15,13 @@ Version 1.1 introduces a **major architectural refactor** from local-storage-fir
 ### 1. Architecture: Storage → API (CRITICAL)
 
 **Before (v1.0):**
+
 ```
 App → Context → Storage (localStorage/FileSystem) → Local data only
 ```
 
 **After (v1.1):**
+
 ```
 App → Context → API Client → Firebase Backend
                     ↓
@@ -29,6 +31,7 @@ App → Context → API Client → Firebase Backend
 **Impact**: All data operations now require Firebase backend.
 
 **Migration Step**:
+
 ```typescript
 // Before: Direct storage access
 const data = await StorageService.loadPrograms()
@@ -46,11 +49,13 @@ const data = await DataContext.fetchPrograms()
 ### 2. Authentication: Optional → Required
 
 **Before (v1.0):**
+
 - App worked completely offline
 - Firebase auth was optional
 - No authentication required
 
 **After (v1.1):**
+
 - ✅ Firebase auth required
 - Anonymous (guest) access supported
 - Account linking for upgrade path
@@ -60,6 +65,7 @@ const data = await DataContext.fetchPrograms()
 **Migration Steps**:
 
 1. **Add Firebase Config to `.env`:**
+
 ```env
 EXPO_PUBLIC_FIREBASE_API_KEY=your-key
 EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your-domain
@@ -72,6 +78,7 @@ EXPO_PUBLIC_FIREBASE_PROJECT_ID=your-project
    - Guest option for immediate access
 
 3. **Update Auth Flow in Components:**
+
 ```typescript
 // Before
 import { DataContext } from '@/context/DataContext'
@@ -93,12 +100,14 @@ if (!user) {
 ### 3. Challenge System: Removed (CRITICAL)
 
 **Before (v1.0):**
+
 - Full challenge support
 - `ChallengeProgress` type
 - `ChallengeConfig` on Programs
 - Challenge screens and UX
 
 **After (v1.1):**
+
 - ❌ Challenges completely removed
 - Use regular Programs instead
 - Use PersonalRecords for tracking
@@ -109,6 +118,7 @@ if (!user) {
 **Migration Steps**:
 
 1. **Export Challenge Data** (if needed):
+
 ```typescript
 // Before deleting challenges, export them
 const challenges = await StorageService.loadChallengeProgress()
@@ -116,6 +126,7 @@ const challenges = await StorageService.loadChallengeProgress()
 ```
 
 2. **Convert Challenge to Program**:
+
 ```typescript
 // Challenge structure
 {
@@ -144,6 +155,7 @@ const challenges = await StorageService.loadChallengeProgress()
 ```
 
 3. **Update Components**:
+
 ```typescript
 // Remove all imports from:
 // - components/challenge/
@@ -157,11 +169,12 @@ const challenges = await StorageService.loadChallengeProgress()
 ```
 
 4. **Update Storage/State**:
+
 ```typescript
 // Remove from storage keys
 const removedKeys = [
-  'pwo.challenge_progress',    // ❌ Remove
-  'pwo.challenge_sessions'      // ❌ Remove
+  'pwo.challenge_progress', // ❌ Remove
+  'pwo.challenge_sessions' // ❌ Remove
 ]
 
 for (const key of removedKeys) {
@@ -174,20 +187,22 @@ for (const key of removedKeys) {
 ### 4. Data Model: SessionProgress → WorkoutProgress (CRITICAL)
 
 **Before (v1.0):**
+
 ```typescript
 interface SessionProgress {
   sessionId: string
   programId: string
-  sessions: ProgramRun[]        // Complex nested
+  sessions: ProgramRun[] // Complex nested
   statusType: 'in_progress' | 'completed'
   // Many nested fields
 }
 ```
 
 **After (v1.1):**
+
 ```typescript
 interface WorkoutProgress {
-  workoutId: string             // Simple, flat
+  workoutId: string // Simple, flat
   programId: string
   completed: boolean
   completedAt?: string
@@ -201,6 +216,7 @@ interface WorkoutProgress {
 **Migration Steps**:
 
 1. **Extract Old Data**:
+
 ```typescript
 const oldProgress = await StorageService.loadSessionProgress()
 
@@ -209,31 +225,33 @@ const newProgress = oldProgress.sessions.map((session, index) => ({
   programId: oldProgress.programId,
   completed: session.completed,
   completedAt: session.completedAt,
-  exercises: session.exercises,  // Should work as-is
+  exercises: session.exercises, // Should work as-is
   timeSpentSeconds: session.timeSpentSeconds
 }))
 ```
 
 2. **Update PersonalRecord References**:
+
 ```typescript
 // Before: workoutId referenced SessionProgress
 const pr = {
-  exerciseId: "bench-press-1",
-  type: "max_weight",
+  exerciseId: 'bench-press-1',
+  type: 'max_weight',
   value: 225,
-  workoutId: "session-123"  // ❌ Old format
+  workoutId: 'session-123' // ❌ Old format
 }
 
 // After: workoutId follows new format
 const pr = {
-  exerciseId: "bench-press-1",
-  type: "max_weight",
+  exerciseId: 'bench-press-1',
+  type: 'max_weight',
   value: 225,
-  workoutId: "full-body-a_workout_0"  // ✅ New format
+  workoutId: 'full-body-a_workout_0' // ✅ New format
 }
 ```
 
 3. **Update Type References**:
+
 ```typescript
 // Search for all references to SessionProgress
 // Replace with WorkoutProgress
@@ -246,12 +264,14 @@ const workoutId = `${programId}_workout_${sessionIndex}`
 ### 5. Event System: Removed (HIGH)
 
 **Before (v1.0):**
+
 - Custom EventEmitter system
 - Pub-sub pattern for cross-component communication
 - `WorkoutEvent` type
 - Event logging and replay
 
 **After (v1.1):**
+
 - ❌ EventEmitter deleted
 - ❌ WorkoutEvent type removed
 - Direct API calls via `recordWorkout()`
@@ -262,6 +282,7 @@ const workoutId = `${programId}_workout_${sessionIndex}`
 **Migration Steps**:
 
 1. **Remove Event Subscriptions**:
+
 ```typescript
 // Before
 import { sessionEvents } from '@/lib/events'
@@ -283,6 +304,7 @@ async function completeSet(data: SetRecord) {
 ```
 
 2. **Replace Event Emissions**:
+
 ```typescript
 // Before
 sessionEvents.emit({
@@ -296,6 +318,7 @@ await DataContext.completeWorkout(workoutId, progress)
 ```
 
 3. **Update Progress Tracking**:
+
 ```typescript
 // Before: Listened to events
 const [progress, setProgress] = useState(null)
@@ -311,6 +334,7 @@ const { data: progress } = useProgramProgress(programId)
 ```
 
 4. **Remove Event Files**:
+
 ```typescript
 // Delete these files:
 // - lib/events.ts
@@ -325,6 +349,7 @@ const { data: progress } = useProgramProgress(programId)
 **Deleted Components** (17 total):
 
 Challenge-related:
+
 - ❌ `ChallengeCard.tsx`
 - ❌ `ChallengeProgress.tsx`
 - ❌ `ChallengeSelector.tsx`
@@ -333,38 +358,45 @@ Challenge-related:
 - ❌ `components/challenge/*` (all)
 
 Legacy/Event-system:
+
 - ❌ `EventFeed.tsx`
 - ❌ `EventLog.tsx`
 - ❌ `components/events/*`
 
 Other:
+
 - ❌ Old storage-based components
 
 **New Components** (22 total):
 
 Auth:
+
 - ✅ `SignInScreen.tsx`
 - ✅ `SignUpScreen.tsx`
 - ✅ `AuthLayout.tsx`
 - ✅ `GuestAccessOption.tsx`
 
 Data Management:
+
 - ✅ `DataList.tsx`
 - ✅ `SearchableList.tsx`
 - ✅ `FilterControls.tsx`
 - ✅ `SortControls.tsx`
 
 Forms:
+
 - ✅ `ExerciseForm.tsx`
 - ✅ `ProgramEditor.tsx`
 - ✅ `forms/ProgramForm.tsx`
 
 QR Features:
+
 - ✅ `QRScanner.tsx`
 - ✅ `QRGenerator.tsx`
 - ✅ `QRModal.tsx`
 
 Others:
+
 - ✅ `LoadingStateList.tsx`
 - ✅ `UnifiedDataManager.tsx`
 - ✅ More...
@@ -372,6 +404,7 @@ Others:
 **Migration Steps**:
 
 1. **Remove Challenge Imports**:
+
 ```typescript
 // Find all imports of deleted components
 import { ChallengeCard } from '@/components/challenge'  // ❌ Delete
@@ -388,6 +421,7 @@ function LibraryScreen() {
 ```
 
 2. **Update Component Trees**:
+
 ```typescript
 // Before: Challenge support in library
 function LibraryScreen() {
@@ -417,11 +451,13 @@ function LibraryScreen() {
 ### 7. API Changes: Direct Access Required
 
 **Before (v1.0):**
+
 - Optional API integration
 - Feature-flagged via `EXPO_PUBLIC_API_ENABLED`
 - Fallback to local storage always worked
 
 **After (v1.1):**
+
 - API required for data operations
 - Graceful fallback to local storage only when offline
 - All CRUD operations go through API
@@ -429,6 +465,7 @@ function LibraryScreen() {
 **Migration Steps**:
 
 1. **Setup Environment**:
+
 ```env
 # Now required
 EXPO_PUBLIC_API_BASE_URL=https://api.example.com
@@ -437,6 +474,7 @@ EXPO_PUBLIC_API_TIMEOUT=30000
 ```
 
 2. **Update DataContext**:
+
 ```typescript
 // Before: Checked storage directly
 async function loadExercises() {
@@ -446,10 +484,10 @@ async function loadExercises() {
 // After: API first, fallback to storage
 async function loadExercises() {
   try {
-    return await fetchExercises()  // API call
+    return await fetchExercises() // API call
   } catch (error) {
     if (error instanceof APIError) {
-      return StorageService.loadExercises()  // Fallback
+      return StorageService.loadExercises() // Fallback
     }
     throw error
   }
@@ -457,6 +495,7 @@ async function loadExercises() {
 ```
 
 3. **Update Hooks**:
+
 ```typescript
 // Before: Storage-based hook
 function usePrograms() {
@@ -471,14 +510,11 @@ function usePrograms() {
 function usePrograms() {
   const { user } = useAuth()
   const { progressVersion } = useContext(DataContext)
-  
-  return useAsyncData(
-    () => {
-      if (!user) return []
-      return fetchPrograms()  // API call
-    },
-    [progressVersion, user?.uid]
-  )
+
+  return useAsyncData(() => {
+    if (!user) return []
+    return fetchPrograms() // API call
+  }, [progressVersion, user?.uid])
 }
 ```
 
@@ -490,23 +526,24 @@ function usePrograms() {
 
 ```typescript
 // Authentication (NEW)
-useAuth()           // Get auth state
-useSignIn()         // Sign in logic
-useSignUp()         // Sign up logic
+useAuth() // Get auth state
+useSignIn() // Sign in logic
+useSignUp() // Sign up logic
 
 // API Integration (NEW)
-useAPIExercises()   // Fetch exercises from API
-useAPIPrograms()    // Fetch programs from API
+useAPIExercises() // Fetch exercises from API
+useAPIPrograms() // Fetch programs from API
 
 // Existing Hooks (UNCHANGED)
 useWorkoutTimer()
 useAsyncData()
-usePrograms()       // Now API-driven internally
+usePrograms() // Now API-driven internally
 ```
 
 **Migration Steps**:
 
 1. **Replace Hook Calls**:
+
 ```typescript
 // Before
 const programs = usePrograms()
@@ -519,6 +556,7 @@ const { data: programs } = useAPIPrograms()
 ```
 
 2. **Add Auth Checks**:
+
 ```typescript
 // Before: No auth check
 function HomeScreen() {
@@ -530,11 +568,11 @@ function HomeScreen() {
 function HomeScreen() {
   const { user } = useAuth()
   const { data: programs } = usePrograms()
-  
+
   if (!user) {
     return <SignInPrompt />
   }
-  
+
   return <ProgramList programs={programs} />
 }
 ```
@@ -621,19 +659,19 @@ async function migrateOldData() {
     // 1. Load old data
     const oldProgress = await StorageService.loadSessionProgress()
     const oldPRs = await StorageService.loadPersonalRecords()
-    
+
     // 2. Transform
     const newProgress = transformSessionToWorkout(oldProgress)
     const newPRs = transformPRReferences(oldPRs)
-    
+
     // 3. Upload to API
     for (const prog of newProgress) {
       await DataContext.recordWorkout(prog)
     }
-    
+
     // 4. Clear old data
     await StorageService.clear()
-    
+
     console.log('Migration complete!')
   } catch (error) {
     console.error('Migration failed:', error)
@@ -641,7 +679,9 @@ async function migrateOldData() {
   }
 }
 
-function transformSessionToWorkout(oldProgress: SessionProgress): WorkoutProgress[] {
+function transformSessionToWorkout(
+  oldProgress: SessionProgress
+): WorkoutProgress[] {
   return oldProgress.sessions.map((session, index) => ({
     workoutId: `${oldProgress.programId}_workout_${index}`,
     programId: oldProgress.programId,
@@ -655,7 +695,7 @@ function transformSessionToWorkout(oldProgress: SessionProgress): WorkoutProgres
 function transformPRReferences(prs: PersonalRecord[]): PersonalRecord[] {
   return prs.map(pr => ({
     ...pr,
-    workoutId: pr.workoutId 
+    workoutId: pr.workoutId
       ? `${extractProgramId(pr.workoutId)}_workout_${extractSessionIndex(pr.workoutId)}`
       : undefined
   }))
@@ -673,6 +713,7 @@ If migration fails:
    - Backup located at: `localStorage.backup.json` (manual export)
 
 2. **Revert Code**
+
    ```bash
    git checkout v1.0
    npm install
@@ -686,24 +727,31 @@ If migration fails:
 ## FAQ
 
 ### Q: Can I keep using local storage?
+
 **A**: No. v1.1 requires API-driven architecture. Local storage is fallback only.
 
 ### Q: What about my challenge data?
+
 **A**: Export it before upgrading. Convert to Programs manually or archive.
 
 ### Q: Do I need to rewrite all my code?
+
 **A**: Most component logic stays the same. Main changes:
+
 - Add auth checks to screens
 - Remove challenge imports
 - Update data model references
 
 ### Q: Is authentication mandatory?
+
 **A**: Yes, but guest/anonymous access is available.
 
 ### Q: How long is the migration?
+
 **A**: ~2 weeks for full codebase + thorough testing
 
 ### Q: What if offline?
+
 **A**: App will show "offline mode" and use local cache. Sync happens when online.
 
 ---
@@ -717,4 +765,4 @@ If migration fails:
 
 ---
 
-*For questions or issues during migration, refer to the full documentation or contact the team.*
+_For questions or issues during migration, refer to the full documentation or contact the team._
