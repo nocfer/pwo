@@ -10,9 +10,6 @@ const colors = {
   border: '#1F2029',
   borderLight: '#2A2B36',
 
-  // @deprecated — use `surface` directly. Kept for backward compatibility until Story 1.2 audit.
-  card: '#14151A',
-
   // Brand — indigo-400 tuned for dark backgrounds
   primary: '#818CF8',
   primaryDark: '#6366F1',
@@ -42,16 +39,6 @@ const colors = {
     breakBg: '#151D20',
     done: '#34D399',
     doneBg: '#161E1B'
-  },
-
-  // @deprecated — kept for backward compatibility until Story 1.2 audit.
-  gradient: {
-    primaryStart: '#818CF8',
-    primaryEnd: '#A78BFA',
-    warmStart: '#FB923C',
-    warmEnd: '#F87171',
-    successStart: '#34D399',
-    successEnd: '#2DD4BF'
   },
 
   overlayGlass: 'rgba(20, 21, 26, 0.95)',
@@ -101,26 +88,8 @@ const shadows = {
     shadowRadius: 3,
     elevation: 1,
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-  },
-  // @deprecated — dark theme uses color-based elevation. Kept for backward compatibility.
-  md: {
-    shadowColor: '#000000',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
-    elevation: 1,
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-  },
-  // @deprecated — dark theme uses color-based elevation. Kept for backward compatibility.
-  lg: {
-    shadowColor: '#000000',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
-    elevation: 1,
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
   }
-}
+} as const
 
 const typography = {
   display: {
@@ -141,33 +110,21 @@ const typography = {
     lineHeight: 24,
     letterSpacing: -0.3
   },
-  // @deprecated — use h2. Kept for backward compatibility until Story 1.2 audit.
-  h3: {
-    fontSize: 18,
-    fontFamily: 'DMSans_600SemiBold',
-    lineHeight: 24,
-    letterSpacing: -0.3
-  },
   body: {
     fontSize: 16,
     fontFamily: 'DMSans_400Regular',
-    lineHeight: 24
+    lineHeight: 24,
+    letterSpacing: 0
   },
   bodyBold: {
     fontSize: 16,
     fontFamily: 'DMSans_600SemiBold',
-    lineHeight: 24
+    lineHeight: 24,
+    letterSpacing: 0
   },
   caption: {
     fontSize: 13,
     fontFamily: 'DMSans_500Medium',
-    lineHeight: 18,
-    letterSpacing: 0.2
-  },
-  // @deprecated — use caption with font override. Kept for backward compatibility.
-  captionBold: {
-    fontSize: 13,
-    fontFamily: 'DMSans_600SemiBold',
     lineHeight: 18,
     letterSpacing: 0.2
   },
@@ -197,37 +154,6 @@ const cards = {
     backgroundColor: colors.surfaceElevated,
     borderRadius: radius.lg,
     padding: spacing.lg
-  },
-  focus: {
-    container: {
-      marginTop: spacing.md,
-      borderRadius: radius.xl,
-      borderWidth: 1,
-      paddingVertical: spacing.xl,
-      paddingHorizontal: spacing.lg
-    },
-    topRow: {
-      width: '100%',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      marginBottom: spacing.md
-    },
-    icons: {
-      sm: {
-        width: 32,
-        height: 32,
-        borderRadius: radius.sm,
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
-    },
-    chipText: {
-      ...typography.caption,
-      fontFamily: fonts.semiBold,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5
-    }
   }
 } as const
 
