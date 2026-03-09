@@ -3,12 +3,12 @@ import { AuthProvider } from '@/context/AuthContext'
 import { DataProvider } from '@/context/DataContext'
 import { theme } from '@/theme/theme'
 import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
   useFonts
-} from '@expo-google-fonts/inter'
+} from '@expo-google-fonts/dm-sans'
 import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
@@ -51,10 +51,10 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold
   })
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export default function RootLayout() {
       <AuthProvider>
         <DataProvider>
           <RootLayoutNav />
-          <StatusBar style="dark" />
+          <StatusBar style="light" />
           <Toast />
         </DataProvider>
       </AuthProvider>
