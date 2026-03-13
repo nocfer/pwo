@@ -9,6 +9,7 @@ import Animated, {
   withTiming
 } from 'react-native-reanimated'
 import { SetDot } from './SetDot'
+import { SetRow } from './SetRow'
 
 export type ExerciseAccordionItemProps = {
   exercise: ExerciseState
@@ -16,18 +17,55 @@ export type ExerciseAccordionItemProps = {
   isExpanded: boolean
   onToggle: () => void
   onSetDotPress: (setIndex: number) => void
+  onSetRepsPress?: (setIndex: number) => void
+  onSetWeightPress?: (setIndex: number) => void
+  onSetConfirm?: (setIndex: number) => void
+  onSetPress?: (setIndex: number) => void
+  onSetSkip?: (setIndex: number) => void
+  focusedField?: { setIndex: number; field: 'reps' | 'weight' } | null
 }
 
-function ExpandedContent({ exercise }: { exercise: ExerciseState }) {
+type ExpandedContentProps = {
+  exercise: ExerciseState
+  onSetRepsPress?: (setIndex: number) => void
+  onSetWeightPress?: (setIndex: number) => void
+  onSetConfirm?: (setIndex: number) => void
+  onSetPress?: (setIndex: number) => void
+  onSetSkip?: (setIndex: number) => void
+  focusedField?: { setIndex: number; field: 'reps' | 'weight' } | null
+}
+
+function ExpandedContent({
+  exercise,
+  onSetRepsPress,
+  onSetWeightPress,
+  onSetConfirm,
+  onSetPress,
+  onSetSkip,
+  focusedField
+}: ExpandedContentProps) {
   return (
     <View style={styles.expandedContent}>
       <Text style={styles.expandedTitle}>{exercise.exerciseName}</Text>
-      {exercise.sets.map((_, sIdx) => (
-        <View key={`placeholder-${sIdx}`} style={styles.setRowPlaceholder}>
-          <Text style={styles.placeholderText}>
-            Set {sIdx + 1} — SetRow placeholder (Story 2.4)
-          </Text>
-        </View>
+      {exercise.sets.map((set, sIdx) => (
+        <SetRow
+          key={`set-${sIdx}`}
+          setNumber={sIdx + 1}
+          reps={set.reps}
+          weight={set.weight}
+          status={set.status}
+          onRepsPress={() => onSetRepsPress?.(sIdx)}
+          onWeightPress={() => onSetWeightPress?.(sIdx)}
+          onConfirm={() => onSetConfirm?.(sIdx)}
+          onPress={() => onSetPress?.(sIdx)}
+          onSkip={() => onSetSkip?.(sIdx)}
+          isRepsFocused={
+            focusedField?.setIndex === sIdx && focusedField.field === 'reps'
+          }
+          isWeightFocused={
+            focusedField?.setIndex === sIdx && focusedField.field === 'weight'
+          }
+        />
       ))}
     </View>
   )
@@ -62,7 +100,13 @@ export function ExerciseAccordionItem({
   exerciseIndex,
   isExpanded,
   onToggle,
-  onSetDotPress
+  onSetDotPress,
+  onSetRepsPress,
+  onSetWeightPress,
+  onSetConfirm,
+  onSetPress,
+  onSetSkip,
+  focusedField
 }: ExerciseAccordionItemProps) {
   const complete = isExerciseComplete(exercise)
   const active = hasActiveSet(exercise)
@@ -133,7 +177,15 @@ export function ExerciseAccordionItem({
       </Pressable>
 
       <Animated.View style={animatedStyle}>
-        <ExpandedContent exercise={exercise} />
+        <ExpandedContent
+          exercise={exercise}
+          onSetRepsPress={onSetRepsPress}
+          onSetWeightPress={onSetWeightPress}
+          onSetConfirm={onSetConfirm}
+          onSetPress={onSetPress}
+          onSetSkip={onSetSkip}
+          focusedField={focusedField}
+        />
       </Animated.View>
 
       <View style={styles.measureContainer} pointerEvents="none">
@@ -177,7 +229,7 @@ const styles = StyleSheet.create({
   setMeta: {
     ...theme.typography.caption,
     color: theme.colors.subtext,
-    marginTop: 2
+    marginTop: theme.spacing.xs
   },
   dotRow: {
     flexDirection: 'row',
@@ -196,16 +248,6 @@ const styles = StyleSheet.create({
     ...theme.typography.h2,
     color: theme.colors.text,
     marginBottom: theme.spacing.sm
-  },
-  setRowPlaceholder: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.sm,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.xs
-  },
-  placeholderText: {
-    ...theme.typography.caption,
-    color: theme.colors.muted
   },
   measureContainer: {
     position: 'absolute',

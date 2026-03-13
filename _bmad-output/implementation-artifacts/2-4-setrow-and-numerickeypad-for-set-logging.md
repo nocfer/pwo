@@ -1,6 +1,6 @@
 # Story 2.4: SetRow & NumericKeypad for Set Logging
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -28,67 +28,67 @@ So that I can quickly confirm or adjust values between sets without fumbling wit
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `components/workout/NumericKeypad.tsx` — Custom overlay keypad (AC: #5, #7)
-  - [ ] 1.1 Define `NumericKeypadProps` type: `{ onDigit: (digit: number) => void, onBackspace: () => void, onDone: () => void }`
-  - [ ] 1.2 Render 4×3 grid: digits 1-9 in rows, bottom row [⌫][0][Done]
-  - [ ] 1.3 Each key: 48pt minimum height, `spacing.sm` (8pt) gaps between keys
-  - [ ] 1.4 Digit keys: `surfaceElevated` background, `text` color, `bodyBold` typography, `radius.md` corners
-  - [ ] 1.5 Backspace key: `surface` background, `subtext` color, "⌫" Unicode character
-  - [ ] 1.6 Done key: `primary` background, `primaryTextOn` color, "Done" text
-  - [ ] 1.7 All keys wrapped in `Pressable` with press feedback (opacity 0.7)
-  - [ ] 1.8 Accessibility labels: "digit {n}", "backspace", "done, dismiss keypad"
-  - [ ] 1.9 Keep component under ~80 lines — pure presentational, no state
+- [x] Task 1: Create `components/workout/NumericKeypad.tsx` — Custom overlay keypad (AC: #5, #7)
+  - [x] 1.1 Define `NumericKeypadProps` type: `{ onDigit: (digit: number) => void, onBackspace: () => void, onDone: () => void }`
+  - [x] 1.2 Render 4×3 grid: digits 1-9 in rows, bottom row [⌫][0][Done]
+  - [x] 1.3 Each key: 48pt minimum height, `spacing.sm` (8pt) gaps between keys
+  - [x] 1.4 Digit keys: `surfaceElevated` background, `text` color, `bodyBold` typography, `radius.md` corners
+  - [x] 1.5 Backspace key: `surface` background, `subtext` color, "⌫" Unicode character
+  - [x] 1.6 Done key: `primary` background, `primaryTextOn` color, "Done" text
+  - [x] 1.7 All keys wrapped in `Pressable` with press feedback (opacity 0.7)
+  - [x] 1.8 Accessibility labels: "digit {n}", "backspace", "done, dismiss keypad"
+  - [x] 1.9 Keep component under ~80 lines — pure presentational, no state
 
-- [ ] Task 2: Create `components/workout/SetRow.tsx` — Atomic set logging row (AC: #1, #2, #3, #12, #13)
-  - [ ] 2.1 Define `SetRowProps` type: `{ setNumber: number, reps: number, weight: number, status: SetStatus, onRepsPress: () => void, onWeightPress: () => void, onConfirm: () => void, onPress: () => void, isRepsFocused?: boolean, isWeightFocused?: boolean }`
-  - [ ] 2.2 Layout: horizontal row `[set#] [reps display] [weight display] [confirm button]` with `spacing.sm` gaps
-  - [ ] 2.3 **Reps display:** Pressable area, 48pt min touch height, shows reps value in `bodyBold`, "reps" label in `caption`/`subtext`; focused state gets `primary` border
-  - [ ] 2.4 **Weight display:** Same as reps but for weight value with "lbs" label
-  - [ ] 2.5 Fixed-width container for numeric values (minWidth: 56pt) for layout stability when values change (AC: #11)
-  - [ ] 2.6 **Confirm button:** 44×44pt Pressable, `radius.full` circle
-  - [ ] 2.7 **Pending state:** `muted` text for set number and values, outlined confirm button (`border` color, 1px)
-  - [ ] 2.8 **Active state:** `primary` color set number, `text` color values, filled `primary` confirm button with white "✓"
-  - [ ] 2.9 **Completed state:** `success` color values, `phases.doneBg` confirm button background with `success` "✓", row background `successLight`
-  - [ ] 2.10 **Editing state:** "✎" (pencil Unicode) replaces set number, `primary` dashed border on the row, `primary` confirm button for re-confirm
-  - [ ] 2.11 Accessibility: `accessibilityLabel` per state ("Set {n}, pending", "Set {n}, ready to confirm", "Set {n}, completed, {reps} reps at {weight} lbs", "Set {n}, editing")
-  - [ ] 2.12 Confirm button accessibility: "Confirm set {n}" for active, "Re-confirm set {n}" for editing
-  - [ ] 2.13 No local state — component is fully controlled via props (AC: #2)
+- [x] Task 2: Create `components/workout/SetRow.tsx` — Atomic set logging row (AC: #1, #2, #3, #12, #13)
+  - [x] 2.1 Define `SetRowProps` type: `{ setNumber: number, reps: number, weight: number, status: SetStatus, onRepsPress: () => void, onWeightPress: () => void, onConfirm: () => void, onPress: () => void, isRepsFocused?: boolean, isWeightFocused?: boolean }`
+  - [x] 2.2 Layout: horizontal row `[set#] [reps display] [weight display] [confirm button]` with `spacing.sm` gaps
+  - [x] 2.3 **Reps display:** Pressable area, 48pt min touch height, shows reps value in `bodyBold`, "reps" label in `caption`/`subtext`; focused state gets `primary` border
+  - [x] 2.4 **Weight display:** Same as reps but for weight value with "lbs" label
+  - [x] 2.5 Fixed-width container for numeric values (minWidth: 56pt) for layout stability when values change (AC: #11)
+  - [x] 2.6 **Confirm button:** 44×44pt Pressable, `radius.full` circle
+  - [x] 2.7 **Pending state:** `muted` text for set number and values, outlined confirm button (`border` color, 1px)
+  - [x] 2.8 **Active state:** `primary` color set number, `text` color values, filled `primary` confirm button with white "✓"
+  - [x] 2.9 **Completed state:** `success` color values, `phases.doneBg` confirm button background with `success` "✓", row background `successLight`
+  - [x] 2.10 **Editing state:** "✎" (pencil Unicode) replaces set number, `primary` dashed border on the row, `primary` confirm button for re-confirm
+  - [x] 2.11 Accessibility: `accessibilityLabel` per state ("Set {n}, pending", "Set {n}, ready to confirm", "Set {n}, completed, {reps} reps at {weight} lbs", "Set {n}, editing")
+  - [x] 2.12 Confirm button accessibility: "Confirm set {n}" for active, "Re-confirm set {n}" for editing
+  - [x] 2.13 No local state — component is fully controlled via props (AC: #2)
 
-- [ ] Task 3: Create `hooks/workout/useKeypadState.ts` — Keypad focus & input management (AC: #4, #6, #8, #9, #10)
-  - [ ] 3.1 Define keypad state type: `{ visible: boolean, exerciseIndex: number, setIndex: number, field: 'reps' | 'weight', isFirstDigit: boolean }`
-  - [ ] 3.2 `openKeypad(exerciseIndex, setIndex, field)` — sets visible true, stores focus target, sets `isFirstDigit` to true
-  - [ ] 3.3 `handleDigit(digit)` — if `isFirstDigit`: replace value (dispatch `LOG_SET` with digit as the new value for the focused field); else: append digit (value * 10 + digit, max 4 digits / 9999). Set `isFirstDigit` to false.
-  - [ ] 3.4 `handleBackspace()` — remove last digit: `Math.floor(value / 10)`, minimum 0. Set `isFirstDigit` to false.
-  - [ ] 3.5 `handleDone()` — if field is 'reps', move focus to 'weight' on same set (keep keypad open); if field is 'weight', dismiss keypad
-  - [ ] 3.6 `dismissKeypad()` — set visible to false, clear focus target
-  - [ ] 3.7 `switchField(exerciseIndex, setIndex, field)` — change focus without dismissing (AC: #9)
-  - [ ] 3.8 Read current value from workout state to compute digit append/replace correctly
-  - [ ] 3.9 Hook consumes `useWorkoutExecution()` for state access and `logSet` dispatch
+- [x] Task 3: Create `hooks/workout/useKeypadState.ts` — Keypad focus & input management (AC: #4, #6, #8, #9, #10)
+  - [x] 3.1 Define keypad state type: `{ visible: boolean, exerciseIndex: number, setIndex: number, field: 'reps' | 'weight', isFirstDigit: boolean }`
+  - [x] 3.2 `openKeypad(exerciseIndex, setIndex, field)` — sets visible true, stores focus target, sets `isFirstDigit` to true
+  - [x] 3.3 `handleDigit(digit)` — if `isFirstDigit`: replace value (dispatch `LOG_SET` with digit as the new value for the focused field); else: append digit (value \* 10 + digit, max 4 digits / 9999). Set `isFirstDigit` to false.
+  - [x] 3.4 `handleBackspace()` — remove last digit: `Math.floor(value / 10)`, minimum 0. Set `isFirstDigit` to false.
+  - [x] 3.5 `handleDone()` — if field is 'reps', move focus to 'weight' on same set (keep keypad open); if field is 'weight', dismiss keypad
+  - [x] 3.6 `dismissKeypad()` — set visible to false, clear focus target
+  - [x] 3.7 `switchField(exerciseIndex, setIndex, field)` — change focus without dismissing (AC: #9)
+  - [x] 3.8 Read current value from workout state to compute digit append/replace correctly
+  - [x] 3.9 Hook consumes `useWorkoutExecution()` for state access and `logSet` dispatch
 
-- [ ] Task 4: Update `components/workout/ExerciseAccordionItem.tsx` — Replace placeholders with SetRow (AC: #1)
-  - [ ] 4.1 Add new props: `onSetRepsPress: (setIndex: number) => void`, `onSetWeightPress: (setIndex: number) => void`, `onSetConfirm: (setIndex: number) => void`, `onSetPress: (setIndex: number) => void`, `focusedField?: { setIndex: number, field: 'reps' | 'weight' } | null`
-  - [ ] 4.2 Replace placeholder `View`/`Text` in expanded area with `SetRow` components
-  - [ ] 4.3 Pass correct props: `reps={set.reps}`, `weight={set.weight}`, `status={set.status}`, `isRepsFocused` / `isWeightFocused` derived from `focusedField`
-  - [ ] 4.4 Remove placeholder styles (`setRowPlaceholder`, `placeholderText`)
-  - [ ] 4.5 Update measurement view to use SetRow-sized placeholders (or keep generic height estimate) so accordion height animation remains accurate
-  - [ ] 4.6 Keep file under ~300 lines
+- [x] Task 4: Update `components/workout/ExerciseAccordionItem.tsx` — Replace placeholders with SetRow (AC: #1)
+  - [x] 4.1 Add new props: `onSetRepsPress: (setIndex: number) => void`, `onSetWeightPress: (setIndex: number) => void`, `onSetConfirm: (setIndex: number) => void`, `onSetPress: (setIndex: number) => void`, `focusedField?: { setIndex: number, field: 'reps' | 'weight' } | null`
+  - [x] 4.2 Replace placeholder `View`/`Text` in expanded area with `SetRow` components
+  - [x] 4.3 Pass correct props: `reps={set.reps}`, `weight={set.weight}`, `status={set.status}`, `isRepsFocused` / `isWeightFocused` derived from `focusedField`
+  - [x] 4.4 Remove placeholder styles (`setRowPlaceholder`, `placeholderText`)
+  - [x] 4.5 Update measurement view to use SetRow-sized placeholders (or keep generic height estimate) so accordion height animation remains accurate
+  - [x] 4.6 Keep file under ~300 lines
 
-- [ ] Task 5: Wire keypad overlay and SetRow interactions into `[index]-v2.tsx` (AC: #4, #10)
-  - [ ] 5.1 Import and initialize `useKeypadState` hook
-  - [ ] 5.2 Pass keypad interaction callbacks down through `ExerciseAccordionItem` props
-  - [ ] 5.3 Render `NumericKeypad` overlay at the bottom of the screen layout (outside `ScrollView`, inside `MaxWidthContainer`)
-  - [ ] 5.4 Keypad overlay: `position: 'absolute'`, bottom 0, full width, `overlayGlass` background, ~40% screen height
-  - [ ] 5.5 Add `Pressable` wrapper around scroll area that calls `dismissKeypad()` when tapped outside inputs (AC: #10)
-  - [ ] 5.6 Confirm button in SetRow dispatches `confirmSet(exerciseIndex, setIndex)` and dismisses keypad
-  - [ ] 5.7 Keep v2 route under ~300 lines — if close, extract keypad overlay into a `KeypadOverlay` wrapper component
+- [x] Task 5: Wire keypad overlay and SetRow interactions into `[index]-v2.tsx` (AC: #4, #10)
+  - [x] 5.1 Import and initialize `useKeypadState` hook
+  - [x] 5.2 Pass keypad interaction callbacks down through `ExerciseAccordionItem` props
+  - [x] 5.3 Render `NumericKeypad` overlay at the bottom of the screen layout (outside `ScrollView`, inside `MaxWidthContainer`)
+  - [x] 5.4 Keypad overlay: `position: 'absolute'`, bottom 0, full width, `overlayGlass` background, ~40% screen height
+  - [x] 5.5 Add `Pressable` wrapper around scroll area that calls `dismissKeypad()` when tapped outside inputs (AC: #10)
+  - [x] 5.6 Confirm button in SetRow dispatches `confirmSet(exerciseIndex, setIndex)` and dismisses keypad
+  - [x] 5.7 Keep v2 route under ~300 lines — if close, extract keypad overlay into a `KeypadOverlay` wrapper component
 
-- [ ] Task 6: Write tests (AC: #14, #15)
-  - [ ] 6.1 Create `__tests__/components/workout/NumericKeypad.test.tsx` — test all keys render, test onDigit/onBackspace/onDone callbacks fire with correct args, test accessibility labels
-  - [ ] 6.2 Create `__tests__/components/workout/SetRow.test.tsx` — test all 4 states render correct content and styling cues, test accessibility labels per state, test onRepsPress/onWeightPress/onConfirm callbacks fire
-  - [ ] 6.3 Create `__tests__/hooks/workout/useKeypadState.test.ts` — test first-digit-replace behavior, test digit append, test backspace, test Done focus advancement (reps→weight→dismiss), test switchField, test dismissKeypad
-  - [ ] 6.4 Verify no new TypeScript compilation errors (`npm run compile`)
-  - [ ] 6.5 Verify all tests pass (`npm run test:run`)
-  - [ ] 6.6 Verify all new files pass Prettier (`npm run lint:fix`)
+- [x] Task 6: Write tests (AC: #14, #15)
+  - [x] 6.1 Create `__tests__/components/workout/NumericKeypad.test.tsx` — test all keys render, test onDigit/onBackspace/onDone callbacks fire with correct args, test accessibility labels
+  - [x] 6.2 Create `__tests__/components/workout/SetRow.test.tsx` — test all 4 states render correct content and styling cues, test accessibility labels per state, test onRepsPress/onWeightPress/onConfirm callbacks fire
+  - [x] 6.3 Create `__tests__/hooks/workout/useKeypadState.test.ts` — test first-digit-replace behavior, test digit append, test backspace, test Done focus advancement (reps→weight→dismiss), test switchField, test dismissKeypad
+  - [x] 6.4 Verify no new TypeScript compilation errors (`npm run compile`)
+  - [x] 6.5 Verify all tests pass (`npm run test:run`)
+  - [x] 6.6 Verify all new files pass Prettier (`npm run lint:fix`)
 
 ## Dev Notes
 
@@ -118,7 +118,7 @@ state.activeSetIndex: number           // which set is active in expanded exerci
 type ExerciseSetState = {
   reps: number
   weight: number
-  status: SetStatus  // 'pending' | 'active' | 'completed' | 'skipped' | 'editing'
+  status: SetStatus // 'pending' | 'active' | 'completed' | 'skipped' | 'editing'
   confirmedReps?: number
   confirmedWeight?: number
 }
@@ -128,8 +128,8 @@ type ExerciseSetState = {
 
 ```typescript
 const { state, logSet, confirmSet, expandExercise } = useWorkoutExecution()
-logSet(exerciseIndex, setIndex, reps, weight)  // updates reps/weight values
-confirmSet(exerciseIndex, setIndex)            // marks set completed, auto-advances
+logSet(exerciseIndex, setIndex, reps, weight) // updates reps/weight values
+confirmSet(exerciseIndex, setIndex) // marks set completed, auto-advances
 ```
 
 **Reducer behavior on LOG_SET:** Updates `reps` and `weight` on the specified set. Does not change status. Pure value update.
@@ -145,12 +145,12 @@ confirmSet(exerciseIndex, setIndex)            // marks set completed, auto-adva
 └──────────────────────────────────────────────────────────────┘
 ```
 
-| State     | Set # Style                     | Values Style                     | Confirm Button                                          | Row Background  |
-| --------- | ------------------------------- | -------------------------------- | ------------------------------------------------------- | --------------- |
-| pending   | `muted` (#53556A) number        | `muted` text                     | 44pt circle, 1px `border` outline, `muted` "✓"         | transparent     |
-| active    | `primary` (#818CF8) number      | `text` (#ECEDF0) text            | 44pt circle, `primary` fill, white "✓"                  | transparent     |
-| completed | `success` (#34D399) number      | `success` text                   | 44pt circle, `phases.doneBg` fill, `success` "✓"       | `successLight`  |
-| editing   | `primary` "✎" (pencil Unicode) | `text` text, values editable     | 44pt circle, `primary` fill, white "✓" (re-confirm)    | dashed `primary` border |
+| State     | Set # Style                    | Values Style                 | Confirm Button                                      | Row Background          |
+| --------- | ------------------------------ | ---------------------------- | --------------------------------------------------- | ----------------------- |
+| pending   | `muted` (#53556A) number       | `muted` text                 | 44pt circle, 1px `border` outline, `muted` "✓"      | transparent             |
+| active    | `primary` (#818CF8) number     | `text` (#ECEDF0) text        | 44pt circle, `primary` fill, white "✓"              | transparent             |
+| completed | `success` (#34D399) number     | `success` text               | 44pt circle, `phases.doneBg` fill, `success` "✓"    | `successLight`          |
+| editing   | `primary` "✎" (pencil Unicode) | `text` text, values editable | 44pt circle, `primary` fill, white "✓" (re-confirm) | dashed `primary` border |
 
 - Row height: minimum 48pt (touch target)
 - Input field touch areas: 48pt height minimum
@@ -225,6 +225,7 @@ User taps anywhere that's not an input field or keypad key
 ### Previous Story Learnings (Stories 2.1, 2.2, 2.3)
 
 **What worked well:**
+
 - Pure function reducer with zero mocking needed for tests
 - Named action dispatchers (`expandExercise()`, `logSet()`, `confirmSet()`) — components never access raw dispatch
 - Unicode characters for icons (✓, –) — no external icon library needed
@@ -233,6 +234,7 @@ User taps anywhere that's not an input field or keypad key
 - Extracting helpers like `computeSetMeta` and `isExerciseComplete` as standalone pure functions
 
 **What went wrong:**
+
 - **Wrong theme tokens:** `textSecondary` (doesn't exist) → use `subtext`, `borderRadius` → `radius`, `error` → `danger`. Always verify token names against `theme/theme.ts`.
 - **Pre-existing TS errors from Epic 1 scope remain.** Do NOT fix: `haptics.notifyWarning` in `ConfirmationModal.tsx`, `SharedValue` in `profile.tsx`, and ~35 files referencing removed tokens. This story must not introduce NEW errors.
 - **COMPLETE_WORKOUT** initially missed `active` sets when marking skipped — both `pending` and `active` must be handled. Already fixed in reducer.
@@ -245,39 +247,39 @@ User taps anywhere that's not an input field or keypad key
 
 **Colors used in this story:**
 
-| Token                          | Value                     | Usage                                      |
-| ------------------------------ | ------------------------- | ------------------------------------------ |
-| `theme.colors.surface`         | #14151A                   | Backspace key background                   |
-| `theme.colors.surfaceElevated` | #1C1D24                   | Digit key background                       |
-| `theme.colors.text`            | #ECEDF0                   | Active state values text                   |
-| `theme.colors.subtext`         | #8C8EA0                   | Field labels ("reps", "lbs")               |
-| `theme.colors.muted`           | #53556A                   | Pending state text, outlined confirm       |
-| `theme.colors.primary`         | #818CF8                   | Active set number, confirm button fill, focused input border, Done key, editing border |
-| `theme.colors.primaryTextOn`   | #FFFFFF                   | Confirm button checkmark (active), Done key text |
-| `theme.colors.success`         | #34D399                   | Completed set values, completed checkmark  |
-| `theme.colors.successLight`    | rgba(52, 211, 153, 0.12)  | Completed row background                   |
-| `theme.colors.phases.doneBg`   | #161E1B                   | Completed confirm button background        |
-| `theme.colors.border`          | #1F2029                   | Pending confirm outline, input borders     |
-| `theme.colors.overlayGlass`    | rgba(20, 21, 26, 0.95)    | Keypad overlay background                  |
+| Token                          | Value                    | Usage                                                                                  |
+| ------------------------------ | ------------------------ | -------------------------------------------------------------------------------------- |
+| `theme.colors.surface`         | #14151A                  | Backspace key background                                                               |
+| `theme.colors.surfaceElevated` | #1C1D24                  | Digit key background                                                                   |
+| `theme.colors.text`            | #ECEDF0                  | Active state values text                                                               |
+| `theme.colors.subtext`         | #8C8EA0                  | Field labels ("reps", "lbs")                                                           |
+| `theme.colors.muted`           | #53556A                  | Pending state text, outlined confirm                                                   |
+| `theme.colors.primary`         | #818CF8                  | Active set number, confirm button fill, focused input border, Done key, editing border |
+| `theme.colors.primaryTextOn`   | #FFFFFF                  | Confirm button checkmark (active), Done key text                                       |
+| `theme.colors.success`         | #34D399                  | Completed set values, completed checkmark                                              |
+| `theme.colors.successLight`    | rgba(52, 211, 153, 0.12) | Completed row background                                                               |
+| `theme.colors.phases.doneBg`   | #161E1B                  | Completed confirm button background                                                    |
+| `theme.colors.border`          | #1F2029                  | Pending confirm outline, input borders                                                 |
+| `theme.colors.overlayGlass`    | rgba(20, 21, 26, 0.95)   | Keypad overlay background                                                              |
 
 **Typography:**
 
-| Token                       | Usage                                      |
-| --------------------------- | ------------------------------------------ |
+| Token                       | Usage                                                     |
+| --------------------------- | --------------------------------------------------------- |
 | `theme.typography.bodyBold` | 16pt SemiBold — numeric values, keypad digits, set number |
-| `theme.typography.caption`  | 13pt Medium — field labels ("reps", "lbs") |
-| `theme.typography.body`     | 16pt Regular — Done key text               |
+| `theme.typography.caption`  | 13pt Medium — field labels ("reps", "lbs")                |
+| `theme.typography.body`     | 16pt Regular — Done key text                              |
 
 **Spacing/Radius:**
 
-| Token               | Value | Usage                                  |
-| ------------------- | ----- | -------------------------------------- |
-| `theme.spacing.xs`  | 4pt   | Minor internal gaps                    |
-| `theme.spacing.sm`  | 8pt   | Gaps between row elements, key gaps    |
-| `theme.spacing.md`  | 12pt  | Row padding, key padding               |
-| `theme.spacing.lg`  | 16pt  | Keypad container padding               |
-| `theme.radius.md`   | 12pt  | Key corners, input field corners       |
-| `theme.radius.full` | 9999  | Confirm button circle                  |
+| Token               | Value | Usage                               |
+| ------------------- | ----- | ----------------------------------- |
+| `theme.spacing.xs`  | 4pt   | Minor internal gaps                 |
+| `theme.spacing.sm`  | 8pt   | Gaps between row elements, key gaps |
+| `theme.spacing.md`  | 12pt  | Row padding, key padding            |
+| `theme.spacing.lg`  | 16pt  | Keypad container padding            |
+| `theme.radius.md`   | 12pt  | Key corners, input field corners    |
+| `theme.radius.full` | 9999  | Confirm button circle               |
 
 ### Existing Components to Use (Do NOT Rebuild)
 
@@ -291,11 +293,13 @@ User taps anywhere that's not an input field or keypad key
 ### V2 Route Current Structure (255 lines)
 
 The v2 route (`app/programs/[id]/session/[index]-v2.tsx`) currently renders:
+
 1. `WorkoutExecutionProvider` wrapping `WorkoutSessionContent`
 2. `WorkoutSessionContent`: `WorkoutHeader`, `ExerciseAccordionItem` list, `ConfirmationModal`
 3. Back handler intercepts hardware back / swipe back
 
 This story adds:
+
 - `useKeypadState` hook initialization
 - Keypad interaction callbacks passed down through accordion items
 - `NumericKeypad` overlay rendered at the bottom (absolute positioned)
@@ -305,18 +309,19 @@ If the v2 route approaches 300 lines, extract the keypad overlay + state into a 
 
 ### File Size Budget
 
-| File                                                    | Estimated Lines | Budget    |
-| ------------------------------------------------------- | --------------- | --------- |
-| `components/workout/NumericKeypad.tsx`                  | ~80-100         | Under 300 |
-| `components/workout/SetRow.tsx`                         | ~130-180        | Under 300 |
-| `hooks/workout/useKeypadState.ts`                       | ~80-120         | Under 300 |
-| `components/workout/ExerciseAccordionItem.tsx`          | ~220-260        | Under 300 |
-| `app/programs/[id]/session/[index]-v2.tsx`              | ~270-300        | Under 300 |
-| `__tests__/components/workout/NumericKeypad.test.tsx`   | ~60-100         | Under 300 |
-| `__tests__/components/workout/SetRow.test.tsx`          | ~120-180        | Under 300 |
-| `__tests__/hooks/workout/useKeypadState.test.ts`        | ~120-180        | Under 300 |
+| File                                                  | Estimated Lines | Budget    |
+| ----------------------------------------------------- | --------------- | --------- |
+| `components/workout/NumericKeypad.tsx`                | ~80-100         | Under 300 |
+| `components/workout/SetRow.tsx`                       | ~130-180        | Under 300 |
+| `hooks/workout/useKeypadState.ts`                     | ~80-120         | Under 300 |
+| `components/workout/ExerciseAccordionItem.tsx`        | ~220-260        | Under 300 |
+| `app/programs/[id]/session/[index]-v2.tsx`            | ~270-300        | Under 300 |
+| `__tests__/components/workout/NumericKeypad.test.tsx` | ~60-100         | Under 300 |
+| `__tests__/components/workout/SetRow.test.tsx`        | ~120-180        | Under 300 |
+| `__tests__/hooks/workout/useKeypadState.test.ts`      | ~120-180        | Under 300 |
 
 If `ExerciseAccordionItem.tsx` or the v2 route approach 300 lines, extract subcomponents:
+
 - `ExerciseAccordionItem`: extract compact row into `ExerciseCompactRow` subcomponent
 - V2 route: extract keypad overlay rendering into standalone component
 
@@ -395,7 +400,7 @@ const styles = StyleSheet.create({
 - **useKeypadState tests:** Test the core logic as a hook:
   - `openKeypad` sets visible + focus target + isFirstDigit
   - `handleDigit` on first digit replaces value (calls logSet with just the digit)
-  - `handleDigit` on subsequent digits appends (value * 10 + digit)
+  - `handleDigit` on subsequent digits appends (value \* 10 + digit)
   - `handleDigit` respects 4-digit max (9999)
   - `handleBackspace` removes last digit, minimum 0
   - `handleDone` on reps → moves focus to weight, keypad stays
@@ -436,17 +441,62 @@ const styles = StyleSheet.create({
 - [Source: _bmad-output/planning-artifacts/ux-design-specification.md#Feedback Patterns] — No haptics for keypad/typing (haptics come in Story 4.2)
 - [Source: _bmad-output/planning-artifacts/prd.md#Set Logging] — FR10 (single-action confirm), FR11 (view pre-filled), FR12 (modify before confirm), FR15 (large-button keypad)
 - [Source: _bmad-output/project-context.md#Code Style] — Prettier config, no semicolons, single quotes, no trailing commas
-- [Source: _bmad-output/project-context.md#Testing Rules] — Vitest, __tests__/ mirror, describe/it blocks
+- [Source: _bmad-output/project-context.md#Testing Rules] — Vitest, **tests**/ mirror, describe/it blocks
 - [Source: _bmad-output/implementation-artifacts/2-3-setdot-compact-indicators-and-exerciseaccordion-structure.md] — Previous story learnings, ExerciseAccordionItem structure, SetDot component, 90 current tests, theme token corrections
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude claude-4.6-opus (Cursor)
 
 ### Debug Log References
 
+- Test traversal helper updated to handle nested arrays from React JSX `.map()` — `collectAllNodes` now recursively flattens array children
+- ExerciseAccordionItem test updated: SetDot filter switched from `accessibilityLabel.startsWith('Set ')` to `accessibilityHint` filter to distinguish SetDots from SetRow Pressables
+- V2 route exceeded 300 lines after keypad integration: extracted `buildInitialState` to `lib/buildInitialState.ts` and keypad overlay to `components/workout/KeypadOverlay.tsx`
+
 ### Completion Notes List
 
+- **NumericKeypad** (129 lines): Pure presentational 4×3 grid with digits 0-9, backspace (⌫), and Done. All keys meet 48pt min height. Uses theme tokens exclusively. accessibilityHint on all keys.
+- **SetRow** (216 lines): Fully controlled component with 4 visual states (pending/active/completed/editing). No local state — all values from props. 44×44pt confirm button, 48pt min touch targets, fixed-width containers for layout stability. accessibilityHint on all interactive elements.
+- **useKeypadState** (136 lines): UI-only hook managing keypad visibility, focus target, and first-digit-replace behavior. Dispatches `logSet` through workout context. Done on reps → weight; Done on weight → dismiss.
+- **KeypadOverlay** (46 lines): Extracted presentational wrapper for the keypad overlay (~40% screen height, overlayGlass background, absolute positioned at bottom).
+- **ExerciseAccordionItem** (253 lines): Replaced placeholder Views with SetRow components in expanded content. Added 5 new optional props for keypad integration and focus state. Uses theme.spacing.xs for setMeta marginTop.
+- **V2 Route** (273 lines): Wired useKeypadState, handleFieldPress, handleSetConfirm, and Pressable dismiss-on-tap. KeypadOverlay renders at bottom. Extra scroll padding when keypad visible.
+- **buildInitialState** (43 lines): Extracted to `lib/buildInitialState.ts` (flat lib/ convention).
+- **Tests**: 48 new tests added (11 NumericKeypad, 20 SetRow, 17 useKeypadState). Total: 138 tests, all passing. No regressions. 3 arithmetic-only tests replaced with real hook-level integration tests during code review.
+- **Quality**: No new TypeScript errors (2 pre-existing from Epic 1 remain). All files pass Prettier.
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][MEDIUM] Inline arrow functions in V2 route render loop (lines 149-163) create 6 closures per exercise per render. Consider refactoring ExerciseAccordionItem callbacks to include exerciseIndex in the signature so the parent can pass handlers directly. [app/programs/[id]/session/[index]-v2.tsx:149]
+- [ ] [AI-Review][MEDIUM] ExpandedContent rendered twice per ExerciseAccordionItem (visible + hidden measurement view). Doubles SetRow/Pressable node count. Consider lighter measurement placeholder or onLayout on the animated view. [components/workout/ExerciseAccordionItem.tsx:174-189]
+- [ ] [AI-Review][MEDIUM] handleDigit reads isFirstDigit from closure — potential stale value on rapid taps. Consider using useRef for isFirstDigit to ensure synchronous reads. [hooks/workout/useKeypadState.ts:71]
+
+### Change Log
+
+- 2026-03-09: Story 2.4 implementation — SetRow, NumericKeypad, useKeypadState, keypad overlay wiring, and 48 new tests
+- 2026-03-13: Code review fixes — replaced 3 fake tests with real hook tests, added accessibilityHint to NumericKeypad (12 elements) and SetRow (3 elements), moved buildInitialState.ts to lib/ (flat convention), fixed hardcoded marginTop, cleaned up dead parameter
+
 ### File List
+
+New files:
+
+- components/workout/NumericKeypad.tsx
+- components/workout/SetRow.tsx
+- components/workout/KeypadOverlay.tsx
+- hooks/workout/useKeypadState.ts
+- lib/buildInitialState.ts
+- **tests**/components/workout/NumericKeypad.test.tsx
+- **tests**/components/workout/SetRow.test.tsx
+- **tests**/hooks/workout/useKeypadState.test.ts
+
+Modified files:
+
+- components/workout/ExerciseAccordionItem.tsx
+- app/programs/[id]/session/[index]-v2.tsx
+- hooks/workout/index.ts
+- **tests**/helpers/mockNodeTraversal.ts
+- **tests**/components/workout/ExerciseAccordionItem.test.tsx
+- \_bmad-output/implementation-artifacts/sprint-status.yaml

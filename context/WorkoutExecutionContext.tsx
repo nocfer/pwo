@@ -25,7 +25,7 @@ export { findNextPendingSet, workoutReducer } from './workoutReducer'
 
 export type WorkoutExecutionContextValue = {
   state: WorkoutState
-  expandExercise: (exerciseIndex: number) => void
+  expandExercise: (exerciseIndex: number, setIndex?: number) => void
   logSet: (
     exerciseIndex: number,
     setIndex: number,
@@ -63,8 +63,8 @@ export function WorkoutExecutionProvider({
   const [state, dispatch] = useReducer(workoutReducer, initialState)
 
   const expandExercise = useCallback(
-    (exerciseIndex: number) =>
-      dispatch({ type: 'EXPAND_EXERCISE', exerciseIndex }),
+    (exerciseIndex: number, setIndex?: number) =>
+      dispatch({ type: 'EXPAND_EXERCISE', exerciseIndex, setIndex }),
     []
   )
 
