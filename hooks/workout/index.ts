@@ -1,3 +1,5 @@
 export { useElapsedTimer } from './useElapsedTimer'
 export { useEndWorkout } from './useEndWorkout'
+export { useKeypadState } from './useKeypadState'
+export { useScrollToExercise } from './useScrollToExercise'
 export { useWorkoutExecution } from './useWorkoutExecution'

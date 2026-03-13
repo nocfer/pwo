@@ -29,27 +29,25 @@ export function resolveNode(node: unknown, depth = 0): MockNode | null {
   return null
 }
 
+function traverseChildren(children: unknown, results: MockNode[]): void {
+  if (Array.isArray(children)) {
+    children.forEach(child => traverseChildren(child, results))
+  } else if (children && typeof children === 'object') {
+    results.push(...collectAllNodes(children))
+  }
+}
+
 export function collectAllNodes(node: unknown): MockNode[] {
   const results: MockNode[] = []
   const resolved = resolveNode(node)
   if (resolved) {
     results.push(resolved)
-    const children = resolved.props?.children
-    if (Array.isArray(children)) {
-      children.forEach(child => results.push(...collectAllNodes(child)))
-    } else if (children && typeof children === 'object') {
-      results.push(...collectAllNodes(children))
-    }
+    traverseChildren(resolved.props?.children, results)
     return results
   }
   const n = node as Record<string, unknown>
   if (n?.props) {
-    const children = (n.props as Record<string, unknown>)?.children
-    if (Array.isArray(children)) {
-      children.forEach(child => results.push(...collectAllNodes(child)))
-    } else if (children && typeof children === 'object') {
-      results.push(...collectAllNodes(children))
-    }
+    traverseChildren((n.props as Record<string, unknown>)?.children, results)
   }
   return results
 }

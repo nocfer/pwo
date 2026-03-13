@@ -192,6 +192,195 @@ describe('workoutReducer — EXPAND_EXERCISE', () => {
     expect(next.activeSetIndex).toBe(1)
     expect(next.exercises[1].sets[1].status).toBe('active')
   })
+
+  it('activates targeted pending set when setIndex is provided', () => {
+    const state = createMockWorkoutState({
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [{ reps: 10, weight: 0, status: 'active' }]
+        },
+        {
+          exerciseId: 'ex2',
+          exerciseName: 'B',
+          sets: [
+            { reps: 8, weight: 0, status: 'pending' },
+            { reps: 8, weight: 0, status: 'pending' },
+            { reps: 8, weight: 0, status: 'pending' }
+          ]
+        }
+      ]
+    })
+
+    const next = workoutReducer(state, {
+      type: 'EXPAND_EXERCISE',
+      exerciseIndex: 1,
+      setIndex: 2
+    })
+
+    expect(next.expandedExerciseIndex).toBe(1)
+    expect(next.activeSetIndex).toBe(2)
+    expect(next.exercises[1].sets[0].status).toBe('pending')
+    expect(next.exercises[1].sets[1].status).toBe('pending')
+    expect(next.exercises[1].sets[2].status).toBe('active')
+  })
+
+  it('does not change completed set status when targeted via setIndex', () => {
+    const state = createMockWorkoutState({
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [{ reps: 10, weight: 0, status: 'active' }]
+        },
+        {
+          exerciseId: 'ex2',
+          exerciseName: 'B',
+          sets: [
+            {
+              reps: 8,
+              weight: 80,
+              status: 'completed',
+              confirmedReps: 8,
+              confirmedWeight: 80
+            },
+            { reps: 8, weight: 0, status: 'pending' }
+          ]
+        }
+      ]
+    })
+
+    const next = workoutReducer(state, {
+      type: 'EXPAND_EXERCISE',
+      exerciseIndex: 1,
+      setIndex: 0
+    })
+
+    expect(next.expandedExerciseIndex).toBe(1)
+    expect(next.activeSetIndex).toBe(0)
+    expect(next.exercises[1].sets[0].status).toBe('completed')
+  })
+
+  it('does not change skipped set status when targeted via setIndex', () => {
+    const state = createMockWorkoutState({
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [{ reps: 10, weight: 0, status: 'active' }]
+        },
+        {
+          exerciseId: 'ex2',
+          exerciseName: 'B',
+          sets: [
+            { reps: 8, weight: 0, status: 'skipped' },
+            { reps: 8, weight: 0, status: 'pending' }
+          ]
+        }
+      ]
+    })
+
+    const next = workoutReducer(state, {
+      type: 'EXPAND_EXERCISE',
+      exerciseIndex: 1,
+      setIndex: 0
+    })
+
+    expect(next.expandedExerciseIndex).toBe(1)
+    expect(next.activeSetIndex).toBe(0)
+    expect(next.exercises[1].sets[0].status).toBe('skipped')
+  })
+
+  it('re-expands same exercise with different setIndex targeting a pending set', () => {
+    const state = createMockWorkoutState({
+      expandedExerciseIndex: 0,
+      activeSetIndex: 0,
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [
+            { reps: 10, weight: 0, status: 'active' },
+            { reps: 10, weight: 0, status: 'pending' },
+            { reps: 10, weight: 0, status: 'pending' }
+          ]
+        }
+      ]
+    })
+
+    const next = workoutReducer(state, {
+      type: 'EXPAND_EXERCISE',
+      exerciseIndex: 0,
+      setIndex: 2
+    })
+
+    expect(next.activeSetIndex).toBe(2)
+    expect(next.exercises[0].sets[0].status).toBe('pending')
+    expect(next.exercises[0].sets[2].status).toBe('active')
+  })
+
+  it('does not change completed set status when targeted on same exercise via setIndex', () => {
+    const state = createMockWorkoutState({
+      expandedExerciseIndex: 0,
+      activeSetIndex: 1,
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [
+            {
+              reps: 10,
+              weight: 60,
+              status: 'completed',
+              confirmedReps: 10,
+              confirmedWeight: 60
+            },
+            { reps: 10, weight: 60, status: 'active' },
+            { reps: 10, weight: 60, status: 'pending' }
+          ]
+        }
+      ]
+    })
+
+    const next = workoutReducer(state, {
+      type: 'EXPAND_EXERCISE',
+      exerciseIndex: 0,
+      setIndex: 0
+    })
+
+    expect(next.activeSetIndex).toBe(0)
+    expect(next.exercises[0].sets[0].status).toBe('completed')
+    expect(next.exercises[0].sets[1].status).toBe('pending')
+  })
+
+  it('does not change skipped set status when targeted on same exercise via setIndex', () => {
+    const state = createMockWorkoutState({
+      expandedExerciseIndex: 0,
+      activeSetIndex: 1,
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [
+            { reps: 10, weight: 60, status: 'skipped' },
+            { reps: 10, weight: 60, status: 'active' },
+            { reps: 10, weight: 60, status: 'pending' }
+          ]
+        }
+      ]
+    })
+
+    const next = workoutReducer(state, {
+      type: 'EXPAND_EXERCISE',
+      exerciseIndex: 0,
+      setIndex: 0
+    })
+
+    expect(next.activeSetIndex).toBe(0)
+    expect(next.exercises[0].sets[0].status).toBe('skipped')
+    expect(next.exercises[0].sets[1].status).toBe('pending')
+  })
 })
 
 // ---------------------------------------------------------------------------

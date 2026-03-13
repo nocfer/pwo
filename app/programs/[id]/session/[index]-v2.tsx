@@ -1,73 +1,34 @@
-/**
- * Temporary v2 workout session route.
- *
- * Mounts the new WorkoutExecutionContext alongside the existing [index].tsx.
- * Full UI components come in Stories 2.2-2.4.
- */
-
 import { ConfirmationModal } from '@/components/common/ConfirmationModal'
 import { MaxWidthContainer } from '@/components/common/MaxWidthContainer'
 import { ExerciseAccordionItem } from '@/components/workout/ExerciseAccordionItem'
+import { KeypadOverlay } from '@/components/workout/KeypadOverlay'
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader'
 import { WorkoutExecutionProvider } from '@/context/WorkoutExecutionContext'
 import { useExercises, usePrograms } from '@/hooks/data'
 import {
   useElapsedTimer,
   useEndWorkout,
+  useKeypadState,
+  useScrollToExercise,
   useWorkoutExecution
 } from '@/hooks/workout'
+import { buildInitialState } from '@/lib/buildInitialState'
 import { theme } from '@/theme/theme'
-import type { Program, SetStatus } from '@/types'
-import type { ExerciseState, WorkoutState } from '@/types/workout'
+import type { Program } from '@/types'
 import { useLocalSearchParams, useNavigation } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { BackHandler, ScrollView, StyleSheet, Text, View } from 'react-native'
-
-function buildInitialState(
-  program: Program,
-  sessionIndex: number,
-  exerciseNameById: Map<string, string>
-): WorkoutState {
-  const exercises: ExerciseState[] = program.blocks
-    .filter(block => block.type === 'exercise')
-    .map(block => ({
-      exerciseId: block.exerciseId,
-      exerciseName: exerciseNameById.get(block.exerciseId) ?? block.exerciseId,
-      sets: Array.from({ length: block.sets ?? 1 }, () => ({
-        reps:
-          typeof block.targetReps === 'number'
-            ? block.targetReps
-            : Array.isArray(block.targetReps) && block.targetReps.length > 0
-              ? block.targetReps[0]
-              : 0,
-        weight: 0,
-        status: 'pending' as SetStatus
-      }))
-    }))
-
-  if (exercises.length > 0 && exercises[0].sets.length > 0) {
-    exercises[0].sets[0].status = 'active'
-  }
-
-  return {
-    workoutId: `${program.id}_${sessionIndex}_${Date.now()}`,
-    programSlug: program.id,
-    sessionIndex,
-    sessionName: program.name,
-    exercises,
-    expandedExerciseIndex: 0,
-    activeSetIndex: 0,
-    restTimer: { isActive: false, startedAt: 0, durationMs: 0 },
-    startedAt: Date.now(),
-    completedAt: null,
-    isCompleted: false
-  }
-}
-
-const ESTIMATED_ROW_HEIGHT = 80
+import {
+  BackHandler,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View
+} from 'react-native'
 
 function WorkoutSessionContent() {
-  const { state, expandExercise } = useWorkoutExecution()
+  const { state, expandExercise, confirmSet, skipSet } = useWorkoutExecution()
   const { elapsedMs } = useElapsedTimer({
     startedAt: state.startedAt,
     isCompleted: state.isCompleted,
@@ -80,20 +41,64 @@ function WorkoutSessionContent() {
     confirmEnd,
     cancelEnd
   } = useEndWorkout()
+  const {
+    keypadState,
+    openKeypad,
+    handleDigit,
+    handleBackspace,
+    handleDone,
+    switchField,
+    dismissKeypad
+  } = useKeypadState()
   const navigation = useNavigation()
   const scrollRef = useRef<ScrollView>(null)
+  const { height: screenHeight } = useWindowDimensions()
+  const { handleExerciseLayout, scrollToExercise } = useScrollToExercise(
+    scrollRef,
+    screenHeight
+  )
 
   const handleExpandExercise = useCallback(
     (exerciseIndex: number) => {
       expandExercise(exerciseIndex)
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({
-          y: exerciseIndex * ESTIMATED_ROW_HEIGHT,
-          animated: true
-        })
-      }, 100)
+      scrollToExercise(exerciseIndex)
     },
-    [expandExercise]
+    [expandExercise, scrollToExercise]
+  )
+
+  const handleSetDotNavigation = useCallback(
+    (exerciseIndex: number, setIndex: number) => {
+      expandExercise(exerciseIndex, setIndex)
+      scrollToExercise(exerciseIndex)
+    },
+    [expandExercise, scrollToExercise]
+  )
+
+  const handleFieldPress = useCallback(
+    (exerciseIndex: number, setIndex: number, field: 'reps' | 'weight') => {
+      if (keypadState.visible) {
+        switchField(exerciseIndex, setIndex, field)
+      } else {
+        openKeypad(exerciseIndex, setIndex, field)
+      }
+    },
+    [keypadState.visible, openKeypad, switchField]
+  )
+
+  const handleSetConfirm = useCallback(
+    (exerciseIndex: number, setIndex: number) => {
+      confirmSet(exerciseIndex, setIndex)
+      dismissKeypad()
+    },
+    [confirmSet, dismissKeypad]
+  )
+
+  const handleSetSkip = useCallback(
+    (exerciseIndex: number, setIndex: number) => {
+      skipSet(exerciseIndex, setIndex)
+      dismissKeypad()
+    },
+    [skipSet, dismissKeypad]
   )
 
   const handleBackPress = useCallback(() => {
@@ -129,31 +134,61 @@ function WorkoutSessionContent() {
     )
   }
 
-  return (
-    <ScrollView
-      ref={scrollRef}
-      style={styles.scroll}
-      contentContainerStyle={styles.content}
-    >
-      <MaxWidthContainer>
-        <WorkoutHeader
-          programName={state.sessionName}
-          sessionName={`Session ${state.sessionIndex}`}
-          elapsedMs={elapsedMs}
-          onEnd={requestEnd}
-        />
+  const focusForExercise = (exerciseIndex: number) =>
+    keypadState.focus?.exerciseIndex === exerciseIndex
+      ? { setIndex: keypadState.focus.setIndex, field: keypadState.focus.field }
+      : null
 
-        {state.exercises.map((ex, idx) => (
-          <ExerciseAccordionItem
-            key={ex.exerciseId}
-            exercise={ex}
-            exerciseIndex={idx}
-            isExpanded={idx === state.expandedExerciseIndex}
-            onToggle={() => handleExpandExercise(idx)}
-            onSetDotPress={(_setIndex: number) => handleExpandExercise(idx)}
-          />
-        ))}
-      </MaxWidthContainer>
+  return (
+    <View style={styles.sessionRoot}>
+      <Pressable style={styles.scrollWrapper} onPress={dismissKeypad}>
+        <ScrollView
+          ref={scrollRef}
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.content,
+            keypadState.visible && {
+              paddingBottom: screenHeight * 0.4 + theme.spacing.lg
+            }
+          ]}
+        >
+          <MaxWidthContainer>
+            <WorkoutHeader
+              programName={state.sessionName}
+              sessionName={`Session ${state.sessionIndex}`}
+              elapsedMs={elapsedMs}
+              onEnd={requestEnd}
+            />
+
+            {state.exercises.map((ex, idx) => (
+              <View key={ex.exerciseId} onLayout={handleExerciseLayout(idx)}>
+                <ExerciseAccordionItem
+                  exercise={ex}
+                  exerciseIndex={idx}
+                  isExpanded={idx === state.expandedExerciseIndex}
+                  onToggle={() => handleExpandExercise(idx)}
+                  onSetDotPress={sIdx => handleSetDotNavigation(idx, sIdx)}
+                  onSetRepsPress={sIdx => handleFieldPress(idx, sIdx, 'reps')}
+                  onSetWeightPress={sIdx =>
+                    handleFieldPress(idx, sIdx, 'weight')
+                  }
+                  onSetConfirm={sIdx => handleSetConfirm(idx, sIdx)}
+                  onSetSkip={sIdx => handleSetSkip(idx, sIdx)}
+                  onSetPress={sIdx => handleFieldPress(idx, sIdx, 'reps')}
+                  focusedField={focusForExercise(idx)}
+                />
+              </View>
+            ))}
+          </MaxWidthContainer>
+        </ScrollView>
+      </Pressable>
+
+      <KeypadOverlay
+        visible={keypadState.visible}
+        onDigit={handleDigit}
+        onBackspace={handleBackspace}
+        onDone={handleDone}
+      />
 
       <ConfirmationModal
         visible={showEndConfirmation}
@@ -164,7 +199,7 @@ function WorkoutSessionContent() {
         onConfirm={confirmEnd}
         onCancel={cancelEnd}
       />
-    </ScrollView>
+    </View>
   )
 }
 
@@ -222,6 +257,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background
+  },
+  sessionRoot: {
+    flex: 1
+  },
+  scrollWrapper: {
+    flex: 1
   },
   scroll: {
     flex: 1

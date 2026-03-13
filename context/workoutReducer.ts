@@ -50,6 +50,37 @@ export function findNextPendingSet(
 }
 
 // ---------------------------------------------------------------------------
+// Activate a specific or first-pending set in an exercise (pure)
+// ---------------------------------------------------------------------------
+
+function activateInExercise(
+  ex: ExerciseState,
+  targetSetIndex?: number
+): ExerciseState {
+  if (targetSetIndex !== undefined) {
+    const target = ex.sets[targetSetIndex]
+    if (!target || target.status !== 'pending') return ex
+    return {
+      ...ex,
+      sets: ex.sets.map((s, i) =>
+        i === targetSetIndex ? { ...s, status: 'active' as const } : s
+      )
+    }
+  }
+  let activated = false
+  return {
+    ...ex,
+    sets: ex.sets.map(s => {
+      if (!activated && s.status === 'pending') {
+        activated = true
+        return { ...s, status: 'active' as const }
+      }
+      return s
+    })
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Reducer (pure function)
 // ---------------------------------------------------------------------------
 
@@ -59,7 +90,10 @@ export function workoutReducer(
 ): WorkoutState {
   switch (action.type) {
     case 'EXPAND_EXERCISE': {
-      if (action.exerciseIndex === state.expandedExerciseIndex) return state
+      const sameExercise = action.exerciseIndex === state.expandedExerciseIndex
+      if (sameExercise && action.setIndex === undefined) return state
+
+      const targetSetIndex = action.setIndex
 
       const exercises = state.exercises.map((ex, eIdx) => {
         if (eIdx === state.expandedExerciseIndex) {
@@ -70,31 +104,31 @@ export function workoutReducer(
             )
           }
         }
-        if (eIdx === action.exerciseIndex) {
-          let activated = false
-          return {
-            ...ex,
-            sets: ex.sets.map(s => {
-              if (!activated && s.status === 'pending') {
-                activated = true
-                return { ...s, status: 'active' as const }
-              }
-              return s
-            })
-          }
+        if (!sameExercise && eIdx === action.exerciseIndex) {
+          return activateInExercise(ex, targetSetIndex)
         }
         return ex
       })
 
-      const firstPendingIdx = exercises[action.exerciseIndex].sets.findIndex(
-        s => s.status === 'active'
-      )
+      if (sameExercise) {
+        exercises[action.exerciseIndex] = activateInExercise(
+          exercises[action.exerciseIndex],
+          targetSetIndex
+        )
+      }
+
+      const resolvedIdx =
+        targetSetIndex !== undefined
+          ? targetSetIndex
+          : exercises[action.exerciseIndex].sets.findIndex(
+              s => s.status === 'active'
+            )
 
       return {
         ...state,
         exercises,
         expandedExerciseIndex: action.exerciseIndex,
-        activeSetIndex: firstPendingIdx === -1 ? 0 : firstPendingIdx
+        activeSetIndex: resolvedIdx === -1 ? 0 : resolvedIdx
       }
     }
 

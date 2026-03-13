@@ -47,7 +47,7 @@ export type WorkoutState = {
 }
 
 export type WorkoutAction =
-  | { type: 'EXPAND_EXERCISE'; exerciseIndex: number }
+  | { type: 'EXPAND_EXERCISE'; exerciseIndex: number; setIndex?: number }
   | {
       type: 'LOG_SET'
       exerciseIndex: number

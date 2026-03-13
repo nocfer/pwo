@@ -15,10 +15,18 @@ vi.mock('react-native', () => ({
     onPress,
     accessibilityLabel,
     accessibilityRole,
+    accessibilityHint,
     style
   }: Record<string, unknown>) => ({
     type: 'Pressable',
-    props: { children, onPress, accessibilityLabel, accessibilityRole, style }
+    props: {
+      children,
+      onPress,
+      accessibilityLabel,
+      accessibilityRole,
+      accessibilityHint,
+      style
+    }
   }),
   Text: ({ children, style }: Record<string, unknown>) => ({
     type: 'Text',
@@ -141,8 +149,8 @@ describe('ExerciseAccordionItem', () => {
       const pressables = findByType(result, 'Pressable')
       const dotPressables = pressables.filter(
         p =>
-          typeof p.props.accessibilityLabel === 'string' &&
-          (p.props.accessibilityLabel as string).startsWith('Set ')
+          typeof p.props.accessibilityHint === 'string' &&
+          (p.props.accessibilityHint as string).includes('navigate to this set')
       )
       expect(dotPressables.length).toBe(4)
     })
@@ -194,6 +202,10 @@ describe('ExerciseAccordionItem', () => {
       const pressables = findByType(result, 'Pressable')
       const dotPressables = pressables.filter(
         p =>
+          typeof p.props.accessibilityHint === 'string' &&
+          (p.props.accessibilityHint as string).includes(
+            'navigate to this set'
+          ) &&
           typeof p.props.accessibilityLabel === 'string' &&
           (p.props.accessibilityLabel as string).includes('completed')
       )
@@ -245,6 +257,26 @@ describe('ExerciseAccordionItem', () => {
       const onPress = firstDot.props.onPress as () => void
       onPress()
       expect(onSetDotPress).toHaveBeenCalledWith(0)
+    })
+  })
+
+  describe('skip wiring', () => {
+    it('fires onSetSkip with correct setIndex when skip is pressed in expanded content', () => {
+      const onSetSkip = vi.fn()
+      const result = renderAccordion({
+        isExpanded: true,
+        onSetSkip
+      })
+      const skipButtons = collectAllNodes(result).filter(
+        n =>
+          typeof n.props?.accessibilityLabel === 'string' &&
+          (n.props.accessibilityLabel as string).startsWith('Skip set')
+      )
+      expect(skipButtons.length).toBeGreaterThan(0)
+      const firstSkip = skipButtons[0]
+      const onPress = firstSkip.props.onPress as () => void
+      onPress()
+      expect(onSetSkip).toHaveBeenCalledWith(0)
     })
   })
 
