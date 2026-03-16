@@ -46,6 +46,16 @@ export type WorkoutState = {
   isCompleted: boolean
 }
 
+export type PrefillEntry = {
+  exerciseId: string
+  reps: number
+  weight: number
+}
+
+export type PrefillData = PrefillEntry[]
+
+export type PrefillMap = Map<string, { reps: number; weight: number }>
+
 export type WorkoutAction =
   | { type: 'EXPAND_EXERCISE'; exerciseIndex: number; setIndex?: number }
   | {
@@ -59,5 +69,6 @@ export type WorkoutAction =
   | { type: 'SKIP_SET'; exerciseIndex: number; setIndex: number }
   | { type: 'START_REST_TIMER'; durationMs: number; startedAt: number }
   | { type: 'DISMISS_REST_TIMER' }
+  | { type: 'EDIT_SET'; exerciseIndex: number; setIndex: number }
   | { type: 'COMPLETE_WORKOUT'; completedAt: number }
   | { type: 'RESTORE_STATE'; state: WorkoutState }

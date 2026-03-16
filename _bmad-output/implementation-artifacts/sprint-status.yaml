@@ -54,9 +54,9 @@ development_status:
   2-3-setdot-compact-indicators-and-exerciseaccordion-structure: done
   2-4-setrow-and-numerickeypad-for-set-logging: done
   2-5-set-confirmation-and-non-linear-navigation: done
-  2-6-edit-completed-sets: backlog
-  2-7-pre-fill-engine-last-logged-and-program-targets: backlog
-  2-8-web-keyboard-shortcuts: backlog
+  2-6-edit-completed-sets: done
+  2-7-pre-fill-engine-last-logged-and-program-targets: done
+  2-8-web-keyboard-shortcuts: ready-for-dev
   epic-2-retrospective: optional
 
   # Epic 3: Workout State Persistence & Recovery

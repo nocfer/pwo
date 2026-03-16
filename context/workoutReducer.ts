@@ -1,84 +1,15 @@
 /**
- * Pure reducer and helpers for the WorkoutExecution state machine.
+ * Pure reducer for the WorkoutExecution state machine.
  */
 
-import type {
-  ExerciseState,
-  WorkoutAction,
-  WorkoutState
-} from '@/types/workout'
+import type { WorkoutAction, WorkoutState } from '@/types/workout'
+import {
+  activateInExercise,
+  findNextPendingSet,
+  revertEditingSets
+} from './reducerHelpers'
 
-// ---------------------------------------------------------------------------
-// Forward-scan helper (pure)
-// ---------------------------------------------------------------------------
-
-export function findNextPendingSet(
-  exercises: ExerciseState[],
-  currentExerciseIndex: number,
-  currentSetIndex: number
-): { exerciseIndex: number; setIndex: number } | null {
-  const total = exercises.length
-  if (total === 0) return null
-
-  // 1. Check remaining sets in the current exercise
-  const currentSets = exercises[currentExerciseIndex].sets
-  for (let s = currentSetIndex + 1; s < currentSets.length; s++) {
-    if (currentSets[s].status === 'pending') {
-      return { exerciseIndex: currentExerciseIndex, setIndex: s }
-    }
-  }
-
-  // 2. Forward scan through subsequent exercises, wrapping around
-  for (let offset = 1; offset < total; offset++) {
-    const eIdx = (currentExerciseIndex + offset) % total
-    const sets = exercises[eIdx].sets
-    for (let s = 0; s < sets.length; s++) {
-      if (sets[s].status === 'pending') {
-        return { exerciseIndex: eIdx, setIndex: s }
-      }
-    }
-  }
-
-  // 3. Check sets before currentSetIndex in the current exercise (full wrap)
-  for (let s = 0; s <= currentSetIndex; s++) {
-    if (currentSets[s].status === 'pending') {
-      return { exerciseIndex: currentExerciseIndex, setIndex: s }
-    }
-  }
-
-  return null
-}
-
-// ---------------------------------------------------------------------------
-// Activate a specific or first-pending set in an exercise (pure)
-// ---------------------------------------------------------------------------
-
-function activateInExercise(
-  ex: ExerciseState,
-  targetSetIndex?: number
-): ExerciseState {
-  if (targetSetIndex !== undefined) {
-    const target = ex.sets[targetSetIndex]
-    if (!target || target.status !== 'pending') return ex
-    return {
-      ...ex,
-      sets: ex.sets.map((s, i) =>
-        i === targetSetIndex ? { ...s, status: 'active' as const } : s
-      )
-    }
-  }
-  let activated = false
-  return {
-    ...ex,
-    sets: ex.sets.map(s => {
-      if (!activated && s.status === 'pending') {
-        activated = true
-        return { ...s, status: 'active' as const }
-      }
-      return s
-    })
-  }
-}
+export { findNextPendingSet, revertEditingSets } from './reducerHelpers'
 
 // ---------------------------------------------------------------------------
 // Reducer (pure function)
@@ -94,8 +25,9 @@ export function workoutReducer(
       if (sameExercise && action.setIndex === undefined) return state
 
       const targetSetIndex = action.setIndex
+      const reverted = revertEditingSets(state.exercises)
 
-      const exercises = state.exercises.map((ex, eIdx) => {
+      const exercises = reverted.map((ex, eIdx) => {
         if (eIdx === state.expandedExerciseIndex) {
           return {
             ...ex,
@@ -241,6 +173,37 @@ export function workoutReducer(
       return { ...state, exercises }
     }
 
+    case 'EDIT_SET': {
+      const target =
+        state.exercises[action.exerciseIndex]?.sets[action.setIndex]
+      if (!target || target.status !== 'completed') return state
+
+      const reverted = revertEditingSets(state.exercises)
+      const exercises = reverted.map((ex, eIdx) => {
+        const isTarget = eIdx === action.exerciseIndex
+        const hasActive = ex.sets.some(s => s.status === 'active')
+        if (!isTarget && !hasActive) return ex
+        return {
+          ...ex,
+          sets: ex.sets.map((s, sIdx) => {
+            if (isTarget && sIdx === action.setIndex) {
+              return { ...s, status: 'editing' as const }
+            }
+            if (s.status === 'active') {
+              return { ...s, status: 'pending' as const }
+            }
+            return s
+          })
+        }
+      })
+      return {
+        ...state,
+        exercises,
+        expandedExerciseIndex: action.exerciseIndex,
+        activeSetIndex: action.setIndex
+      }
+    }
+
     case 'START_REST_TIMER':
       return {
         ...state,
@@ -258,7 +221,8 @@ export function workoutReducer(
       }
 
     case 'COMPLETE_WORKOUT': {
-      const exercises = state.exercises.map(ex => ({
+      const reverted = revertEditingSets(state.exercises)
+      const exercises = reverted.map(ex => ({
         ...ex,
         sets: ex.sets.map(s =>
           s.status === 'pending' || s.status === 'active'
