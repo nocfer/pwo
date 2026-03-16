@@ -36,6 +36,7 @@ export type WorkoutExecutionContextValue = {
   skipSet: (exerciseIndex: number, setIndex: number) => void
   startRestTimer: (durationMs: number) => void
   dismissRestTimer: () => void
+  editSet: (exerciseIndex: number, setIndex: number) => void
   completeWorkout: () => void
   restoreState: (state: WorkoutState) => void
 }
@@ -86,6 +87,12 @@ export function WorkoutExecutionProvider({
     []
   )
 
+  const editSet = useCallback(
+    (exerciseIndex: number, setIndex: number) =>
+      dispatch({ type: 'EDIT_SET', exerciseIndex, setIndex }),
+    []
+  )
+
   const startRestTimer = useCallback(
     (durationMs: number) =>
       dispatch({
@@ -118,6 +125,7 @@ export function WorkoutExecutionProvider({
       logSet,
       confirmSet,
       skipSet,
+      editSet,
       startRestTimer,
       dismissRestTimer,
       completeWorkout,
@@ -129,6 +137,7 @@ export function WorkoutExecutionProvider({
       logSet,
       confirmSet,
       skipSet,
+      editSet,
       startRestTimer,
       dismissRestTimer,
       completeWorkout,

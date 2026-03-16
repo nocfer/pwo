@@ -1,24 +1,44 @@
 import type { Program } from '@/types'
 import type { ExerciseState, SetStatus, WorkoutState } from '@/types/workout'
+import type { PrefillMap } from '@/types/workout'
+
+function resolveSetValues(
+  block: Program['blocks'][number],
+  setIndex: number,
+  prefillMap?: PrefillMap
+): { reps: number; weight: number } {
+  const prefill =
+    block.type === 'exercise' ? prefillMap?.get(block.exerciseId) : undefined
+
+  if (prefill) {
+    return { reps: prefill.reps, weight: prefill.weight }
+  }
+
+  if (block.type !== 'exercise') return { reps: 0, weight: 0 }
+
+  const { targetReps } = block
+  let reps = 0
+  if (typeof targetReps === 'number') {
+    reps = targetReps
+  } else if (Array.isArray(targetReps) && targetReps.length > 0) {
+    reps = targetReps[setIndex] ?? targetReps[targetReps.length - 1]
+  }
+  return { reps, weight: 0 }
+}
 
 export function buildInitialState(
   program: Program,
   sessionIndex: number,
-  exerciseNameById: Map<string, string>
+  exerciseNameById: Map<string, string>,
+  prefillMap?: PrefillMap
 ): WorkoutState {
   const exercises: ExerciseState[] = program.blocks
     .filter(block => block.type === 'exercise')
     .map(block => ({
       exerciseId: block.exerciseId,
       exerciseName: exerciseNameById.get(block.exerciseId) ?? block.exerciseId,
-      sets: Array.from({ length: block.sets ?? 1 }, () => ({
-        reps:
-          typeof block.targetReps === 'number'
-            ? block.targetReps
-            : Array.isArray(block.targetReps) && block.targetReps.length > 0
-              ? block.targetReps[0]
-              : 0,
-        weight: 0,
+      sets: Array.from({ length: block.sets ?? 1 }, (_, i) => ({
+        ...resolveSetValues(block, i, prefillMap),
         status: 'pending' as SetStatus
       }))
     }))

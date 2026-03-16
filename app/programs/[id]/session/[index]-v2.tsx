@@ -9,6 +9,7 @@ import {
   useElapsedTimer,
   useEndWorkout,
   useKeypadState,
+  usePrefill,
   useScrollToExercise,
   useWorkoutExecution
 } from '@/hooks/workout'
@@ -28,7 +29,8 @@ import {
 } from 'react-native'
 
 function WorkoutSessionContent() {
-  const { state, expandExercise, confirmSet, skipSet } = useWorkoutExecution()
+  const { state, expandExercise, editSet, confirmSet, skipSet } =
+    useWorkoutExecution()
   const { elapsedMs } = useElapsedTimer({
     startedAt: state.startedAt,
     isCompleted: state.isCompleted,
@@ -60,18 +62,11 @@ function WorkoutSessionContent() {
 
   const handleExpandExercise = useCallback(
     (exerciseIndex: number) => {
+      dismissKeypad()
       expandExercise(exerciseIndex)
       scrollToExercise(exerciseIndex)
     },
-    [expandExercise, scrollToExercise]
-  )
-
-  const handleSetDotNavigation = useCallback(
-    (exerciseIndex: number, setIndex: number) => {
-      expandExercise(exerciseIndex, setIndex)
-      scrollToExercise(exerciseIndex)
-    },
-    [expandExercise, scrollToExercise]
+    [dismissKeypad, expandExercise, scrollToExercise]
   )
 
   const handleFieldPress = useCallback(
@@ -83,6 +78,38 @@ function WorkoutSessionContent() {
       }
     },
     [keypadState.visible, openKeypad, switchField]
+  )
+
+  const handleSetDotNavigation = useCallback(
+    (exerciseIndex: number, setIndex: number) => {
+      const set = state.exercises[exerciseIndex].sets[setIndex]
+      if (set.status === 'editing') return
+      if (set.status === 'completed') {
+        editSet(exerciseIndex, setIndex)
+        handleFieldPress(exerciseIndex, setIndex, 'reps')
+      } else {
+        expandExercise(exerciseIndex, setIndex)
+      }
+      scrollToExercise(exerciseIndex)
+    },
+    [
+      state.exercises,
+      editSet,
+      expandExercise,
+      handleFieldPress,
+      scrollToExercise
+    ]
+  )
+
+  const handleSetRowPress = useCallback(
+    (exerciseIndex: number, setIndex: number) => {
+      const set = state.exercises[exerciseIndex].sets[setIndex]
+      if (set.status === 'completed') {
+        editSet(exerciseIndex, setIndex)
+      }
+      handleFieldPress(exerciseIndex, setIndex, 'reps')
+    },
+    [state.exercises, editSet, handleFieldPress]
   )
 
   const handleSetConfirm = useCallback(
@@ -174,7 +201,7 @@ function WorkoutSessionContent() {
                   }
                   onSetConfirm={sIdx => handleSetConfirm(idx, sIdx)}
                   onSetSkip={sIdx => handleSetSkip(idx, sIdx)}
-                  onSetPress={sIdx => handleFieldPress(idx, sIdx, 'reps')}
+                  onSetPress={sIdx => handleSetRowPress(idx, sIdx)}
                   focusedField={focusForExercise(idx)}
                 />
               </View>
@@ -222,13 +249,23 @@ export default function ProgramSessionV2() {
     return map
   }, [exercises])
 
-  const initialState = useMemo(() => {
-    if (!program) return null
-    return buildInitialState(program, index, exerciseNameById)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- exerciseNameById excluded: initial state should only be built once when program/index change, not when exercise names re-fetch
-  }, [program, index])
+  const exerciseIds = useMemo(
+    () =>
+      program?.blocks
+        .filter(b => b.type === 'exercise')
+        .map(b => b.exerciseId) ?? [],
+    [program]
+  )
 
-  if (programsLoading || exercisesLoading) {
+  const { prefillMap, isLoading: prefillLoading } = usePrefill(exerciseIds)
+
+  const initialState = useMemo(() => {
+    if (!program || prefillLoading) return null
+    return buildInitialState(program, index, exerciseNameById, prefillMap)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- exerciseNameById excluded: initial state should only be built once when program/index/prefill change
+  }, [program, index, prefillLoading, prefillMap])
+
+  if (programsLoading || exercisesLoading || prefillLoading) {
     return (
       <View style={styles.container}>
         <Text style={styles.loadingText}>Loading…</Text>
