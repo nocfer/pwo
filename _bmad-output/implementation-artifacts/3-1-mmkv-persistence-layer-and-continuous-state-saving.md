@@ -1,6 +1,6 @@
 # Story 3.1: MMKV Persistence Layer & Continuous State Saving
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -27,39 +27,39 @@ So that I never have to think about saving and never lose data.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Install dependencies (AC: #1)
-  - [ ] 1.1 Run `npx expo install react-native-mmkv react-native-nitro-modules` to install both packages at compatible versions
-  - [ ] 1.2 Verify `package.json` includes both new dependencies
-  - [ ] 1.3 Run `npx expo prebuild --clean` if native modules need rebuilding (EAS custom dev client already in use for expo-camera)
-  - [ ] 1.4 Verify `npm run compile` passes with new dependencies
+- [x] Task 1: Install dependencies (AC: #1)
+  - [x] 1.1 Run `npx expo install react-native-mmkv react-native-nitro-modules` to install both packages at compatible versions
+  - [x] 1.2 Verify `package.json` includes both new dependencies
+  - [x] 1.3 Run `npx expo prebuild --clean` if native modules need rebuilding (EAS custom dev client already in use for expo-camera)
+  - [x] 1.4 Verify `npm run compile` passes with new dependencies
 
-- [ ] Task 2: Create storage keys constants (AC: #3, #10)
-  - [ ] 2.1 Create `lib/storage-keys.ts` — defines `STORAGE_KEYS` as a `const` object with `pwo:` prefixed keys:
+- [x] Task 2: Create storage keys constants (AC: #3, #10)
+  - [x] 2.1 Create `lib/storage-keys.ts` — defines `STORAGE_KEYS` as a `const` object with `pwo:` prefixed keys:
     - `WORKOUT_ACTIVE_STATE: 'pwo:workout:active-state'`
     - `WORKOUT_SYNC_QUEUE: 'pwo:workout:sync-queue'`
     - `WORKOUT_SESSION_ID: 'pwo:workout:session-id'`
-  - [ ] 2.2 Export `STORAGE_KEYS` as named export
+  - [x] 2.2 Export `STORAGE_KEYS` as named export
 
-- [ ] Task 3: Create MMKV instance (AC: #2)
-  - [ ] 3.1 Create `lib/mmkv.ts` — imports `createMMKV` from `react-native-mmkv`, creates and exports a singleton: `export const storage = createMMKV({ id: 'pwo' })`
-  - [ ] 3.2 Keep file minimal (~5-10 lines) — just initialization and export
+- [x] Task 3: Create MMKV instance (AC: #2)
+  - [x] 3.1 Create `lib/mmkv.ts` — imports `createMMKV` from `react-native-mmkv`, creates and exports a singleton: `export const storage = createMMKV({ id: 'pwo' })`
+  - [x] 3.2 Keep file minimal (~5-10 lines) — just initialization and export
 
-- [ ] Task 4: Create useWorkoutPersistence hook (AC: #4, #5, #6, #7, #8)
-  - [ ] 4.1 Create `hooks/workout/useWorkoutPersistence.ts` — hook that subscribes to `WorkoutState` from `useWorkoutExecution()` and writes to MMKV on every state change
-  - [ ] 4.2 Use `useEffect` with `state` as dependency — when state changes, serialize entire `WorkoutState` as JSON and write to `STORAGE_KEYS.WORKOUT_ACTIVE_STATE`
-  - [ ] 4.3 Import `storage` from `@/lib/mmkv` and `STORAGE_KEYS` from `@/lib/storage-keys`
-  - [ ] 4.4 Generate a unique session ID on mount (before first write) using `crypto.randomUUID()` with `Date.now().toString(36)` fallback for environments without crypto API — store in `STORAGE_KEYS.WORKOUT_SESSION_ID`
-  - [ ] 4.5 On workout completion (`state.isCompleted === true`), remove `STORAGE_KEYS.WORKOUT_ACTIVE_STATE` from MMKV (cleanup)
-  - [ ] 4.6 Return `{ sessionId }` from hook for downstream use (sync queue in Story 3.2+)
-  - [ ] 4.7 Export `useWorkoutPersistence` from `hooks/workout/index.ts`
+- [x] Task 4: Create useWorkoutPersistence hook (AC: #4, #5, #6, #7, #8)
+  - [x] 4.1 Create `hooks/workout/useWorkoutPersistence.ts` — hook that subscribes to `WorkoutState` from `useWorkoutExecution()` and writes to MMKV on every state change
+  - [x] 4.2 Use `useEffect` with `state` as dependency — when state changes, serialize entire `WorkoutState` as JSON and write to `STORAGE_KEYS.WORKOUT_ACTIVE_STATE`
+  - [x] 4.3 Import `storage` from `@/lib/mmkv` and `STORAGE_KEYS` from `@/lib/storage-keys`
+  - [x] 4.4 Generate a unique session ID on mount (before first write) using `crypto.randomUUID()` with `Date.now().toString(36)` fallback for environments without crypto API — store in `STORAGE_KEYS.WORKOUT_SESSION_ID`
+  - [x] 4.5 On workout completion (`state.isCompleted === true`), remove `STORAGE_KEYS.WORKOUT_ACTIVE_STATE` from MMKV (cleanup)
+  - [x] 4.6 Return `{ sessionId }` from hook for downstream use (sync queue in Story 3.2+)
+  - [x] 4.7 Export `useWorkoutPersistence` from `hooks/workout/index.ts`
 
-- [ ] Task 5: Integrate hook into v2 route (AC: #4, #5)
-  - [ ] 5.1 In `WorkoutSessionContent` (inside `[index]-v2.tsx`), call `useWorkoutPersistence()` — this activates state subscription and MMKV writes
-  - [ ] 5.2 This is a single-line addition: `const { sessionId } = useWorkoutPersistence()` (sessionId unused until Story 3.2/7.2 but establishes the persistence pipeline)
-  - [ ] 5.3 Verify the hook is called INSIDE the `WorkoutExecutionProvider` tree so `useWorkoutExecution()` resolves correctly
+- [x] Task 5: Integrate hook into v2 route (AC: #4, #5)
+  - [x] 5.1 In `WorkoutSessionContent` (inside `[index]-v2.tsx`), call `useWorkoutPersistence()` — this activates state subscription and MMKV writes
+  - [x] 5.2 This is a single-line addition: `const { sessionId } = useWorkoutPersistence()` (sessionId unused until Story 3.2/7.2 but establishes the persistence pipeline)
+  - [x] 5.3 Verify the hook is called INSIDE the `WorkoutExecutionProvider` tree so `useWorkoutExecution()` resolves correctly
 
-- [ ] Task 6: Write tests (AC: #9, #11, #12)
-  - [ ] 6.1 Unit tests for `useWorkoutPersistence` in `__tests__/hooks/workout/useWorkoutPersistence.test.ts`:
+- [x] Task 6: Write tests (AC: #9, #11, #12)
+  - [x] 6.1 Unit tests for `useWorkoutPersistence` in `__tests__/hooks/workout/useWorkoutPersistence.test.ts`:
     - Writes state to MMKV on mount (initial state persisted)
     - Writes to MMKV when state changes (simulated dispatch → new state → MMKV write)
     - Uses correct storage key (`STORAGE_KEYS.WORKOUT_ACTIVE_STATE`)
@@ -68,10 +68,10 @@ So that I never have to think about saving and never lose data.
     - Clears active state from MMKV when `isCompleted` becomes true
     - Does NOT clear session ID on completion (needed for sync queue)
     - Returns sessionId from hook
-  - [ ] 6.2 Unit tests for `lib/storage-keys.ts`: all keys have `pwo:` prefix, STORAGE_KEYS is a frozen/readonly object
-  - [ ] 6.3 Verify no new TypeScript compilation errors (`npm run compile`)
-  - [ ] 6.4 Verify all tests pass (`npm run test:run`)
-  - [ ] 6.5 Verify all files pass Prettier (`npm run lint:fix`)
+  - [x] 6.2 Unit tests for `lib/storage-keys.ts`: all keys have `pwo:` prefix, STORAGE_KEYS is a frozen/readonly object
+  - [x] 6.3 Verify no new TypeScript compilation errors (`npm run compile`)
+  - [x] 6.4 Verify all tests pass (`npm run test:run`)
+  - [x] 6.5 Verify all files pass Prettier (`npm run lint:fix`)
 
 ## Dev Notes
 
@@ -483,10 +483,39 @@ useEffect(() => {
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude claude-4.6-opus (Cursor)
 
 ### Debug Log References
 
+None — clean implementation with no blocking issues.
+
 ### Completion Notes List
 
+- Installed `react-native-mmkv@^4.2.0` and `react-native-nitro-modules@^0.35.2` via `npx expo install`
+- Created `lib/storage-keys.ts` with `as const` typed `STORAGE_KEYS` object; all keys use `pwo:` prefix
+- Created `lib/mmkv.ts` as minimal 3-line MMKV singleton using v4 `createMMKV()` API
+- Created `hooks/workout/useWorkoutPersistence.ts` (34 lines): subscribes to `WorkoutState` via `useWorkoutExecution()`, writes full state as JSON on every change via `useEffect`, generates session ID on mount with `crypto.randomUUID()` + fallback, clears active state on workout completion while preserving session ID
+- Integrated `useWorkoutPersistence()` in `WorkoutSessionContent` inside `[index]-v2.tsx` — single-line addition inside the `WorkoutExecutionProvider` tree
+- Added barrel export in `hooks/workout/index.ts`
+- 9 unit tests for `useWorkoutPersistence` covering: write-on-mount, write-on-change, correct key usage, JSON serialization, session ID generation, cleanup-on-complete, session ID preservation on complete
+- 5 unit tests for `STORAGE_KEYS` covering: prefix validation, key definitions, uniqueness
+- All 225 tests pass with zero regressions (was 211 before this story)
+- Only pre-existing TS compilation errors remain (`SharedValue` in profile.tsx, `haptics.notifyWarning` in ConfirmationModal.tsx)
+- All files pass Prettier formatting
+
 ### File List
+
+- `lib/storage-keys.ts` — NEW (centralized MMKV key constants)
+- `lib/mmkv.ts` — NEW (MMKV singleton instance)
+- `hooks/workout/useWorkoutPersistence.ts` — NEW (state persistence hook)
+- `hooks/workout/index.ts` — MODIFIED (added useWorkoutPersistence export)
+- `app/programs/[id]/session/[index]-v2.tsx` — MODIFIED (integrated useWorkoutPersistence call)
+- `__tests__/hooks/workout/useWorkoutPersistence.test.ts` — NEW (9 persistence hook tests)
+- `__tests__/lib/storage-keys.test.ts` — NEW (5 storage key tests)
+- `package.json` — MODIFIED (new dependencies: react-native-mmkv, react-native-nitro-modules)
+- `package-lock.json` — MODIFIED (dependency lockfile updated)
+
+### Change Log
+
+- 2026-03-17: Implemented MMKV persistence layer and continuous state saving (Story 3.1). Added write-on-every-change persistence pipeline via useWorkoutPersistence hook, MMKV v4 singleton, centralized storage keys, and session ID generation. 14 new unit tests added.
+- 2026-03-17: Code review (adversarial). 2 HIGH, 3 MEDIUM, 2 LOW findings. Fixed H1 (side effect during render — moved session ID MMKV write into useEffect), H2 (misleading state-change test — fixed useRef mock re-render simulation), M3 (unstaged cross-story 2-9 file), L1 (removed unused React import). M1/M2 cancelled (systemic project-wide patterns). All 225 tests pass. Status → done.
