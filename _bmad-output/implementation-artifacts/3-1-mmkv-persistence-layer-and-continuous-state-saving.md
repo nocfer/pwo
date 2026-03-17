@@ -153,13 +153,13 @@ npx expo install react-native-mmkv react-native-nitro-modules
 
 **Core API:**
 
-| Method | Description |
-|---|---|
-| `storage.set(key, value)` | Set string, number, or boolean (synchronous) |
-| `storage.getString(key)` | Get string value (returns `undefined` if not set) |
-| `storage.contains(key)` | Check if key exists |
-| `storage.remove(key)` | Delete a key |
-| `storage.clearAll()` | Delete all keys in this instance |
+| Method                    | Description                                       |
+| ------------------------- | ------------------------------------------------- |
+| `storage.set(key, value)` | Set string, number, or boolean (synchronous)      |
+| `storage.getString(key)`  | Get string value (returns `undefined` if not set) |
+| `storage.contains(key)`   | Check if key exists                               |
+| `storage.remove(key)`     | Delete a key                                      |
+| `storage.clearAll()`      | Delete all keys in this instance                  |
 
 **JSON serialization pattern (for complex objects like WorkoutState):**
 
@@ -196,7 +196,13 @@ The entire `WorkoutState` is serialized as one JSON key. For a typical workout w
       "exerciseId": "ex1",
       "exerciseName": "Bench Press",
       "sets": [
-        { "reps": 8, "weight": 185, "status": "completed", "confirmedReps": 8, "confirmedWeight": 185 },
+        {
+          "reps": 8,
+          "weight": 185,
+          "status": "completed",
+          "confirmedReps": 8,
+          "confirmedWeight": 185
+        },
         { "reps": 8, "weight": 185, "status": "active" },
         { "reps": 8, "weight": 185, "status": "pending" },
         { "reps": 8, "weight": 185, "status": "pending" }
@@ -235,10 +241,12 @@ The persistence hook sits INSIDE the provider tree, consumes state via `useWorko
 ### Session ID Generation
 
 The workout session ID serves as:
+
 1. **Persistence identity:** Links the MMKV active state to a specific workout session
 2. **Idempotency key:** Used later (Story 7.2) for `POST /api/v1/stats/workouts` to prevent duplicate sync submissions
 
 Generation strategy:
+
 - Primary: `crypto.randomUUID()` — available in modern browsers and React Native Hermes
 - Fallback: `Date.now().toString(36) + Math.random().toString(36).substring(2)` — for environments without `crypto.randomUUID()`
 - Generated once at mount time of `useWorkoutPersistence`, stored in MMKV immediately
@@ -335,29 +343,29 @@ Test cases:
 
 ### Edge Cases
 
-| Scenario | Expected Behavior |
-|---|---|
-| Very first state write (mount) | Initial state is persisted immediately — even before user does anything |
-| Rapid successive state changes (confirm → auto-expand → timer start) | Each state change triggers a write; MMKV handles synchronous overwrites |
-| Workout completed (COMPLETE_WORKOUT dispatched) | Active state key is removed from MMKV; session ID preserved |
-| App crash during JSON.stringify | Extremely unlikely (pure data, no circular refs). Previous persisted state survives in MMKV |
-| MMKV write failure on web (LocalStorage disabled) | MMKV falls back to in-memory — data not persisted across page refresh. Acceptable for web. |
-| State contains `completedAt: null` vs `completedAt: number` | Both serialize correctly to JSON; `null` round-trips as `null` |
-| `Map` or `Set` in state | WorkoutState has NO Map/Set types — all plain objects and arrays. JSON.stringify is safe. |
-| Multiple workouts started (edge case) | New workout overwrites the MMKV key — only one active workout at a time |
-| Hook unmounts mid-write | MMKV writes are synchronous — no async cleanup needed |
+| Scenario                                                             | Expected Behavior                                                                           |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Very first state write (mount)                                       | Initial state is persisted immediately — even before user does anything                     |
+| Rapid successive state changes (confirm → auto-expand → timer start) | Each state change triggers a write; MMKV handles synchronous overwrites                     |
+| Workout completed (COMPLETE_WORKOUT dispatched)                      | Active state key is removed from MMKV; session ID preserved                                 |
+| App crash during JSON.stringify                                      | Extremely unlikely (pure data, no circular refs). Previous persisted state survives in MMKV |
+| MMKV write failure on web (LocalStorage disabled)                    | MMKV falls back to in-memory — data not persisted across page refresh. Acceptable for web.  |
+| State contains `completedAt: null` vs `completedAt: number`          | Both serialize correctly to JSON; `null` round-trips as `null`                              |
+| `Map` or `Set` in state                                              | WorkoutState has NO Map/Set types — all plain objects and arrays. JSON.stringify is safe.   |
+| Multiple workouts started (edge case)                                | New workout overwrites the MMKV key — only one active workout at a time                     |
+| Hook unmounts mid-write                                              | MMKV writes are synchronous — no async cleanup needed                                       |
 
 ### File Size Budget
 
-| File | Current Lines | Estimated After | Budget |
-|---|---|---|---|
-| `lib/mmkv.ts` | NEW | ~5 | Under 300 |
-| `lib/storage-keys.ts` | NEW | ~10 | Under 300 |
-| `hooks/workout/useWorkoutPersistence.ts` | NEW | ~55 | Under 300 |
-| `hooks/workout/index.ts` | 7 | ~8 | Under 300 |
-| `app/programs/[id]/session/[index]-v2.tsx` | 387 | ~389 | ⚠️ Over 300 (composition root — acceptable) |
-| `__tests__/hooks/workout/useWorkoutPersistence.test.ts` | NEW | ~100 | Under 300 |
-| `__tests__/lib/storage-keys.test.ts` | NEW | ~25 | Under 300 |
+| File                                                    | Current Lines | Estimated After | Budget                                      |
+| ------------------------------------------------------- | ------------- | --------------- | ------------------------------------------- |
+| `lib/mmkv.ts`                                           | NEW           | ~5              | Under 300                                   |
+| `lib/storage-keys.ts`                                   | NEW           | ~10             | Under 300                                   |
+| `hooks/workout/useWorkoutPersistence.ts`                | NEW           | ~55             | Under 300                                   |
+| `hooks/workout/index.ts`                                | 7             | ~8              | Under 300                                   |
+| `app/programs/[id]/session/[index]-v2.tsx`              | 387           | ~389            | ⚠️ Over 300 (composition root — acceptable) |
+| `__tests__/hooks/workout/useWorkoutPersistence.test.ts` | NEW           | ~100            | Under 300                                   |
+| `__tests__/lib/storage-keys.test.ts`                    | NEW           | ~25             | Under 300                                   |
 
 ### Anti-Patterns to Avoid
 
@@ -465,7 +473,7 @@ useEffect(() => {
 - [Source: _bmad-output/planning-artifacts/prd.md#NFR10] — "Zero workout data loss across all termination paths"
 - [Source: _bmad-output/planning-artifacts/prd.md#NFR11] — "100% of state changes persisted before next user action"
 - [Source: _bmad-output/project-context.md#Code Style] — Prettier config, no semicolons, single quotes
-- [Source: _bmad-output/project-context.md#Testing Rules] — Vitest, __tests__/ mirror structure, describe/it blocks
+- [Source: _bmad-output/project-context.md#Testing Rules] — Vitest, **tests**/ mirror structure, describe/it blocks
 - [Source: _bmad-output/project-context.md#State Management] — React Context API only, no Redux/Zustand
 - [Source: _bmad-output/implementation-artifacts/2-8-web-keyboard-shortcuts.md] — Previous story learnings, current test count (205), v2 route file size (387 lines)
 - [Source: _bmad-output/implementation-artifacts/2-7-pre-fill-engine-last-logged-and-program-targets.md] — Prefill integration patterns, buildInitialState patterns, inverted dependency fix

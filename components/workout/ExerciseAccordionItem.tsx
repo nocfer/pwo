@@ -35,6 +35,12 @@ type ExpandedContentProps = {
   focusedField?: { setIndex: number; field: 'reps' | 'weight' } | null
 }
 
+function getCompletedCount(exercise: ExerciseState): number {
+  return exercise.sets.filter(
+    s => s.status === 'completed' || s.status === 'skipped'
+  ).length
+}
+
 function ExpandedContent({
   exercise,
   onSetRepsPress,
@@ -44,6 +50,12 @@ function ExpandedContent({
   onSetSkip,
   focusedField
 }: ExpandedContentProps) {
+  const completedCount = getCompletedCount(exercise)
+  const progressPercent =
+    exercise.sets.length > 0
+      ? Math.round((completedCount / exercise.sets.length) * 100)
+      : 0
+
   return (
     <View style={styles.expandedContent}>
       <Text style={styles.expandedTitle}>{exercise.exerciseName}</Text>
@@ -67,14 +79,20 @@ function ExpandedContent({
           }
         />
       ))}
+      <View
+        style={styles.progressTrack}
+        accessibilityRole="progressbar"
+        accessibilityValue={{ min: 0, max: 100, now: progressPercent }}
+        accessibilityLabel="Set completion progress"
+      >
+        <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
+      </View>
     </View>
   )
 }
 
 function computeSetMeta(exercise: ExerciseState): string {
-  const completed = exercise.sets.filter(
-    s => s.status === 'completed' || s.status === 'skipped'
-  ).length
+  const completed = getCompletedCount(exercise)
   const total = exercise.sets.length
   const lastConfirmed = [...exercise.sets]
     .reverse()
@@ -111,9 +129,7 @@ export function ExerciseAccordionItem({
   const complete = isExerciseComplete(exercise)
   const active = hasActiveSet(exercise)
   const setMeta = computeSetMeta(exercise)
-  const completedCount = exercise.sets.filter(
-    s => s.status === 'completed' || s.status === 'skipped'
-  ).length
+  const completedCount = getCompletedCount(exercise)
 
   const contentHeight = useSharedValue(0)
   const animatedHeight = useDerivedValue(() =>
@@ -200,9 +216,9 @@ export function ExerciseAccordionItem({
 const styles = StyleSheet.create({
   row: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.md,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.xs
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border
   },
   rowCompactActive: {
     backgroundColor: theme.colors.primaryLight
@@ -240,14 +256,24 @@ const styles = StyleSheet.create({
   },
   expandedContent: {
     backgroundColor: theme.colors.surfaceElevated,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.lg,
-    marginTop: theme.spacing.sm
+    padding: theme.spacing.lg
   },
   expandedTitle: {
     ...theme.typography.h2,
-    color: theme.colors.text,
+    color: theme.colors.primary,
     marginBottom: theme.spacing.sm
+  },
+  progressTrack: {
+    height: 4,
+    backgroundColor: theme.colors.border,
+    borderRadius: theme.radius.xs,
+    marginTop: theme.spacing.md,
+    overflow: 'hidden' as const
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.xs
   },
   measureContainer: {
     position: 'absolute',

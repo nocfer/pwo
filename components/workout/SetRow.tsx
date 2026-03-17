@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.sm,
     borderWidth: 1,
     borderColor: theme.colors.border,
     paddingVertical: theme.spacing.xs
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   confirmButton: {
     width: 44,
     height: 44,
-    borderRadius: theme.radius.full,
+    borderRadius: theme.radius.sm,
     alignItems: 'center',
     justifyContent: 'center'
   },
