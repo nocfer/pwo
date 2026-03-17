@@ -311,13 +311,13 @@ expect(onEnter).toHaveBeenCalledTimes(1)
 
 ### File Size Budget
 
-| File                                                      | Current Lines | Estimated After | Actual  | Budget                             |
-| --------------------------------------------------------- | ------------- | --------------- | ------- | ---------------------------------- |
-| `hooks/workout/useWebKeyboardShortcuts.ts`                | NEW           | ~55             | 56      | Under 300                          |
-| `hooks/workout/useWorkoutKeyboardHandlers.ts`             | NEW           | —               | 99      | Under 300                          |
-| `hooks/workout/index.ts`                                  | 6             | ~7              | 8       | Under 300                          |
-| `app/programs/[id]/session/[index]-v2.tsx`                | 328           | ~355            | 340     | ⚠️ Over 300 — mitigated by handler extraction |
-| `__tests__/hooks/workout/useWebKeyboardShortcuts.test.ts` | NEW           | ~120            | 272     | Under 300                          |
+| File                                                      | Current Lines | Estimated After | Actual | Budget                                        |
+| --------------------------------------------------------- | ------------- | --------------- | ------ | --------------------------------------------- |
+| `hooks/workout/useWebKeyboardShortcuts.ts`                | NEW           | ~55             | 56     | Under 300                                     |
+| `hooks/workout/useWorkoutKeyboardHandlers.ts`             | NEW           | —               | 99     | Under 300                                     |
+| `hooks/workout/index.ts`                                  | 6             | ~7              | 8      | Under 300                                     |
+| `app/programs/[id]/session/[index]-v2.tsx`                | 328           | ~355            | 340    | ⚠️ Over 300 — mitigated by handler extraction |
+| `__tests__/hooks/workout/useWebKeyboardShortcuts.test.ts` | NEW           | ~120            | 272    | Under 300                                     |
 
 **V2 route mitigation if exceeding 300 lines:**
 
@@ -468,5 +468,5 @@ No debug issues encountered.
 - hooks/workout/useWorkoutKeyboardHandlers.ts (new) — Workout-specific keyboard handler composition (Enter confirm, Tab advance, Escape dismiss)
 - hooks/workout/index.ts (modified) — Added useWebKeyboardShortcuts and useWorkoutKeyboardHandlers exports
 - app/programs/[id]/session/[index]-v2.tsx (modified) — Integrated keyboard shortcuts via useWorkoutKeyboardHandlers
-- __tests__/hooks/workout/useWebKeyboardShortcuts.test.ts (new) — 17 tests for all key mappings, conditional preventDefault, platform gating, modifier exclusion, Shift+Tab, cleanup
-- _bmad-output/implementation-artifacts/sprint-status.yaml (modified) — Story status tracking
+- **tests**/hooks/workout/useWebKeyboardShortcuts.test.ts (new) — 17 tests for all key mappings, conditional preventDefault, platform gating, modifier exclusion, Shift+Tab, cleanup
+- \_bmad-output/implementation-artifacts/sprint-status.yaml (modified) — Story status tracking

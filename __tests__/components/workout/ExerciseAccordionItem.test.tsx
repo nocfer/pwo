@@ -32,14 +32,9 @@ vi.mock('react-native', () => ({
     type: 'Text',
     props: { children, style }
   }),
-  View: ({
-    children,
-    style,
-    pointerEvents,
-    onLayout
-  }: Record<string, unknown>) => ({
+  View: (props: Record<string, unknown>) => ({
     type: 'View',
-    props: { children, style, pointerEvents, onLayout }
+    props
   }),
   StyleSheet: {
     create: <T extends Record<string, unknown>>(styles: T): T => styles
@@ -299,6 +294,65 @@ describe('ExerciseAccordionItem', () => {
             theme.colors.primaryLight
       )
       expect(hasPrimaryLight).toBe(true)
+    })
+  })
+
+  describe('progress bar', () => {
+    it('renders progress bar with correct accessibility attributes at 0%', () => {
+      const result = renderAccordion({ isExpanded: true })
+      const allNodes = collectAllNodes(result)
+      const progressBar = allNodes.find(
+        n => n.props?.accessibilityRole === 'progressbar'
+      )
+      expect(progressBar).toBeDefined()
+      expect(progressBar!.props.accessibilityLabel).toBe(
+        'Set completion progress'
+      )
+      const value = progressBar!.props.accessibilityValue as {
+        min: number
+        max: number
+        now: number
+      }
+      expect(value).toEqual({ min: 0, max: 100, now: 0 })
+    })
+
+    it('renders progress bar at 100% for completed exercise', () => {
+      const exercise = makeCompletedExercise()
+      const result = renderAccordion({ exercise, isExpanded: true })
+      const allNodes = collectAllNodes(result)
+      const progressBar = allNodes.find(
+        n => n.props?.accessibilityRole === 'progressbar'
+      )
+      expect(progressBar).toBeDefined()
+      const value = progressBar!.props.accessibilityValue as {
+        min: number
+        max: number
+        now: number
+      }
+      expect(value).toEqual({ min: 0, max: 100, now: 100 })
+    })
+
+    it('renders progress bar at 50% for partially completed exercise', () => {
+      const exercise = makeExercise({
+        sets: [
+          { reps: 8, weight: 135, status: 'completed' },
+          { reps: 8, weight: 135, status: 'skipped' },
+          { reps: 8, weight: 135, status: 'active' },
+          { reps: 8, weight: 135, status: 'pending' }
+        ]
+      })
+      const result = renderAccordion({ exercise, isExpanded: true })
+      const allNodes = collectAllNodes(result)
+      const progressBar = allNodes.find(
+        n => n.props?.accessibilityRole === 'progressbar'
+      )
+      expect(progressBar).toBeDefined()
+      const value = progressBar!.props.accessibilityValue as {
+        min: number
+        max: number
+        now: number
+      }
+      expect(value).toEqual({ min: 0, max: 100, now: 50 })
     })
   })
 })

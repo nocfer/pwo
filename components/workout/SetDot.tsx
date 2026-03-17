@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
   dot: {
     width: 28,
     height: 28,
-    borderRadius: theme.radius.full,
+    borderRadius: theme.radius.xs,
     alignItems: 'center',
     justifyContent: 'center'
   },
