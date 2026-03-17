@@ -12,7 +12,8 @@ import {
   usePrefill,
   useScrollToExercise,
   useWorkoutKeyboardHandlers,
-  useWorkoutExecution
+  useWorkoutExecution,
+  useWorkoutPersistence
 } from '@/hooks/workout'
 import { buildInitialState } from '@/lib/buildInitialState'
 import { theme } from '@/theme/theme'
@@ -32,6 +33,7 @@ import {
 function WorkoutSessionContent() {
   const { state, expandExercise, editSet, confirmSet, skipSet } =
     useWorkoutExecution()
+  useWorkoutPersistence()
   const { elapsedMs } = useElapsedTimer({
     startedAt: state.startedAt,
     isCompleted: state.isCompleted,
