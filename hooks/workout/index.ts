@@ -1,3 +1,4 @@
+export { useActiveWorkoutRedirect } from './useActiveWorkoutRedirect'
 export { useElapsedTimer } from './useElapsedTimer'
 export { useEndWorkout } from './useEndWorkout'
 export { useKeypadState } from './useKeypadState'

@@ -18,7 +18,15 @@ export function useWorkoutPersistence(): { sessionId: string } {
   const sessionIdRef = useRef<string>('')
 
   if (sessionIdRef.current === '') {
-    sessionIdRef.current = generateSessionId()
+    const hasActiveWorkout = storage.getString(
+      STORAGE_KEYS.WORKOUT_ACTIVE_STATE
+    )
+    if (hasActiveWorkout) {
+      const existing = storage.getString(STORAGE_KEYS.WORKOUT_SESSION_ID)
+      sessionIdRef.current = existing ?? generateSessionId()
+    } else {
+      sessionIdRef.current = generateSessionId()
+    }
   }
 
   useEffect(() => {

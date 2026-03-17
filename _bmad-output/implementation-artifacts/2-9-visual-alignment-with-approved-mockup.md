@@ -315,15 +315,12 @@ No debug issues encountered. All changes were pure style modifications — no be
 ### Review Findings (5 total: 0 High, 1 Medium, 4 Low)
 
 **MEDIUM — Fixed:**
+
 1. **Missing accessibility on progress bar** — Added `accessibilityRole="progressbar"`, `accessibilityValue`, and `accessibilityLabel` to the progress track View.
 
-**LOW — Fixed:**
-2. **DRY violation: completed set count calculated 3 times** — Extracted `getCompletedCount(exercise)` helper; replaced all 3 inline filter expressions.
-3. **Float precision in progress width** — Changed `${fraction * 100}%` to `${Math.round(...)}%` via `progressPercent` variable.
-4. **No test coverage for progress bar** — Added 3 tests (0%, 50%, 100%) verifying progress bar renders with correct accessibility values.
+**LOW — Fixed:** 2. **DRY violation: completed set count calculated 3 times** — Extracted `getCompletedCount(exercise)` helper; replaced all 3 inline filter expressions. 3. **Float precision in progress width** — Changed `${fraction * 100}%` to `${Math.round(...)}%` via `progressPercent` variable. 4. **No test coverage for progress bar** — Added 3 tests (0%, 50%, 100%) verifying progress bar renders with correct accessibility values.
 
-**LOW — Not Fixed (by design):**
-5. **No animation on progress bar fill** — Width changes abruptly vs. animated expand/collapse. Not required by ACs; adding reanimated to ExpandedContent would increase complexity for marginal polish.
+**LOW — Not Fixed (by design):** 5. **No animation on progress bar fill** — Width changes abruptly vs. animated expand/collapse. Not required by ACs; adding reanimated to ExpandedContent would increase complexity for marginal polish.
 
 ### Verification
 
