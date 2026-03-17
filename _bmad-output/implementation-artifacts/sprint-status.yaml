@@ -56,12 +56,12 @@ development_status:
   2-5-set-confirmation-and-non-linear-navigation: done
   2-6-edit-completed-sets: done
   2-7-pre-fill-engine-last-logged-and-program-targets: done
-  2-8-web-keyboard-shortcuts: ready-for-dev
+  2-8-web-keyboard-shortcuts: done
   epic-2-retrospective: optional
 
   # Epic 3: Workout State Persistence & Recovery
-  epic-3: backlog
-  3-1-mmkv-persistence-layer-and-continuous-state-saving: backlog
+  epic-3: in-progress
+  3-1-mmkv-persistence-layer-and-continuous-state-saving: ready-for-dev
   3-2-seamless-workout-resume-and-state-restoration: backlog
   epic-3-retrospective: optional
 

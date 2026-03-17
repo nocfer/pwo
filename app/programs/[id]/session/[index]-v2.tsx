@@ -11,6 +11,7 @@ import {
   useKeypadState,
   usePrefill,
   useScrollToExercise,
+  useWorkoutKeyboardHandlers,
   useWorkoutExecution
 } from '@/hooks/workout'
 import { buildInitialState } from '@/lib/buildInitialState'
@@ -150,6 +151,17 @@ function WorkoutSessionContent() {
     })
     return unsubscribe
   }, [navigation, requestEnd, state.isCompleted])
+
+  useWorkoutKeyboardHandlers({
+    state,
+    keypadState,
+    onSetConfirm: handleSetConfirm,
+    openKeypad,
+    switchField,
+    dismissKeypad,
+    onDigit: handleDigit,
+    onBackspace: handleBackspace
+  })
 
   if (state.isCompleted) {
     return (
