@@ -449,6 +449,26 @@ So that the desktop experience feels native and productive for reviewing or logg
 **And** all keyboard interactions produce the same state changes as their touch equivalents
 **And** keyboard shortcuts do not interfere with system keyboard shortcuts or browser navigation
 
+### Story 2.9: Visual Alignment with Approved Mockup
+
+As a user,
+I want the workout execution screen to match the approved dark-first design mockup,
+So that the interface feels cohesive, flat, and minimalist as originally designed.
+
+**Acceptance Criteria:**
+
+**Given** the approved HTML mockup (`_bmad-output/planning-artifacts/ux-design-directions.html`, Direction A: Matrix Accordion) as visual baseline
+**When** the workout components are rendered
+**Then** `SetDot` uses `borderRadius: theme.radius.xs` (4px, rounded square) instead of `theme.radius.full`
+**And** the confirm button in `SetRow` uses `borderRadius: theme.radius.sm` (8px, rounded rectangle) instead of `theme.radius.full`
+**And** `ExerciseAccordionItem` compact rows render full-width with `borderBottom` dividers and no `borderRadius` or `marginBottom` gaps
+**And** the expanded exercise area fills the full row width with `surfaceElevated` background (not a nested card)
+**And** the expanded exercise title displays in `theme.colors.primary` (indigo) color
+**And** input fields in `SetRow` use `borderRadius: theme.radius.sm` (8px)
+**And** a thin progress bar appears at the bottom of the expanded exercise area showing set completion fraction
+**And** all existing behavioral tests continue to pass
+**And** the visual result matches the Direction A phone mockup in the HTML design directions file
+
 ## Epic 3: Workout State Persistence & Recovery
 
 Users never lose workout data. State persists through phone lock, battery death, OS force-quit, and app restart. Resume is seamless — exact same exercise, same set, same values, no recovery dialogs or spinners.

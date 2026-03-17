@@ -57,6 +57,7 @@ development_status:
   2-6-edit-completed-sets: done
   2-7-pre-fill-engine-last-logged-and-program-targets: done
   2-8-web-keyboard-shortcuts: done
+  2-9-visual-alignment-with-approved-mockup: ready-for-dev
   epic-2-retrospective: optional
 
   # Epic 3: Workout State Persistence & Recovery
