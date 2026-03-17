@@ -735,6 +735,17 @@ The existing `WorkoutMatrix.tsx` component becomes the foundation. Key additions
 
 6. **Progressive disclosure:** Compact rows show: exercise name, set count ("2/4 sets"), last weight, and set dots. Expanded area adds: individual set rows with reps/weight inputs, confirm buttons, demo video link, and per-exercise progress bar.
 
+### Visual Baseline
+
+The HTML mockup file (`_bmad-output/planning-artifacts/ux-design-directions.html`, Direction A) serves as the pixel-level visual reference for component styling. When stories specify behavioral acceptance criteria without explicit styling values (border-radius, layout mode, color assignments), the mockup is the authoritative visual source. Key visual rules derived from the mockup:
+
+- **SetDot:** `radius.xs` (4px) rounded square, not circular
+- **Confirm button:** `radius.sm` (8px) rounded rectangle, not circular
+- **Exercise rows:** Full-width with border dividers, no card-style border-radius or gaps
+- **Expanded exercise area:** Full-width elevation (`surfaceElevated` fills entire row)
+- **Expanded exercise title:** `primary` color (indigo), not `text` color (white)
+- **Input fields:** `radius.sm` (8px)
+
 ## User Journey Flows
 
 ### Journey 1: Starting a Workout
