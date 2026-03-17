@@ -1,6 +1,6 @@
 # Story 4.2: Semantic Haptic Feedback System
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -27,50 +27,50 @@ So that each action feels confirmed and rewarding.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add missing semantic haptic functions to `lib/haptics.ts` (AC: #1, #2, #3, #5, #6, #8)
-  - [ ] 1.1 Add `setConfirmed: tapMedium` — medium impact for set confirmation (UX spec: medium impact, 200ms)
-  - [ ] 1.2 Add `exerciseCompleted: notifySuccess` — success notification when all sets of an exercise are done
-  - [ ] 1.3 Add `prDetected: tapHeavy` — heavy impact for PR detection (UX spec: heavy impact, 400ms)
-  - [ ] 1.4 Add `workoutCompleted: notifySuccess` — success notification on workout completion (UX spec: success, 1000ms animation context)
-  - [ ] 1.5 Add `navigationTap: selectionChanged` — selection haptic on exercise/set navigation (UX spec: light selection, 250ms)
-  - [ ] 1.6 Verify `restTimerFinished: tapLight` already exists (added in Story 4.1) — no change needed
-  - [ ] 1.7 Verify all base functions (`tapLight`, `tapMedium`, `tapHeavy`, `notifySuccess`, `selectionChanged`) already check `Platform.OS === 'ios'` for web safety — no change needed
+- [x] Task 1: Add missing semantic haptic functions to `lib/haptics.ts` (AC: #1, #2, #3, #5, #6, #8)
+  - [x] 1.1 Add `setConfirmed: tapMedium` — medium impact for set confirmation (UX spec: medium impact, 200ms)
+  - [x] 1.2 Add `exerciseCompleted: notifySuccess` — success notification when all sets of an exercise are done
+  - [x] 1.3 Add `prDetected: tapHeavy` — heavy impact for PR detection (UX spec: heavy impact, 400ms)
+  - [x] 1.4 Add `workoutCompleted: notifySuccess` — success notification on workout completion (UX spec: success, 1000ms animation context)
+  - [x] 1.5 Add `navigationTap: selectionChanged` — selection haptic on exercise/set navigation (UX spec: light selection, 250ms)
+  - [x] 1.6 Verify `restTimerFinished: tapLight` already exists (added in Story 4.1) — no change needed
+  - [x] 1.7 Verify all base functions (`tapLight`, `tapMedium`, `tapHeavy`, `notifySuccess`, `selectionChanged`) already check `Platform.OS === 'ios'` for web safety — no change needed
 
-- [ ] Task 2: Integrate `haptics.setConfirmed()` into set confirmation flow (AC: #1, #9)
-  - [ ] 2.1 In `app/programs/[id]/session/[index]-v2.tsx`, import `haptics` from `@/lib/haptics`
-  - [ ] 2.2 In `handleSetConfirm`, call `haptics.setConfirmed()` after `confirmSet(exerciseIndex, setIndex)` — fire-and-forget, no await
-  - [ ] 2.3 Verify haptic fires on both fresh set confirm AND re-confirm after editing
+- [x] Task 2: Integrate `haptics.setConfirmed()` into set confirmation flow (AC: #1, #9)
+  - [x] 2.1 In `app/programs/[id]/session/[index]-v2.tsx`, import `haptics` from `@/lib/haptics`
+  - [x] 2.2 In `handleSetConfirm`, call `haptics.setConfirmed()` after `confirmSet(exerciseIndex, setIndex)` — fire-and-forget, no await
+  - [x] 2.3 Verify haptic fires on both fresh set confirm AND re-confirm after editing
 
-- [ ] Task 3: Integrate `haptics.exerciseCompleted()` on exercise completion (AC: #2, #9)
-  - [ ] 3.1 In `handleSetConfirm`, after calling `confirmSet()`, detect if the confirmed exercise is now fully done by checking if all sets in `state.exercises[exerciseIndex]` are `completed` or `skipped` (check the PREVIOUS set status since the current one was just confirmed)
-  - [ ] 3.2 **CRITICAL TIMING:** The reducer runs synchronously, but `state` in the callback closure is the pre-dispatch snapshot. Use a `useEffect` that watches for `expandedExerciseIndex` changes to detect exercise transitions instead, OR compute completion from the pre-confirm state (the current set being confirmed is the one to check)
-  - [ ] 3.3 Recommended approach: In `handleSetConfirm`, before calling `confirmSet`, check if this is the last non-completed/non-skipped set in the exercise. If so, the exercise will be complete after confirmation → call `haptics.exerciseCompleted()` after `haptics.setConfirmed()`
-  - [ ] 3.4 Do NOT fire `exerciseCompleted` on SKIP_SET (only on confirm of the last pending set)
+- [x] Task 3: Integrate `haptics.exerciseCompleted()` on exercise completion (AC: #2, #9)
+  - [x] 3.1 In `handleSetConfirm`, after calling `confirmSet()`, detect if the confirmed exercise is now fully done by checking if all sets in `state.exercises[exerciseIndex]` are `completed` or `skipped` (check the PREVIOUS set status since the current one was just confirmed)
+  - [x] 3.2 **CRITICAL TIMING:** The reducer runs synchronously, but `state` in the callback closure is the pre-dispatch snapshot. Use a `useEffect` that watches for `expandedExerciseIndex` changes to detect exercise transitions instead, OR compute completion from the pre-confirm state (the current set being confirmed is the one to check)
+  - [x] 3.3 Recommended approach: In `handleSetConfirm`, before calling `confirmSet`, check if this is the last non-completed/non-skipped set in the exercise. If so, the exercise will be complete after confirmation → call `haptics.exerciseCompleted()` after `haptics.setConfirmed()`
+  - [x] 3.4 Do NOT fire `exerciseCompleted` on SKIP_SET (only on confirm of the last pending set)
 
-- [ ] Task 4: Integrate `haptics.navigationTap()` on navigation actions (AC: #6, #9)
-  - [ ] 4.1 In `handleExpandExercise`, call `haptics.navigationTap()` — fire-and-forget
-  - [ ] 4.2 In `handleSetDotNavigation`, call `haptics.navigationTap()` — fire-and-forget
-  - [ ] 4.3 Do NOT add haptic to `handleFieldPress` (opening keypad) or `handleSetRowPress` (editing) — UX spec says no feedback for opening numeric keypad
+- [x] Task 4: Integrate `haptics.navigationTap()` on navigation actions (AC: #6, #9)
+  - [x] 4.1 In `handleExpandExercise`, call `haptics.navigationTap()` — fire-and-forget
+  - [x] 4.2 In `handleSetDotNavigation`, call `haptics.navigationTap()` — fire-and-forget
+  - [x] 4.3 Do NOT add haptic to `handleFieldPress` (opening keypad) or `handleSetRowPress` (editing) — UX spec says no feedback for opening numeric keypad
 
-- [ ] Task 5: Integrate `haptics.workoutCompleted()` on workout completion (AC: #5, #9)
-  - [ ] 5.1 In `useEndWorkout` hook (or in `confirmEnd` handler in `[index]-v2.tsx`), call `haptics.workoutCompleted()` when the workout transitions to completed state
-  - [ ] 5.2 Also detect "natural completion" — when all sets across all exercises are done after a confirm, the workout should also trigger `haptics.workoutCompleted()`. If this auto-complete doesn't exist yet, add the haptic call where it will be wired in Epic 7 CompletionSummary
-  - [ ] 5.3 If CompletionSummary component doesn't exist yet, wire the haptic into the `confirmEnd` function call in `[index]-v2.tsx` as the interim trigger point (Epic 7 will refine placement)
+- [x] Task 5: Integrate `haptics.workoutCompleted()` on workout completion (AC: #5, #9)
+  - [x] 5.1 In `useEndWorkout` hook (or in `confirmEnd` handler in `[index]-v2.tsx`), call `haptics.workoutCompleted()` when the workout transitions to completed state
+  - [x] 5.2 Also detect "natural completion" — when all sets across all exercises are done after a confirm, the workout should also trigger `haptics.workoutCompleted()`. If this auto-complete doesn't exist yet, add the haptic call where it will be wired in Epic 7 CompletionSummary
+  - [x] 5.3 If CompletionSummary component doesn't exist yet, wire the haptic into the `confirmEnd` function call in `[index]-v2.tsx` as the interim trigger point (Epic 7 will refine placement)
 
-- [ ] Task 6: Write unit tests for haptics (AC: #10, #12)
-  - [ ] 6.1 Create `__tests__/lib/haptics.test.ts`
-  - [ ] 6.2 Mock `expo-haptics` module and `Platform` from `react-native`
-  - [ ] 6.3 Test all semantic function mappings exist on the `haptics` object
-  - [ ] 6.4 Test `setConfirmed` calls `Haptics.impactAsync(ImpactFeedbackStyle.Medium)`
-  - [ ] 6.5 Test `exerciseCompleted` calls `Haptics.notificationAsync(NotificationFeedbackType.Success)`
-  - [ ] 6.6 Test `prDetected` calls `Haptics.impactAsync(ImpactFeedbackStyle.Heavy)`
-  - [ ] 6.7 Test `workoutCompleted` calls `Haptics.notificationAsync(NotificationFeedbackType.Success)`
-  - [ ] 6.8 Test `navigationTap` calls `Haptics.selectionAsync()`
-  - [ ] 6.9 Test `restTimerFinished` calls `Haptics.impactAsync(ImpactFeedbackStyle.Light)` (verify existing mapping)
-  - [ ] 6.10 Test all base functions no-op when `Platform.OS !== 'ios'` (web safety)
-  - [ ] 6.11 Run `npm run compile` — no new TypeScript errors
-  - [ ] 6.12 Run `npm run test:run` — all tests pass
-  - [ ] 6.13 Run `npm run lint:fix` — all files pass Prettier
+- [x] Task 6: Write unit tests for haptics (AC: #10, #12)
+  - [x] 6.1 Create `__tests__/lib/haptics.test.ts`
+  - [x] 6.2 Mock `expo-haptics` module and `Platform` from `react-native`
+  - [x] 6.3 Test all semantic function mappings exist on the `haptics` object
+  - [x] 6.4 Test `setConfirmed` calls `Haptics.impactAsync(ImpactFeedbackStyle.Medium)`
+  - [x] 6.5 Test `exerciseCompleted` calls `Haptics.notificationAsync(NotificationFeedbackType.Success)`
+  - [x] 6.6 Test `prDetected` calls `Haptics.impactAsync(ImpactFeedbackStyle.Heavy)`
+  - [x] 6.7 Test `workoutCompleted` calls `Haptics.notificationAsync(NotificationFeedbackType.Success)`
+  - [x] 6.8 Test `navigationTap` calls `Haptics.selectionAsync()`
+  - [x] 6.9 Test `restTimerFinished` calls `Haptics.impactAsync(ImpactFeedbackStyle.Light)` (verify existing mapping)
+  - [x] 6.10 Test all base functions no-op when `Platform.OS !== 'ios'` (web safety)
+  - [x] 6.11 Run `npm run compile` — no new TypeScript errors
+  - [x] 6.12 Run `npm run test:run` — all tests pass
+  - [x] 6.13 Run `npm run lint:fix` — all files pass Prettier
 
 ## Dev Notes
 
@@ -136,14 +136,14 @@ No haptic calls exist in any `components/workout/*.tsx` files currently — all 
 
 ### Haptic Feedback Scale (from UX Design Specification)
 
-| Action | Haptic Function | Haptic Type | Trigger Point |
-|---|---|---|---|
-| Set confirmed | `setConfirmed` | `tapMedium` (Medium impact) | `handleSetConfirm` in `[index]-v2.tsx` |
-| Exercise completed (all sets) | `exerciseCompleted` | `notifySuccess` (Success notification) | After confirm when last set in exercise is done |
-| Rest timer finished | `restTimerFinished` | `tapLight` (Light impact) | `useRestTimer.ts` (**already done**) |
-| PR detected | `prDetected` | `tapHeavy` (Heavy impact) | Epic 5 `usePRComparison` (future) |
-| Workout completed | `workoutCompleted` | `notifySuccess` (Success notification) | `confirmEnd` / Epic 7 CompletionSummary |
-| Navigation (tap exercise/set) | `navigationTap` | `selectionChanged` (Selection) | `handleExpandExercise`, `handleSetDotNavigation` |
+| Action                        | Haptic Function     | Haptic Type                            | Trigger Point                                    |
+| ----------------------------- | ------------------- | -------------------------------------- | ------------------------------------------------ |
+| Set confirmed                 | `setConfirmed`      | `tapMedium` (Medium impact)            | `handleSetConfirm` in `[index]-v2.tsx`           |
+| Exercise completed (all sets) | `exerciseCompleted` | `notifySuccess` (Success notification) | After confirm when last set in exercise is done  |
+| Rest timer finished           | `restTimerFinished` | `tapLight` (Light impact)              | `useRestTimer.ts` (**already done**)             |
+| PR detected                   | `prDetected`        | `tapHeavy` (Heavy impact)              | Epic 5 `usePRComparison` (future)                |
+| Workout completed             | `workoutCompleted`  | `notifySuccess` (Success notification) | `confirmEnd` / Epic 7 CompletionSummary          |
+| Navigation (tap exercise/set) | `navigationTap`     | `selectionChanged` (Selection)         | `handleExpandExercise`, `handleSetDotNavigation` |
 
 ### Exercise Completion Detection Strategy
 
@@ -160,6 +160,7 @@ In handleSetConfirm(exerciseIndex, setIndex):
 ```
 
 **Edge cases:**
+
 - Editing a completed set and re-confirming: exercise was already complete, don't fire `exerciseCompleted` again
 - Skipping a set: do NOT fire `exerciseCompleted` (only on explicit confirmation)
 - Last exercise last set: fire both `exerciseCompleted` AND potentially `workoutCompleted`
@@ -181,6 +182,7 @@ Epic 7 will add the confetti celebration and may relocate the haptic to fire alo
 ### Previous Story Learnings (Stories 2.1–4.1)
 
 **What worked well:**
+
 - Pure function reducer with zero mocking for tests
 - Named action dispatchers — components never access raw dispatch
 - `useElapsedTimer` pattern with injectable `now()` — reused for `useRestTimer`
@@ -188,6 +190,7 @@ Epic 7 will add the confetti celebration and may relocate the haptic to fire alo
 - MMKV v4 automatic mocking in Vitest
 
 **What went wrong (avoid repeating):**
+
 - **Wrong theme tokens:** `textSecondary` → use `subtext`, `borderRadius` → `radius`, `error` → `danger`. Always verify token names against `theme/theme.ts`.
 - **Pre-existing TS errors remain.** Do NOT fix: `haptics.notifyWarning` in `ConfirmationModal.tsx`, `SharedValue` in `profile.tsx`, and ~35 files referencing removed tokens. This story must not introduce NEW errors.
 - **Test environment requires explicit `import React from 'react'`** for JSX in test files.
@@ -207,6 +210,7 @@ cc08299 feat: implement NumericKeypad and SetRow components
 ```
 
 **Patterns observed:**
+
 - Test files placed in `__tests__/` mirroring source structure
 - `vi.fn()` for mocking, `describe`/`it` blocks
 - Pure function tests with no mocking for reducer-like logic
@@ -257,29 +261,29 @@ describe('semantic haptic functions', () => {
 
 ### Edge Cases
 
-| Scenario | Expected Behavior |
-|---|---|
-| Set confirmed (normal) | `setConfirmed` fires medium impact |
-| Set re-confirmed after editing | `setConfirmed` fires, `exerciseCompleted` does NOT fire (exercise was already complete) |
-| Last set in exercise confirmed | Both `setConfirmed` and `exerciseCompleted` fire |
-| Set skipped (not confirmed) | No haptic fires (UX spec: no feedback for skip action in new workout flow) |
-| Last set of entire workout confirmed | `setConfirmed` + `exerciseCompleted` + potentially `workoutCompleted` |
-| User taps "End Workout" and confirms | `workoutCompleted` fires |
-| Exercise navigation tap | `navigationTap` fires (selection haptic) |
-| SetDot navigation to different exercise | `navigationTap` fires |
-| Opening numeric keypad | No haptic (UX spec: no feedback for opening keypad) |
-| Web platform | All haptic calls silently no-op |
-| Rapid set confirmations | Each confirmation fires its own haptic (no debounce needed — hardware handles queuing) |
-| Rest timer finishes | `restTimerFinished` fires (already wired in Story 4.1) |
+| Scenario                                | Expected Behavior                                                                       |
+| --------------------------------------- | --------------------------------------------------------------------------------------- |
+| Set confirmed (normal)                  | `setConfirmed` fires medium impact                                                      |
+| Set re-confirmed after editing          | `setConfirmed` fires, `exerciseCompleted` does NOT fire (exercise was already complete) |
+| Last set in exercise confirmed          | Both `setConfirmed` and `exerciseCompleted` fire                                        |
+| Set skipped (not confirmed)             | No haptic fires (UX spec: no feedback for skip action in new workout flow)              |
+| Last set of entire workout confirmed    | `setConfirmed` + `exerciseCompleted` + potentially `workoutCompleted`                   |
+| User taps "End Workout" and confirms    | `workoutCompleted` fires                                                                |
+| Exercise navigation tap                 | `navigationTap` fires (selection haptic)                                                |
+| SetDot navigation to different exercise | `navigationTap` fires                                                                   |
+| Opening numeric keypad                  | No haptic (UX spec: no feedback for opening keypad)                                     |
+| Web platform                            | All haptic calls silently no-op                                                         |
+| Rapid set confirmations                 | Each confirmation fires its own haptic (no debounce needed — hardware handles queuing)  |
+| Rest timer finishes                     | `restTimerFinished` fires (already wired in Story 4.1)                                  |
 
 ### File Size Budget
 
-| File | Current Lines | Estimated After | Budget |
-|---|---|---|---|
-| `lib/haptics.ts` | 114 | ~120 | Under 300 |
-| `app/programs/[id]/session/[index]-v2.tsx` | ~390 | ~410 | ⚠️ Over 300 (composition root — acceptable) |
-| `__tests__/lib/haptics.test.ts` | NEW | ~100 | Under 300 |
-| `hooks/workout/useEndWorkout.ts` | unknown | +2-3 lines | Under 300 |
+| File                                       | Current Lines | Estimated After | Budget                                      |
+| ------------------------------------------ | ------------- | --------------- | ------------------------------------------- |
+| `lib/haptics.ts`                           | 114           | ~120            | Under 300                                   |
+| `app/programs/[id]/session/[index]-v2.tsx` | ~390          | ~410            | ⚠️ Over 300 (composition root — acceptable) |
+| `__tests__/lib/haptics.test.ts`            | NEW           | ~100            | Under 300                                   |
+| `hooks/workout/useEndWorkout.ts`           | unknown       | +2-3 lines      | Under 300                                   |
 
 ### Anti-Patterns to Avoid
 
@@ -378,7 +382,7 @@ import { Platform } from 'react-native'
 - [Source: _bmad-output/planning-artifacts/prd.md#FR33] — "System provides haptic feedback on set confirmation, personal record detection, rest timer completion, and workout completion"
 - [Source: _bmad-output/project-context.md#Haptics Integration] — "Import Pattern: import { haptics } from '@/lib/haptics'"
 - [Source: _bmad-output/project-context.md#Code Style] — Prettier config, no semicolons, single quotes, no trailing commas
-- [Source: _bmad-output/project-context.md#Testing Rules] — Vitest, __tests__/ mirror structure, describe/it blocks
+- [Source: _bmad-output/project-context.md#Testing Rules] — Vitest, **tests**/ mirror structure, describe/it blocks
 - [Source: lib/haptics.ts] — Current haptics implementation with base functions and semantic object
 - [Source: hooks/workout/useRestTimer.ts#L82,L97] — Already calls `haptics.restTimerFinished()` on timer expiry
 - [Source: context/workoutReducer.ts#CONFIRM_SET] — Pure reducer for set confirmation, auto-expand next exercise
@@ -389,10 +393,34 @@ import { Platform } from 'react-native'
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (1M context)
 
 ### Debug Log References
 
+- `isHapticsAvailable` changed from module-level constant to function call `() => Platform.OS === 'ios'` to enable proper test isolation (Platform.OS is mocked as 'web' by default in test environment, computed-at-load constant couldn't be overridden per-test)
+
 ### Completion Notes List
 
+- Added 5 semantic haptic functions to `lib/haptics.ts`: `setConfirmed` (tapMedium), `exerciseCompleted` (notifySuccess), `prDetected` (tapHeavy), `workoutCompleted` (notifySuccess), `navigationTap` (selectionChanged)
+- Verified `restTimerFinished` already exists from Story 4.1
+- Integrated `haptics.setConfirmed()` into `handleSetConfirm` in `[index]-v2.tsx` — fire-and-forget after confirmSet
+- Integrated `haptics.exerciseCompleted()` with pre-dispatch detection: checks if current set is the last pending set before confirming, fires only on last-set confirmation (not on skip)
+- Integrated `haptics.navigationTap()` into `handleExpandExercise` and `handleSetDotNavigation` — no haptic on keypad open or set row press per UX spec
+- Integrated `haptics.workoutCompleted()` into `confirmEnd` in `useEndWorkout.ts` — fires when user confirms ending workout. Natural completion haptic deferred to Epic 7 CompletionSummary
+- `prDetected` defined but not wired — Epic 5 will integrate with `usePRComparison`
+- Changed `isHapticsAvailable` from `const = Platform.OS === 'ios'` to `() => Platform.OS === 'ios'` for testability — no behavioral change in production
+- Created 21 unit tests covering all semantic functions, correct haptic type mappings, web safety no-op behavior, and existing function regression
+- All 300 tests pass (23 test files), no regressions
+- No new TypeScript errors introduced (pre-existing errors unchanged)
+- All files pass Prettier
+
+### Change Log
+
+- 2026-03-17: Implemented Story 4.2 — semantic haptic feedback system with 5 new functions, 4 integration points, and 21 unit tests
+
 ### File List
+
+- `lib/haptics.ts` — MODIFIED: added 5 semantic workout functions, changed `isHapticsAvailable` to function for testability
+- `app/programs/[id]/session/[index]-v2.tsx` — MODIFIED: added haptic calls to handleSetConfirm (setConfirmed + exerciseCompleted), handleExpandExercise (navigationTap), handleSetDotNavigation (navigationTap)
+- `hooks/workout/useEndWorkout.ts` — MODIFIED: added haptics.workoutCompleted() to confirmEnd
+- `__tests__/lib/haptics.test.ts` — NEW: 21 unit tests for haptic function mappings, web safety, and existing function regression

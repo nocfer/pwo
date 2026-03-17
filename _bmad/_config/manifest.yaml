@@ -19,5 +19,3 @@ modules:
     repoUrl: null
 ides:
   - claude-code
-  - cursor
-  - kiro
