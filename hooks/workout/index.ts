@@ -1,5 +1,6 @@
 export { useActiveWorkoutRedirect } from './useActiveWorkoutRedirect'
 export { useElapsedTimer } from './useElapsedTimer'
+export { useRestTimer } from './useRestTimer'
 export { useEndWorkout } from './useEndWorkout'
 export { useKeypadState } from './useKeypadState'
 export { usePrefill } from './usePrefill'

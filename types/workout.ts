@@ -24,6 +24,7 @@ export type ExerciseState = {
   exerciseId: string
   exerciseName: string
   sets: ExerciseSetState[]
+  restDurationMs?: number
 }
 
 export type RestTimerState = {
