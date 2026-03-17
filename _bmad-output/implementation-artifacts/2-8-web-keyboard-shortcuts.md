@@ -1,6 +1,6 @@
 # Story 2.8: Web Keyboard Shortcuts
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -25,26 +25,26 @@ So that the desktop experience feels native and productive for reviewing or logg
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create useWebKeyboardShortcuts hook (AC: #1, #2, #3, #5, #6, #7, #8)
-  - [ ] 1.1 Create `hooks/workout/useWebKeyboardShortcuts.ts` — new hook that adds a `keydown` event listener on `document` when `Platform.OS === 'web'`
-  - [ ] 1.2 Hook accepts a config object: `{ onEnter, onTab, onEscape, onDigit?, onBackspace?, enabled }` — all callbacks are invoked on the corresponding key presses
-  - [ ] 1.3 Gate all event listeners behind `Platform.OS === 'web'` AND `enabled` — no-op on iOS/Android
-  - [ ] 1.4 Ignore key events when modifier keys are held (Ctrl, Alt, Meta) to avoid hijacking browser shortcuts
-  - [ ] 1.5 Call `e.preventDefault()` for Enter, Tab, Escape, digit keys, and Backspace to stop default browser behavior (Tab focus cycling, Enter form submission, Backspace navigation)
-  - [ ] 1.6 Route digit keys `0-9` → `onDigit(parseInt(e.key, 10))` when `onDigit` callback is provided (keypad visible)
-  - [ ] 1.7 Route Backspace → `onBackspace()` when `onBackspace` callback is provided (keypad visible)
-  - [ ] 1.8 Cleanup: remove event listener on unmount or when config changes
-  - [ ] 1.9 Export `useWebKeyboardShortcuts` from `hooks/workout/index.ts`
+- [x] Task 1: Create useWebKeyboardShortcuts hook (AC: #1, #2, #3, #5, #6, #7, #8)
+  - [x] 1.1 Create `hooks/workout/useWebKeyboardShortcuts.ts` — new hook that adds a `keydown` event listener on `document` when `Platform.OS === 'web'`
+  - [x] 1.2 Hook accepts a config object: `{ onEnter, onTab, onEscape, onDigit?, onBackspace?, enabled }` — all callbacks are invoked on the corresponding key presses
+  - [x] 1.3 Gate all event listeners behind `Platform.OS === 'web'` AND `enabled` — no-op on iOS/Android
+  - [x] 1.4 Ignore key events when modifier keys are held (Ctrl, Alt, Meta) to avoid hijacking browser shortcuts
+  - [x] 1.5 Call `e.preventDefault()` for Enter, Tab, Escape, digit keys, and Backspace to stop default browser behavior (Tab focus cycling, Enter form submission, Backspace navigation)
+  - [x] 1.6 Route digit keys `0-9` → `onDigit(parseInt(e.key, 10))` when `onDigit` callback is provided (keypad visible)
+  - [x] 1.7 Route Backspace → `onBackspace()` when `onBackspace` callback is provided (keypad visible)
+  - [x] 1.8 Cleanup: remove event listener on unmount or when config changes
+  - [x] 1.9 Export `useWebKeyboardShortcuts` from `hooks/workout/index.ts`
 
-- [ ] Task 2: Build composed handlers in v2 route (AC: #1, #2, #3, #6, #8)
-  - [ ] 2.1 Create `handleEnterConfirm` callback in `WorkoutSessionContent`: find the current active or editing set from `state.exercises`, call `handleSetConfirm(exerciseIndex, setIndex)`. No-op if no active/editing set exists.
-  - [ ] 2.2 Create `handleTabAdvance` callback: if keypad not visible → open keypad on active set's reps field. If keypad on reps → switch to weight. If keypad on weight → find next pending/active set in same exercise and open on reps. If no more sets → dismiss keypad.
-  - [ ] 2.3 Create `handleEscapeDismiss` callback: call `dismissKeypad()` — same as tapping outside the keypad
-  - [ ] 2.4 Call `useWebKeyboardShortcuts({ onEnter: handleEnterConfirm, onTab: handleTabAdvance, onEscape: handleEscapeDismiss, onDigit: keypadState.visible ? handleDigit : undefined, onBackspace: keypadState.visible ? handleBackspace : undefined, enabled: !state.isCompleted })`
-  - [ ] 2.5 Ensure `enabled` is `false` when workout is completed (no shortcuts on completion screen)
+- [x] Task 2: Build composed handlers in v2 route (AC: #1, #2, #3, #6, #8)
+  - [x] 2.1 Create `handleEnterConfirm` callback in `WorkoutSessionContent`: find the current active or editing set from `state.exercises`, call `handleSetConfirm(exerciseIndex, setIndex)`. No-op if no active/editing set exists.
+  - [x] 2.2 Create `handleTabAdvance` callback: if keypad not visible → open keypad on active set's reps field. If keypad on reps → switch to weight. If keypad on weight → find next pending/active set in same exercise and open on reps. If no more sets → dismiss keypad.
+  - [x] 2.3 Create `handleEscapeDismiss` callback: call `dismissKeypad()` — same as tapping outside the keypad
+  - [x] 2.4 Call `useWebKeyboardShortcuts({ onEnter: handleEnterConfirm, onTab: handleTabAdvance, onEscape: handleEscapeDismiss, onDigit: keypadState.visible ? handleDigit : undefined, onBackspace: keypadState.visible ? handleBackspace : undefined, enabled: !state.isCompleted })`
+  - [x] 2.5 Ensure `enabled` is `false` when workout is completed (no shortcuts on completion screen)
 
-- [ ] Task 3: Write tests (AC: #5, #6, #7, #9, #10)
-  - [ ] 3.1 Unit tests for `useWebKeyboardShortcuts` in `__tests__/hooks/workout/useWebKeyboardShortcuts.test.ts`:
+- [x] Task 3: Write tests (AC: #5, #6, #7, #9, #10)
+  - [x] 3.1 Unit tests for `useWebKeyboardShortcuts` in `__tests__/hooks/workout/useWebKeyboardShortcuts.test.ts`:
     - Enter key fires `onEnter` callback with `preventDefault`
     - Tab key fires `onTab` callback with `preventDefault`
     - Escape key fires `onEscape` callback with `preventDefault`
@@ -56,9 +56,9 @@ So that the desktop experience feels native and productive for reviewing or logg
     - Hook is no-op when `enabled` is false
     - Event listener is cleaned up on unmount
     - Unrecognized keys are ignored (no errors)
-  - [ ] 3.2 Verify no new TypeScript compilation errors (`npm run compile`)
-  - [ ] 3.3 Verify all tests pass (`npm run test:run`)
-  - [ ] 3.4 Verify all files pass Prettier (`npm run lint:fix`)
+  - [x] 3.2 Verify no new TypeScript compilation errors (`npm run compile`)
+  - [x] 3.3 Verify all tests pass (`npm run test:run`)
+  - [x] 3.4 Verify all files pass Prettier (`npm run lint:fix`)
 
 ## Dev Notes
 
@@ -178,13 +178,13 @@ The active set can be found using `state.expandedExerciseIndex` and `state.activ
 
 **`KeyboardEvent.key` values:**
 
-| Key Pressed | `e.key` Value | Action |
-| --- | --- | --- |
-| Enter | `'Enter'` | Confirm active set |
-| Tab | `'Tab'` | Advance to next field |
-| Escape | `'Escape'` | Dismiss keypad |
-| 0-9 | `'0'` to `'9'` | Route digit to keypad |
-| Backspace | `'Backspace'` | Delete last digit |
+| Key Pressed | `e.key` Value  | Action                |
+| ----------- | -------------- | --------------------- |
+| Enter       | `'Enter'`      | Confirm active set    |
+| Tab         | `'Tab'`        | Advance to next field |
+| Escape      | `'Escape'`     | Dismiss keypad        |
+| 0-9         | `'0'` to `'9'` | Route digit to keypad |
+| Backspace   | `'Backspace'`  | Delete last digit     |
 
 **`preventDefault()` requirement:**
 
@@ -241,6 +241,7 @@ d46f0e5 test: add unit tests for ExerciseAccordionItem and SetDot
 **`useWebKeyboardShortcuts` tests (`__tests__/hooks/workout/useWebKeyboardShortcuts.test.ts`):**
 
 Since this hook uses `document.addEventListener` (web-only API), tests need:
+
 1. Mock `Platform.OS` to `'web'` to enable the hook
 2. Mock `document.addEventListener` and `document.removeEventListener`
 3. Fire synthetic `KeyboardEvent` objects to simulate key presses
@@ -291,31 +292,32 @@ expect(onEnter).toHaveBeenCalledTimes(1)
 
 ### Edge Cases
 
-| Scenario | Expected Behavior |
-| --- | --- |
-| Enter pressed with no active set (all completed/skipped) | No-op — no set to confirm |
-| Enter pressed on pending set (not yet active) | No-op — only active/editing sets can be confirmed via Enter |
-| Tab pressed with keypad closed | Opens keypad on active set's reps field |
-| Tab pressed on weight field, no more pending sets in exercise | Dismiss keypad |
-| Tab pressed on weight field, next set is pending | Open keypad on next set's reps |
-| Tab pressed on weight field, next set is completed | Skip to next pending set, or dismiss if none |
-| Escape pressed with keypad already closed | No-op |
-| Ctrl+Enter pressed | Ignored (modifier key) — browser handles normally |
-| Alt+Tab pressed | Ignored — OS handles normally |
-| Digit key pressed with keypad closed | No-op — digits only route when keypad visible |
-| Backspace pressed with keypad closed | No-op — browser default (may navigate back) |
-| Keyboard shortcut pressed after workout completed | No-op — `enabled: false` |
-| Rapid key presses (Enter Enter Enter) | Each fires independently; confirms sequential sets |
-| Shift+Tab (reverse tab) | Shift is not a modifier we check for; Tab handler fires. Could optionally reverse direction but AC doesn't require it. |
+| Scenario                                                      | Expected Behavior                                                                                                      |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Enter pressed with no active set (all completed/skipped)      | No-op — no set to confirm                                                                                              |
+| Enter pressed on pending set (not yet active)                 | No-op — only active/editing sets can be confirmed via Enter                                                            |
+| Tab pressed with keypad closed                                | Opens keypad on active set's reps field                                                                                |
+| Tab pressed on weight field, no more pending sets in exercise | Dismiss keypad                                                                                                         |
+| Tab pressed on weight field, next set is pending              | Open keypad on next set's reps                                                                                         |
+| Tab pressed on weight field, next set is completed            | Skip to next pending set, or dismiss if none                                                                           |
+| Escape pressed with keypad already closed                     | No-op                                                                                                                  |
+| Ctrl+Enter pressed                                            | Ignored (modifier key) — browser handles normally                                                                      |
+| Alt+Tab pressed                                               | Ignored — OS handles normally                                                                                          |
+| Digit key pressed with keypad closed                          | No-op — digits only route when keypad visible                                                                          |
+| Backspace pressed with keypad closed                          | No-op — browser default (may navigate back)                                                                            |
+| Keyboard shortcut pressed after workout completed             | No-op — `enabled: false`                                                                                               |
+| Rapid key presses (Enter Enter Enter)                         | Each fires independently; confirms sequential sets                                                                     |
+| Shift+Tab (reverse tab)                                       | Shift is not a modifier we check for; Tab handler fires. Could optionally reverse direction but AC doesn't require it. |
 
 ### File Size Budget
 
-| File | Current Lines | Estimated After | Budget |
-| --- | --- | --- | --- |
-| `hooks/workout/useWebKeyboardShortcuts.ts` | NEW | ~55 | Under 300 |
-| `hooks/workout/index.ts` | 6 | ~7 | Under 300 |
-| `app/programs/[id]/session/[index]-v2.tsx` | 328 | ~355 | ⚠️ Over 300 — see mitigation below |
-| `__tests__/hooks/workout/useWebKeyboardShortcuts.test.ts` | NEW | ~120 | Under 300 |
+| File                                                      | Current Lines | Estimated After | Actual  | Budget                             |
+| --------------------------------------------------------- | ------------- | --------------- | ------- | ---------------------------------- |
+| `hooks/workout/useWebKeyboardShortcuts.ts`                | NEW           | ~55             | 56      | Under 300                          |
+| `hooks/workout/useWorkoutKeyboardHandlers.ts`             | NEW           | —               | 99      | Under 300                          |
+| `hooks/workout/index.ts`                                  | 6             | ~7              | 8       | Under 300                          |
+| `app/programs/[id]/session/[index]-v2.tsx`                | 328           | ~355            | 340     | ⚠️ Over 300 — mitigated by handler extraction |
+| `__tests__/hooks/workout/useWebKeyboardShortcuts.test.ts` | NEW           | ~120            | 272     | Under 300                          |
 
 **V2 route mitigation if exceeding 300 lines:**
 
@@ -427,7 +429,7 @@ document.addEventListener('keydown', handler)
 - [Source: _bmad-output/planning-artifacts/prd.md#FR16] — "User can confirm sets, navigate inputs, and dismiss the keypad using keyboard shortcuts on web"
 - [Source: _bmad-output/project-context.md#Expo-Specific Considerations] — "Platform.OS === 'web' for web-only features"
 - [Source: _bmad-output/project-context.md#Code Style] — Prettier config, no semicolons, single quotes
-- [Source: _bmad-output/project-context.md#Testing Rules] — Vitest, __tests__/ mirror structure, describe/it blocks
+- [Source: _bmad-output/project-context.md#Testing Rules] — Vitest, **tests**/ mirror structure, describe/it blocks
 - [Source: _bmad-output/implementation-artifacts/2-7-pre-fill-engine-last-logged-and-program-targets.md] — Previous story learnings, current test count (191), file sizes, patterns
 - [Source: _bmad-output/implementation-artifacts/2-6-edit-completed-sets.md] — Edit mode interactions, handleSetConfirm/handleFieldPress patterns, reducer helper extraction
 
@@ -435,10 +437,36 @@ document.addEventListener('keydown', handler)
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude claude-4.6-opus (Cursor)
 
 ### Debug Log References
 
+No debug issues encountered.
+
 ### Completion Notes List
 
+- Created `hooks/workout/useWebKeyboardShortcuts.ts` (56 lines) — generic web-only keyboard event hook gated behind `Platform.OS === 'web'` and `enabled` flag, with `typeof document` safety belt
+- Hook accepts `{ onEnter, onTab, onEscape, onDigit?, onBackspace?, enabled }` config — uses `keydown` event on `document`, skips events with Ctrl/Alt/Meta/Shift(Tab) modifiers, calls `preventDefault()` only when callback returns truthy
+- Created `hooks/workout/useWorkoutKeyboardHandlers.ts` (99 lines) — composes workout-specific Enter/Tab/Escape handlers and wires them to the generic keyboard hook
+  - `handleEnterConfirm` — finds active/editing set via state indices, confirms it (same as tapping checkmark), returns boolean
+  - `handleTabAdvance` — reps→weight→next-pending-set→dismiss progression, opens keypad on active set if not visible, returns true
+  - `handleEscapeDismiss` — dismisses keypad when visible, no-op otherwise, returns boolean
+- Digit keys (0-9) and Backspace conditionally routed to keypad handlers when keypad is visible
+- Shortcuts disabled when workout is completed (`enabled: !state.isCompleted`)
+- 17 tests covering: all key mappings (Enter/Tab/Escape/digits/Backspace), conditional `preventDefault` behavior, modifier key exclusion (Ctrl/Alt/Meta), Shift+Tab passthrough, Platform gating (no-op on iOS), enabled flag gating, event listener cleanup on unmount, unrecognized key handling
+- All 208 tests pass, no new TS errors, Prettier clean
+- V2 route at 340 lines (was 328 pre-story; ~300 is soft guideline for composition roots)
+
+### Change Log
+
+- 2026-03-16: Implemented web keyboard shortcuts — useWebKeyboardShortcuts hook, v2 route integration with composed handlers, and 14 unit tests
+- 2026-03-16: Code review fixes — extracted composed handlers to useWorkoutKeyboardHandlers, conditional preventDefault (boolean returns), Shift+Tab passthrough, 3 new tests (17 total)
+
 ### File List
+
+- hooks/workout/useWebKeyboardShortcuts.ts (new) — Web-only keyboard event hook with platform gating, modifier key exclusion, and conditional preventDefault
+- hooks/workout/useWorkoutKeyboardHandlers.ts (new) — Workout-specific keyboard handler composition (Enter confirm, Tab advance, Escape dismiss)
+- hooks/workout/index.ts (modified) — Added useWebKeyboardShortcuts and useWorkoutKeyboardHandlers exports
+- app/programs/[id]/session/[index]-v2.tsx (modified) — Integrated keyboard shortcuts via useWorkoutKeyboardHandlers
+- __tests__/hooks/workout/useWebKeyboardShortcuts.test.ts (new) — 17 tests for all key mappings, conditional preventDefault, platform gating, modifier exclusion, Shift+Tab, cleanup
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified) — Story status tracking

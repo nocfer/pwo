@@ -390,11 +390,11 @@ No debug issues encountered.
 - hooks/workout/usePrefill.ts (new) — useAsyncData-based hook returning prefillMap; imports PrefillMap from types/workout
 - hooks/workout/index.ts (modified) — Added usePrefill export
 - app/programs/[id]/session/[index]-v2.tsx (modified) — Integrated usePrefill, exerciseIds extraction, prefill-aware loading state
-- __tests__/lib/buildInitialState.test.ts (new) — 12 tests for buildInitialState with/without prefill
-- __tests__/hooks/workout/usePrefill.test.ts (new) — 7 tests for usePrefill hook
-- __tests__/lib/fetchPrefillData.test.ts (new) — 6 tests for fetchPrefillData (real implementation via fetch mock)
-- _bmad-output/implementation-artifacts/sprint-status.yaml (modified) — Story status tracking
+- **tests**/lib/buildInitialState.test.ts (new) — 12 tests for buildInitialState with/without prefill
+- **tests**/hooks/workout/usePrefill.test.ts (new) — 7 tests for usePrefill hook
+- **tests**/lib/fetchPrefillData.test.ts (new) — 6 tests for fetchPrefillData (real implementation via fetch mock)
+- \_bmad-output/implementation-artifacts/sprint-status.yaml (modified) — Story status tracking
 
 ### Review Follow-ups
 
-- [ ] [AI-Review][MEDIUM] Uncommitted story 2-6 changes in working directory: context/WorkoutExecutionContext.tsx, context/workoutReducer.ts, context/reducerHelpers.ts, __tests__/context/workoutReducer.test.ts — these should be committed separately before story 2-7 changes
+- [ ] [AI-Review][MEDIUM] Uncommitted story 2-6 changes in working directory: context/WorkoutExecutionContext.tsx, context/workoutReducer.ts, context/reducerHelpers.ts, **tests**/context/workoutReducer.test.ts — these should be committed separately before story 2-7 changes
