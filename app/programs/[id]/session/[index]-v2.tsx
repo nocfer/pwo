@@ -2,6 +2,7 @@ import { ConfirmationModal } from '@/components/common/ConfirmationModal'
 import { MaxWidthContainer } from '@/components/common/MaxWidthContainer'
 import { ExerciseAccordionItem } from '@/components/workout/ExerciseAccordionItem'
 import { KeypadOverlay } from '@/components/workout/KeypadOverlay'
+import { RestTimerBar } from '@/components/workout/RestTimerBar'
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader'
 import { WorkoutExecutionProvider } from '@/context/WorkoutExecutionContext'
 import { useExercises, usePrograms } from '@/hooks/data'
@@ -10,6 +11,7 @@ import {
   useEndWorkout,
   useKeypadState,
   usePrefill,
+  useRestTimer,
   useScrollToExercise,
   useWorkoutKeyboardHandlers,
   useWorkoutExecution,
@@ -32,9 +34,20 @@ import {
 } from 'react-native'
 
 function WorkoutSessionContent() {
-  const { state, expandExercise, editSet, confirmSet, skipSet } =
-    useWorkoutExecution()
+  const {
+    state,
+    expandExercise,
+    editSet,
+    confirmSet,
+    skipSet,
+    startRestTimer
+  } = useWorkoutExecution()
   useWorkoutPersistence()
+  const {
+    remainingMs: restRemainingMs,
+    isActive: restTimerActive,
+    dismiss: dismissRest
+  } = useRestTimer()
   const { elapsedMs } = useElapsedTimer({
     startedAt: state.startedAt,
     isCompleted: state.isCompleted,
@@ -120,8 +133,21 @@ function WorkoutSessionContent() {
     (exerciseIndex: number, setIndex: number) => {
       confirmSet(exerciseIndex, setIndex)
       dismissKeypad()
+      const durationMs = state.exercises[exerciseIndex].restDurationMs ?? 60000
+      if (durationMs > 0) {
+        const allDone = state.exercises.every((ex, ei) =>
+          ex.sets.every((s, si) =>
+            ei === exerciseIndex && si === setIndex
+              ? true
+              : s.status === 'completed' || s.status === 'skipped'
+          )
+        )
+        if (!allDone) {
+          startRestTimer(durationMs)
+        }
+      }
     },
-    [confirmSet, dismissKeypad]
+    [confirmSet, dismissKeypad, startRestTimer, state.exercises]
   )
 
   const handleSetSkip = useCallback(
@@ -200,6 +226,12 @@ function WorkoutSessionContent() {
               sessionName={`Session ${state.sessionIndex}`}
               elapsedMs={elapsedMs}
               onEnd={requestEnd}
+            />
+
+            <RestTimerBar
+              remainingMs={restRemainingMs}
+              isActive={restTimerActive}
+              onSkip={dismissRest}
             />
 
             {state.exercises.map((ex, idx) => (

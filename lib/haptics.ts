@@ -76,6 +76,7 @@ export const haptics = {
   skipAction: notifyWarning,
   pauseTimer: tapLight,
   resumeTimer: tapMedium,
+  restTimerFinished: tapLight,
 
   // Data Management CRUD operations
   createItem: notifySuccess,
