@@ -16,6 +16,7 @@ import {
   useWorkoutPersistence
 } from '@/hooks/workout'
 import { buildInitialState } from '@/lib/buildInitialState'
+import { readPersistedWorkout } from '@/lib/workout-persistence'
 import { theme } from '@/theme/theme'
 import type { Program } from '@/types'
 import { useLocalSearchParams, useNavigation } from 'expo-router'
@@ -249,6 +250,14 @@ export default function ProgramSessionV2() {
   const id = params.id as string
   const index = Number(params.index)
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- synchronous MMKV read, only on mount
+  const persistedState = useMemo(() => {
+    const state = readPersistedWorkout()
+    if (!state) return null
+    if (state.programSlug !== id || state.sessionIndex !== index) return null
+    return state
+  }, [])
+
   const { data: programs, loading: programsLoading } = usePrograms()
   const { data: exercises, loading: exercisesLoading } = useExercises()
 
@@ -273,13 +282,19 @@ export default function ProgramSessionV2() {
 
   const { prefillMap, isLoading: prefillLoading } = usePrefill(exerciseIds)
 
-  const initialState = useMemo(() => {
+  const freshState = useMemo(() => {
+    if (persistedState) return null
     if (!program || prefillLoading) return null
     return buildInitialState(program, index, exerciseNameById, prefillMap)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- exerciseNameById excluded: initial state should only be built once when program/index/prefill change
-  }, [program, index, prefillLoading, prefillMap])
+  }, [program, index, prefillLoading, prefillMap, persistedState])
 
-  if (programsLoading || exercisesLoading || prefillLoading) {
+  const initialState = persistedState ?? freshState
+
+  if (
+    !persistedState &&
+    (programsLoading || exercisesLoading || prefillLoading)
+  ) {
     return (
       <View style={styles.container}>
         <Text style={styles.loadingText}>Loading…</Text>
@@ -287,7 +302,7 @@ export default function ProgramSessionV2() {
     )
   }
 
-  if (!program || !initialState) {
+  if (!initialState) {
     return (
       <View style={styles.container}>
         <Text style={styles.errorText}>Session unavailable.</Text>

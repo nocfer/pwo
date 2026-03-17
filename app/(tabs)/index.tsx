@@ -1,6 +1,7 @@
 import { WeeklyChart } from '@/components'
 import { AnimatedCard, EmptyState } from '@/components/common'
 import { useAllProgress, usePrograms, useWeeklyActivity } from '@/hooks/data'
+import { useActiveWorkoutRedirect } from '@/hooks/workout'
 import {
   AnimatedIcon,
   useScreenIconAnimation
@@ -24,6 +25,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function Index() {
+  const { redirecting } = useActiveWorkoutRedirect()
   const { data: programs } = usePrograms()
   const [programSelectorOpen, setProgramSelectorOpen] = useState(false)
   const [prioritizedPrograms, setPrioritizedPrograms] = useState<
@@ -82,6 +84,14 @@ export default function Index() {
   })
 
   const hasProgress = aggregated && aggregated.totalWorkoutsCompleted > 0
+
+  if (redirecting) {
+    return (
+      <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
+        <View style={styles.container} />
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>

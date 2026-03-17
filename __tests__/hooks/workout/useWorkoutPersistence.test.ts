@@ -188,6 +188,40 @@ describe('useWorkoutPersistence', () => {
     expect(activeStateSetCall).toBeUndefined()
   })
 
+  it('preserves existing session ID from MMKV on resume (active state exists)', () => {
+    const existingId = 'existing-session-id-abc'
+    mockStorage.getString.mockImplementation((key: string) => {
+      if (key === STORAGE_KEYS.WORKOUT_ACTIVE_STATE) return '{"some":"state"}'
+      if (key === STORAGE_KEYS.WORKOUT_SESSION_ID) return existingId
+      return undefined
+    })
+
+    const result = useWorkoutPersistence()
+
+    expect(result.sessionId).toBe(existingId)
+  })
+
+  it('generates new session ID on fresh start even if old session ID exists in MMKV', () => {
+    mockStorage.getString.mockImplementation((key: string) => {
+      if (key === STORAGE_KEYS.WORKOUT_SESSION_ID) return 'stale-old-id'
+      return undefined
+    })
+
+    const result = useWorkoutPersistence()
+
+    expect(result.sessionId).not.toBe('stale-old-id')
+    expect(result.sessionId.length).toBeGreaterThan(0)
+  })
+
+  it('generates new session ID when MMKV has no existing session ID', () => {
+    mockStorage.getString.mockReturnValue(undefined)
+
+    const result = useWorkoutPersistence()
+
+    expect(result.sessionId).toBeTruthy()
+    expect(result.sessionId.length).toBeGreaterThan(0)
+  })
+
   it('writes updated state on subsequent state changes', () => {
     useWorkoutPersistence()
     vi.clearAllMocks()

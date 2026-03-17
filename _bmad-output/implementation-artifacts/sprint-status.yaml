@@ -63,12 +63,12 @@ development_status:
   # Epic 3: Workout State Persistence & Recovery
   epic-3: in-progress
   3-1-mmkv-persistence-layer-and-continuous-state-saving: done
-  3-2-seamless-workout-resume-and-state-restoration: backlog
+  3-2-seamless-workout-resume-and-state-restoration: done
   epic-3-retrospective: optional
 
   # Epic 4: Rest Timer & Haptic Feedback
-  epic-4: backlog
-  4-1-rest-timer-bar-with-background-notification: backlog
+  epic-4: in-progress
+  4-1-rest-timer-bar-with-background-notification: ready-for-dev
   4-2-semantic-haptic-feedback-system: backlog
   epic-4-retrospective: optional
 
