@@ -675,14 +675,16 @@ Claude claude-4.6-opus (Cursor)
 ### File List
 
 New files:
+
 - hooks/workout/useRestTimer.ts
 - components/workout/RestTimerBar.tsx
 - lib/notifications.ts
-- __tests__/hooks/workout/useRestTimer.test.ts
-- __tests__/components/workout/RestTimerBar.test.tsx
-- __tests__/lib/notifications.test.ts
+- **tests**/hooks/workout/useRestTimer.test.ts
+- **tests**/components/workout/RestTimerBar.test.tsx
+- **tests**/lib/notifications.test.ts
 
 Modified files:
+
 - types/workout.ts (added restDurationMs to ExerciseState)
 - lib/buildInitialState.ts (populate restDurationMs from block.restBetweenSets)
 - lib/haptics.ts (added restTimerFinished semantic function)
