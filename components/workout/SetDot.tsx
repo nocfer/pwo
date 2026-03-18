@@ -1,7 +1,7 @@
 import { theme } from '@/theme/theme'
 import type { SetStatus } from '@/types/workout'
 import React from 'react'
-import { Pressable, StyleSheet, Text } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity } from 'react-native'
 
 export type SetDotProps = {
   setNumber: number
@@ -18,13 +18,16 @@ function getAccessibilityLabel(setNumber: number, status: SetStatus): string {
 export function SetDot({ setNumber, status, onPress }: SetDotProps) {
   const label = getAccessibilityLabel(setNumber, status)
 
+  // TouchableOpacity used instead of Pressable to avoid nested <button> on web
+  // (SetDot renders inside a Pressable accordion toggle in ExerciseAccordionItem)
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={onPress}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint="Double tap to navigate to this set"
+      activeOpacity={0.7}
       style={[styles.dot, statusStyles[status]]}
     >
       {status === 'completed' ? (
@@ -54,7 +57,7 @@ export function SetDot({ setNumber, status, onPress }: SetDotProps) {
           {setNumber}
         </Text>
       )}
-    </Pressable>
+    </TouchableOpacity>
   )
 }
 

@@ -28,6 +28,28 @@ vi.mock('react-native', () => ({
       style
     }
   }),
+  TouchableOpacity: ({
+    children,
+    onPress,
+    accessibilityLabel,
+    accessibilityRole,
+    accessibilityHint,
+    hitSlop,
+    activeOpacity,
+    style
+  }: Record<string, unknown>) => ({
+    type: 'TouchableOpacity',
+    props: {
+      children,
+      onPress,
+      accessibilityLabel,
+      accessibilityRole,
+      accessibilityHint,
+      hitSlop,
+      activeOpacity,
+      style
+    }
+  }),
   Text: ({ children, style }: Record<string, unknown>) => ({
     type: 'Text',
     props: { children, style }
@@ -141,13 +163,13 @@ describe('ExerciseAccordionItem', () => {
 
     it('renders correct number of SetDot pressables', () => {
       const result = renderAccordion()
-      const pressables = findByType(result, 'Pressable')
-      const dotPressables = pressables.filter(
+      const touchables = findByType(result, 'TouchableOpacity')
+      const dotTouchables = touchables.filter(
         p =>
           typeof p.props.accessibilityHint === 'string' &&
           (p.props.accessibilityHint as string).includes('navigate to this set')
       )
-      expect(dotPressables.length).toBe(4)
+      expect(dotTouchables.length).toBe(4)
     })
 
     it('renders set meta with weight when sets have confirmed weight', () => {
@@ -194,8 +216,8 @@ describe('ExerciseAccordionItem', () => {
     it('renders all SetDots as completed', () => {
       const exercise = makeCompletedExercise()
       const result = renderAccordion({ exercise })
-      const pressables = findByType(result, 'Pressable')
-      const dotPressables = pressables.filter(
+      const touchables = findByType(result, 'TouchableOpacity')
+      const dotTouchables = touchables.filter(
         p =>
           typeof p.props.accessibilityHint === 'string' &&
           (p.props.accessibilityHint as string).includes(
@@ -204,7 +226,7 @@ describe('ExerciseAccordionItem', () => {
           typeof p.props.accessibilityLabel === 'string' &&
           (p.props.accessibilityLabel as string).includes('completed')
       )
-      expect(dotPressables.length).toBe(3)
+      expect(dotTouchables.length).toBe(3)
     })
   })
 
@@ -242,13 +264,13 @@ describe('ExerciseAccordionItem', () => {
     it('fires onSetDotPress when a SetDot is tapped', () => {
       const onSetDotPress = vi.fn()
       const result = renderAccordion({ onSetDotPress })
-      const dotPressables = findByType(result, 'Pressable').filter(
+      const dotTouchables = findByType(result, 'TouchableOpacity').filter(
         p =>
           typeof p.props.accessibilityLabel === 'string' &&
           (p.props.accessibilityLabel as string).startsWith('Set ')
       )
-      expect(dotPressables.length).toBeGreaterThan(0)
-      const firstDot = dotPressables[0]
+      expect(dotTouchables.length).toBeGreaterThan(0)
+      const firstDot = dotTouchables[0]
       const onPress = firstDot.props.onPress as () => void
       onPress()
       expect(onSetDotPress).toHaveBeenCalledWith(0)

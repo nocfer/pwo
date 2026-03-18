@@ -74,10 +74,8 @@ export function SetRow({
     : `Set ${setNumber}, ${statusLabel(status)}`
 
   return (
-    <Pressable
-      onPress={onPress}
+    <View
       accessibilityLabel={a11yLabel}
-      accessibilityRole="button"
       style={[
         styles.row,
         isCompleted && styles.rowCompleted,
@@ -86,9 +84,15 @@ export function SetRow({
       ]}
     >
       <View style={styles.setNumContainer}>
-        <Text style={[styles.setNum, { color: setNumColor }]}>
-          {isEditing ? '✎' : isSkipped ? '–' : setNumber}
-        </Text>
+        <Pressable
+          onPress={onPress}
+          accessibilityLabel={`Set ${setNumber}`}
+          accessibilityRole="button"
+        >
+          <Text style={[styles.setNum, { color: setNumColor }]}>
+            {isEditing ? '✎' : isSkipped ? '–' : setNumber}
+          </Text>
+        </Pressable>
         {isActive && onSkip && (
           <Pressable
             onPress={onSkip}
@@ -146,7 +150,7 @@ export function SetRow({
           ✓
         </Text>
       </Pressable>
-    </Pressable>
+    </View>
   )
 }
 

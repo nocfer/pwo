@@ -22,7 +22,7 @@ import { buildInitialState } from '@/lib/buildInitialState'
 import { readPersistedWorkout } from '@/lib/workout-persistence'
 import { theme } from '@/theme/theme'
 import type { Program } from '@/types'
-import { useLocalSearchParams, useNavigation } from 'expo-router'
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   BackHandler,
@@ -71,6 +71,7 @@ function WorkoutSessionContent() {
     dismissKeypad
   } = useKeypadState()
   const navigation = useNavigation()
+  const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
   const { height: screenHeight } = useWindowDimensions()
   const { handleExerciseLayout, scrollToExercise } = useScrollToExercise(
@@ -88,15 +89,18 @@ function WorkoutSessionContent() {
     [dismissKeypad, expandExercise, scrollToExercise]
   )
 
+  const keypadVisibleRef = useRef(keypadState.visible)
+  keypadVisibleRef.current = keypadState.visible
+
   const handleFieldPress = useCallback(
     (exerciseIndex: number, setIndex: number, field: 'reps' | 'weight') => {
-      if (keypadState.visible) {
+      if (keypadVisibleRef.current) {
         switchField(exerciseIndex, setIndex, field)
       } else {
         openKeypad(exerciseIndex, setIndex, field)
       }
     },
-    [keypadState.visible, openKeypad, switchField]
+    [openKeypad, switchField]
   )
 
   const handleSetDotNavigation = useCallback(
@@ -211,6 +215,18 @@ function WorkoutSessionContent() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <MaxWidthContainer>
           <Text style={styles.completedText}>Workout Complete!</Text>
+          <Pressable
+            style={styles.doneButton}
+            onPress={() =>
+              navigation.canGoBack()
+                ? navigation.goBack()
+                : router.replace('/(tabs)')
+            }
+            accessibilityRole="button"
+            accessibilityLabel="Done"
+          >
+            <Text style={styles.doneButtonText}>Done</Text>
+          </Pressable>
         </MaxWidthContainer>
       </ScrollView>
     )
@@ -291,7 +307,7 @@ function WorkoutSessionContent() {
   )
 }
 
-export default function ProgramSessionV2() {
+export default function ProgramSession() {
   const params = useLocalSearchParams()
   const id = params.id as string
   const index = Number(params.index)
@@ -387,6 +403,20 @@ const styles = StyleSheet.create({
     color: theme.colors.success,
     textAlign: 'center',
     marginTop: theme.spacing.xxl
+  },
+  doneButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xl,
+    alignSelf: 'center',
+    marginTop: theme.spacing.xl
+  },
+  doneButtonText: {
+    ...theme.typography.body,
+    color: theme.colors.background,
+    fontWeight: '600',
+    textAlign: 'center'
   },
   loadingText: {
     ...theme.typography.body,

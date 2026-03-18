@@ -2,16 +2,17 @@ import { describe, expect, it, vi } from 'vitest'
 import React from 'react'
 
 vi.mock('react-native', () => ({
-  Pressable: ({
+  TouchableOpacity: ({
     children,
     onPress,
     accessibilityRole,
     accessibilityLabel,
     accessibilityHint,
     hitSlop,
+    activeOpacity,
     style
   }: Record<string, unknown>) => ({
-    type: 'Pressable',
+    type: 'TouchableOpacity',
     props: {
       children,
       onPress,
@@ -19,6 +20,7 @@ vi.mock('react-native', () => ({
       accessibilityLabel,
       accessibilityHint,
       hitSlop,
+      activeOpacity,
       style
     }
   }),

@@ -36,7 +36,7 @@ export function ConfirmationModal({
   loading = false
 }: ConfirmationModalProps) {
   const handleConfirm = async () => {
-    haptics.notifyWarning()
+    haptics.deleteItem()
     await onConfirm()
   }
 

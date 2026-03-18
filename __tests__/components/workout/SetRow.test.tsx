@@ -201,11 +201,13 @@ describe('SetRow', () => {
       expect(onConfirm).toHaveBeenCalledOnce()
     })
 
-    it('fires onPress when row is pressed', () => {
+    it('fires onPress when set number area is pressed', () => {
       const onPress = vi.fn()
       const result = renderSetRow({ onPress })
-      const rowOnPress = result.props.onPress as () => void
-      rowOnPress()
+      const setNumButton = findByAccessibilityLabel(result, 'Set 1')
+      expect(setNumButton).toBeDefined()
+      const handler = setNumButton!.props.onPress as () => void
+      handler()
       expect(onPress).toHaveBeenCalledOnce()
     })
   })

@@ -74,18 +74,10 @@ const radius = {
 
 const shadows = {
   none: {
-    shadowColor: 'transparent',
-    shadowOpacity: 0,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 0,
     elevation: 0,
     boxShadow: 'none'
   },
   sm: {
-    shadowColor: '#000000',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
     elevation: 1,
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
   }

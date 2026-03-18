@@ -158,39 +158,38 @@ export function ExerciseAccordionItem({
         isExpanded && styles.rowExpanded
       ]}
     >
-      <Pressable
-        onPress={onToggle}
-        accessibilityLabel={isExpanded ? expandedLabel : compactLabel}
-        accessibilityRole="button"
-      >
-        <View style={styles.compactContent}>
-          <View style={styles.textArea}>
-            <Text
-              style={[
-                styles.exerciseName,
-                complete && styles.exerciseNameComplete
-              ]}
+      <View style={styles.compactContent}>
+        <Pressable
+          onPress={onToggle}
+          accessibilityLabel={isExpanded ? expandedLabel : compactLabel}
+          accessibilityRole="button"
+          style={styles.textArea}
+        >
+          <Text
+            style={[
+              styles.exerciseName,
+              complete && styles.exerciseNameComplete
+            ]}
+          >
+            {exercise.exerciseName}
+          </Text>
+          <Text style={styles.setMeta}>{setMeta}</Text>
+        </Pressable>
+        <View style={styles.dotRow}>
+          {exercise.sets.map((set, sIdx) => (
+            <View
+              key={`${exerciseIndex}-${sIdx}`}
+              style={sIdx > 0 ? styles.dotGap : undefined}
             >
-              {exercise.exerciseName}
-            </Text>
-            <Text style={styles.setMeta}>{setMeta}</Text>
-          </View>
-          <View style={styles.dotRow}>
-            {exercise.sets.map((set, sIdx) => (
-              <View
-                key={`${exerciseIndex}-${sIdx}`}
-                style={sIdx > 0 ? styles.dotGap : undefined}
-              >
-                <SetDot
-                  setNumber={sIdx + 1}
-                  status={set.status}
-                  onPress={() => onSetDotPress(sIdx)}
-                />
-              </View>
-            ))}
-          </View>
+              <SetDot
+                setNumber={sIdx + 1}
+                status={set.status}
+                onPress={() => onSetDotPress(sIdx)}
+              />
+            </View>
+          ))}
         </View>
-      </Pressable>
+      </View>
 
       <Animated.View style={animatedStyle}>
         <ExpandedContent
@@ -204,7 +203,7 @@ export function ExerciseAccordionItem({
         />
       </Animated.View>
 
-      <View style={styles.measureContainer} pointerEvents="none">
+      <View style={styles.measureContainer}>
         <View onLayout={handleLayout}>
           <ExpandedContent exercise={exercise} />
         </View>
@@ -279,6 +278,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     opacity: 0,
     left: 0,
-    right: 0
+    right: 0,
+    pointerEvents: 'none' as const
   }
 })

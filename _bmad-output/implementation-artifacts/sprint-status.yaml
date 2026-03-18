@@ -1,5 +1,5 @@
 # generated: 2026-03-09
-# last_updated: 2026-03-18
+# last_updated: 2026-03-19
 # project: pwo
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-09
-last_updated: 2026-03-18
+last_updated: 2026-03-19
 project: pwo
 project_key: NOKEY
 tracking_system: file-system
@@ -69,10 +69,10 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: Rest Timer & Haptic Feedback
-  epic-4: in-progress
+  epic-4: done
   4-1-rest-timer-bar-with-background-notification: done
   4-2-semantic-haptic-feedback-system: done
-  4-3-wire-v2-session-screen-and-v1-cleanup: review
+  4-3-wire-v2-session-screen-and-v1-cleanup: done
   epic-4-retrospective: optional
 
   # Epic 5: PR Detection & Achievement Notifications
