@@ -1,3 +1,4 @@
+import { haptics } from '@/lib/haptics'
 import { useWorkoutExecution } from './useWorkoutExecution'
 import { useCallback, useMemo, useState } from 'react'
 
@@ -24,6 +25,7 @@ export function useEndWorkout() {
   const confirmEnd = useCallback(() => {
     completeWorkout()
     setShowEndConfirmation(false)
+    haptics.workoutCompleted()
   }, [completeWorkout])
 
   const cancelEnd = useCallback(() => {

@@ -234,7 +234,8 @@ export function workoutReducer(
         ...state,
         exercises,
         isCompleted: true,
-        completedAt: action.completedAt
+        completedAt: action.completedAt,
+        restTimer: { isActive: false, startedAt: 0, durationMs: 0 }
       }
     }
 

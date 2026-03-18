@@ -19,7 +19,7 @@ export function useActiveWorkoutRedirect(): { redirecting: boolean } {
 
     hasRedirected.current = true
     router.replace(
-      `/programs/${activeWorkout.programSlug}/session/${activeWorkout.sessionIndex}-v2`
+      `/programs/${activeWorkout.programSlug}/session/${activeWorkout.sessionIndex}`
     )
   }, [router, activeWorkout])
 

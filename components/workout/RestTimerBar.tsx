@@ -1,6 +1,13 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { theme } from '@/theme/theme'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+  runOnJS
+} from 'react-native-reanimated'
 
 export type RestTimerBarProps = {
   remainingMs: number
@@ -31,11 +38,33 @@ export function RestTimerBar({
   isActive,
   onSkip
 }: RestTimerBarProps) {
-  if (!isActive) return null
+  const opacity = useSharedValue(1)
+  const [visible, setVisible] = useState(isActive)
+
+  useEffect(() => {
+    if (isActive) {
+      opacity.value = 1
+      setVisible(true)
+    } else if (visible) {
+      opacity.value = withSequence(
+        withTiming(0.3, { duration: 150 }),
+        withTiming(1, { duration: 150 }),
+        withTiming(0, { duration: 200 }, () => {
+          runOnJS(setVisible)(false)
+        })
+      )
+    }
+  }, [isActive])
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value
+  }))
+
+  if (!visible) return null
 
   return (
-    <View
-      style={styles.container}
+    <Animated.View
+      style={[styles.container, animatedStyle]}
       accessibilityRole="timer"
       accessibilityLabel={`Rest timer, ${accessibilityTime(remainingMs)} remaining`}
       accessibilityLiveRegion="polite"
@@ -55,7 +84,7 @@ export function RestTimerBar({
       >
         <Text style={styles.skipText}>Skip</Text>
       </Pressable>
-    </View>
+    </Animated.View>
   )
 }
 

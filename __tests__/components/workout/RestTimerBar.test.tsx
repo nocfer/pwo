@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import React from 'react'
 
 vi.mock('react-native', () => ({
+  Platform: { OS: 'ios' },
   Pressable: ({
     children,
     onPress,
@@ -47,9 +48,52 @@ vi.mock('react-native', () => ({
   }
 }))
 
+vi.mock('react-native-reanimated', () => ({
+  default: {
+    View: ({
+      children,
+      style,
+      accessibilityRole,
+      accessibilityLabel,
+      accessibilityLiveRegion
+    }: Record<string, unknown>) => ({
+      type: 'Animated.View',
+      props: {
+        children,
+        style,
+        accessibilityRole,
+        accessibilityLabel,
+        accessibilityLiveRegion
+      }
+    })
+  },
+  useSharedValue: (v: number) => ({ value: v }),
+  useAnimatedStyle: () => ({}),
+  withSequence: vi.fn(),
+  withTiming: vi.fn(),
+  runOnJS: (fn: Function) => fn
+}))
+
+let mockStateCall = 0
+vi.mock('react', async () => {
+  const actual = await vi.importActual('react')
+  return {
+    ...actual,
+    useState: (initial: unknown) => {
+      if (typeof initial === 'boolean') {
+        mockStateCall++
+        return [initial, vi.fn()]
+      }
+      return [initial, vi.fn()]
+    },
+    useEffect: vi.fn()
+  }
+})
+
 import { RestTimerBar } from '@/components/workout/RestTimerBar'
 
 function renderBar(remainingMs: number, isActive: boolean, onSkip = vi.fn()) {
+  mockStateCall = 0
   return RestTimerBar({ remainingMs, isActive, onSkip })
 }
 

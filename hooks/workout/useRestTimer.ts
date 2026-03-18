@@ -27,6 +27,7 @@ export function useRestTimer(
   nowRef.current = options?.now ?? Date.now
 
   const notificationIdRef = useRef<string | null>(null)
+  const notificationPendingRef = useRef(false)
   const permissionRequestedRef = useRef(false)
   const didFireFinishRef = useRef(false)
 
@@ -55,8 +56,14 @@ export function useRestTimer(
       const remaining =
         restTimer.startedAt + restTimer.durationMs - nowRef.current()
       if (remaining > 0) {
+        notificationPendingRef.current = true
         scheduleRestTimerNotification(remaining).then(id => {
-          notificationIdRef.current = id
+          notificationPendingRef.current = false
+          if (id && restTimer.isActive) {
+            notificationIdRef.current = id
+          } else if (id) {
+            cancelRestTimerNotification(id)
+          }
         })
       }
     } else {
