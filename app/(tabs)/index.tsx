@@ -1,6 +1,7 @@
 import { WeeklyChart } from '@/components'
 import { AnimatedCard, EmptyState } from '@/components/common'
 import { useAllProgress, usePrograms, useWeeklyActivity } from '@/hooks/data'
+import { useActiveWorkoutRedirect } from '@/hooks/workout'
 import {
   AnimatedIcon,
   useScreenIconAnimation
@@ -24,6 +25,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function Index() {
+  const { redirecting } = useActiveWorkoutRedirect()
   const { data: programs } = usePrograms()
   const [programSelectorOpen, setProgramSelectorOpen] = useState(false)
   const [prioritizedPrograms, setPrioritizedPrograms] = useState<
@@ -82,6 +84,14 @@ export default function Index() {
   })
 
   const hasProgress = aggregated && aggregated.totalWorkoutsCompleted > 0
+
+  if (redirecting) {
+    return (
+      <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
+        <View style={styles.container} />
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
@@ -395,8 +405,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    ...theme.shadows.md
+    padding: theme.spacing.lg
   },
   heroCardPressed: {
     opacity: 0.9,
@@ -438,8 +447,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
-    alignItems: 'center',
-    ...theme.shadows.sm
+    alignItems: 'center'
   },
   statCardPressed: {
     transform: [{ scale: 0.98 }]
@@ -468,8 +476,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    ...theme.shadows.sm
+    padding: theme.spacing.lg
   },
   browseCardPressed: {
     backgroundColor: theme.colors.background,
@@ -529,7 +536,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.borderLight
   },
   modalTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     textAlign: 'center'
   },

@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.success
   },
   streakDotInactive: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.surface,
     borderColor: theme.colors.border
   },
   streakDotToday: {

@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg
   },
   title: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     textAlign: 'center',
     marginBottom: theme.spacing.sm
@@ -216,7 +216,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md
   },
   compactButtonText: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primary
   }
 })

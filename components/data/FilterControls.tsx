@@ -252,7 +252,8 @@ const styles = StyleSheet.create({
     color: theme.colors.subtext
   },
   pillTextActive: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primary
   },
   clearButton: {
@@ -264,7 +265,8 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xs
   },
   clearButtonText: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primary
   }
 })

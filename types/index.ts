@@ -41,6 +41,16 @@ export type {
   WorkoutProgress
 } from './progress'
 
+// Workout execution types (v1.2 state machine)
+export type {
+  ExerciseSetState,
+  ExerciseState,
+  RestTimerState,
+  SetStatus,
+  WorkoutAction,
+  WorkoutState
+} from './workout'
+
 // Enhanced types
 export type {
   AuditAction,

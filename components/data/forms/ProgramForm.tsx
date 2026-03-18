@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface
   },
   headerTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text
   },
   saveButton: {
@@ -914,7 +914,8 @@ const styles = StyleSheet.create({
     opacity: 0.7
   },
   addButtonText: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primary
   },
   emptyCard: {
@@ -971,7 +972,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   exerciseNumberText: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primaryTextOn
   },
   exercisePicker: {
@@ -1057,7 +1059,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.borderLight
   },
   modalTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     textAlign: 'center'
   },

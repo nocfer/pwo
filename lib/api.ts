@@ -8,6 +8,7 @@
 import { auth } from '@/lib/firebase'
 import type { APIWorkout, APIWorkoutCreateInput } from '@/lib/mappers/workout'
 import type { Exercise } from '@/types'
+import type { PrefillData } from '@/types/workout'
 
 // Use global fetch — expo/fetch is for streaming (SSE) and has issues on iOS in Expo Go
 
@@ -182,6 +183,24 @@ export async function fetchExercisesByCategory(
   return request<Exercise[]>(
     `/api/v1/exercises?category=${encodeURIComponent(category)}`
   )
+}
+
+/**
+ * Fetch last-logged reps/weight per exercise for pre-filling workout sets.
+ * Returns empty array on any error so callers fall back to program targets.
+ */
+export async function fetchPrefillData(
+  exerciseIds: string[]
+): Promise<PrefillData> {
+  if (exerciseIds.length === 0) return []
+  const ids = exerciseIds.map(encodeURIComponent).join(',')
+  try {
+    return await request<PrefillData>(
+      `/api/v1/exercises/prefill?exerciseIds=${ids}`
+    )
+  } catch {
+    return []
+  }
 }
 
 /**

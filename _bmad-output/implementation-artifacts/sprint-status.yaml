@@ -1,0 +1,90 @@
+# generated: 2026-03-09
+# project: pwo
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: {project-root}/_bmad-output/implementation-artifacts
+#
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-03-09
+project: pwo
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Dark Theme & Design System Foundation
+  epic-1: in-progress
+  1-1-replace-theme-tokens-with-dark-first-design-system: done
+  1-2-hardcoded-color-audit-and-component-token-migration: done
+  1-3-cross-platform-visual-parity-and-responsive-layout-utility: done
+  epic-1-retrospective: optional
+
+  # Epic 2: Core Workout Logging Experience
+  epic-2: in-progress
+  2-1-workout-state-machine-and-type-contracts: done
+  2-2-workout-header-and-elapsed-timer: done
+  2-3-setdot-compact-indicators-and-exerciseaccordion-structure: done
+  2-4-setrow-and-numerickeypad-for-set-logging: done
+  2-5-set-confirmation-and-non-linear-navigation: done
+  2-6-edit-completed-sets: done
+  2-7-pre-fill-engine-last-logged-and-program-targets: done
+  2-8-web-keyboard-shortcuts: done
+  2-9-visual-alignment-with-approved-mockup: done
+  epic-2-retrospective: optional
+
+  # Epic 3: Workout State Persistence & Recovery
+  epic-3: in-progress
+  3-1-mmkv-persistence-layer-and-continuous-state-saving: done
+  3-2-seamless-workout-resume-and-state-restoration: done
+  epic-3-retrospective: optional
+
+  # Epic 4: Rest Timer & Haptic Feedback
+  epic-4: in-progress
+  4-1-rest-timer-bar-with-background-notification: review
+  4-2-semantic-haptic-feedback-system: review
+  epic-4-retrospective: optional
+
+  # Epic 5: PR Detection & Achievement Notifications
+  epic-5: backlog
+  5-1-per-set-pr-detection-and-inline-notification: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Exercise Media & Instructions
+  epic-6: backlog
+  6-1-exercise-media-modal-for-active-workouts: backlog
+  6-2-exercise-library-media-and-offline-placeholder: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Workout Completion & Background Sync
+  epic-7: backlog
+  7-1-completion-summary-modal-with-celebration: backlog
+  7-2-background-sync-queue-and-offline-reliability: backlog
+  epic-7-retrospective: optional

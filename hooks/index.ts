@@ -13,3 +13,9 @@ export {
   type HistoryEntry,
   type LiveProgress
 } from './data'
+
+// Workout execution (v1.2)
+export { useElapsedTimer, useEndWorkout, useWorkoutExecution } from './workout'
+
+// Responsive layout
+export { useResponsiveLayout } from './useResponsiveLayout'

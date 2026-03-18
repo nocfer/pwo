@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface
   },
   headerTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text
   },
   saveButton: {
@@ -413,7 +413,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   },
   changeButtonText: {
-    ...theme.typography.captionBold,
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primary
   },
   modalBackdrop: {
@@ -444,7 +445,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.borderLight
   },
   modalTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     textAlign: 'center'
   },

@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md
   },
   title: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text
   },
   dateRange: {

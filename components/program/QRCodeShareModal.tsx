@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xl,
     width: '100%',
     maxWidth: 400,
-    ...theme.shadows.lg
+    ...theme.shadows.sm
   },
   header: {
     flexDirection: 'row',
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     flex: 1
   },
   title: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text
   },
   closeButton: {
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md
   },
   programName: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text,
     textAlign: 'center'
   },

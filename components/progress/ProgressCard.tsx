@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   percentage: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.primaryTextOn,
     fontFamily: theme.fonts.bold
   }

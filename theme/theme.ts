@@ -1,66 +1,57 @@
 const colors = {
-  // Neutral palette - refined slate with better contrast
-  background: '#F8FAFC', // slate-50 - subtle warmth
-  surface: '#FFFFFF',
-  text: '#0F172A', // slate-900 - deeper for better readability
-  subtext: '#475569', // slate-600
-  muted: '#94A3B8', // slate-400 - softer for secondary text
-  border: '#E2E8F0', // slate-200
-  borderLight: '#F1F5F9', // slate-100 - for subtle dividers
-  card: '#FFFFFF', // pure white for cards
+  // Core surfaces — dark-first palette
+  background: '#0B0C10',
+  surface: '#14151A',
+  surfaceElevated: '#1C1D24',
+  text: '#ECEDF0',
+  textInverse: '#0B0C10',
+  subtext: '#8C8EA0',
+  muted: '#53556A',
+  border: '#1F2029',
+  borderLight: '#2A2B36',
 
-  // Primary palette - sophisticated indigo
-  primary: '#6366F1', // indigo-500 - vibrant but professional
-  primaryDark: '#4F46E5', // indigo-600
-  primaryLight: '#EEF2FF', // indigo-50
-  primaryMuted: '#C7D2FE', // indigo-200
+  // Brand — indigo-400 tuned for dark backgrounds
+  primary: '#818CF8',
+  primaryDark: '#6366F1',
+  primaryLight: 'rgba(129, 140, 248, 0.12)',
+  primaryMuted: 'rgba(129, 140, 248, 0.25)',
   primaryTextOn: '#FFFFFF',
 
-  // Accent - refined amber
-  accent: '#F59E0B', // amber-500
-  accentLight: '#FEF3C7', // amber-100
+  // Accent — amber-400
+  accent: '#FBBF24',
+  accentLight: 'rgba(251, 191, 36, 0.12)',
 
-  // Status colors - refined and cohesive
-  success: '#10B981', // emerald-500
-  successLight: '#D1FAE5', // emerald-100
-  danger: '#EF4444', // red-500
-  dangerLight: '#FEE2E2', // red-100
-  warning: '#F59E0B', // amber-500
-  warningLight: '#FEF3C7', // amber-100
+  // Status
+  success: '#34D399',
+  successLight: 'rgba(52, 211, 153, 0.12)',
+  danger: '#F87171',
+  dangerLight: 'rgba(248, 113, 113, 0.12)',
+  warning: '#FBBF24',
+  warningLight: 'rgba(251, 191, 36, 0.12)',
 
-  // Phase palette for workout states
+  // Phase palette — solid hex pre-computed against surface #14151A
   phases: {
-    warmup: '#F97316', // orange-500
-    warmupBg: '#FFF7ED', // orange-50
-    working: '#6366F1', // indigo-500
-    workingBg: '#EEF2FF', // indigo-50
-    break: '#06B6D4', // cyan-500
-    breakBg: '#ECFEFF', // cyan-50
-    done: '#10B981', // emerald-500
-    doneBg: '#D1FAE5' // emerald-100
+    warmup: '#FB923C',
+    warmupBg: '#1D1813',
+    working: '#818CF8',
+    workingBg: '#1B1B28',
+    break: '#22D3EE',
+    breakBg: '#151D20',
+    done: '#34D399',
+    doneBg: '#161E1B'
   },
 
-  // Gradient colors
-  gradient: {
-    primaryStart: '#6366F1', // indigo-500
-    primaryEnd: '#8B5CF6', // violet-500
-    warmStart: '#F97316', // orange-500
-    warmEnd: '#EF4444', // red-500
-    successStart: '#10B981', // emerald-500
-    successEnd: '#14B8A6' // teal-500
-  },
-
-  overlayGlass: '#FFFFFFF5',
-  overlay: 'rgba(15, 23, 42, 0.5)', // slate-900 with opacity
-  skeleton: '#E2E8F0',
-  skeletonHighlight: '#F1F5F9'
+  overlayGlass: 'rgba(20, 21, 26, 0.95)',
+  overlay: 'rgba(0, 0, 0, 0.6)',
+  skeleton: '#1C1D24',
+  skeletonHighlight: '#2A2B36'
 } as const
 
 const fonts = {
-  regular: 'Inter_400Regular',
-  medium: 'Inter_500Medium',
-  semiBold: 'Inter_600SemiBold',
-  bold: 'Inter_700Bold'
+  regular: 'DMSans_400Regular',
+  medium: 'DMSans_500Medium',
+  semiBold: 'DMSans_600SemiBold',
+  bold: 'DMSans_700Bold'
 } as const
 
 const spacing = {
@@ -69,15 +60,15 @@ const spacing = {
   md: 12,
   lg: 16,
   xl: 24,
-  xxl: 32
+  xxl: 40
 } as const
 
 const radius = {
-  xs: 6,
-  sm: 10,
-  md: 14,
-  lg: 18,
-  xl: 24,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
   full: 9999
 } as const
 
@@ -91,85 +82,67 @@ const shadows = {
     boxShadow: 'none'
   },
   sm: {
-    shadowColor: '#0F172A',
-    shadowOpacity: 0.04,
+    shadowColor: '#000000',
+    shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 3,
     elevation: 1,
-    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)'
-  },
-  md: {
-    shadowColor: '#0F172A',
-    shadowOpacity: 0.06,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 2,
-    boxShadow: '0 2px 6px rgba(15, 23, 42, 0.06)'
-  },
-  lg: {
-    shadowColor: '#0F172A',
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 12,
-    elevation: 4,
-    boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)'
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
   }
-}
+} as const
 
 const typography = {
+  display: {
+    fontSize: 32,
+    fontFamily: 'DMSans_700Bold',
+    lineHeight: 38,
+    letterSpacing: -0.8
+  },
   h1: {
-    fontSize: 26,
-    fontFamily: 'Inter_700Bold',
-    lineHeight: 32,
+    fontSize: 24,
+    fontFamily: 'DMSans_600SemiBold',
+    lineHeight: 30,
     letterSpacing: -0.5
   },
   h2: {
-    fontSize: 20,
-    fontFamily: 'Inter_600SemiBold',
-    lineHeight: 26,
+    fontSize: 18,
+    fontFamily: 'DMSans_600SemiBold',
+    lineHeight: 24,
     letterSpacing: -0.3
   },
-  h3: {
-    fontSize: 17,
-    fontFamily: 'Inter_600SemiBold',
-    lineHeight: 22
-  },
   body: {
-    fontSize: 15,
-    fontFamily: 'Inter_400Regular',
-    lineHeight: 22
+    fontSize: 16,
+    fontFamily: 'DMSans_400Regular',
+    lineHeight: 24,
+    letterSpacing: 0
   },
   bodyBold: {
-    fontSize: 15,
-    fontFamily: 'Inter_600SemiBold',
-    lineHeight: 22
+    fontSize: 16,
+    fontFamily: 'DMSans_600SemiBold',
+    lineHeight: 24,
+    letterSpacing: 0
   },
   caption: {
     fontSize: 13,
-    fontFamily: 'Inter_400Regular',
-    lineHeight: 18
-  },
-  captionBold: {
-    fontSize: 13,
-    fontFamily: 'Inter_600SemiBold',
-    lineHeight: 18
+    fontFamily: 'DMSans_500Medium',
+    lineHeight: 18,
+    letterSpacing: 0.2
   },
   small: {
     fontSize: 11,
-    fontFamily: 'Inter_500Medium',
-    lineHeight: 14
+    fontFamily: 'DMSans_500Medium',
+    lineHeight: 14,
+    letterSpacing: 0.3
   }
 } as const
 
 const cards = {
-  // Standard card container
   base: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
     ...shadows.sm
   },
-  // Card with border
   bordered: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
@@ -177,50 +150,14 @@ const cards = {
     borderColor: colors.border,
     padding: spacing.lg
   },
-  // Elevated card
   elevated: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceElevated,
     borderRadius: radius.lg,
-    padding: spacing.lg,
-    ...shadows.md
-  },
-  focus: {
-    container: {
-      marginTop: spacing.md,
-      borderRadius: radius.xl,
-      borderWidth: 1,
-      paddingVertical: spacing.xl,
-      paddingHorizontal: spacing.lg,
-      ...shadows.md
-    },
-    topRow: {
-      width: '100%',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      marginBottom: spacing.md
-    },
-    icons: {
-      sm: {
-        width: 32,
-        height: 32,
-        borderRadius: radius.sm,
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
-    },
-    chipText: {
-      ...typography.caption,
-      fontFamily: fonts.semiBold,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5
-    }
+    padding: spacing.lg
   }
 } as const
 
-// Reusable style presets to avoid duplication
 const presets = {
-  // Standard card container
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
@@ -228,7 +165,6 @@ const presets = {
     ...shadows.sm
   },
 
-  // Card with border (no shadow)
   cardBordered: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
@@ -237,32 +173,27 @@ const presets = {
     padding: spacing.lg
   },
 
-  // Row with space-between
   rowBetween: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const
   },
 
-  // Row with items centered
   rowCenter: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const
   },
 
-  // Screen container
   screenContainer: {
     flex: 1,
     backgroundColor: colors.background
   },
 
-  // Screen content with padding
   screenContent: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl * 2
   },
 
-  // Section header
   sectionHeader: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -270,7 +201,6 @@ const presets = {
     marginBottom: spacing.md
   },
 
-  // Primary button style
   buttonPrimary: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -278,8 +208,7 @@ const presets = {
     backgroundColor: colors.primary,
     borderRadius: radius.md,
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    ...shadows.sm
+    paddingHorizontal: spacing.lg
   },
   buttonPrimaryPressed: {
     opacity: 0.9,
@@ -293,7 +222,6 @@ const presets = {
     color: colors.primaryTextOn
   },
 
-  // Secondary button style
   buttonSecondary: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -302,18 +230,17 @@ const presets = {
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     backgroundColor: colors.surface
   },
   buttonSecondaryPressed: {
-    backgroundColor: colors.background
+    backgroundColor: colors.surfaceElevated
   },
   buttonSecondaryText: {
     ...typography.bodyBold,
     color: colors.text
   },
 
-  // Ghost button style
   buttonGhost: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -329,7 +256,6 @@ const presets = {
     color: colors.primary
   },
 
-  // Icon button
   iconButton: {
     width: 40,
     height: 40,
@@ -341,18 +267,17 @@ const presets = {
     borderColor: colors.border
   },
   iconButtonPressed: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfaceElevated,
     transform: [{ scale: 0.96 }]
   },
 
-  // Input field
   input: {
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceElevated,
     color: colors.text,
     ...typography.body
   },
@@ -360,19 +285,16 @@ const presets = {
     borderColor: colors.primary
   },
 
-  // Muted text
   textMuted: {
     ...typography.body,
     color: colors.muted
   },
 
-  // Caption muted
   captionMuted: {
     ...typography.caption,
     color: colors.muted
   },
 
-  // Chip/badge
   chip: {
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
@@ -385,7 +307,6 @@ const presets = {
     color: colors.primary
   },
 
-  // Session row base
   sessionRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -393,11 +314,10 @@ const presets = {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
     padding: spacing.md,
-    marginBottom: spacing.sm,
-    ...shadows.sm
+    marginBottom: spacing.sm
   },
   sessionRowPressed: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfaceElevated,
     transform: [{ scale: 0.98 }]
   },
   sessionRowCompleted: {
@@ -407,22 +327,19 @@ const presets = {
     opacity: 0.5
   },
 
-  // List item
   listItem: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     backgroundColor: colors.surface,
     borderRadius: radius.md,
     padding: spacing.md,
-    marginBottom: spacing.sm,
-    ...shadows.sm
+    marginBottom: spacing.sm
   },
   listItemPressed: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfaceElevated,
     transform: [{ scale: 0.98 }]
   },
 
-  // Divider
   divider: {
     height: 1,
     backgroundColor: colors.border

@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg
   },
   title: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text
   },
   summaryPills: {
