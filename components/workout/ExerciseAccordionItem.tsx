@@ -1,13 +1,13 @@
 import { theme } from '@/theme/theme'
 import type { ExerciseState } from '@/types/workout'
 import React, { useCallback } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
-import Animated, {
-  useAnimatedStyle,
-  useDerivedValue,
-  useSharedValue,
-  withTiming
-} from 'react-native-reanimated'
+import {
+  LayoutAnimation,
+  Pressable,
+  StyleSheet,
+  Text,
+  View
+} from 'react-native'
 import { SetDot } from './SetDot'
 import { SetRow } from './SetRow'
 
@@ -21,17 +21,16 @@ export type ExerciseAccordionItemProps = {
   onSetWeightPress?: (setIndex: number) => void
   onSetConfirm?: (setIndex: number) => void
   onSetPress?: (setIndex: number) => void
-  onSetSkip?: (setIndex: number) => void
   focusedField?: { setIndex: number; field: 'reps' | 'weight' } | null
 }
 
 type ExpandedContentProps = {
   exercise: ExerciseState
+  onToggle?: () => void
   onSetRepsPress?: (setIndex: number) => void
   onSetWeightPress?: (setIndex: number) => void
   onSetConfirm?: (setIndex: number) => void
   onSetPress?: (setIndex: number) => void
-  onSetSkip?: (setIndex: number) => void
   focusedField?: { setIndex: number; field: 'reps' | 'weight' } | null
 }
 
@@ -43,11 +42,11 @@ function getCompletedCount(exercise: ExerciseState): number {
 
 function ExpandedContent({
   exercise,
+  onToggle,
   onSetRepsPress,
   onSetWeightPress,
   onSetConfirm,
   onSetPress,
-  onSetSkip,
   focusedField
 }: ExpandedContentProps) {
   const completedCount = getCompletedCount(exercise)
@@ -58,7 +57,15 @@ function ExpandedContent({
 
   return (
     <View style={styles.expandedContent}>
-      <Text style={styles.expandedTitle}>{exercise.exerciseName}</Text>
+      <View style={styles.expandedHeader}>
+        <Pressable
+          onPress={onToggle}
+          accessibilityLabel={`${exercise.exerciseName}, expanded, tap to collapse`}
+          accessibilityRole="button"
+        >
+          <Text style={styles.expandedTitle}>{exercise.exerciseName}</Text>
+        </Pressable>
+      </View>
       {exercise.sets.map((set, sIdx) => (
         <SetRow
           key={`set-${sIdx}`}
@@ -70,7 +77,6 @@ function ExpandedContent({
           onWeightPress={() => onSetWeightPress?.(sIdx)}
           onConfirm={() => onSetConfirm?.(sIdx)}
           onPress={() => onSetPress?.(sIdx)}
-          onSkip={() => onSetSkip?.(sIdx)}
           isRepsFocused={
             focusedField?.setIndex === sIdx && focusedField.field === 'reps'
           }
@@ -79,13 +85,17 @@ function ExpandedContent({
           }
         />
       ))}
-      <View
-        style={styles.progressTrack}
-        accessibilityRole="progressbar"
-        accessibilityValue={{ min: 0, max: 100, now: progressPercent }}
-        accessibilityLabel="Set completion progress"
-      >
-        <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
+      <View style={styles.progressPadding}>
+        <View
+          style={styles.progressTrack}
+          accessibilityRole="progressbar"
+          accessibilityValue={{ min: 0, max: 100, now: progressPercent }}
+          accessibilityLabel="Set completion progress"
+        >
+          <View
+            style={[styles.progressFill, { width: `${progressPercent}%` }]}
+          />
+        </View>
       </View>
     </View>
   )
@@ -123,7 +133,6 @@ export function ExerciseAccordionItem({
   onSetWeightPress,
   onSetConfirm,
   onSetPress,
-  onSetSkip,
   focusedField
 }: ExerciseAccordionItemProps) {
   const complete = isExerciseComplete(exercise)
@@ -131,99 +140,90 @@ export function ExerciseAccordionItem({
   const setMeta = computeSetMeta(exercise)
   const completedCount = getCompletedCount(exercise)
 
-  const contentHeight = useSharedValue(0)
-  const animatedHeight = useDerivedValue(() =>
-    withTiming(isExpanded ? contentHeight.value : 0, { duration: 250 })
-  )
-  const animatedStyle = useAnimatedStyle(() => ({
-    height: animatedHeight.value,
-    overflow: 'hidden' as const
-  }))
-
-  const handleLayout = useCallback(
-    (e: { nativeEvent: { layout: { height: number } } }) => {
-      contentHeight.value = e.nativeEvent.layout.height
-    },
-    [contentHeight]
-  )
+  const handleToggle = useCallback(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+    onToggle()
+  }, [onToggle])
 
   const compactLabel = `${exercise.exerciseName}, ${completedCount} of ${exercise.sets.length} sets complete, tap to expand`
-  const expandedLabel = `${exercise.exerciseName}, expanded`
 
   return (
     <View
       style={[
         styles.row,
+        !isExpanded && complete && styles.rowComplete,
         !isExpanded && active && styles.rowCompactActive,
         isExpanded && styles.rowExpanded
       ]}
     >
-      <View style={styles.compactContent}>
-        <Pressable
-          onPress={onToggle}
-          accessibilityLabel={isExpanded ? expandedLabel : compactLabel}
-          accessibilityRole="button"
-          style={styles.textArea}
-        >
-          <Text
-            style={[
-              styles.exerciseName,
-              complete && styles.exerciseNameComplete
-            ]}
+      {!isExpanded && (
+        <View style={styles.compactContent}>
+          <Pressable
+            onPress={handleToggle}
+            accessibilityLabel={compactLabel}
+            accessibilityRole="button"
+            style={styles.textArea}
           >
-            {exercise.exerciseName}
-          </Text>
-          <Text style={styles.setMeta}>{setMeta}</Text>
-        </Pressable>
-        <View style={styles.dotRow}>
-          {exercise.sets.map((set, sIdx) => (
-            <View
-              key={`${exerciseIndex}-${sIdx}`}
-              style={sIdx > 0 ? styles.dotGap : undefined}
+            <Text
+              style={[
+                styles.exerciseName,
+                complete && styles.exerciseNameComplete
+              ]}
             >
-              <SetDot
-                setNumber={sIdx + 1}
-                status={set.status}
-                onPress={() => onSetDotPress(sIdx)}
-              />
-            </View>
-          ))}
+              {exercise.exerciseName}
+            </Text>
+            <Text style={styles.setMeta}>{setMeta}</Text>
+          </Pressable>
+          <View style={styles.dotRow}>
+            {exercise.sets.map((set, sIdx) => (
+              <View
+                key={`${exerciseIndex}-${sIdx}`}
+                style={sIdx > 0 ? styles.dotGap : undefined}
+              >
+                <SetDot
+                  setNumber={sIdx + 1}
+                  status={set.status}
+                  onPress={() => onSetDotPress(sIdx)}
+                />
+              </View>
+            ))}
+          </View>
         </View>
-      </View>
+      )}
 
-      <Animated.View style={animatedStyle}>
+      {isExpanded && (
         <ExpandedContent
           exercise={exercise}
+          onToggle={handleToggle}
           onSetRepsPress={onSetRepsPress}
           onSetWeightPress={onSetWeightPress}
           onSetConfirm={onSetConfirm}
           onSetPress={onSetPress}
-          onSetSkip={onSetSkip}
           focusedField={focusedField}
         />
-      </Animated.View>
-
-      <View style={styles.measureContainer}>
-        <View onLayout={handleLayout}>
-          <ExpandedContent exercise={exercise} />
-        </View>
-      </View>
+      )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   row: {
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.md,
+    padding: 14,
+    paddingHorizontal: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border
+  },
+  rowComplete: {
+    backgroundColor: theme.colors.phases.doneBg
   },
   rowCompactActive: {
     backgroundColor: theme.colors.primaryLight
   },
   rowExpanded: {
-    backgroundColor: theme.colors.surface
+    backgroundColor: theme.colors.surfaceElevated,
+    padding: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border
   },
   compactContent: {
     flexDirection: 'row',
@@ -235,7 +235,8 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.sm
   },
   exerciseName: {
-    ...theme.typography.bodyBold,
+    fontSize: 16,
+    fontFamily: theme.fonts.medium,
     color: theme.colors.text
   },
   exerciseNameComplete: {
@@ -244,41 +245,41 @@ const styles = StyleSheet.create({
   setMeta: {
     ...theme.typography.caption,
     color: theme.colors.subtext,
-    marginTop: theme.spacing.xs
+    marginTop: 2
   },
   dotRow: {
     flexDirection: 'row',
     alignItems: 'center'
   },
   dotGap: {
-    marginLeft: theme.spacing.xs
+    marginLeft: 6
   },
   expandedContent: {
-    backgroundColor: theme.colors.surfaceElevated,
-    padding: theme.spacing.lg
+    backgroundColor: theme.colors.surfaceElevated
+  },
+  expandedHeader: {
+    paddingTop: 14,
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.sm
   },
   expandedTitle: {
     ...theme.typography.h2,
-    color: theme.colors.primary,
-    marginBottom: theme.spacing.sm
+    color: theme.colors.primary
+  },
+  progressPadding: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.md
   },
   progressTrack: {
-    height: 4,
+    height: 3,
     backgroundColor: theme.colors.border,
-    borderRadius: theme.radius.xs,
-    marginTop: theme.spacing.md,
+    borderRadius: 2,
+    marginTop: theme.spacing.xs,
     overflow: 'hidden' as const
   },
   progressFill: {
     height: '100%',
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.xs
-  },
-  measureContainer: {
-    position: 'absolute',
-    opacity: 0,
-    left: 0,
-    right: 0,
-    pointerEvents: 'none' as const
+    backgroundColor: theme.colors.success,
+    borderRadius: 2
   }
 })

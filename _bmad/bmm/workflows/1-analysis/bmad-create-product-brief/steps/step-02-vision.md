@@ -1,6 +1,7 @@
 ---
 # File References
 outputFile: '{planning_artifacts}/product-brief-{{project_name}}-{{date}}.md'
+
 ---
 
 # Step 2: Product Vision Discovery

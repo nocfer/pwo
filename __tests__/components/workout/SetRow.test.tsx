@@ -212,60 +212,6 @@ describe('SetRow', () => {
     })
   })
 
-  describe('skip button', () => {
-    it('renders skip text in active state when onSkip is provided', () => {
-      const result = renderSetRow({ status: 'active', onSkip: vi.fn() })
-      const textNodes = findByType(result, 'Text')
-      const skipNode = textNodes.find(t => t.props.children === 'Skip')
-      expect(skipNode).toBeDefined()
-    })
-
-    it('has correct accessibility label on skip button', () => {
-      const result = renderSetRow({
-        status: 'active',
-        setNumber: 3,
-        onSkip: vi.fn()
-      })
-      const skipButton = findByAccessibilityLabel(result, 'Skip set 3')
-      expect(skipButton).toBeDefined()
-    })
-
-    it('fires onSkip callback when skip is pressed', () => {
-      const onSkip = vi.fn()
-      const result = renderSetRow({ status: 'active', onSkip })
-      const skipButton = findByAccessibilityLabel(result, 'Skip set 1')
-      expect(skipButton).toBeDefined()
-      const onPress = skipButton!.props.onPress as () => void
-      onPress()
-      expect(onSkip).toHaveBeenCalledOnce()
-    })
-
-    it('does not render skip in pending state', () => {
-      const result = renderSetRow({ status: 'pending', onSkip: vi.fn() })
-      const skipButton = findByAccessibilityLabel(result, 'Skip set 1')
-      expect(skipButton).toBeUndefined()
-    })
-
-    it('does not render skip in completed state', () => {
-      const result = renderSetRow({ status: 'completed', onSkip: vi.fn() })
-      const skipButton = findByAccessibilityLabel(result, 'Skip set 1')
-      expect(skipButton).toBeUndefined()
-    })
-
-    it('does not render skip in editing state', () => {
-      const result = renderSetRow({ status: 'editing', onSkip: vi.fn() })
-      const skipButton = findByAccessibilityLabel(result, 'Skip set 1')
-      expect(skipButton).toBeUndefined()
-    })
-
-    it('does not render skip when onSkip is not provided', () => {
-      const result = renderSetRow({ status: 'active' })
-      const textNodes = findByType(result, 'Text')
-      const skipNode = textNodes.find(t => t.props.children === 'Skip')
-      expect(skipNode).toBeUndefined()
-    })
-  })
-
   describe('focus state', () => {
     it('renders focused reps field with focus indicator', () => {
       const result = renderSetRow({ isRepsFocused: true })

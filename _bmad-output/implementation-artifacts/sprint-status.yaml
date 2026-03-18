@@ -1,5 +1,5 @@
 # generated: 2026-03-09
-# last_updated: 2026-03-19
+# last_updated: 2026-03-18
 # project: pwo
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-09
-last_updated: 2026-03-19
+last_updated: 2026-03-18
 project: pwo
 project_key: NOKEY
 tracking_system: file-system
@@ -50,7 +50,7 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Core Workout Logging Experience
-  epic-2: done
+  epic-2: in-progress
   2-1-workout-state-machine-and-type-contracts: done
   2-2-workout-header-and-elapsed-timer: done
   2-3-setdot-compact-indicators-and-exerciseaccordion-structure: done
@@ -59,7 +59,7 @@ development_status:
   2-6-edit-completed-sets: done
   2-7-pre-fill-engine-last-logged-and-program-targets: done
   2-8-web-keyboard-shortcuts: done
-  2-9-visual-alignment-with-approved-mockup: done
+  2-9-visual-alignment-with-approved-mockup: review # Reopened 2026-03-18, fixes complete — sprint-change-proposal-2026-03-18.md
   epic-2-retrospective: optional
 
   # Epic 3: Workout State Persistence & Recovery

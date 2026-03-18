@@ -35,14 +35,8 @@ import {
 } from 'react-native'
 
 function WorkoutSessionContent() {
-  const {
-    state,
-    expandExercise,
-    editSet,
-    confirmSet,
-    skipSet,
-    startRestTimer
-  } = useWorkoutExecution()
+  const { state, expandExercise, editSet, confirmSet, startRestTimer } =
+    useWorkoutExecution()
   useWorkoutPersistence()
   const {
     remainingMs: restRemainingMs,
@@ -168,14 +162,6 @@ function WorkoutSessionContent() {
     [confirmSet, dismissKeypad, startRestTimer, state.exercises]
   )
 
-  const handleSetSkip = useCallback(
-    (exerciseIndex: number, setIndex: number) => {
-      skipSet(exerciseIndex, setIndex)
-      dismissKeypad()
-    },
-    [skipSet, dismissKeypad]
-  )
-
   const handleBackPress = useCallback(() => {
     if (state.isCompleted) return false
     requestEnd()
@@ -277,7 +263,6 @@ function WorkoutSessionContent() {
                     handleFieldPress(idx, sIdx, 'weight')
                   }
                   onSetConfirm={sIdx => handleSetConfirm(idx, sIdx)}
-                  onSetSkip={sIdx => handleSetSkip(idx, sIdx)}
                   onSetPress={sIdx => handleSetRowPress(idx, sIdx)}
                   focusedField={focusForExercise(idx)}
                 />
@@ -396,7 +381,7 @@ const styles = StyleSheet.create({
     flex: 1
   },
   content: {
-    padding: theme.spacing.lg
+    paddingVertical: theme.spacing.lg
   },
   completedText: {
     ...theme.typography.h1,

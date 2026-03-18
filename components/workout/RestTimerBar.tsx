@@ -82,7 +82,7 @@ export function RestTimerBar({
         accessibilityHint="Double tap to skip the rest timer"
         hitSlop={8}
       >
-        <Text style={styles.skipText}>Skip</Text>
+        <Text style={styles.skipText}>SKIP</Text>
       </Pressable>
     </Animated.View>
   )
@@ -90,37 +90,39 @@ export function RestTimerBar({
 
 const styles = StyleSheet.create({
   container: {
+    height: 36,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: theme.colors.phases.breakBg,
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border
   },
   label: {
-    ...theme.typography.caption,
+    fontSize: 13,
+    fontFamily: theme.fonts.medium,
     color: theme.colors.phases.break
   },
   countdown: {
-    ...theme.typography.body,
+    fontSize: 16,
+    fontFamily: theme.fonts.bold,
     color: theme.colors.phases.break,
     fontVariant: ['tabular-nums']
   },
   skipButton: {
     minWidth: 48,
-    minHeight: 48,
+    minHeight: 36,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: theme.radius.sm,
-    paddingHorizontal: theme.spacing.md
+    justifyContent: 'center'
   },
   skipPressed: {
     opacity: 0.6
   },
   skipText: {
-    ...theme.typography.caption,
-    color: theme.colors.phases.break
+    fontSize: 11,
+    fontFamily: theme.fonts.medium,
+    color: theme.colors.subtext,
+    letterSpacing: 0.5
   }
 })

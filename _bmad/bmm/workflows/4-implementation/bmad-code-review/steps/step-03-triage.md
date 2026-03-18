@@ -44,6 +44,7 @@
 
 6. If zero findings remain after dropping rejects and no layers failed, note clean review.
 
+
 ## NEXT
 
 Read fully and follow `./step-04-present.md`

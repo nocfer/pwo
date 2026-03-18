@@ -141,7 +141,7 @@ describe('RestTimerBar', () => {
       type: string
       props: { children: string }
     }
-    expect(skipText.props.children).toBe('Skip')
+    expect(skipText.props.children).toBe('SKIP')
   })
 
   it('calls onSkip when Skip button is pressed', () => {

@@ -68,20 +68,24 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 8,
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md
+    paddingBottom: 12
   },
   timer: {
-    ...theme.typography.display,
-    color: theme.colors.text
+    fontSize: 18,
+    fontFamily: theme.fonts.semiBold,
+    color: theme.colors.text,
+    fontVariant: ['tabular-nums']
   },
   info: {
     flex: 1,
-    marginHorizontal: theme.spacing.md,
-    alignItems: 'flex-end'
+    alignItems: 'center'
   },
   programName: {
-    ...theme.typography.caption,
+    fontSize: 16,
+    fontFamily: theme.fonts.medium,
     color: theme.colors.subtext
   },
   sessionName: {
@@ -91,8 +95,8 @@ const styles = StyleSheet.create({
   endButton: {
     backgroundColor: theme.colors.dangerLight,
     borderRadius: theme.radius.sm,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     minWidth: 48,
     minHeight: 48,
     alignItems: 'center',
@@ -103,7 +107,8 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.96 }]
   },
   endButtonText: {
-    ...theme.typography.caption,
+    fontSize: 13,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.danger
   }
 })

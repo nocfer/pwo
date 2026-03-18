@@ -1,6 +1,6 @@
 # Story 2.9: Visual Alignment with Approved Mockup
 
-Status: done
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -54,6 +54,40 @@ So that the interface feels cohesive, flat, and minimalist as originally designe
   - [x] 6.1 Run `npm run test:run` — all existing 208 tests must pass
   - [x] 6.2 Run `npm run compile` — no new TypeScript errors
   - [x] 6.3 Run `npm run lint:fix` — Prettier clean
+
+### Sprint Change Proposal Tasks (2026-03-18)
+
+- [x] Task 7: Fix progress bar color — `primary` → `success` (ExerciseAccordionItem.tsx)
+  - [x] 7.1 Change `progressFill` `backgroundColor` from `theme.colors.primary` to `theme.colors.success`
+
+- [x] Task 8: Fix completed check button — solid green bg + white icon (SetRow.tsx)
+  - [x] 8.1 Change `confirmCompleted` `backgroundColor` from `theme.colors.phases.doneBg` to `theme.colors.success`
+  - [x] 8.2 Change `confirmIconCompleted` `color` from `theme.colors.success` to `theme.colors.primaryTextOn`
+
+- [x] Task 9: Remove per-set skip entirely (SetRow.tsx, ExerciseAccordionItem.tsx, [index].tsx)
+  - [x] 9.1 Remove `onSkip` prop from `SetRowProps` and all skip-related rendering/styles in SetRow
+  - [x] 9.2 Remove `onSetSkip` prop from `ExerciseAccordionItemProps`, `ExpandedContentProps`, and pass-through
+  - [x] 9.3 Remove `handleSetSkip` callback and `onSetSkip` prop usage in session screen
+  - [x] 9.4 Remove skip-related tests
+
+- [x] Task 10: Fix active row value colors (SetRow.tsx)
+  - [x] 10.1 Verify `valueColor` logic: completed→`success`, pending/skipped→`muted`, active/editing→`text` — already correct, no change needed
+
+- [x] Task 11: Hide compact row when expanded — fix name duplication (ExerciseAccordionItem.tsx)
+  - [x] 11.1 Conditionally hide `compactContent` when `isExpanded` — only `ExpandedContent` visible
+  - [x] 11.2 Update tests for compact row hide behavior — updated expanded a11y label, removed skip wiring test
+
+- [x] Task 12: Remove outer content padding for edge-to-edge rows ([index].tsx)
+  - [x] 12.1 Changed `padding` to `paddingVertical` in `styles.content` so exercise rows span full width
+
+- [x] Task 13: Fix expanded content padding alignment (ExerciseAccordionItem.tsx)
+  - [x] 13.1 `rowExpanded` style sets `padding: 0` + `surfaceElevated` bg — expanded content handles its own 16px padding
+  - [x] 13.2 `expandedContent` retains `padding: theme.spacing.lg` (16px) as sole padding source
+
+- [x] Task 14: Run tests and verify all fixes
+  - [x] 14.1 Run `npm run test:run` — 292 tests pass (0 failures)
+  - [x] 14.2 Run `npm run compile` — no new TypeScript errors (pre-existing only)
+  - [x] 14.3 Run `npm run lint:fix` — all source files Prettier clean
 
 ## Dev Notes
 
@@ -334,3 +368,4 @@ No debug issues encountered. All changes were pure style modifications — no be
 
 - **2026-03-17:** Visual alignment with approved Direction A mockup — SetDot rounded square (radius.xs), confirm button and inputs rounded rectangle (radius.sm), full-width compact rows with border dividers, flat expanded area with primary-colored title, set completion progress bar in expanded exercise area. All 208 tests pass, zero regressions.
 - **2026-03-17 (review):** Code review fixes — progress bar accessibility attributes, extracted getCompletedCount helper (DRY), Math.round on progress width, 3 new progress bar tests. 211 tests pass.
+- **2026-03-18 (sprint change proposal):** 8 visual alignment fixes per sprint-change-proposal-2026-03-18.md: progress bar color primary→success, completed check button solid green+white icon, removed per-set skip entirely (onSkip prop + UI + tests), verified active row value colors correct, hide compact row when expanded (fix name duplication), removed outer content padding for edge-to-edge rows, fixed expanded content double padding, removed reanimated height animation (replaced with conditional render). 292 tests pass.

@@ -63,29 +63,29 @@ The architecture doc specifies a **clean-room rebuild strategy**: "Build at temp
 
 ### Files to DELETE (11 files)
 
-| File | Reason |
-|------|--------|
-| `app/programs/[id]/session/[index].tsx` | Replaced by renamed V2 |
-| `hooks/session/useWorkoutSteps.ts` | V1 step-based model, replaced by `WorkoutExecutionContext` |
-| `hooks/session/useWorkoutTimer.ts` | V1 timer, replaced by `useElapsedTimer` + `useRestTimer` |
-| `hooks/session/useStepCompletion.ts` | V1 step tracking, replaced by set-level state in reducer |
-| `hooks/session/useProgramSessionTimer.ts` | V1 elapsed timer, replaced by `useElapsedTimer` |
-| `hooks/session/index.ts` | Barrel for deleted hooks |
-| `components/program/ProgramSessionView.tsx` | V1 wrapper, V2 renders inline |
-| `components/program/WorkoutExecutionScreen.tsx` | V1 execution UI, replaced by accordion |
-| `components/program/WorkoutMatrix.tsx` | V1 step matrix, replaced by `ExerciseAccordionItem` |
-| `lib/utils/colors.ts` | Only consumer was V1 components (`getPhaseColors`, `getPhaseInfo`) — verify zero other consumers before deleting |
+| File                                            | Reason                                                                                                           |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `app/programs/[id]/session/[index].tsx`         | Replaced by renamed V2                                                                                           |
+| `hooks/session/useWorkoutSteps.ts`              | V1 step-based model, replaced by `WorkoutExecutionContext`                                                       |
+| `hooks/session/useWorkoutTimer.ts`              | V1 timer, replaced by `useElapsedTimer` + `useRestTimer`                                                         |
+| `hooks/session/useStepCompletion.ts`            | V1 step tracking, replaced by set-level state in reducer                                                         |
+| `hooks/session/useProgramSessionTimer.ts`       | V1 elapsed timer, replaced by `useElapsedTimer`                                                                  |
+| `hooks/session/index.ts`                        | Barrel for deleted hooks                                                                                         |
+| `components/program/ProgramSessionView.tsx`     | V1 wrapper, V2 renders inline                                                                                    |
+| `components/program/WorkoutExecutionScreen.tsx` | V1 execution UI, replaced by accordion                                                                           |
+| `components/program/WorkoutMatrix.tsx`          | V1 step matrix, replaced by `ExerciseAccordionItem`                                                              |
+| `lib/utils/colors.ts`                           | Only consumer was V1 components (`getPhaseColors`, `getPhaseInfo`) — verify zero other consumers before deleting |
 
 ### Files to MODIFY (1 file)
 
-| File | Change |
-|------|--------|
+| File                                        | Change                                   |
+| ------------------------------------------- | ---------------------------------------- |
 | `hooks/workout/useActiveWorkoutRedirect.ts` | Line 22: remove `-v2` from redirect path |
 
 ### Files to RENAME (1 file)
 
-| From | To |
-|------|-----|
+| From                                       | To                                      |
+| ------------------------------------------ | --------------------------------------- |
 | `app/programs/[id]/session/[index]-v2.tsx` | `app/programs/[id]/session/[index].tsx` |
 
 ### Anti-Patterns to Avoid
@@ -99,18 +99,21 @@ The architecture doc specifies a **clean-room rebuild strategy**: "Build at temp
 ### Previous Story Intelligence
 
 From Story 4.2 (Semantic Haptic Feedback):
+
 - `[index]-v2.tsx` is ~390 lines — over the 300-line guideline but acceptable as composition root
 - Haptic calls are fire-and-forget (not awaited) in event handlers
 - Exercise completion detection uses pre-dispatch count check
 - All side effects (haptics, notifications) are in UI layer, never in reducer
 
 From Story 4.1 (Rest Timer Bar):
+
 - `theme.colors.phases.break` is the correct token path (not `theme.colors.break`)
 - Test JSX requires explicit `import React from 'react'`
 
 ### Verification Checklist
 
 After all deletions and the rename:
+
 1. `npx tsc --noEmit` — zero type errors
 2. `npx vitest run` — all tests pass
 3. Manual: start a workout from program view → lands on V2 screen
@@ -160,6 +163,7 @@ No issues encountered. Clean execution of all tasks.
 ### File List
 
 **Deleted:**
+
 - `app/programs/[id]/session/[index].tsx` (V1 route — replaced by renamed V2)
 - `hooks/session/useWorkoutSteps.ts`
 - `hooks/session/useWorkoutTimer.ts`
@@ -172,8 +176,10 @@ No issues encountered. Clean execution of all tasks.
 - `lib/utils/colors.ts`
 
 **Renamed:**
+
 - `app/programs/[id]/session/[index]-v2.tsx` → `app/programs/[id]/session/[index].tsx`
 
 **Modified:**
+
 - `hooks/workout/useActiveWorkoutRedirect.ts` (removed `-v2` suffix from redirect path)
 - `.expo/types/router.d.ts` (regenerated — no longer includes `[index]-v2` route)

@@ -10,6 +10,10 @@ vi.mock('react', async importOriginal => {
 })
 
 vi.mock('react-native', () => ({
+  LayoutAnimation: {
+    configureNext: vi.fn(),
+    Presets: { easeInEaseOut: {} }
+  },
   Pressable: ({
     children,
     onPress,
@@ -242,7 +246,10 @@ describe('ExerciseAccordionItem', () => {
 
     it('has correct expanded accessibility label', () => {
       const result = renderAccordion({ isExpanded: true })
-      const node = findByAccessibilityLabel(result, 'Bench Press, expanded')
+      const node = findByAccessibilityLabel(
+        result,
+        'Bench Press, expanded, tap to collapse'
+      )
       expect(node).toBeDefined()
     })
   })
@@ -274,26 +281,6 @@ describe('ExerciseAccordionItem', () => {
       const onPress = firstDot.props.onPress as () => void
       onPress()
       expect(onSetDotPress).toHaveBeenCalledWith(0)
-    })
-  })
-
-  describe('skip wiring', () => {
-    it('fires onSetSkip with correct setIndex when skip is pressed in expanded content', () => {
-      const onSetSkip = vi.fn()
-      const result = renderAccordion({
-        isExpanded: true,
-        onSetSkip
-      })
-      const skipButtons = collectAllNodes(result).filter(
-        n =>
-          typeof n.props?.accessibilityLabel === 'string' &&
-          (n.props.accessibilityLabel as string).startsWith('Skip set')
-      )
-      expect(skipButtons.length).toBeGreaterThan(0)
-      const firstSkip = skipButtons[0]
-      const onPress = firstSkip.props.onPress as () => void
-      onPress()
-      expect(onSetSkip).toHaveBeenCalledWith(0)
     })
   })
 

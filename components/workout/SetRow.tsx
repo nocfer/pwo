@@ -12,7 +12,6 @@ export type SetRowProps = {
   onWeightPress: () => void
   onConfirm: () => void
   onPress: () => void
-  onSkip?: () => void
   isRepsFocused?: boolean
   isWeightFocused?: boolean
 }
@@ -47,7 +46,6 @@ export function SetRow({
   onWeightPress,
   onConfirm,
   onPress,
-  onSkip,
   isRepsFocused = false,
   isWeightFocused = false
 }: SetRowProps) {
@@ -66,7 +64,7 @@ export function SetRow({
   const setNumColor = isCompleted
     ? theme.colors.success
     : isPending || isSkipped
-      ? theme.colors.muted
+      ? theme.colors.subtext
       : theme.colors.primary
 
   const a11yLabel = isCompleted
@@ -93,21 +91,15 @@ export function SetRow({
             {isEditing ? '✎' : isSkipped ? '–' : setNumber}
           </Text>
         </Pressable>
-        {isActive && onSkip && (
-          <Pressable
-            onPress={onSkip}
-            hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
-            accessibilityLabel={`Skip set ${setNumber}`}
-            accessibilityRole="button"
-          >
-            <Text style={styles.skipText}>Skip</Text>
-          </Pressable>
-        )}
       </View>
 
       <Pressable
         onPress={onRepsPress}
-        style={[styles.inputField, isRepsFocused && styles.inputFocused]}
+        style={[
+          styles.inputField,
+          isCompleted && styles.inputCompleted,
+          isRepsFocused && styles.inputFocused
+        ]}
         accessibilityLabel={`reps, ${reps}`}
         accessibilityHint="Open keypad to edit reps"
         accessibilityRole="button"
@@ -118,7 +110,11 @@ export function SetRow({
 
       <Pressable
         onPress={onWeightPress}
-        style={[styles.inputField, isWeightFocused && styles.inputFocused]}
+        style={[
+          styles.inputField,
+          isCompleted && styles.inputCompleted,
+          isWeightFocused && styles.inputFocused
+        ]}
         accessibilityLabel={`weight, ${weight}`}
         accessibilityHint="Open keypad to edit weight"
         accessibilityRole="button"
@@ -147,7 +143,7 @@ export function SetRow({
             isCompleted && styles.confirmIconCompleted
           ]}
         >
-          ✓
+          {isPending ? '○' : '✓'}
         </Text>
       </Pressable>
     </View>
@@ -158,56 +154,53 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.sm,
-    minHeight: 48,
-    paddingVertical: theme.spacing.xs
+    gap: theme.spacing.md,
+    paddingVertical: 10,
+    paddingHorizontal: theme.spacing.lg
   },
   rowCompleted: {
-    backgroundColor: theme.colors.successLight,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.sm
+    backgroundColor: theme.colors.phases.doneBg
   },
   rowEditing: {
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: theme.colors.primary,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing.sm
+    borderColor: theme.colors.primary
   },
   rowSkipped: {
     opacity: 0.5
   },
   setNumContainer: {
-    width: 28,
+    width: 20,
     alignItems: 'center'
   },
   setNum: {
-    ...theme.typography.bodyBold
-  },
-  skipText: {
-    ...theme.typography.caption,
-    color: theme.colors.subtext
+    ...theme.typography.caption
   },
   inputField: {
     flex: 1,
     minWidth: 56,
-    minHeight: 48,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: theme.radius.sm,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    paddingVertical: theme.spacing.xs
+    backgroundColor: theme.colors.surface
+  },
+  inputCompleted: {
+    backgroundColor: theme.colors.phases.doneBg,
+    borderColor: 'transparent'
   },
   inputFocused: {
     borderColor: theme.colors.primary
   },
   inputValue: {
-    ...theme.typography.bodyBold
+    fontSize: 16,
+    fontFamily: theme.fonts.medium
   },
   inputLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.subtext
+    ...theme.typography.small,
+    color: theme.colors.muted
   },
   confirmButton: {
     width: 44,
@@ -218,16 +211,18 @@ const styles = StyleSheet.create({
   },
   confirmPending: {
     borderWidth: 1,
-    borderColor: theme.colors.border
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface
   },
   confirmActive: {
     backgroundColor: theme.colors.primary
   },
   confirmCompleted: {
-    backgroundColor: theme.colors.phases.doneBg
+    backgroundColor: theme.colors.success
   },
   confirmIcon: {
-    ...theme.typography.bodyBold
+    fontSize: 18,
+    fontFamily: theme.fonts.semiBold
   },
   confirmIconPending: {
     color: theme.colors.muted
@@ -236,6 +231,6 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryTextOn
   },
   confirmIconCompleted: {
-    color: theme.colors.success
+    color: theme.colors.primaryTextOn
   }
 })

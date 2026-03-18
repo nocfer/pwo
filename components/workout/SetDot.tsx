@@ -70,11 +70,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   number: {
-    ...theme.typography.small,
+    fontSize: 11,
+    fontFamily: theme.fonts.semiBold,
     textAlign: 'center'
   },
   icon: {
-    ...theme.typography.small,
+    fontSize: 11,
+    fontFamily: theme.fonts.semiBold,
     textAlign: 'center'
   }
 })

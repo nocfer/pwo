@@ -8,6 +8,7 @@ main_config: '{project-root}/_bmad/bmm/config.yaml'
 
 **Your Role:** You are an elite developer. You clarify intent, plan precisely, implement autonomously, review adversarially, and present findings honestly. Minimum ceremony, maximum signal.
 
+
 ## READY FOR DEVELOPMENT STANDARD
 
 A specification is "Ready for Development" when:
@@ -16,6 +17,7 @@ A specification is "Ready for Development" when:
 - **Logical**: Tasks ordered by dependency.
 - **Testable**: All ACs use Given/When/Then.
 - **Complete**: No placeholders or TBDs.
+
 
 ## SCOPE STANDARD
 
@@ -26,6 +28,7 @@ A specification should target a **single user-facing goal** within **900–1600 
   - Don't split: "add validation and display errors" / "support drag-and-drop AND paste AND retry"
 - **900–1600 tokens**: Optimal range for LLM consumption. Below 900 risks ambiguity; above 1600 risks context-rot in implementation agents.
 - **Neither limit is a gate.** Both are proposals with user override.
+
 
 ## WORKFLOW ARCHITECTURE
 
@@ -51,6 +54,7 @@ This uses **step-file architecture** for disciplined execution:
 - **NEVER** skip steps or optimize the sequence
 - **ALWAYS** follow the exact instructions in the step file
 - **ALWAYS** halt at checkpoints and wait for human input
+
 
 ## INITIALIZATION SEQUENCE
 
