@@ -53,8 +53,6 @@ export type {
 
 // Enhanced types
 export type {
-  AuditAction,
-  AuditLogEntry,
   ConflictResolution,
   CustomValidator,
   DataType,
@@ -67,25 +65,16 @@ export type {
   EnhancedDataState,
   EnhancedExercise,
   EnhancedProgram,
-  ExportData,
   FieldValidation,
   ImportData,
   ImportError,
   ImportErrorCode,
   ImportResult,
   ImportedItem,
-  OperationStatus,
-  SearchFacets,
-  SearchQuery,
-  SearchResult,
   SearchState,
   SkippedItem,
-  UsageStats,
-  UsageTrend,
   ValidationError,
   ValidationErrorCode,
   ValidationResult,
-  ValidationSchema,
-  ValidationWarning,
-  ValidationWarningCode
+  ValidationSchema
 } from './enhanced'

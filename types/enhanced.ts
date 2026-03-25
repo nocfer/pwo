@@ -60,7 +60,6 @@ export interface EnhancedChallenge extends Program {
 export type ValidationResult = {
   isValid: boolean
   errors: ValidationError[]
-  warnings?: ValidationWarning[]
 }
 
 export type ValidationError = {
@@ -68,12 +67,6 @@ export type ValidationError = {
   message: string
   code: ValidationErrorCode
   severity: 'error' | 'warning' | 'info'
-}
-
-export type ValidationWarning = {
-  field: string
-  message: string
-  code: ValidationWarningCode
 }
 
 export enum ValidationErrorCode {
@@ -86,12 +79,6 @@ export enum ValidationErrorCode {
   INVALID_RANGE = 'INVALID_RANGE',
   INVALID_CATEGORY = 'INVALID_CATEGORY',
   INVALID_ICON = 'INVALID_ICON'
-}
-
-export enum ValidationWarningCode {
-  MISSING_OPTIONAL = 'MISSING_OPTIONAL',
-  PERFORMANCE_CONCERN = 'PERFORMANCE_CONCERN',
-  DEPRECATED_FIELD = 'DEPRECATED_FIELD'
 }
 
 export type CustomValidator<T> = (value: T) => ValidationResult
@@ -131,32 +118,6 @@ export type DependencyResult = {
 }
 
 // ============================================================================
-// Audit Logging Types
-// ============================================================================
-
-export type AuditLogEntry = {
-  id: string
-  timestamp: string // ISO string
-  userId?: string
-  action: AuditAction
-  entityType: DataType
-  entityId: string
-  entityName?: string
-  changes?: Record<string, { from: any; to: any }>
-  metadata?: Record<string, any>
-}
-
-export enum AuditAction {
-  CREATE = 'CREATE',
-  UPDATE = 'UPDATE',
-  DELETE = 'DELETE',
-  BULK_DELETE = 'BULK_DELETE',
-  DUPLICATE = 'DUPLICATE',
-  IMPORT = 'IMPORT',
-  EXPORT = 'EXPORT'
-}
-
-// ============================================================================
 // Search and Filter Types
 // ============================================================================
 
@@ -180,41 +141,9 @@ export type DateRange = {
   end: string // ISO date string
 }
 
-export type SearchResult<T> = {
-  items: T[]
-  totalCount: number
-  hasMore: boolean
-  facets: SearchFacets
-}
-
-export type SearchFacets = {
-  categories: { [key: string]: number }
-  sources: { [key: string]: number }
-  difficulties: { [key: string]: number }
-  tags: { [key: string]: number }
-}
-
-export type SearchQuery = {
-  query: string
-  type?: DataType
-  filters?: SearchState['filters']
-  sortBy?: SearchState['sortBy']
-  sortOrder?: SearchState['sortOrder']
-  limit?: number
-  offset?: number
-}
-
 // ============================================================================
 // Import/Export Types
 // ============================================================================
-
-export type ExportData = {
-  type: DataType
-  version: string
-  timestamp: string
-  data: any[]
-  metadata?: Record<string, any>
-}
 
 export type ImportData = {
   type: DataType
@@ -268,65 +197,13 @@ export type ConflictResolution = {
 }
 
 // ============================================================================
-// Usage Statistics Types
-// ============================================================================
-
-export type UsageStats = {
-  entityId: string
-  entityType: DataType
-  totalUses: number
-  lastUsed?: string
-  averageSessionDuration?: number
-  popularityScore: number
-  trends: UsageTrend[]
-}
-
-export type UsageTrend = {
-  period: string // ISO date string (daily/weekly/monthly)
-  uses: number
-  duration?: number
-}
-
-// ============================================================================
-// Operation Status Types
-// ============================================================================
-
-export type OperationStatus = {
-  type: 'idle' | 'loading' | 'success' | 'error'
-  message?: string
-  progress?: number // 0-100
-  details?: Record<string, any>
-}
-
-// ============================================================================
 // Enhanced Data Context Types
 // ============================================================================
 
 export type EnhancedDataActions = {
-  // Advanced search
-  searchData: (query: SearchQuery) => Promise<SearchResult<any>>
-
-  // Export (reads from state, not storage)
-  exportData: (type: DataType, ids?: string[]) => Promise<ExportData>
-
-  // TODO: bulkDeleteExercises, bulkDeletePrograms, duplicateProgram, importData
-  // removed — these used storage directly. Re-add when API batch endpoints are available.
-
-  // Validation
-  validateDependencies: (type: DataType, id: string) => Promise<DependencyCheck>
-
-  // Analytics
-  getUsageStats: (type: DataType, id: string) => Promise<UsageStats>
-
-  // Audit logging
-  logAuditEntry: (
-    entry: Omit<AuditLogEntry, 'id' | 'timestamp'>
-  ) => Promise<void>
+  // Placeholder — dead actions removed in story 0.2
 }
 
 export type EnhancedDataState = {
-  searchCache: Map<string, SearchResult<any>>
-  validationErrors: ValidationError[]
-  operationStatus: OperationStatus
-  auditLog: AuditLogEntry[]
+  // Placeholder — dead state fields removed in story 0.2
 }
