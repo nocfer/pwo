@@ -5,6 +5,7 @@ import {
   type IconAnimationConfig,
   useScreenIconAnimation
 } from '@/hooks/useScreenIconAnimation'
+import type { SharedValue } from 'react-native-reanimated'
 import { theme } from '@/theme/theme'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useCallback, useMemo, useState } from 'react'

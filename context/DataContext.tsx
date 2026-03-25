@@ -41,8 +41,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useReducer,
-  useRef
+  useReducer
 } from 'react'
 
 // ============================================================================
@@ -156,9 +155,7 @@ export const initialState: DataState & EnhancedDataState = {
   lastNewPRs: [],
   progressVersion: 0,
   historyVersion: 0,
-  completedVersion: 0,
-  // Enhanced state (placeholder for EnhancedDataState compatibility)
-
+  completedVersion: 0
 }
 
 export function dataReducer(

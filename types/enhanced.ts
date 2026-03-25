@@ -200,10 +200,6 @@ export type ConflictResolution = {
 // Enhanced Data Context Types
 // ============================================================================
 
-export type EnhancedDataActions = {
-  // Placeholder — dead actions removed in story 0.2
-}
+export type EnhancedDataActions = {}
 
-export type EnhancedDataState = {
-  // Placeholder — dead state fields removed in story 0.2
-}
+export type EnhancedDataState = {}

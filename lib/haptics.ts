@@ -120,7 +120,6 @@ export const haptics = {
   formValidationError: notifyError,
 
   // Import/Export operations
-  exportData: tapMedium,
   importData: notifySuccess,
   shareData: tapMedium,
 
