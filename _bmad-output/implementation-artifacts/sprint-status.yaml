@@ -1,5 +1,5 @@
 # generated: 2026-03-09
-# last_updated: 2026-03-18
+# last_updated: 2026-03-25T00:00:00
 # project: pwo
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,13 +35,17 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-09
-last_updated: 2026-03-18
+last_updated: 2026-03-25
 project: pwo
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
 development_status:
+  # Epic 0: Hotfix — API Pagination Adaptation
+  epic-0: in-progress
+  0-1-exercise-list-pagination-adaptation: review # Rewritten per sprint-change-proposal-2026-03-25 (infinite scroll)
+
   # Epic 1: Dark Theme & Design System Foundation
   epic-1: done
   1-1-replace-theme-tokens-with-dark-first-design-system: done

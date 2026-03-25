@@ -57,9 +57,18 @@ import React, {
 // Types
 // ============================================================================
 
+interface ExercisePagination {
+  currentPage: number
+  totalPages: number
+  totalItems: number
+  hasMore: boolean
+}
+
 interface DataState {
   exercises: Exercise[]
   exercisesLoading: boolean
+  exercisesLoadingMore: boolean
+  exercisePagination: ExercisePagination
   programs: Program[]
   programsLoading: boolean
   lastCompletedSlug: string | null
@@ -72,6 +81,13 @@ interface DataState {
 type DataAction =
   | { type: 'SET_EXERCISES'; exercises: Exercise[] }
   | { type: 'SET_EXERCISES_LOADING'; loading: boolean }
+  | {
+      type: 'APPEND_EXERCISES'
+      exercises: Exercise[]
+      pagination: { page: number; totalPages: number; totalItems: number }
+    }
+  | { type: 'RESET_EXERCISES' }
+  | { type: 'SET_EXERCISES_LOADING_MORE'; loading: boolean }
   | { type: 'SET_PROGRAMS'; programs: Program[] }
   | { type: 'SET_PROGRAMS_LOADING'; loading: boolean }
   | { type: 'SET_LAST_COMPLETED_SLUG'; slug: string | null }
@@ -98,6 +114,9 @@ type DataContextValue = {
     // Refresh data
     refreshAll: () => void
     refreshProgress: () => void
+
+    // Exercise pagination
+    loadMoreExercises: () => Promise<void>
 
     // Exercises CRUD
     upsertExercise: (
@@ -132,6 +151,13 @@ type DataContextValue = {
 export const initialState: DataState & EnhancedDataState = {
   exercises: [],
   exercisesLoading: true,
+  exercisesLoadingMore: false,
+  exercisePagination: {
+    currentPage: 0,
+    totalPages: 0,
+    totalItems: 0,
+    hasMore: true
+  },
   programs: [],
   programsLoading: true,
   lastCompletedSlug: null,
@@ -155,6 +181,40 @@ export function dataReducer(
       return { ...state, exercises: action.exercises, exercisesLoading: false }
     case 'SET_EXERCISES_LOADING':
       return { ...state, exercisesLoading: action.loading }
+    case 'APPEND_EXERCISES': {
+      const existingIds = new Set(state.exercises.map(e => e.id))
+      const unique = action.exercises.filter(e => !existingIds.has(e.id))
+      const merged = [...state.exercises, ...unique].sort((a, b) =>
+        a.name.localeCompare(b.name)
+      )
+      return {
+        ...state,
+        exercises: merged,
+        exercisesLoading: false,
+        exercisesLoadingMore: false,
+        exercisePagination: {
+          currentPage: action.pagination.page,
+          totalPages: action.pagination.totalPages,
+          totalItems: action.pagination.totalItems,
+          hasMore: action.pagination.page < action.pagination.totalPages
+        }
+      }
+    }
+    case 'RESET_EXERCISES':
+      return {
+        ...state,
+        exercises: [],
+        exercisesLoading: true,
+        exercisesLoadingMore: false,
+        exercisePagination: {
+          currentPage: 0,
+          totalPages: 0,
+          totalItems: 0,
+          hasMore: true
+        }
+      }
+    case 'SET_EXERCISES_LOADING_MORE':
+      return { ...state, exercisesLoadingMore: action.loading }
     case 'SET_PROGRAMS':
       return { ...state, programs: action.programs, programsLoading: false }
     case 'SET_PROGRAMS_LOADING':
@@ -208,16 +268,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (!mounted) return
 
         if (!currentUser) {
-          dispatch({ type: 'SET_EXERCISES', exercises: [] })
+          dispatch({ type: 'RESET_EXERCISES' })
           return
         }
 
         try {
-          const apiExercises = await fetchExercises()
-          const sorted = apiExercises.sort((a, b) =>
-            a.name.localeCompare(b.name)
-          )
-          if (mounted) dispatch({ type: 'SET_EXERCISES', exercises: sorted })
+          const response = await fetchExercises(1)
+          if (mounted)
+            dispatch({
+              type: 'APPEND_EXERCISES',
+              exercises: response.data,
+              pagination: response.pagination
+            })
         } catch (error) {
           console.error('Failed to load exercises from API:', error)
           if (mounted)
@@ -326,17 +388,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const currentUser = auth.currentUser
 
       if (!currentUser) {
-        dispatch({ type: 'SET_EXERCISES', exercises: [] })
+        dispatch({ type: 'RESET_EXERCISES' })
         dispatch({ type: 'SET_PROGRAMS', programs: [] })
         dispatch({ type: 'REFRESH_ALL' })
         return
       }
 
-      const apiExercises = await fetchExercises()
-      const sortedExercises = apiExercises.sort((a, b) =>
-        a.name.localeCompare(b.name)
-      )
-      dispatch({ type: 'SET_EXERCISES', exercises: sortedExercises })
+      try {
+        const exerciseResponse = await fetchExercises(1)
+        dispatch({ type: 'RESET_EXERCISES' })
+        dispatch({
+          type: 'APPEND_EXERCISES',
+          exercises: exerciseResponse.data,
+          pagination: exerciseResponse.pagination
+        })
+      } catch (error) {
+        console.error('Failed to refresh exercises:', error)
+        dispatch({ type: 'SET_EXERCISES_LOADING', loading: false })
+      }
 
       const workouts = await fetchWorkouts()
       const sortedPrograms = workouts
@@ -353,6 +422,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // refreshHistory and refreshCompleted consolidated into refreshProgress
+
+  const loadMoreExercises = useCallback(async () => {
+    if (
+      state.exercisesLoadingMore ||
+      !state.exercisePagination.hasMore ||
+      !auth.currentUser
+    )
+      return
+
+    dispatch({ type: 'SET_EXERCISES_LOADING_MORE', loading: true })
+
+    try {
+      const nextPage = state.exercisePagination.currentPage + 1
+      const response = await fetchExercises(nextPage)
+      dispatch({
+        type: 'APPEND_EXERCISES',
+        exercises: response.data,
+        pagination: response.pagination
+      })
+    } catch (error) {
+      console.error('Failed to load more exercises:', error)
+      dispatch({ type: 'SET_EXERCISES_LOADING_MORE', loading: false })
+    }
+  }, [state.exercisesLoadingMore, state.exercisePagination])
 
   const upsertExercise = useCallback(
     async (
@@ -391,7 +484,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         throw new Error(`Validation failed: ${errorMessages}`)
       }
 
-      // Check for name uniqueness
+      // Client-side uniqueness check (loaded pages only; server is authoritative)
       const nameValidation = validateUniqueName(input.name, id, state.exercises)
       if (!nameValidation.isValid) {
         throw new Error(nameValidation.errors[0].message)
@@ -414,10 +507,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
         })
       }
 
-      // Re-fetch full exercise list from API to ensure consistency
-      const apiExercises = await fetchExercises()
-      const sorted = apiExercises.sort((a, b) => a.name.localeCompare(b.name))
-      dispatch({ type: 'SET_EXERCISES', exercises: sorted })
+      // Fetch page 1 first, then replace atomically to avoid flash of empty state
+      const exerciseResponse = await fetchExercises(1)
+      dispatch({ type: 'RESET_EXERCISES' })
+      dispatch({
+        type: 'APPEND_EXERCISES',
+        exercises: exerciseResponse.data,
+        pagination: exerciseResponse.pagination
+      })
 
       return saved
     },
@@ -458,10 +555,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
       // Call API delete — errors propagate directly to the caller
       await apiDeleteExercise(id)
 
-      // Re-fetch full exercise list from API to ensure consistency
-      const apiExercises = await fetchExercises()
-      const sorted = apiExercises.sort((a, b) => a.name.localeCompare(b.name))
-      dispatch({ type: 'SET_EXERCISES', exercises: sorted })
+      // Fetch page 1 first, then replace atomically to avoid flash of empty state
+      const exerciseResponse = await fetchExercises(1)
+      dispatch({ type: 'RESET_EXERCISES' })
+      dispatch({
+        type: 'APPEND_EXERCISES',
+        exercises: exerciseResponse.data,
+        pagination: exerciseResponse.pagination
+      })
     },
     [state.exercises, state.programs]
   )
@@ -728,6 +829,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [state.exercises, state.programs]
   )
 
+  // TODO: exercises are paginated — export only includes loaded pages, not the full library
   const exportData = useCallback(
     async (type: DataType, ids?: string[]): Promise<ExportData> => {
       let data: any[] = []
@@ -828,6 +930,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       completeSession,
       refreshAll,
       refreshProgress,
+      loadMoreExercises,
       upsertExercise,
       deleteExercise,
       upsertProgram,

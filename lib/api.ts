@@ -18,6 +18,19 @@ const API_TIMEOUT = parseInt(process.env.EXPO_PUBLIC_API_TIMEOUT || '30000', 10)
 const API_ENABLED = process.env.EXPO_PUBLIC_API_ENABLED === 'true'
 
 /**
+ * Paginated response shape from backend API
+ */
+export interface PaginatedResponse<T> {
+  data: T[]
+  pagination: {
+    page: number
+    limit: number
+    totalItems: number
+    totalPages: number
+  }
+}
+
+/**
  * API Error class for consistent error handling
  */
 export class APIError extends Error {
@@ -161,10 +174,15 @@ async function request<T>(
 }
 
 /**
- * Fetch all exercises from the API
+ * Fetch a page of exercises from the API
  */
-export async function fetchExercises(): Promise<Exercise[]> {
-  return request<Exercise[]>('/api/v1/exercises')
+export async function fetchExercises(
+  page: number = 1,
+  limit: number = 20
+): Promise<PaginatedResponse<Exercise>> {
+  return request<PaginatedResponse<Exercise>>(
+    `/api/v1/exercises?page=${page}&limit=${limit}`
+  )
 }
 
 /**
@@ -178,10 +196,13 @@ export async function fetchExercise(id: string): Promise<Exercise> {
  * Fetch exercises by category
  */
 export async function fetchExercisesByCategory(
-  category: string
-): Promise<Exercise[]> {
-  return request<Exercise[]>(
-    `/api/v1/exercises?category=${encodeURIComponent(category)}`
+  category: string,
+  page: number = 1,
+  limit: number = 20
+): Promise<PaginatedResponse<Exercise>> {
+  const encodedCategory = encodeURIComponent(category)
+  return request<PaginatedResponse<Exercise>>(
+    `/api/v1/exercises?category=${encodedCategory}&page=${page}&limit=${limit}`
   )
 }
 

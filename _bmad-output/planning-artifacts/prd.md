@@ -54,7 +54,7 @@ date: '2026-03-06'
 
 ## Executive Summary
 
-PWO v1.2 overhauls the workout execution experience for a cross-platform fitness tracker serving gym-goers from beginners to experienced lifters. The release replaces a rigid, timer-driven 1256-line monolithic workout screen with a Hevy-inspired, user-paced matrix accordion interface where users log sets at their own pace -- pre-filled values from their last session, one-tap confirmation, under 5 seconds per set. Alongside the UX redesign, v1.2 introduces exercise media support: short looping video/GIF demonstrations accessible one tap away during active workouts, putting form guidance exactly where users need it. The monolithic codebase is decomposed into clean, composable components and hooks. No backend changes are required. The trainer-trainee coaching platform is explicitly deferred to future phases but informs architectural decisions.
+PWO v1.2 overhauls the workout execution experience for a cross-platform fitness tracker serving gym-goers from beginners to experienced lifters. The release replaces a rigid, timer-driven 1256-line monolithic workout screen with a Hevy-inspired, user-paced matrix accordion interface where users log sets at their own pace -- pre-filled values from their last session, one-tap confirmation, under 5 seconds per set. Alongside the UX redesign, v1.2 introduces exercise media support: short looping video/GIF demonstrations accessible one tap away during active workouts, putting form guidance exactly where users need it. The monolithic codebase is decomposed into clean, composable components and hooks. No backend changes are required beyond adapting to the existing paginated exercises endpoint. The trainer-trainee coaching platform is explicitly deferred to future phases but informs architectural decisions.
 
 ### What Makes This Special
 
@@ -103,7 +103,7 @@ PWO v1.2 overhauls the workout execution experience for a cross-platform fitness
 
 **No regressions.** Progress tracking, QR sharing, programs, authentication, and all existing features continue working without regression after the redesign.
 
-**Zero backend changes.** v1.2 is a frontend-only release. The existing API endpoints, data models, and Firebase backend are sufficient. The `instructions` and `media` fields on Exercise already exist.
+**Minimal backend dependency.** v1.2 is primarily a frontend release. The existing API endpoints, data models, and Firebase backend are sufficient for all workout features. The `instructions` and `media` fields on Exercise already exist. The one backend change is the `GET /api/v1/exercises` endpoint, which switched to paginated responses (returning `page`, `limit`, `totalPages`) in March 2026. The frontend leverages this pagination via infinite scroll in the exercise library.
 
 ### Measurable Outcomes
 
@@ -272,7 +272,7 @@ No notification permission is requested until the user starts their first workou
 
 **MVP Approach:** Experience MVP -- validating that PWO's specific execution model (matrix accordion, in-context media, sub-5-second logging) earns a place in gym-goers' routines. The market for workout trackers is proven; the hypothesis is that this UX approach is meaningfully better.
 
-**Resource Requirements:** Solo developer (Nocfer). Frontend-only release -- no backend changes, no infrastructure provisioning. Expo managed workflow for cross-platform delivery from a single codebase.
+**Resource Requirements:** Solo developer (Nocfer). Primarily frontend release -- minimal backend dependency (paginated exercises endpoint). No infrastructure provisioning. Expo managed workflow for cross-platform delivery from a single codebase.
 
 **Scope governance:** After this PRD is finalized, additions to v1.2 scope require explicit justification that the feature is (a) necessary for the core thesis to land, and (b) low enough in implementation cost that it doesn't push other must-haves. All other ideas go to Phase 2+.
 

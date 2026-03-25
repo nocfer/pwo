@@ -40,6 +40,9 @@ type Props = {
   showInlineActions?: boolean
   isLoading?: boolean
   error?: string
+  onEndReached?: () => void
+  hasMore?: boolean
+  loadingMore?: boolean
   style?: ViewStyle
 }
 
@@ -56,6 +59,9 @@ export function DataList({
   showInlineActions = false,
   isLoading = false,
   error,
+  onEndReached,
+  hasMore = false,
+  loadingMore = false,
   style
 }: Props) {
   // Filter and sort data based on search state
@@ -260,6 +266,9 @@ export function DataList({
       error={undefined} // Error is handled above
       emptyTitle={emptyTitle}
       emptySubtitle={emptySubtitle}
+      onEndReached={onEndReached}
+      hasMore={hasMore}
+      loadingMore={loadingMore}
       style={style}
     />
   )

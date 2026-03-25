@@ -439,6 +439,21 @@ export function UnifiedDataManager({
         onItemDelete={handleDeletePress}
         showInlineActions={activeTab === 'programs'}
         isLoading={isLoading}
+        onEndReached={
+          activeTab === 'exercises'
+            ? actions.loadMoreExercises
+            : undefined
+        }
+        hasMore={
+          activeTab === 'exercises'
+            ? state.exercisePagination.hasMore
+            : false
+        }
+        loadingMore={
+          activeTab === 'exercises'
+            ? state.exercisesLoadingMore
+            : false
+        }
         style={styles.dataList}
       />
 

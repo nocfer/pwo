@@ -43,9 +43,9 @@ export function useAPIExercises(): UseAPIExercisesState {
           return
         }
 
-        const exercises = await fetchExercises()
+        const response = await fetchExercises(1)
         if (mounted) {
-          setData(exercises)
+          setData(response.data)
           setError(null)
         }
       } catch (err) {

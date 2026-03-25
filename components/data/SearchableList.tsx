@@ -8,6 +8,7 @@ import type { DataType } from '@/types/enhanced'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useMemo, useState } from 'react'
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -48,6 +49,9 @@ type Props = {
   error?: string
   emptyTitle?: string
   emptySubtitle?: string
+  onEndReached?: () => void
+  hasMore?: boolean
+  loadingMore?: boolean
   style?: ViewStyle
 }
 
@@ -68,6 +72,9 @@ export function SearchableList({
   error,
   emptyTitle,
   emptySubtitle,
+  onEndReached,
+  hasMore = false,
+  loadingMore = false,
   style
 }: Props) {
   const [searchQuery, setSearchQuery] = useState('')
@@ -292,6 +299,18 @@ export function SearchableList({
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore && hasMore ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator
+                  size="small"
+                  color={theme.colors.primary}
+                />
+              </View>
+            ) : null
+          }
         />
       )}
     </View>
@@ -371,6 +390,10 @@ const styles = StyleSheet.create({
   },
   itemNoMargin: {
     marginBottom: 0
+  },
+  footerLoader: {
+    paddingVertical: theme.spacing.lg,
+    alignItems: 'center'
   }
 })
 
