@@ -1,4 +1,8 @@
 export { useActiveWorkoutRedirect } from './useActiveWorkoutRedirect'
+export {
+  useResumableWorkout,
+  type ResumableWorkout
+} from './useResumableWorkout'
 export { useElapsedTimer } from './useElapsedTimer'
 export { useRestTimer } from './useRestTimer'
 export { useEndWorkout } from './useEndWorkout'

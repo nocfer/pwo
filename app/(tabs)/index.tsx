@@ -1,7 +1,13 @@
 import { WeeklyChart } from '@/components'
 import { AnimatedCard, EmptyState } from '@/components/common'
-import { useAllProgress, usePrograms, useWeeklyActivity } from '@/hooks/data'
-import { useActiveWorkoutRedirect } from '@/hooks/workout'
+import { useAuth } from '@/context/AuthContext'
+import {
+  useAllProgress,
+  usePrograms,
+  useWeeklyActivity,
+  useWeeklyStats
+} from '@/hooks/data'
+import { useResumableWorkout } from '@/hooks/workout'
 import {
   AnimatedIcon,
   useScreenIconAnimation
@@ -24,8 +30,33 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Morning'
+  if (hour < 18) return 'Afternoon'
+  return 'Evening'
+}
+
+function getTodayLabel(): string {
+  return new Date()
+    .toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric'
+    })
+    .toUpperCase()
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
 export default function Index() {
-  const { redirecting } = useActiveWorkoutRedirect()
+  const { user } = useAuth()
+  const { workout: resumable, resume } = useResumableWorkout()
   const { data: programs } = usePrograms()
   const [programSelectorOpen, setProgramSelectorOpen] = useState(false)
   const [prioritizedPrograms, setPrioritizedPrograms] = useState<
@@ -33,6 +64,7 @@ export default function Index() {
   >([])
 
   const { data: aggregated } = useAllProgress()
+  const { stats: weeklyStats } = useWeeklyStats()
 
   useEffect(() => {
     if (programs) {
@@ -84,14 +116,16 @@ export default function Index() {
   })
 
   const hasProgress = aggregated && aggregated.totalWorkoutsCompleted > 0
+  const minutesThisWeek = Math.round(
+    (weeklyStats?.totalTimeSeconds ?? 0) / 60
+  )
 
-  if (redirecting) {
-    return (
-      <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
-        <View style={styles.container} />
-      </SafeAreaView>
-    )
-  }
+  const userName =
+    user?.displayName || user?.email?.split('@')[0] || 'there'
+  const resumeProgress =
+    resumable && resumable.totalSets > 0
+      ? resumable.completedSets / resumable.totalSets
+      : 0
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
@@ -101,23 +135,91 @@ export default function Index() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>Welcome back</Text>
-          <Text style={styles.subtitle}>Ready to crush your workout?</Text>
+          <View style={styles.headerText}>
+            <Text style={styles.dateLabel}>{getTodayLabel()}</Text>
+            <Text style={styles.greeting}>
+              {getGreeting()}, {userName}
+            </Text>
+          </View>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{getInitials(userName)}</Text>
+          </View>
         </View>
 
         <View style={styles.content}>
-          {/* Quick Start Hero */}
-          {allPrograms.length > 0 && (
+          {/* Resume / Start hero */}
+          {resumable ? (
             <AnimatedCard>
               <Pressable
-                onPress={handleQuickStart}
+                onPress={resume}
                 style={({ pressed }) => [
                   styles.heroCard,
                   pressed && styles.heroCardPressed
                 ]}
               >
-                <View style={styles.heroContent}>
-                  <View style={styles.heroIconContainer}>
+                <View style={styles.heroMain}>
+                  <Text style={styles.heroLabel}>
+                    PICK UP WHERE YOU LEFT OFF
+                  </Text>
+                  <Text style={styles.heroTitle} numberOfLines={1}>
+                    {resumable.sessionName}
+                  </Text>
+                  <Text style={styles.heroMeta} numberOfLines={1}>
+                    {resumable.currentExerciseName} · Set{' '}
+                    {resumable.setNumber} of {resumable.setCount}
+                  </Text>
+                  <View style={styles.heroProgressTrack}>
+                    <View
+                      style={[
+                        styles.heroProgressFill,
+                        { width: `${resumeProgress * 100}%` }
+                      ]}
+                    />
+                  </View>
+                  <View style={styles.heroFooterRow}>
+                    <Text style={styles.heroFooterText}>
+                      {resumable.completedSets} of {resumable.totalSets} sets
+                    </Text>
+                    <Text style={styles.heroFooterText}>
+                      ~{resumable.minutesLeft} min left
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.heroPlayCircle}>
+                  <Ionicons
+                    name="play"
+                    size={24}
+                    color={theme.colors.primary}
+                  />
+                </View>
+              </Pressable>
+            </AnimatedCard>
+          ) : (
+            allPrograms.length > 0 && (
+              <AnimatedCard>
+                <Pressable
+                  onPress={handleQuickStart}
+                  style={({ pressed }) => [
+                    styles.heroCard,
+                    pressed && styles.heroCardPressed
+                  ]}
+                >
+                  <View style={styles.heroMain}>
+                    <Text style={styles.heroLabel}>
+                      {"START TODAY'S SESSION"}
+                    </Text>
+                    <Text style={styles.heroTitle} numberOfLines={1}>
+                      {allPrograms.length === 1
+                        ? allPrograms[0].name
+                        : 'Choose a program'}
+                    </Text>
+                    <Text style={styles.heroMeta} numberOfLines={1}>
+                      {allPrograms.length === 1
+                        ? 'Tap to begin'
+                        : `${allPrograms.length} programs available`}
+                    </Text>
+                  </View>
+                  <View style={styles.heroPlayCircle}>
                     <AnimatedIcon
                       config={{ type: 'pulse', duration: 500 }}
                       trigger={trigger}
@@ -126,95 +228,56 @@ export default function Index() {
                     >
                       <Ionicons
                         name="play"
-                        size={28}
-                        color={theme.colors.primaryTextOn}
-                      />
-                    </AnimatedIcon>
-                  </View>
-                  <View style={styles.heroTextContainer}>
-                    <Text style={styles.heroTitle}>
-                      {allPrograms.length === 1
-                        ? 'Start Workout'
-                        : 'Quick Start'}
-                    </Text>
-                    <Text style={styles.heroSubtitle}>
-                      {allPrograms.length === 1
-                        ? allPrograms[0].name
-                        : `${allPrograms.length} programs available`}
-                    </Text>
-                  </View>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={22}
-                  color={theme.colors.primaryTextOn}
-                />
-              </Pressable>
-            </AnimatedCard>
-          )}
-
-          {/* Stats Row */}
-          {hasProgress && (
-            <AnimatedCard delay={50}>
-              <View style={styles.statsRow}>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.statCard,
-                    pressed && styles.statCardPressed
-                  ]}
-                  onPress={() => router.navigate('/(tabs)/progress')}
-                >
-                  <View style={styles.statIconContainer}>
-                    <AnimatedIcon
-                      config={{ type: 'rotate', duration: 400 }}
-                      trigger={trigger}
-                      index={1}
-                      staggerDelay={staggerDelay}
-                    >
-                      <Ionicons
-                        name="fitness"
-                        size={20}
+                        size={24}
                         color={theme.colors.primary}
                       />
                     </AnimatedIcon>
                   </View>
-                  <Text style={styles.statValue}>
-                    {aggregated.totalWorkoutsCompleted}
-                  </Text>
-                  <Text style={styles.statLabel}>workouts</Text>
                 </Pressable>
+              </AnimatedCard>
+            )
+          )}
 
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.statCard,
-                    pressed && styles.statCardPressed
-                  ]}
+          {/* Stat strip */}
+          {hasProgress && (
+            <AnimatedCard delay={50}>
+              <View style={styles.statsRow}>
+                <StatTile
+                  icon="fitness"
+                  iconColor={theme.colors.primary}
+                  iconBg={theme.colors.primaryLight}
+                  value={aggregated.totalWorkoutsCompleted}
+                  label="workouts"
                   onPress={() => router.navigate('/(tabs)/progress')}
-                >
-                  <View
-                    style={[
-                      styles.statIconContainer,
-                      { backgroundColor: theme.colors.accentLight }
-                    ]}
-                  >
-                    <AnimatedIcon
-                      config={{ type: 'bounceY', duration: 450 }}
-                      trigger={trigger}
-                      index={2}
-                      staggerDelay={staggerDelay}
-                    >
-                      <Ionicons
-                        name="flame"
-                        size={20}
-                        color={theme.colors.accent}
-                      />
-                    </AnimatedIcon>
-                  </View>
-                  <Text style={styles.statValue}>
-                    {aggregated.currentStreak}
-                  </Text>
-                  <Text style={styles.statLabel}>day streak</Text>
-                </Pressable>
+                  animationConfig={{ type: 'rotate', duration: 400 }}
+                  trigger={trigger}
+                  index={1}
+                  staggerDelay={staggerDelay}
+                />
+                <StatTile
+                  icon="flame"
+                  iconColor={theme.colors.accent}
+                  iconBg={theme.colors.accentLight}
+                  value={aggregated.currentStreak}
+                  label="day streak"
+                  onPress={() => router.navigate('/(tabs)/progress')}
+                  animationConfig={{ type: 'bounceY', duration: 450 }}
+                  trigger={trigger}
+                  index={2}
+                  staggerDelay={staggerDelay}
+                />
+                <StatTile
+                  icon="time"
+                  iconColor={theme.colors.info}
+                  iconBg={theme.colors.infoLight}
+                  value={minutesThisWeek}
+                  label="min this week"
+                  onPress={() => router.navigate('/(tabs)/progress')}
+                  animationConfig={{ type: 'slideX', duration: 400 }}
+                  trigger={trigger}
+                  index={3}
+                  staggerDelay={staggerDelay}
+                />
               </View>
             </AnimatedCard>
           )}
@@ -235,18 +298,11 @@ export default function Index() {
             >
               <View style={styles.browseContent}>
                 <View style={styles.browseIconContainer}>
-                  <AnimatedIcon
-                    config={{ type: 'slideX', duration: 400 }}
-                    trigger={trigger}
-                    index={3}
-                    staggerDelay={staggerDelay}
-                  >
-                    <Ionicons
-                      name="grid-outline"
-                      size={22}
-                      color={theme.colors.primary}
-                    />
-                  </AnimatedIcon>
+                  <Ionicons
+                    name="grid-outline"
+                    size={22}
+                    color={theme.colors.primary}
+                  />
                 </View>
                 <View style={styles.browseTextContainer}>
                   <Text style={styles.browseTitle}>Browse Library</Text>
@@ -319,6 +375,53 @@ export default function Index() {
   )
 }
 
+function StatTile({
+  icon,
+  iconColor,
+  iconBg,
+  value,
+  label,
+  onPress,
+  animationConfig,
+  trigger,
+  index,
+  staggerDelay
+}: {
+  icon: keyof typeof Ionicons.glyphMap
+  iconColor: string
+  iconBg: string
+  value: number
+  label: string
+  onPress: () => void
+  animationConfig: import('@/hooks/useScreenIconAnimation').IconAnimationConfig
+  trigger: import('react-native-reanimated').SharedValue<number>
+  index: number
+  staggerDelay: number
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.statCard,
+        pressed && styles.statCardPressed
+      ]}
+      onPress={onPress}
+    >
+      <View style={[styles.statIconContainer, { backgroundColor: iconBg }]}>
+        <AnimatedIcon
+          config={animationConfig}
+          trigger={trigger}
+          index={index}
+          staggerDelay={staggerDelay}
+        >
+          <Ionicons name={icon} size={20} color={iconColor} />
+        </AnimatedIcon>
+      </View>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </Pressable>
+  )
+}
+
 function ProgramSection({
   label,
   programs,
@@ -381,18 +484,43 @@ const styles = StyleSheet.create({
     flex: 1
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.xl,
     paddingBottom: theme.spacing.lg
   },
+  headerText: {
+    flex: 1,
+    gap: theme.spacing.xs
+  },
+  dateLabel: {
+    ...theme.typography.small,
+    fontFamily: theme.fonts.semiBold,
+    color: theme.colors.session.limeMutedText,
+    letterSpacing: 1.6,
+    fontSize: 10
+  },
   greeting: {
     ...theme.typography.h1,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs
+    color: theme.colors.text
   },
-  subtitle: {
-    ...theme.typography.body,
-    color: theme.colors.muted
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primaryLight,
+    borderWidth: 1,
+    borderColor: theme.colors.session.activeBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: theme.spacing.md
+  },
+  avatarText: {
+    fontFamily: theme.fonts.displayMed,
+    fontSize: 15,
+    color: theme.colors.primary
   },
   content: {
     paddingHorizontal: theme.spacing.lg,
@@ -403,50 +531,82 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: theme.spacing.md,
     backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.xl,
     padding: theme.spacing.lg
   },
   heroCardPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }]
+    opacity: 0.92,
+    transform: [{ scale: 0.99 }]
   },
-  heroContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-    flex: 1
-  },
-  heroIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: theme.radius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  heroTextContainer: {
+  heroMain: {
     flex: 1,
     gap: theme.spacing.xs
   },
-  heroTitle: {
-    ...theme.typography.h2,
-    color: theme.colors.primaryTextOn
-  },
-  heroSubtitle: {
-    ...theme.typography.caption,
+  heroLabel: {
+    ...theme.typography.small,
+    fontFamily: theme.fonts.bold,
     color: theme.colors.primaryTextOn,
-    opacity: 0.85
+    letterSpacing: 1,
+    opacity: 0.7,
+    fontSize: 10
+  },
+  heroTitle: {
+    fontFamily: theme.fonts.display,
+    fontSize: 20,
+    color: theme.colors.primaryTextOn,
+    letterSpacing: -0.3
+  },
+  heroMeta: {
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
+    color: theme.colors.primaryTextOn,
+    opacity: 0.75
+  },
+  heroProgressTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: theme.colors.primaryDark,
+    overflow: 'hidden',
+    marginTop: theme.spacing.sm
+  },
+  heroProgressFill: {
+    height: '100%',
+    borderRadius: 2,
+    backgroundColor: theme.colors.primaryTextOn
+  },
+  heroFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: theme.spacing.xs
+  },
+  heroFooterText: {
+    ...theme.typography.small,
+    fontFamily: theme.fonts.semiBold,
+    color: theme.colors.primaryTextOn,
+    opacity: 0.7
+  },
+  heroPlayCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primaryTextOn,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   statsRow: {
     flexDirection: 'row',
-    gap: theme.spacing.md
+    gap: theme.spacing.sm
   },
   statCard: {
     flex: 1,
     backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.sm,
     alignItems: 'center'
   },
   statCardPressed: {
@@ -456,19 +616,20 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: theme.spacing.sm
   },
   statValue: {
-    ...theme.typography.h1,
+    fontFamily: theme.fonts.displayMed,
+    fontSize: 22,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs
+    marginBottom: 2
   },
   statLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.muted
+    ...theme.typography.small,
+    color: theme.colors.muted,
+    textAlign: 'center'
   },
   browseCard: {
     flexDirection: 'row',
