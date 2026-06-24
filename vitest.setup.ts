@@ -21,3 +21,29 @@ vi.mock('expo-haptics', () => ({
 vi.mock('@expo/vector-icons', () => ({
   Ionicons: (props: Record<string, unknown>) => ({ type: 'Icon', props })
 }))
+
+// Mock react-native-reanimated — Animated.View passes through; entering builders
+// are chainable no-ops. (Per-file mocks, e.g. RestTimerBar, still take precedence.)
+vi.mock('react-native-reanimated', () => {
+  const builder = () => {
+    const b: Record<string, () => unknown> = {
+      duration: () => b,
+      delay: () => b,
+      springify: () => b,
+      withInitialValues: () => b
+    }
+    return b
+  }
+  return {
+    default: {
+      View: (props: Record<string, unknown>) => ({
+        type: 'Animated.View',
+        props
+      })
+    },
+    SlideInDown: builder(),
+    SlideOutDown: builder(),
+    FadeIn: builder(),
+    FadeOut: builder()
+  }
+})

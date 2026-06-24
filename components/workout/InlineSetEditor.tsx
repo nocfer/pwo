@@ -3,6 +3,7 @@ import type { SetStatus } from '@/types/workout'
 import { Ionicons } from '@expo/vector-icons'
 import React from 'react'
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import Animated, { SlideInDown } from 'react-native-reanimated'
 
 export type EditorField = 'weight' | 'reps'
 
@@ -73,7 +74,11 @@ export function InlineSetEditor({
         onPress={onDone}
         accessibilityLabel="Close editor"
       >
-        <Pressable style={styles.card} onPress={() => {}}>
+        <Animated.View
+          style={styles.cardWrap}
+          entering={SlideInDown.duration(350)}
+        >
+          <Pressable style={styles.card} onPress={() => {}}>
           <Text style={styles.title}>
             SET {setNumber} · {field.toUpperCase()}
           </Text>
@@ -153,7 +158,8 @@ export function InlineSetEditor({
               <Text style={styles.doneText}>Done</Text>
             </Pressable>
           </View>
-        </Pressable>
+          </Pressable>
+        </Animated.View>
       </Pressable>
     </Modal>
   )
@@ -164,11 +170,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.session.editorScrim
   },
-  card: {
+  cardWrap: {
     position: 'absolute',
     left: 24,
     right: 24,
-    bottom: 96,
+    bottom: 96
+  },
+  card: {
     backgroundColor: theme.colors.session.elevated,
     borderWidth: 1,
     borderColor: theme.colors.session.editorBorder,

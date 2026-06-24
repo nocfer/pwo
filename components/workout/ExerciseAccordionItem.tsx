@@ -285,6 +285,7 @@ export function ExerciseAccordionItem({
           style={[styles.chevron, !canMoveUp && styles.chevronDisabled]}
           onPress={onMoveUp}
           disabled={!canMoveUp}
+          hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={`Move ${exercise.exerciseName} up`}
         >
@@ -298,6 +299,7 @@ export function ExerciseAccordionItem({
           style={[styles.chevron, !canMoveDown && styles.chevronDisabled]}
           onPress={onMoveDown}
           disabled={!canMoveDown}
+          hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={`Move ${exercise.exerciseName} down`}
         >

@@ -1,6 +1,7 @@
 import { theme } from '@/theme/theme'
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import Animated, { SlideInDown } from 'react-native-reanimated'
 import Svg, { Circle } from 'react-native-svg'
 
 export type RestSheetProps = {
@@ -52,7 +53,7 @@ export function RestSheet({
   const dashOffset = RING_CIRCUMFERENCE * (1 - progress)
 
   return (
-    <View style={styles.sheet}>
+    <Animated.View style={styles.sheet} entering={SlideInDown.duration(350)}>
       <View style={styles.topRow}>
         <View
           style={styles.ring}
@@ -117,7 +118,7 @@ export function RestSheet({
           <Text style={styles.skipText}>Skip rest</Text>
         </Pressable>
       </View>
-    </View>
+    </Animated.View>
   )
 }
 

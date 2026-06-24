@@ -102,7 +102,7 @@ export function SetRow({
               ? `Edit set ${setNumber}`
               : `Set ${setNumber}`
         }
-        hitSlop={8}
+        hitSlop={12}
         style={[
           styles.checkBox,
           isActive && styles.checkActive,

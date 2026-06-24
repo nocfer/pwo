@@ -20,6 +20,7 @@ import {
   usePrefill,
   useRestTimer,
   useScrollToExercise,
+  useWebKeyboardShortcuts,
   useWorkoutExecution,
   useWorkoutPersistence
 } from '@/hooks/workout'
@@ -206,6 +207,7 @@ function WorkoutSessionContent() {
     if (set?.status === 'editing') {
       confirmSet(editor.exerciseIndex, editor.setIndex)
     }
+    haptics.buttonTap()
     setEditor(null)
   }, [editor, state.exercises, confirmSet])
 
@@ -216,14 +218,21 @@ function WorkoutSessionContent() {
     if (!set) return
     if (set.status === 'editing') {
       unlogSet(exerciseIndex, setIndex)
+      haptics.buttonTap()
     } else if (set.status === 'skipped') {
       restoreSet(exerciseIndex, setIndex)
+      haptics.buttonTap()
     } else {
       skipSet(exerciseIndex, setIndex)
       haptics.skipAction()
     }
     setEditor(null)
   }, [editor, state.exercises, unlogSet, restoreSet, skipSet])
+
+  const handleExtendRest = useCallback(() => {
+    extendRest()
+    haptics.buttonTap()
+  }, [extendRest])
 
   const handleBackPress = useCallback(() => {
     if (state.isCompleted) return false
@@ -258,6 +267,31 @@ function WorkoutSessionContent() {
     }
     return null
   }, [state.exercises])
+
+  // Web keyboard: Enter logs the active set (or commits the editor), Esc closes
+  // the editor. Re-uses the generic shortcut primitive (no-op off web).
+  useWebKeyboardShortcuts({
+    onEnter: () => {
+      if (editor) {
+        handleEditorDone()
+        return true
+      }
+      if (activeLoc) {
+        handleLogSet(activeLoc.exerciseIndex, activeLoc.setIndex)
+        return true
+      }
+      return false
+    },
+    onTab: () => false,
+    onEscape: () => {
+      if (editor) {
+        setEditor(null)
+        return true
+      }
+      return false
+    },
+    enabled: !state.isCompleted
+  })
 
   const overall = useMemo(() => {
     let total = 0
@@ -402,7 +436,7 @@ function WorkoutSessionContent() {
             state.exercises[activeLoc.exerciseIndex].sets[activeLoc.setIndex]
               .reps
           }
-          onExtend={extendRest}
+          onExtend={handleExtendRest}
           onSkip={dismissRest}
         />
       ) : activeLoc ? (
