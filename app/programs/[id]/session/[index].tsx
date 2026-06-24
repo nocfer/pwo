@@ -9,6 +9,7 @@ import { LogActionBar } from '@/components/workout/LogActionBar'
 import { RestSheet } from '@/components/workout/RestSheet'
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader'
 import { WorkoutRecap } from '@/components/workout/WorkoutRecap'
+import { useDataActions } from '@/context/DataContext'
 import {
   findNextPendingSet,
   WorkoutExecutionProvider
@@ -30,7 +31,7 @@ import { buildWorkoutRecap } from '@/lib/workoutRecap'
 import { showToast } from '@/lib/toast'
 import { readPersistedWorkout } from '@/lib/workout-persistence'
 import { theme } from '@/theme/theme'
-import type { Program } from '@/types'
+import type { AccumulatedSet, Program } from '@/types'
 import type { ExerciseState } from '@/types/workout'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -89,6 +90,7 @@ function WorkoutSessionContent() {
     cancelEnd
   } = useEndWorkout()
   const { data: prsData } = usePRs(100)
+  const { completeSession } = useDataActions()
   const navigation = useNavigation()
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
@@ -347,6 +349,61 @@ function WorkoutSessionContent() {
         : null,
     [state.isCompleted, state.exercises, elapsedMs, bestWeightById]
   )
+
+  // Record the finished workout to the backend exactly once when it completes.
+  // This POSTs the session (so it appears in Statistics/Home/PRs) and bumps the
+  // progress version so those screens refetch. Fires for both natural completion
+  // and the End-workout path; skipped/pending sets are not recorded.
+  const recordedRef = useRef(false)
+  useEffect(() => {
+    if (!state.isCompleted || recordedRef.current) return
+    recordedRef.current = true
+
+    const completedAtIso = new Date(
+      state.completedAt ?? Date.now()
+    ).toISOString()
+
+    const accumulatedSets: AccumulatedSet[] = []
+    for (const exercise of state.exercises) {
+      for (const set of exercise.sets) {
+        if (set.status !== 'completed') continue
+        const weight = set.confirmedWeight ?? set.weight
+        const isBodyweight = !weight || weight <= 0
+        accumulatedSets.push({
+          exerciseId: exercise.exerciseId,
+          reps: set.confirmedReps ?? set.reps,
+          ...(isBodyweight ? {} : { weight }),
+          isBodyweight,
+          timestamp: completedAtIso
+        })
+      }
+    }
+
+    if (accumulatedSets.length === 0) return // nothing logged → nothing to record
+
+    completeSession(
+      state.programSlug,
+      state.sessionIndex,
+      `${accumulatedSets.length} sets`,
+      Math.round(elapsedMs / 1000),
+      accumulatedSets
+    ).catch(error => {
+      console.error('Failed to record completed workout:', error)
+      showToast({
+        type: 'error',
+        text1: 'Could not save workout to your stats',
+        visibilityTime: 2500
+      })
+    })
+  }, [
+    state.isCompleted,
+    state.exercises,
+    state.completedAt,
+    state.programSlug,
+    state.sessionIndex,
+    elapsedMs,
+    completeSession
+  ])
 
   const handleDone = useCallback(() => {
     if (navigation.canGoBack()) navigation.goBack()
