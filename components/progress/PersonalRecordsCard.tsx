@@ -2,7 +2,7 @@
  * PersonalRecordsCard - Display recent PRs
  */
 
-import { useExercises, usePRs } from '@/hooks/data'
+import { isPRRecent, useExercises, usePRs } from '@/hooks/data'
 import { theme } from '@/theme/theme'
 import { Exercise } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
@@ -48,6 +48,7 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
   }
 
   const prs = prsData?.latestPRs ?? []
+  const newCount = prs.filter(pr => isPRRecent(pr, 7)).length
 
   if (prs.length === 0) {
     return (
@@ -79,6 +80,11 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
             style={styles.titleIcon}
           />
           <Text style={styles.title}>Personal Records</Text>
+          {newCount > 0 && (
+            <View style={styles.newBadge}>
+              <Text style={styles.newBadgeText}>{newCount} NEW</Text>
+            </View>
+          )}
         </View>
         {onViewAll && prs.length >= limit && (
           <Pressable
@@ -131,7 +137,20 @@ const styles = StyleSheet.create({
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    gap: theme.spacing.sm
+  },
+  newBadge: {
+    backgroundColor: theme.colors.primaryLight,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 2,
+    borderRadius: theme.radius.sm
+  },
+  newBadgeText: {
+    ...theme.typography.small,
+    color: theme.colors.primary,
+    fontFamily: theme.fonts.bold,
+    letterSpacing: 0.5
   },
   titleIcon: {
     marginRight: theme.spacing.xs

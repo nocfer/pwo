@@ -328,9 +328,11 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm
   },
   statValue: {
-    ...theme.typography.h2,
+    fontFamily: theme.fonts.displayMed,
+    fontSize: 26,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs
+    marginBottom: theme.spacing.xs,
+    letterSpacing: -0.5
   },
   statLabel: {
     ...theme.typography.caption,

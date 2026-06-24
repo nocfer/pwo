@@ -2,21 +2,34 @@
  * WeeklySummaryCard - Hero card showing this week's progress
  */
 
-import { useWeeklyStats } from '@/hooks/data'
-import { formatDuration } from '@/lib/utils/format'
+import { useConsistencyData, useWeeklyStats } from '@/hooks/data'
+import { getWeekStart } from '@/lib/utils/date'
 import { theme } from '@/theme/theme'
 import { Ionicons } from '@expo/vector-icons'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Animated, StyleSheet, Text, View } from 'react-native'
 import ProgressEmptyState from './ProgressEmptyState'
-import RingChart from './RingChart'
 
 type Props = {
   onStartWorkout?: () => void
 }
 
+const MINI_BARS = 5
+
+function lastWeekStart(): Date {
+  const start = getWeekStart(new Date())
+  start.setDate(start.getDate() - 7)
+  return start
+}
+
 export default function WeeklySummaryCard({ onStartWorkout }: Props) {
   const { stats, loading } = useWeeklyStats()
+  // Previous week, for the "vs last week" delta (extra fetch).
+  const prevWeek = useMemo(() => lastWeekStart(), [])
+  const { stats: lastStats } = useWeeklyStats(prevWeek)
+  // Recent weekly totals for the mini bar chart.
+  const { data: consistency } = useConsistencyData(MINI_BARS)
+
   const fadeAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
@@ -29,6 +42,16 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
     }
   }, [loading, fadeAnim])
 
+  const weeklyTotals = useMemo(() => {
+    const totals =
+      consistency?.weeks.map(week =>
+        week.days.reduce((sum, day) => sum + day.workoutCount, 0)
+      ) ?? []
+    const trimmed = totals.slice(-MINI_BARS)
+    while (trimmed.length < MINI_BARS) trimmed.unshift(0)
+    return trimmed
+  }, [consistency])
+
   if (loading) {
     return (
       <View style={styles.card}>
@@ -38,31 +61,23 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
   }
 
   const completed = stats?.workoutsCompleted ?? 0
-  const goal = stats?.workoutGoal ?? 4
-  const percentage = goal > 0 ? Math.min(100, (completed / goal) * 100) : 0
-  const timeFormatted = formatDuration(
-    stats?.totalTimeSeconds ?? 0,
-    'shortWithSuffix'
-  )
-  const streak = stats?.currentStreak ?? 0
+  const delta = completed - (lastStats?.workoutsCompleted ?? 0)
 
   const parseLocalDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split('-').map(Number)
     return new Date(year, month - 1, day)
   }
 
-  const weekStart = stats?.weekStart
-    ? parseLocalDate(stats.weekStart).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric'
-      })
-    : ''
-  const weekEnd = stats?.weekEnd
-    ? parseLocalDate(stats.weekEnd).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric'
-      })
-    : ''
+  const formatRange = (dateStr?: string) =>
+    dateStr
+      ? parseLocalDate(dateStr).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric'
+        })
+      : ''
+
+  const weekStart = formatRange(stats?.weekStart)
+  const weekEnd = formatRange(stats?.weekEnd)
 
   if (completed === 0) {
     return (
@@ -82,6 +97,8 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
     )
   }
 
+  const maxBar = Math.max(...weeklyTotals, 1)
+
   return (
     <Animated.View style={[styles.card, { opacity: fadeAnim }]}>
       <View style={styles.header}>
@@ -92,82 +109,73 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
       </View>
 
       <View style={styles.content}>
-        <View style={styles.ringSection}>
-          <RingChart
-            percentage={percentage}
-            size={100}
-            strokeWidth={10}
-            labelText={`${completed}/${goal}`}
-          />
+        <View style={styles.summarySection}>
+          <View style={styles.bigNumberRow}>
+            <Text style={styles.bigNumber}>{completed}</Text>
+            <Text style={styles.bigNumberUnit}>
+              {completed === 1 ? 'workout' : 'workouts'}
+            </Text>
+          </View>
+          <View style={styles.deltaRow}>
+            <Ionicons
+              name={
+                delta > 0 ? 'arrow-up' : delta < 0 ? 'arrow-down' : 'remove'
+              }
+              size={13}
+              color={
+                delta > 0
+                  ? theme.colors.success
+                  : delta < 0
+                    ? theme.colors.danger
+                    : theme.colors.muted
+              }
+            />
+            <Text
+              style={[
+                styles.deltaText,
+                {
+                  color:
+                    delta > 0
+                      ? theme.colors.success
+                      : delta < 0
+                        ? theme.colors.danger
+                        : theme.colors.muted
+                }
+              ]}
+            >
+              {delta === 0
+                ? 'Same as last week'
+                : `${delta > 0 ? '+' : ''}${delta} vs last week`}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.statsSection}>
-          <StatRow
-            icon="fitness"
-            label="Workouts"
-            value={`${completed} completed`}
-            color={theme.colors.primary}
-          />
-          <StatRow
-            icon="time"
-            label="Time"
-            value={timeFormatted || '0m'}
-            color={theme.colors.phases.working}
-          />
-          <StatRow
-            icon="barbell"
-            label="Volume"
-            value={
-              (stats?.totalVolume ?? 0) > 0
-                ? `${stats?.totalVolume?.toLocaleString()} kg`
-                : 'No data'
-            }
-            color={theme.colors.accent}
-            highlight={(stats?.totalVolume ?? 0) > 0}
-          />
+        <View style={styles.miniChart}>
+          {weeklyTotals.map((value, index) => {
+            const isCurrent = index === weeklyTotals.length - 1
+            const isActive = value > 0
+            return (
+              <View key={index} style={styles.miniBarColumn}>
+                <View style={styles.miniBarWrapper}>
+                  <View
+                    style={[
+                      styles.miniBar,
+                      {
+                        height: `${Math.max((value / maxBar) * 100, 8)}%`,
+                        backgroundColor: isActive
+                          ? theme.colors.primary
+                          : theme.colors.borderLight,
+                        opacity: isActive && !isCurrent ? 0.55 : 1
+                      }
+                    ]}
+                  />
+                </View>
+              </View>
+            )
+          })}
         </View>
       </View>
-
-      {streak > 0 && (
-        <View style={styles.streakContainer}>
-          <Ionicons name="flame" size={16} color={theme.colors.accent} />
-          <Text style={styles.streakText}>
-            Current streak:{' '}
-            <Text style={styles.streakValue}>{streak} days</Text>
-          </Text>
-        </View>
-      )}
     </Animated.View>
-  )
-}
-
-function StatRow({
-  icon,
-  label,
-  value,
-  color,
-  highlight = false
-}: {
-  icon: string
-  label: string
-  value: string
-  color: string
-  highlight?: boolean
-}) {
-  return (
-    <View style={styles.statRow}>
-      <View style={[styles.statIcon, { backgroundColor: `${color}15` }]}>
-        <Ionicons name={icon as any} size={14} color={color} />
-      </View>
-      <View style={styles.statText}>
-        <Text style={styles.statLabel}>{label}</Text>
-        <Text
-          style={[styles.statValue, highlight && styles.statValueHighlight]}
-        >
-          {value}
-        </Text>
-      </View>
-    </View>
   )
 }
 
@@ -194,64 +202,63 @@ const styles = StyleSheet.create({
   },
   content: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
     gap: theme.spacing.lg
   },
-  ringSection: {
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  statsSection: {
-    flex: 1,
-    gap: theme.spacing.sm
-  },
-  statRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm
-  },
-  statIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: theme.radius.xs,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  statText: {
+  summarySection: {
     flex: 1
   },
-  statLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.muted
+  bigNumberRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: theme.spacing.sm
   },
-  statValue: {
-    ...theme.typography.bodyBold,
+  bigNumber: {
+    fontFamily: theme.fonts.displayMed,
+    fontSize: 40,
     color: theme.colors.text,
-    fontSize: 14
+    letterSpacing: -1
   },
-  statValueHighlight: {
-    color: theme.colors.accent
+  bigNumberUnit: {
+    ...theme.typography.body,
+    color: theme.colors.subtext
   },
-  streakContainer: {
+  deltaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.xs,
-    marginTop: theme.spacing.md,
-    paddingTop: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.borderLight
+    marginTop: theme.spacing.xs
   },
-  streakText: {
-    ...theme.typography.body,
-    color: theme.colors.text,
-    fontSize: 14
+  deltaText: {
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold
   },
-  streakValue: {
-    fontFamily: theme.fonts.bold,
-    color: theme.colors.accent
+  miniChart: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: theme.spacing.xs,
+    height: 56,
+    width: 96
+  },
+  miniBarColumn: {
+    flex: 1,
+    height: '100%'
+  },
+  miniBarWrapper: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.xs,
+    overflow: 'hidden',
+    justifyContent: 'flex-end'
+  },
+  miniBar: {
+    width: '100%',
+    borderRadius: theme.radius.xs,
+    minHeight: 4
   },
   skeleton: {
-    height: 180,
+    height: 120,
     backgroundColor: theme.colors.skeleton,
     borderRadius: theme.radius.sm
   }

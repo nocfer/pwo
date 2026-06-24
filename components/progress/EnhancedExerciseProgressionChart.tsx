@@ -28,6 +28,7 @@ import {
   View
 } from 'react-native'
 import { CompactEmptyState } from './ProgressEmptyState'
+import LineChart, { type DataPoint } from './LineChart'
 
 type MetricType = 'reps' | 'weight' | 'volume'
 type TimeRange = '7d' | '30d' | '90d'
@@ -44,8 +45,7 @@ const TIME_RANGES: { key: TimeRange; label: string; days: number }[] = [
   { key: '90d', label: '90D', days: 90 }
 ]
 
-const CHART_HEIGHT = 140
-const BAR_MIN_HEIGHT = 4
+const CHART_HEIGHT = 160
 
 interface ChartProps {
   selectedExerciseId?: string
@@ -167,6 +167,21 @@ export function EnhancedExerciseProgressionChart({
 
     return { bars, trend }
   }, [progressionData, selectedMetric, exercisePRs])
+
+  const lineData: DataPoint[] = useMemo(
+    () =>
+      chartData?.bars.map(b => ({ date: b.point.date, value: b.value })) ?? [],
+    [chartData]
+  )
+  const metricUnit =
+    selectedMetric === 'reps'
+      ? 'reps'
+      : selectedMetric === 'weight'
+        ? 'kg'
+        : 'vol'
+  const currentValue = lineData.length
+    ? lineData[lineData.length - 1].value
+    : 0
 
   // Skeleton loading state - wait for all data to load
   if (loading || loadingExerciseIds || loadingExercises) {
@@ -345,47 +360,17 @@ export function EnhancedExerciseProgressionChart({
         />
       ) : (
         <View style={styles.chartArea}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chartScrollContent}
-          >
-            {chartData.bars.map((bar, index) => (
-              <View key={index} style={styles.barColumn}>
-                <View style={styles.barArea}>
-                  <View
-                    style={[
-                      styles.bar,
-                      {
-                        height: Math.max(
-                          BAR_MIN_HEIGHT,
-                          (bar.heightPercent / 100) * CHART_HEIGHT
-                        ),
-                        backgroundColor: bar.isPR
-                          ? theme.colors.accent
-                          : theme.colors.primary
-                      }
-                    ]}
-                  />
-                  {bar.isPR && (
-                    <View style={styles.prBadge}>
-                      <Ionicons
-                        name="trophy"
-                        size={10}
-                        color={theme.colors.accent}
-                      />
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.barValue}>{bar.value}</Text>
-                <Text style={styles.barDate}>
-                  {new Date(bar.point.date).toLocaleDateString('en-US', {
-                    day: 'numeric'
-                  })}
-                </Text>
-              </View>
-            ))}
-          </ScrollView>
+          <View style={styles.currentValueRow}>
+            <Text style={styles.currentValue}>{currentValue}</Text>
+            <Text style={styles.currentUnit}>{metricUnit}</Text>
+          </View>
+          <LineChart
+            data={lineData}
+            color={theme.colors.primary}
+            height={CHART_HEIGHT}
+            showDots={lineData.length <= 14}
+            valueFormatter={v => String(Math.round(v))}
+          />
         </View>
       )}
 
@@ -566,45 +551,23 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.semiBold
   },
   chartArea: {
-    height: CHART_HEIGHT + 48,
     marginTop: theme.spacing.sm
   },
-  chartScrollContent: {
-    alignItems: 'flex-end',
-    paddingRight: theme.spacing.sm,
-    gap: theme.spacing.sm
+  currentValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.sm
   },
-  barColumn: {
-    alignItems: 'center',
-    width: 36
-  },
-  barArea: {
-    height: CHART_HEIGHT,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    position: 'relative'
-  },
-  bar: {
-    width: 20,
-    borderRadius: theme.radius.xs
-  },
-  prBadge: {
-    position: 'absolute',
-    top: -14,
-    backgroundColor: theme.colors.accentLight,
-    borderRadius: theme.radius.full,
-    padding: 2
-  },
-  barValue: {
-    ...theme.typography.caption,
+  currentValue: {
+    fontFamily: theme.fonts.displayMed,
+    fontSize: 28,
     color: theme.colors.text,
-    fontFamily: theme.fonts.semiBold,
-    marginTop: theme.spacing.xs
+    letterSpacing: -0.5
   },
-  barDate: {
+  currentUnit: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
-    fontSize: 11
+    color: theme.colors.subtext
   },
   skeleton: {
     height: 280,

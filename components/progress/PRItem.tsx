@@ -117,7 +117,9 @@ export default function PRItem({
         <Text style={styles.exerciseName} numberOfLines={1}>
           {exerciseName}
         </Text>
-        <Text style={styles.value}>{formatPRValue(pr)}</Text>
+        <Text style={[styles.value, !isNew && styles.valueOld]}>
+          {formatPRValue(pr)}
+        </Text>
       </View>
 
       <View style={styles.meta}>
@@ -162,8 +164,12 @@ const styles = StyleSheet.create({
     marginBottom: 2
   },
   value: {
-    ...theme.typography.h2,
+    fontFamily: theme.fonts.displayMed,
+    fontSize: 19,
     color: theme.colors.primary
+  },
+  valueOld: {
+    color: theme.colors.text
   },
   meta: {
     alignItems: 'flex-end',

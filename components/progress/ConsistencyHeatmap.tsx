@@ -19,14 +19,14 @@ type Props = {
 const CELL_SIZE = 22
 const CELL_GAP = 3
 
-// Max-intensity step beyond theme.colors.success (emerald-600)
-const HEATMAP_INTENSITY_HIGH = '#059669'
-
+// Lime→green intensity ramp (theme.colors.heatmap = [none, …, peak/lime]).
+// Data has 4 levels (0–3); map them onto a subset of the 5-stop ramp ending in lime.
+const RAMP = theme.colors.heatmap
 const levelColors: Record<ConsistencyLevel, string> = {
-  0: theme.colors.background,
-  1: theme.colors.successLight,
-  2: theme.colors.success,
-  3: HEATMAP_INTENSITY_HIGH
+  0: RAMP[0],
+  1: RAMP[2],
+  2: RAMP[3],
+  3: RAMP[4]
 }
 
 export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
@@ -113,10 +113,10 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
 
       <View style={styles.legend}>
         <Text style={styles.legendLabel}>Less</Text>
-        {([0, 1, 2, 3] as ConsistencyLevel[]).map(level => (
+        {RAMP.map((color, i) => (
           <View
-            key={level}
-            style={[styles.legendCell, { backgroundColor: levelColors[level] }]}
+            key={i}
+            style={[styles.legendCell, { backgroundColor: color }]}
           />
         ))}
         <Text style={styles.legendLabel}>More</Text>

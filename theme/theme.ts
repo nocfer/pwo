@@ -45,6 +45,9 @@ const colors = {
     doneBg: '#161E1B'
   },
 
+  // Consistency-heatmap intensity ramp — none → peak (lime). Shared design token.
+  heatmap: ['#16181E', '#1F3A2A', '#246B45', '#34D399', '#C6F24E'],
+
   overlayGlass: 'rgba(20, 21, 26, 0.95)',
   overlay: 'rgba(0, 0, 0, 0.6)',
   skeleton: '#1C1D24',
