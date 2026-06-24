@@ -101,7 +101,11 @@ const colors = {
     trackBg: '#16181E',
     completedValue: '#7C8A82',
     completedNum: '#6B6E7A',
-    controlBg: '#23262F'
+    controlBg: '#23262F',
+    // inline editor
+    editorBorder: '#2C303B',
+    editorScrim: 'rgba(5, 6, 8, 0.62)',
+    doneBtnBg: '#2A2E38'
   }
 } as const
 
