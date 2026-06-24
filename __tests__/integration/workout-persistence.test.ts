@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { WorkoutState } from '@/types/workout'
 
+import { readPersistedWorkout } from '@/lib/workout-persistence'
+import { STORAGE_KEYS } from '@/lib/storage-keys'
+
 const mockStorage = vi.hoisted(() => {
   const store = new Map<string, string>()
   return {
@@ -15,9 +18,6 @@ const mockStorage = vi.hoisted(() => {
 vi.mock('@/lib/mmkv', () => ({
   storage: mockStorage
 }))
-
-import { readPersistedWorkout } from '@/lib/workout-persistence'
-import { STORAGE_KEYS } from '@/lib/storage-keys'
 
 function createValidState(overrides?: Partial<WorkoutState>): WorkoutState {
   return {

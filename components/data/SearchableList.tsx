@@ -304,10 +304,7 @@ export function SearchableList({
           ListFooterComponent={
             loadingMore && hasMore ? (
               <View style={styles.footerLoader}>
-                <ActivityIndicator
-                  size="small"
-                  color={theme.colors.primary}
-                />
+                <ActivityIndicator size="small" color={theme.colors.primary} />
               </View>
             ) : null
           }

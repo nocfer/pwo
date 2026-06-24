@@ -10,16 +10,20 @@ const colors = {
   border: '#1F2029',
   borderLight: '#2A2B36',
 
-  // Brand — indigo-400 tuned for dark backgrounds
-  primary: '#818CF8',
-  primaryDark: '#6366F1',
-  primaryLight: 'rgba(129, 140, 248, 0.12)',
-  primaryMuted: 'rgba(129, 140, 248, 0.25)',
-  primaryTextOn: '#FFFFFF',
+  // Brand — electric lime, bright on dark backgrounds
+  primary: '#C6F24E',
+  primaryDark: '#AEDB37',
+  primaryLight: 'rgba(198, 242, 78, 0.12)',
+  primaryMuted: 'rgba(198, 242, 78, 0.25)',
+  primaryTextOn: '#0A0B0E', // ⚠ dark: lime is a light color, content on a primary fill must be dark
 
-  // Accent — amber-400
+  // Accent — amber-400 (supporting role: streak/flame)
   accent: '#FBBF24',
   accentLight: 'rgba(251, 191, 36, 0.12)',
+
+  // Info — cyan (timers / rest / informational)
+  info: '#56E0F0',
+  infoLight: 'rgba(86, 224, 240, 0.12)',
 
   // Status
   success: '#34D399',
@@ -33,9 +37,9 @@ const colors = {
   phases: {
     warmup: '#FB923C',
     warmupBg: '#1D1813',
-    working: '#818CF8',
-    workingBg: '#1B1B28',
-    break: '#22D3EE',
+    working: '#C6F24E',
+    workingBg: '#1B1E14',
+    break: '#56E0F0',
     breakBg: '#151D20',
     done: '#34D399',
     doneBg: '#161E1B'
@@ -51,7 +55,10 @@ const fonts = {
   regular: 'DMSans_400Regular',
   medium: 'DMSans_500Medium',
   semiBold: 'DMSans_600SemiBold',
-  bold: 'DMSans_700Bold'
+  bold: 'DMSans_700Bold',
+  // Space Grotesk — numerals, metrics, big headings
+  display: 'SpaceGrotesk_700Bold',
+  displayMed: 'SpaceGrotesk_600SemiBold'
 } as const
 
 const spacing = {
@@ -86,13 +93,13 @@ const shadows = {
 const typography = {
   display: {
     fontSize: 32,
-    fontFamily: 'DMSans_700Bold',
+    fontFamily: fonts.display,
     lineHeight: 38,
     letterSpacing: -0.8
   },
   h1: {
     fontSize: 24,
-    fontFamily: 'DMSans_600SemiBold',
+    fontFamily: fonts.displayMed,
     lineHeight: 30,
     letterSpacing: -0.5
   },

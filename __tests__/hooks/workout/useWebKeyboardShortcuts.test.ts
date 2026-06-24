@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { useWebKeyboardShortcuts } from '@/hooks/workout/useWebKeyboardShortcuts'
+import type { WebKeyboardShortcutsConfig } from '@/hooks/workout/useWebKeyboardShortcuts'
+
 type EffectFn = () => (() => void) | void
 let effectCallbacks: EffectFn[] = []
 
@@ -17,9 +20,6 @@ vi.mock('react-native', () => ({
     }
   }
 }))
-
-import { useWebKeyboardShortcuts } from '@/hooks/workout/useWebKeyboardShortcuts'
-import type { WebKeyboardShortcutsConfig } from '@/hooks/workout/useWebKeyboardShortcuts'
 
 type KeyHandler = (e: Record<string, unknown>) => void
 let keydownHandler: KeyHandler | null = null

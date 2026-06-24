@@ -7,7 +7,7 @@ export function useActiveWorkoutRedirect(): { redirecting: boolean } {
   const pathname = usePathname()
   const hasRedirected = useRef(false)
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- synchronous MMKV check, only on mount
+   
   const activeWorkout = useMemo(() => {
     if (pathname.includes('/session/')) return null
     return readPersistedWorkout()

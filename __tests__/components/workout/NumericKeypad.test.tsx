@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 import React from 'react'
 
+import { NumericKeypad } from '@/components/workout/NumericKeypad'
+import {
+  collectAllNodes,
+  findByAccessibilityLabel,
+  findByType
+} from '@/__tests__/helpers/mockNodeTraversal'
+
 vi.mock('react-native', () => ({
   Pressable: ({
     children,
@@ -32,13 +39,6 @@ vi.mock('react-native', () => ({
     create: <T extends Record<string, unknown>>(styles: T): T => styles
   }
 }))
-
-import { NumericKeypad } from '@/components/workout/NumericKeypad'
-import {
-  collectAllNodes,
-  findByAccessibilityLabel,
-  findByType
-} from '@/__tests__/helpers/mockNodeTraversal'
 
 function renderKeypad(
   overrides?: Partial<Parameters<typeof NumericKeypad>[0]>

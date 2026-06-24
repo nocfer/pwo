@@ -1,6 +1,5 @@
 import type { Program } from '@/types'
-import type { ExerciseState, SetStatus, WorkoutState } from '@/types/workout'
-import type { PrefillMap } from '@/types/workout'
+import type { ExerciseState, SetStatus, WorkoutState , PrefillMap } from '@/types/workout'
 
 function resolveSetValues(
   block: Program['blocks'][number],

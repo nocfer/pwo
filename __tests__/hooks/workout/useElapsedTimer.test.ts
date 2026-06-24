@@ -1,14 +1,14 @@
 import { formatElapsedTime } from '@/components/workout/WorkoutHeader'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { useEffect } from 'react'
+import { useElapsedTimer } from '@/hooks/workout/useElapsedTimer'
+
 vi.mock('react', () => ({
   useState: vi.fn((initial: number) => [initial, vi.fn()]),
   useRef: (initial: unknown) => ({ current: initial }),
   useEffect: vi.fn()
 }))
-
-import { useEffect } from 'react'
-import { useElapsedTimer } from '@/hooks/workout/useElapsedTimer'
 
 // ---------------------------------------------------------------------------
 // formatElapsedTime — pure function tests

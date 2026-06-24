@@ -1,6 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ExerciseState } from '@/types/workout'
 
+import { ExerciseAccordionItem } from '@/components/workout/ExerciseAccordionItem'
+import { theme } from '@/theme/theme'
+import {
+  collectAllNodes,
+  findByAccessibilityLabel,
+  findByType
+} from '@/__tests__/helpers/mockNodeTraversal'
+
 vi.mock('react', async importOriginal => {
   const actual = (await importOriginal()) as Record<string, unknown>
   return {
@@ -79,14 +87,6 @@ vi.mock('react-native-reanimated', () => ({
   useAnimatedStyle: (fn: () => unknown) => fn(),
   withTiming: (v: number) => v
 }))
-
-import { ExerciseAccordionItem } from '@/components/workout/ExerciseAccordionItem'
-import { theme } from '@/theme/theme'
-import {
-  collectAllNodes,
-  findByAccessibilityLabel,
-  findByType
-} from '@/__tests__/helpers/mockNodeTraversal'
 
 function makeExercise(overrides?: Partial<ExerciseState>): ExerciseState {
   return {

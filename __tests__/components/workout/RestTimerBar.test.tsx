@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import React from 'react'
 
+import { RestTimerBar } from '@/components/workout/RestTimerBar'
+
 vi.mock('react-native', () => ({
   Platform: { OS: 'ios' },
   Pressable: ({
@@ -89,8 +91,6 @@ vi.mock('react', async () => {
     useEffect: vi.fn()
   }
 })
-
-import { RestTimerBar } from '@/components/workout/RestTimerBar'
 
 function renderBar(remainingMs: number, isActive: boolean, onSkip = vi.fn()) {
   mockStateCall = 0

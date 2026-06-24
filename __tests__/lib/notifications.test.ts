@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  scheduleRestTimerNotification,
+  cancelRestTimerNotification,
+  requestNotificationPermission
+} from '@/lib/notifications'
+
 const mockSchedule = vi.fn(async () => 'notif-abc')
 const mockCancel = vi.fn(async () => {})
 const mockRequestPermissions = vi.fn(async () => ({ status: 'granted' }))
@@ -19,12 +25,6 @@ vi.mock('expo-notifications', () => ({
     TIME_INTERVAL: 'timeInterval'
   }
 }))
-
-import {
-  scheduleRestTimerNotification,
-  cancelRestTimerNotification,
-  requestNotificationPermission
-} from '@/lib/notifications'
 
 describe('lib/notifications', () => {
   beforeEach(() => {

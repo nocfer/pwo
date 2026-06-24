@@ -440,19 +440,13 @@ export function UnifiedDataManager({
         showInlineActions={activeTab === 'programs'}
         isLoading={isLoading}
         onEndReached={
-          activeTab === 'exercises'
-            ? actions.loadMoreExercises
-            : undefined
+          activeTab === 'exercises' ? actions.loadMoreExercises : undefined
         }
         hasMore={
-          activeTab === 'exercises'
-            ? state.exercisePagination.hasMore
-            : false
+          activeTab === 'exercises' ? state.exercisePagination.hasMore : false
         }
         loadingMore={
-          activeTab === 'exercises'
-            ? state.exercisesLoadingMore
-            : false
+          activeTab === 'exercises' ? state.exercisesLoadingMore : false
         }
         style={styles.dataList}
       />

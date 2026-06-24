@@ -1,6 +1,8 @@
 import type { ExerciseState } from '@/types/workout'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { useEndWorkout } from '@/hooks/workout/useEndWorkout'
+
 // ---------------------------------------------------------------------------
 // Mocking setup
 // ---------------------------------------------------------------------------
@@ -22,8 +24,6 @@ vi.mock('react', () => ({
   useCallback: (fn: (...args: unknown[]) => unknown) => fn,
   useMemo: (fn: () => unknown) => fn()
 }))
-
-import { useEndWorkout } from '@/hooks/workout/useEndWorkout'
 
 // Pure computation helper (mirrors hook logic for edge case coverage)
 function computePendingSetsCount(exercises: ExerciseState[]): number {

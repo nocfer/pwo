@@ -9,6 +9,10 @@ import {
   DMSans_700Bold,
   useFonts
 } from '@expo-google-fonts/dm-sans'
+import {
+  SpaceGrotesk_600SemiBold,
+  SpaceGrotesk_700Bold
+} from '@expo-google-fonts/space-grotesk'
 import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
@@ -54,7 +58,9 @@ export default function RootLayout() {
     DMSans_400Regular,
     DMSans_500Medium,
     DMSans_600SemiBold,
-    DMSans_700Bold
+    DMSans_700Bold,
+    SpaceGrotesk_600SemiBold,
+    SpaceGrotesk_700Bold
   })
 
   useEffect(() => {

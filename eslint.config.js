@@ -6,6 +6,13 @@ module.exports = defineConfig([
   expoConfig,
   eslintConfigPrettier,
   {
-    ignores: ['dist/*', 'node_modules/*', '.expo/*', 'coverage/*']
+    ignores: [
+      'dist/*',
+      'node_modules/*',
+      '.expo/*',
+      'coverage/*',
+      '_bmad/*',
+      '_bmad_output/*'
+    ]
   }
 ])

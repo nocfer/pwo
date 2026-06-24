@@ -3,11 +3,7 @@
  * Provides comprehensive validation for exercises, programs, and challenges
  */
 
-import type {
-  Exercise,
-  ExerciseCategory,
-  Program
-} from '@/types'
+import type { Exercise, ExerciseCategory, Program } from '@/types'
 import type {
   EnhancedExercise,
   EnhancedProgram,
@@ -29,11 +25,7 @@ export const VALID_EXERCISE_CATEGORIES: ExerciseCategory[] = [
   'skill'
 ]
 
-const VALID_DIFFICULTIES = [
-  'beginner',
-  'intermediate',
-  'advanced'
-] as const
+const VALID_DIFFICULTIES = ['beginner', 'intermediate', 'advanced'] as const
 
 // Common Ionicons that are suitable for exercises
 export const VALID_EXERCISE_ICONS = [

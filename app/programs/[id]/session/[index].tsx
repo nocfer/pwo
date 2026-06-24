@@ -297,7 +297,7 @@ export default function ProgramSession() {
   const id = params.id as string
   const index = Number(params.index)
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- synchronous MMKV read, only on mount
+   
   const persistedState = useMemo(() => {
     const state = readPersistedWorkout()
     if (!state) return null

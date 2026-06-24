@@ -1,5 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
+import useAsyncData from '@/hooks/useAsyncData'
+import { fetchPrefillData } from '@/lib/api'
+import { usePrefill } from '@/hooks/workout/usePrefill'
+
 vi.mock('react', () => ({
   useMemo: vi.fn((fn: () => unknown) => fn())
 }))
@@ -17,10 +21,6 @@ vi.mock('@/hooks/useAsyncData', () => ({
     refetch: vi.fn()
   }))
 }))
-
-import useAsyncData from '@/hooks/useAsyncData'
-import { fetchPrefillData } from '@/lib/api'
-import { usePrefill } from '@/hooks/workout/usePrefill'
 
 const mockUseAsyncData = useAsyncData as ReturnType<typeof vi.fn>
 const mockFetch = fetchPrefillData as ReturnType<typeof vi.fn>

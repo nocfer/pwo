@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import React from 'react'
 
+import { SetDot } from '@/components/workout/SetDot'
+
 vi.mock('react-native', () => ({
   TouchableOpacity: ({
     children,
@@ -32,8 +34,6 @@ vi.mock('react-native', () => ({
     create: <T extends Record<string, unknown>>(styles: T): T => styles
   }
 }))
-
-import { SetDot } from '@/components/workout/SetDot'
 
 function renderSetDot(
   status: 'pending' | 'active' | 'completed' | 'skipped',

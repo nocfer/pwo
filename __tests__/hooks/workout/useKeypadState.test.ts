@@ -1,6 +1,9 @@
 import type { ExerciseState } from '@/types/workout'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { useKeypadState } from '@/hooks/workout/useKeypadState'
+import { useState } from 'react'
+
 const mockLogSet = vi.fn()
 let mockExercises: ExerciseState[] = []
 
@@ -41,9 +44,6 @@ vi.mock('react', () => ({
   }),
   useCallback: (fn: (...args: unknown[]) => unknown) => fn
 }))
-
-import { useKeypadState } from '@/hooks/workout/useKeypadState'
-import { useState } from 'react'
 
 function makeExercises(): ExerciseState[] {
   return [

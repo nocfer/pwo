@@ -1,6 +1,9 @@
 import type { WorkoutState } from '@/types/workout'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { STORAGE_KEYS } from '@/lib/storage-keys'
+import { useWorkoutPersistence } from '@/hooks/workout/useWorkoutPersistence'
+
 // ---------------------------------------------------------------------------
 // Hoisted mocks
 // ---------------------------------------------------------------------------
@@ -17,7 +20,7 @@ const stateHolder = vi.hoisted(() => ({
 }))
 
 const effectCbs = vi.hoisted(() => ({
-  list: [] as Array<() => void | (() => void)>
+  list: [] as (() => void | (() => void))[]
 }))
 
 const refs = vi.hoisted(() => ({
@@ -52,9 +55,6 @@ vi.mock('react', () => ({
     return refs.map.get(idx)!
   }
 }))
-
-import { STORAGE_KEYS } from '@/lib/storage-keys'
-import { useWorkoutPersistence } from '@/hooks/workout/useWorkoutPersistence'
 
 // ---------------------------------------------------------------------------
 // Helpers

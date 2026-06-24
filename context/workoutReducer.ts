@@ -239,6 +239,102 @@ export function workoutReducer(
       }
     }
 
+    // ---- redesign extensions (ported from the Flow prototype) ----
+
+    case 'ADD_SET': {
+      const exercises = state.exercises.map((ex, eIdx) => {
+        if (eIdx !== action.exerciseIndex) return ex
+        const last = ex.sets[ex.sets.length - 1]
+        return {
+          ...ex,
+          sets: [
+            ...ex.sets,
+            {
+              reps: last ? last.reps : 0,
+              weight: last ? last.weight : 0,
+              status: 'pending' as const
+            }
+          ]
+        }
+      })
+      return { ...state, exercises }
+    }
+
+    case 'MOVE_EXERCISE': {
+      const { from, to } = action
+      const n = state.exercises.length
+      if (to < 0 || to >= n) return state
+      // Only reorder untouched, upcoming exercises — never the active one.
+      if (
+        from === state.expandedExerciseIndex ||
+        to === state.expandedExerciseIndex
+      ) {
+        return state
+      }
+      const allPending = (ex: WorkoutState['exercises'][number]) =>
+        ex.sets.every(s => s.status === 'pending')
+      if (
+        !allPending(state.exercises[from]) ||
+        !allPending(state.exercises[to])
+      ) {
+        return state
+      }
+      const exercises = state.exercises.slice()
+      const tmp = exercises[from]
+      exercises[from] = exercises[to]
+      exercises[to] = tmp
+      return { ...state, exercises }
+    }
+
+    case 'EXTEND_REST':
+      if (!state.restTimer.isActive) return state
+      return {
+        ...state,
+        restTimer: {
+          ...state.restTimer,
+          startedAt: state.restTimer.startedAt + 15000
+        }
+      }
+
+    case 'UNLOG_SET':
+    case 'RESTORE_SET': {
+      let exercises = state.exercises.map((ex, eIdx) =>
+        eIdx === action.exerciseIndex
+          ? {
+              ...ex,
+              sets: ex.sets.map((s, sIdx) =>
+                sIdx === action.setIndex
+                  ? { ...s, status: 'pending' as const }
+                  : s
+              )
+            }
+          : ex
+      )
+
+      const hasActive = exercises.some(ex =>
+        ex.sets.some(s => s.status === 'active')
+      )
+      let expanded = state.expandedExerciseIndex
+      let activeIdx = state.activeSetIndex
+      if (!hasActive) {
+        exercises = exercises.map((ex, eIdx) =>
+          eIdx === action.exerciseIndex
+            ? activateInExercise(ex, action.setIndex)
+            : ex
+        )
+        expanded = action.exerciseIndex
+        activeIdx = action.setIndex
+      }
+
+      return {
+        ...state,
+        exercises,
+        expandedExerciseIndex: expanded,
+        activeSetIndex: activeIdx,
+        restTimer: { ...state.restTimer, isActive: false }
+      }
+    }
+
     case 'RESTORE_STATE':
       return action.state
 

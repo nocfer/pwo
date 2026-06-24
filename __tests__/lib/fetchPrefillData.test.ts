@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { fetchPrefillData } from '@/lib/api'
+
 vi.hoisted(() => {
   process.env.EXPO_PUBLIC_API_ENABLED = 'true'
   process.env.EXPO_PUBLIC_API_BASE_URL = 'https://test.api'
@@ -12,8 +14,6 @@ vi.mock('@/lib/firebase', () => ({
     }
   }
 }))
-
-import { fetchPrefillData } from '@/lib/api'
 
 describe('fetchPrefillData', () => {
   beforeEach(() => {

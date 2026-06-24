@@ -1,6 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 import React from 'react'
 
+import { SetRow } from '@/components/workout/SetRow'
+import type { SetStatus } from '@/types/workout'
+import {
+  collectAllNodes,
+  findByAccessibilityLabel,
+  findByType
+} from '@/__tests__/helpers/mockNodeTraversal'
+
 vi.mock('react-native', () => ({
   Pressable: ({
     children,
@@ -32,14 +40,6 @@ vi.mock('react-native', () => ({
     create: <T extends Record<string, unknown>>(styles: T): T => styles
   }
 }))
-
-import { SetRow } from '@/components/workout/SetRow'
-import type { SetStatus } from '@/types/workout'
-import {
-  collectAllNodes,
-  findByAccessibilityLabel,
-  findByType
-} from '@/__tests__/helpers/mockNodeTraversal'
 
 function renderSetRow(overrides?: Partial<Parameters<typeof SetRow>[0]>) {
   return SetRow({

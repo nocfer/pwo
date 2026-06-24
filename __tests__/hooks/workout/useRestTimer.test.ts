@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { haptics } from '@/lib/haptics'
+import { useRestTimer } from '@/hooks/workout/useRestTimer'
+
 const mockDismissRestTimer = vi.fn()
 const mockStartRestTimer = vi.fn()
 let mockState = {
@@ -53,9 +56,6 @@ vi.mock('react', async () => {
     useCallback: (fn: unknown) => fn
   }
 })
-
-import { haptics } from '@/lib/haptics'
-import { useRestTimer } from '@/hooks/workout/useRestTimer'
 
 describe('useRestTimer', () => {
   beforeEach(() => {

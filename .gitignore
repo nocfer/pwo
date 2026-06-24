@@ -43,3 +43,7 @@ app-example
 /ios
 /android
 coverage/
+_bmad/*
+_bmad_output/*
+
+.claude/*

@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import React from 'react'
 
+import { MaxWidthContainer } from '@/components/common/MaxWidthContainer'
+
 const mockUseResponsiveLayout = vi.fn()
 
 vi.mock('@/hooks/useResponsiveLayout', () => ({
@@ -13,8 +15,6 @@ vi.mock('react-native', () => ({
     props: { style, children }
   })
 }))
-
-import { MaxWidthContainer } from '@/components/common/MaxWidthContainer'
 
 describe('MaxWidthContainer', () => {
   it('renders children inside a View', () => {

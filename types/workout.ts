@@ -73,3 +73,8 @@ export type WorkoutAction =
   | { type: 'EDIT_SET'; exerciseIndex: number; setIndex: number }
   | { type: 'COMPLETE_WORKOUT'; completedAt: number }
   | { type: 'RESTORE_STATE'; state: WorkoutState }
+  | { type: 'ADD_SET'; exerciseIndex: number }
+  | { type: 'MOVE_EXERCISE'; from: number; to: number }
+  | { type: 'EXTEND_REST' }
+  | { type: 'UNLOG_SET'; exerciseIndex: number; setIndex: number }
+  | { type: 'RESTORE_SET'; exerciseIndex: number; setIndex: number }

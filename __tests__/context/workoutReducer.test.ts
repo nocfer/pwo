@@ -818,3 +818,292 @@ describe('workoutReducer — COMPLETE_WORKOUT with editing set', () => {
     expect(next.isCompleted).toBe(true)
   })
 })
+
+// ---------------------------------------------------------------------------
+// workoutReducer — ADD_SET
+// ---------------------------------------------------------------------------
+
+describe('workoutReducer — ADD_SET', () => {
+  it('appends a pending set copying the last set reps/weight', () => {
+    const state = createMockWorkoutState()
+    const next = workoutReducer(state, { type: 'ADD_SET', exerciseIndex: 1 })
+
+    expect(next.exercises[1].sets).toHaveLength(3)
+    expect(next.exercises[1].sets[2]).toEqual({
+      reps: 8,
+      weight: 80,
+      status: 'pending'
+    })
+  })
+
+  it('does not affect other exercises', () => {
+    const state = createMockWorkoutState()
+    const next = workoutReducer(state, { type: 'ADD_SET', exerciseIndex: 1 })
+
+    expect(next.exercises[0]).toBe(state.exercises[0])
+  })
+
+  it('appends a zeroed pending set when the exercise has no sets', () => {
+    const state = createMockWorkoutState({
+      exercises: [{ exerciseId: 'ex1', exerciseName: 'A', sets: [] }]
+    })
+    const next = workoutReducer(state, { type: 'ADD_SET', exerciseIndex: 0 })
+
+    expect(next.exercises[0].sets).toEqual([
+      { reps: 0, weight: 0, status: 'pending' }
+    ])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// workoutReducer — MOVE_EXERCISE
+// ---------------------------------------------------------------------------
+
+describe('workoutReducer — MOVE_EXERCISE', () => {
+  function createReorderableState() {
+    return createMockWorkoutState({
+      expandedExerciseIndex: 0,
+      activeSetIndex: 0,
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'Active',
+          sets: [{ reps: 10, weight: 60, status: 'active' }]
+        },
+        {
+          exerciseId: 'ex2',
+          exerciseName: 'Upcoming B',
+          sets: [{ reps: 8, weight: 80, status: 'pending' }]
+        },
+        {
+          exerciseId: 'ex3',
+          exerciseName: 'Upcoming C',
+          sets: [{ reps: 6, weight: 100, status: 'pending' }]
+        }
+      ]
+    })
+  }
+
+  it('swaps two untouched upcoming exercises', () => {
+    const state = createReorderableState()
+    const next = workoutReducer(state, {
+      type: 'MOVE_EXERCISE',
+      from: 1,
+      to: 2
+    })
+
+    expect(next.exercises[1].exerciseId).toBe('ex3')
+    expect(next.exercises[2].exerciseId).toBe('ex2')
+  })
+
+  it('is a no-op when the target index is out of bounds', () => {
+    const state = createReorderableState()
+    expect(
+      workoutReducer(state, { type: 'MOVE_EXERCISE', from: 2, to: 3 })
+    ).toBe(state)
+    expect(
+      workoutReducer(state, { type: 'MOVE_EXERCISE', from: 1, to: -1 })
+    ).toBe(state)
+  })
+
+  it('refuses to move the currently expanded/active exercise', () => {
+    const state = createReorderableState()
+    expect(
+      workoutReducer(state, { type: 'MOVE_EXERCISE', from: 0, to: 1 })
+    ).toBe(state)
+    expect(
+      workoutReducer(state, { type: 'MOVE_EXERCISE', from: 1, to: 0 })
+    ).toBe(state)
+  })
+
+  it('refuses to move an exercise that has a non-pending set', () => {
+    const state = createReorderableState()
+    state.exercises[1].sets[0].status = 'completed'
+    expect(
+      workoutReducer(state, { type: 'MOVE_EXERCISE', from: 1, to: 2 })
+    ).toBe(state)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// workoutReducer — EXTEND_REST
+// ---------------------------------------------------------------------------
+
+describe('workoutReducer — EXTEND_REST', () => {
+  it('adds 15s to the rest timer startedAt when active', () => {
+    const state = createMockWorkoutState({
+      restTimer: { isActive: true, startedAt: 1000, durationMs: 60000 }
+    })
+    const next = workoutReducer(state, { type: 'EXTEND_REST' })
+
+    expect(next.restTimer.startedAt).toBe(16000)
+    expect(next.restTimer.durationMs).toBe(60000)
+    expect(next.restTimer.isActive).toBe(true)
+  })
+
+  it('is a no-op when the rest timer is not active', () => {
+    const state = createMockWorkoutState({
+      restTimer: { isActive: false, startedAt: 0, durationMs: 0 }
+    })
+    expect(workoutReducer(state, { type: 'EXTEND_REST' })).toBe(state)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// workoutReducer — UNLOG_SET / RESTORE_SET
+// ---------------------------------------------------------------------------
+
+describe('workoutReducer — UNLOG_SET / RESTORE_SET', () => {
+  it('re-activates an unlogged set when nothing else is active and clears rest', () => {
+    const state = createMockWorkoutState({
+      expandedExerciseIndex: 1,
+      activeSetIndex: 0,
+      restTimer: { isActive: true, startedAt: 1000, durationMs: 60000 },
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [
+            {
+              reps: 10,
+              weight: 60,
+              status: 'completed',
+              confirmedReps: 10,
+              confirmedWeight: 60
+            }
+          ]
+        },
+        {
+          exerciseId: 'ex2',
+          exerciseName: 'B',
+          sets: [{ reps: 8, weight: 80, status: 'completed' }]
+        }
+      ]
+    })
+
+    const next = workoutReducer(state, {
+      type: 'UNLOG_SET',
+      exerciseIndex: 0,
+      setIndex: 0
+    })
+
+    expect(next.exercises[0].sets[0].status).toBe('active')
+    expect(next.expandedExerciseIndex).toBe(0)
+    expect(next.activeSetIndex).toBe(0)
+    expect(next.restTimer.isActive).toBe(false)
+  })
+
+  it('only sets the unlogged set to pending when another set is still active', () => {
+    const state = createMockWorkoutState({
+      expandedExerciseIndex: 0,
+      activeSetIndex: 1,
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [
+            {
+              reps: 10,
+              weight: 60,
+              status: 'completed',
+              confirmedReps: 10,
+              confirmedWeight: 60
+            },
+            { reps: 10, weight: 60, status: 'active' }
+          ]
+        }
+      ]
+    })
+
+    const next = workoutReducer(state, {
+      type: 'UNLOG_SET',
+      exerciseIndex: 0,
+      setIndex: 0
+    })
+
+    expect(next.exercises[0].sets[0].status).toBe('pending')
+    expect(next.exercises[0].sets[1].status).toBe('active')
+    expect(next.expandedExerciseIndex).toBe(0)
+    expect(next.activeSetIndex).toBe(1)
+  })
+
+  it('re-activates a restored (previously skipped) set when nothing is active', () => {
+    const state = createMockWorkoutState({
+      expandedExerciseIndex: 0,
+      activeSetIndex: 0,
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [
+            { reps: 10, weight: 60, status: 'completed' },
+            { reps: 10, weight: 60, status: 'skipped' }
+          ]
+        }
+      ]
+    })
+
+    const next = workoutReducer(state, {
+      type: 'RESTORE_SET',
+      exerciseIndex: 0,
+      setIndex: 1
+    })
+
+    expect(next.exercises[0].sets[1].status).toBe('active')
+    expect(next.expandedExerciseIndex).toBe(0)
+    expect(next.activeSetIndex).toBe(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// workoutReducer — natural completion endpoint
+// ---------------------------------------------------------------------------
+// The screen (Phase 2) dispatches COMPLETE_WORKOUT when CONFIRM_SET on the last
+// set yields no next pending set. This verifies that terminal handoff: the
+// reducer stays pure and completion finalizes a fully-logged state.
+
+describe('workoutReducer — natural completion endpoint', () => {
+  it('confirming the last set leaves no next pending, then COMPLETE_WORKOUT finalizes', () => {
+    const state = createMockWorkoutState({
+      expandedExerciseIndex: 0,
+      activeSetIndex: 0,
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [
+            {
+              reps: 10,
+              weight: 60,
+              status: 'completed',
+              confirmedReps: 10,
+              confirmedWeight: 60
+            },
+            { reps: 10, weight: 60, status: 'active' }
+          ]
+        }
+      ]
+    })
+
+    const confirmed = workoutReducer(state, {
+      type: 'CONFIRM_SET',
+      exerciseIndex: 0,
+      setIndex: 1
+    })
+
+    // No next pending set anywhere -> the screen would now complete.
+    expect(findNextPendingSet(confirmed.exercises, 0, 1)).toBeNull()
+    expect(confirmed.isCompleted).toBe(false)
+
+    const completed = workoutReducer(confirmed, {
+      type: 'COMPLETE_WORKOUT',
+      completedAt: 9999
+    })
+
+    expect(completed.isCompleted).toBe(true)
+    expect(completed.completedAt).toBe(9999)
+    expect(
+      completed.exercises[0].sets.every(s => s.status === 'completed')
+    ).toBe(true)
+  })
+})
