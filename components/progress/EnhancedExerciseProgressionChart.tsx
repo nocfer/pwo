@@ -77,27 +77,35 @@ export function EnhancedExerciseProgressionChart({
   )
   const { prs: exercisePRs } = useExercisePRs(selectedExerciseId ?? '')
 
-  const exercisesWithProgression = useMemo(
+  const catalogById = useMemo(() => {
+    const map = new Map<string, Exercise>()
+    exercises?.forEach((ex: Exercise) => map.set(ex.id, ex))
+    return map
+  }, [exercises])
+
+  // The backend's exercisesWithData (exerciseIds) is the source of truth for
+  // which exercises have progression. The local catalog is paginated, so we
+  // resolve names from it opportunistically and fall back to the id rather than
+  // hiding exercises that simply haven't been loaded into the catalog yet.
+  const progressionExercises = useMemo(
     () =>
-      exercises?.filter((ex: Exercise) => exerciseIds.includes(ex.id)) ?? [],
-    [exercises, exerciseIds]
+      exerciseIds.map(id => {
+        const ex = catalogById.get(id)
+        return { id, name: ex?.name ?? id, category: ex?.category ?? '' }
+      }),
+    [exerciseIds, catalogById]
   )
 
-  const selectedExercise = useMemo(
-    () => exercises?.find((ex: Exercise) => ex.id === selectedExerciseId),
-    [exercises, selectedExerciseId]
-  )
+  const selectedExerciseName = selectedExerciseId
+    ? (catalogById.get(selectedExerciseId)?.name ?? selectedExerciseId)
+    : undefined
 
   // Auto-select first exercise when available and no selection
   useEffect(() => {
-    if (
-      !externalSelectedId &&
-      !internalSelectedId &&
-      exercisesWithProgression.length > 0
-    ) {
-      setInternalSelectedId(exercisesWithProgression[0].id)
+    if (!externalSelectedId && !internalSelectedId && exerciseIds.length > 0) {
+      setInternalSelectedId(exerciseIds[0])
     }
-  }, [externalSelectedId, internalSelectedId, exercisesWithProgression])
+  }, [externalSelectedId, internalSelectedId, exerciseIds])
 
   useEffect(() => {
     if (!loading && !loadingExerciseIds && !loadingExercises) {
@@ -110,11 +118,11 @@ export function EnhancedExerciseProgressionChart({
   }, [loading, loadingExerciseIds, loadingExercises, fadeAnim])
 
   const handleExerciseSelect = useCallback(
-    (exercise: Exercise) => {
+    (exerciseId: string) => {
       if (onExerciseChange) {
-        onExerciseChange(exercise.id)
+        onExerciseChange(exerciseId)
       } else {
-        setInternalSelectedId(exercise.id)
+        setInternalSelectedId(exerciseId)
       }
       setShowExerciseSelector(false)
       haptics.tabSwitch()
@@ -184,8 +192,9 @@ export function EnhancedExerciseProgressionChart({
     ? lineData[lineData.length - 1].value
     : 0
 
-  // Skeleton loading state - wait for all data to load
-  if (loading || loadingExerciseIds || loadingExercises) {
+  // Skeleton while the progression id list resolves. The catalog (names) is
+  // not required to render — names fall back to ids — so don't block on it.
+  if (loadingExerciseIds) {
     return (
       <View style={styles.card}>
         <View style={styles.skeleton} />
@@ -194,7 +203,7 @@ export function EnhancedExerciseProgressionChart({
   }
 
   // Empty state - no exercises with progression
-  if (exercisesWithProgression.length === 0) {
+  if (progressionExercises.length === 0) {
     return (
       <View style={styles.card}>
         <View style={styles.header}>
@@ -280,11 +289,11 @@ export function EnhancedExerciseProgressionChart({
         <Text
           style={[
             styles.exerciseSelectorText,
-            !selectedExercise && styles.exerciseSelectorPlaceholder
+            !selectedExerciseName && styles.exerciseSelectorPlaceholder
           ]}
           numberOfLines={1}
         >
-          {selectedExercise?.name ?? 'Select exercise'}
+          {selectedExerciseName ?? 'Select exercise'}
         </Text>
         <Ionicons name="chevron-down" size={16} color={theme.colors.muted} />
       </Pressable>
@@ -399,7 +408,7 @@ export function EnhancedExerciseProgressionChart({
             style={styles.exerciseList}
             contentContainerStyle={styles.exerciseListContent}
           >
-            {exercisesWithProgression.map((exercise: Exercise) => {
+            {progressionExercises.map(exercise => {
               const isSelected = selectedExerciseId === exercise.id
               return (
                 <Pressable
@@ -409,13 +418,15 @@ export function EnhancedExerciseProgressionChart({
                     isSelected && styles.exerciseItemSelected,
                     pressed && styles.exerciseItemPressed
                   ]}
-                  onPress={() => handleExerciseSelect(exercise)}
+                  onPress={() => handleExerciseSelect(exercise.id)}
                 >
                   <View style={styles.exerciseInfo}>
                     <Text style={styles.exerciseName}>{exercise.name}</Text>
-                    <Text style={styles.exerciseCategory}>
-                      {exercise.category}
-                    </Text>
+                    {exercise.category ? (
+                      <Text style={styles.exerciseCategory}>
+                        {exercise.category}
+                      </Text>
+                    ) : null}
                   </View>
                   {isSelected && (
                     <Ionicons
