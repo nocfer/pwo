@@ -39,6 +39,11 @@ export type WorkoutExecutionContextValue = {
   editSet: (exerciseIndex: number, setIndex: number) => void
   completeWorkout: () => void
   restoreState: (state: WorkoutState) => void
+  addSet: (exerciseIndex: number) => void
+  moveExercise: (from: number, to: number) => void
+  extendRest: () => void
+  unlogSet: (exerciseIndex: number, setIndex: number) => void
+  restoreSet: (exerciseIndex: number, setIndex: number) => void
 }
 
 // ---------------------------------------------------------------------------
@@ -118,6 +123,31 @@ export function WorkoutExecutionProvider({
     []
   )
 
+  const addSet = useCallback(
+    (exerciseIndex: number) => dispatch({ type: 'ADD_SET', exerciseIndex }),
+    []
+  )
+
+  const moveExercise = useCallback(
+    (from: number, to: number) =>
+      dispatch({ type: 'MOVE_EXERCISE', from, to }),
+    []
+  )
+
+  const extendRest = useCallback(() => dispatch({ type: 'EXTEND_REST' }), [])
+
+  const unlogSet = useCallback(
+    (exerciseIndex: number, setIndex: number) =>
+      dispatch({ type: 'UNLOG_SET', exerciseIndex, setIndex }),
+    []
+  )
+
+  const restoreSet = useCallback(
+    (exerciseIndex: number, setIndex: number) =>
+      dispatch({ type: 'RESTORE_SET', exerciseIndex, setIndex }),
+    []
+  )
+
   const value = useMemo<WorkoutExecutionContextValue>(
     () => ({
       state,
@@ -129,7 +159,12 @@ export function WorkoutExecutionProvider({
       startRestTimer,
       dismissRestTimer,
       completeWorkout,
-      restoreState
+      restoreState,
+      addSet,
+      moveExercise,
+      extendRest,
+      unlogSet,
+      restoreSet
     }),
     [
       state,
@@ -141,7 +176,12 @@ export function WorkoutExecutionProvider({
       startRestTimer,
       dismissRestTimer,
       completeWorkout,
-      restoreState
+      restoreState,
+      addSet,
+      moveExercise,
+      extendRest,
+      unlogSet,
+      restoreSet
     ]
   )
 

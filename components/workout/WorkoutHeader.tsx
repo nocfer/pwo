@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 export type WorkoutHeaderProps = {
   programName: string
-  sessionName?: string
+  subtitle?: string
   elapsedMs: number
   onEnd: () => void
 }
@@ -24,42 +24,45 @@ export function formatElapsedTime(ms: number): string {
 
 export function WorkoutHeader({
   programName,
-  sessionName,
+  subtitle,
   elapsedMs,
   onEnd
 }: WorkoutHeaderProps) {
   return (
     <View style={styles.container}>
-      <Text
-        style={styles.timer}
-        accessibilityRole="timer"
-        accessibilityLiveRegion="polite"
-      >
-        {formatElapsedTime(elapsedMs)}
-      </Text>
-
       <View style={styles.info}>
         <Text style={styles.programName} numberOfLines={1}>
           {programName}
         </Text>
-        {sessionName ? (
-          <Text style={styles.sessionName} numberOfLines={1}>
-            {sessionName}
+        {subtitle ? (
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {subtitle}
           </Text>
         ) : null}
       </View>
 
-      <Pressable
-        style={({ pressed }) => [
-          styles.endButton,
-          pressed && styles.endButtonPressed
-        ]}
-        onPress={onEnd}
-        accessibilityRole="button"
-        accessibilityLabel="End workout"
-      >
-        <Text style={styles.endButtonText}>End</Text>
-      </Pressable>
+      <View style={styles.actions}>
+        <View
+          style={styles.elapsedPill}
+          accessibilityRole="timer"
+          accessibilityLiveRegion="polite"
+          accessibilityLabel={`Elapsed time ${formatElapsedTime(elapsedMs)}`}
+        >
+          <Text style={styles.elapsedText}>{formatElapsedTime(elapsedMs)}</Text>
+        </View>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.endPill,
+            pressed && styles.endPillPressed
+          ]}
+          onPress={onEnd}
+          accessibilityRole="button"
+          accessibilityLabel="End workout"
+        >
+          <Text style={styles.endText}>End</Text>
+        </Pressable>
+      </View>
     </View>
   )
 }
@@ -69,46 +72,61 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 8,
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: 12
-  },
-  timer: {
-    fontSize: 18,
-    fontFamily: theme.fonts.semiBold,
-    color: theme.colors.text,
-    fontVariant: ['tabular-nums']
+    paddingTop: 6,
+    paddingHorizontal: 22,
+    paddingBottom: 14,
+    gap: theme.spacing.md
   },
   info: {
-    flex: 1,
-    alignItems: 'center'
+    flex: 1
   },
   programName: {
-    fontSize: 16,
+    fontSize: 22,
+    fontFamily: theme.fonts.display,
+    letterSpacing: -0.4,
+    color: theme.colors.session.textPrimary
+  },
+  subtitle: {
+    fontSize: 13,
     fontFamily: theme.fonts.medium,
-    color: theme.colors.subtext
+    color: theme.colors.session.muted,
+    marginTop: 2
   },
-  sessionName: {
-    ...theme.typography.small,
-    color: theme.colors.muted
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm
   },
-  endButton: {
-    backgroundColor: theme.colors.dangerLight,
-    borderRadius: theme.radius.sm,
+  elapsedPill: {
+    backgroundColor: theme.colors.session.panel,
+    borderRadius: 12,
+    paddingVertical: 9,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    minWidth: 48,
-    minHeight: 48,
+    minHeight: 44,
+    justifyContent: 'center'
+  },
+  elapsedText: {
+    fontSize: 13,
+    fontFamily: theme.fonts.semiBold,
+    color: theme.colors.session.subtext,
+    fontVariant: ['tabular-nums']
+  },
+  endPill: {
+    backgroundColor: theme.colors.session.dangerTintBg,
+    borderRadius: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center'
   },
-  endButtonPressed: {
+  endPillPressed: {
     opacity: 0.7,
     transform: [{ scale: 0.96 }]
   },
-  endButtonText: {
+  endText: {
     fontSize: 13,
     fontFamily: theme.fonts.semiBold,
-    color: theme.colors.danger
+    color: theme.colors.session.danger
   }
 })

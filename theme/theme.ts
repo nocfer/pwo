@@ -48,7 +48,61 @@ const colors = {
   overlayGlass: 'rgba(20, 21, 26, 0.95)',
   overlay: 'rgba(0, 0, 0, 0.6)',
   skeleton: '#1C1D24',
-  skeletonHighlight: '#2A2B36'
+  skeletonHighlight: '#2A2B36',
+
+  // Workout Session ("Flow") redesign palette — scoped to the session screen.
+  // Centralized here so session components stay free of literal hex.
+  session: {
+    // surfaces
+    appBg: '#0A0B0E',
+    backdrop: '#060708',
+    panel: '#14161B',
+    elevated: '#1A1D24',
+    hairline: '#23262F',
+    activeBorder: '#2C3424',
+    // text
+    textPrimary: '#F2F3F5',
+    subtext: '#9A9DAB',
+    muted: '#6B6E7A',
+    faint: '#5B5E6B',
+    // lime (primary/active)
+    lime: '#C6F24E',
+    onLime: '#0A0B0E',
+    limeTintBg: '#1B1E14',
+    limeMutedText: '#9AA86A',
+    // cyan (rest/info)
+    cyan: '#56E0F0',
+    cyanPanel: '#0C1416',
+    cyanBorder: '#163038',
+    cyanControlBg: '#11181C',
+    cyanControlBorder: '#1D2933',
+    // green (completed)
+    green: '#34D399',
+    greenTintBg: '#0E1411',
+    greenCheckBg: '#1C2A22',
+    onGreen: '#06241A',
+    // danger
+    danger: '#FB7185',
+    dangerTintBg: '#241317',
+    dangerEditorBg: '#1F1417',
+    dangerBorder: '#3A2226',
+    // skipped
+    skippedText: '#5B5E6B',
+    skippedNum: '#4D505C',
+    // component-specific
+    badgeUpNextBg: '#181A20',
+    collapsedDoneBorder: '#18241D',
+    collapsedPendingBg: '#101116',
+    collapsedPendingBorder: '#1C1E25',
+    chevronBg: '#181A20',
+    chevronIcon: '#8A8D99',
+    pendingCheckBorder: '#2A2D36',
+    addSetBorder: '#2F3A26',
+    trackBg: '#16181E',
+    completedValue: '#7C8A82',
+    completedNum: '#6B6E7A',
+    controlBg: '#23262F'
+  }
 } as const
 
 const fonts = {

@@ -16,3 +16,8 @@ vi.mock('expo-haptics', () => ({
   notificationAsync: vi.fn(),
   selectionAsync: vi.fn()
 }))
+
+// Mock @expo/vector-icons — icons render as a simple resolvable node in tests
+vi.mock('@expo/vector-icons', () => ({
+  Ionicons: (props: Record<string, unknown>) => ({ type: 'Icon', props })
+}))

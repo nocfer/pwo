@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ExerciseState } from '@/types/workout'
 
 import { ExerciseAccordionItem } from '@/components/workout/ExerciseAccordionItem'
-import { theme } from '@/theme/theme'
 import {
   collectAllNodes,
   findByAccessibilityLabel,
@@ -25,42 +24,13 @@ vi.mock('react-native', () => ({
   Pressable: ({
     children,
     onPress,
+    disabled,
     accessibilityLabel,
     accessibilityRole,
-    accessibilityHint,
     style
   }: Record<string, unknown>) => ({
     type: 'Pressable',
-    props: {
-      children,
-      onPress,
-      accessibilityLabel,
-      accessibilityRole,
-      accessibilityHint,
-      style
-    }
-  }),
-  TouchableOpacity: ({
-    children,
-    onPress,
-    accessibilityLabel,
-    accessibilityRole,
-    accessibilityHint,
-    hitSlop,
-    activeOpacity,
-    style
-  }: Record<string, unknown>) => ({
-    type: 'TouchableOpacity',
-    props: {
-      children,
-      onPress,
-      accessibilityLabel,
-      accessibilityRole,
-      accessibilityHint,
-      hitSlop,
-      activeOpacity,
-      style
-    }
+    props: { children, onPress, disabled, accessibilityLabel, accessibilityRole, style }
   }),
   Text: ({ children, style }: Record<string, unknown>) => ({
     type: 'Text',
@@ -75,20 +45,7 @@ vi.mock('react-native', () => ({
   }
 }))
 
-vi.mock('react-native-reanimated', () => ({
-  default: {
-    View: ({ children, style }: { children?: unknown; style?: unknown }) => ({
-      type: 'Animated.View',
-      props: { children, style }
-    })
-  },
-  useSharedValue: (v: number) => ({ value: v }),
-  useDerivedValue: (fn: () => unknown) => ({ value: fn() }),
-  useAnimatedStyle: (fn: () => unknown) => fn(),
-  withTiming: (v: number) => v
-}))
-
-function makeExercise(overrides?: Partial<ExerciseState>): ExerciseState {
+function makeActiveExercise(overrides?: Partial<ExerciseState>): ExerciseState {
   return {
     exerciseId: 'bench-press',
     exerciseName: 'Bench Press',
@@ -102,266 +59,190 @@ function makeExercise(overrides?: Partial<ExerciseState>): ExerciseState {
   }
 }
 
+function makePendingExercise(): ExerciseState {
+  return {
+    exerciseId: 'row',
+    exerciseName: 'Barbell Row',
+    sets: [
+      { reps: 10, weight: 95, status: 'pending' },
+      { reps: 10, weight: 95, status: 'pending' }
+    ]
+  }
+}
+
 function makeCompletedExercise(): ExerciseState {
   return {
     exerciseId: 'squat',
     exerciseName: 'Squat',
     sets: [
-      {
-        reps: 5,
-        weight: 225,
-        status: 'completed',
-        confirmedReps: 5,
-        confirmedWeight: 225
-      },
-      {
-        reps: 5,
-        weight: 225,
-        status: 'completed',
-        confirmedReps: 5,
-        confirmedWeight: 225
-      },
-      {
-        reps: 5,
-        weight: 225,
-        status: 'completed',
-        confirmedReps: 5,
-        confirmedWeight: 225
-      }
+      { reps: 5, weight: 225, status: 'completed', confirmedReps: 5, confirmedWeight: 225 },
+      { reps: 5, weight: 245, status: 'completed', confirmedReps: 5, confirmedWeight: 245 },
+      { reps: 5, weight: 225, status: 'completed', confirmedReps: 5, confirmedWeight: 225 }
     ]
   }
 }
 
-function renderAccordion(
+function render(
   overrides?: Partial<Parameters<typeof ExerciseAccordionItem>[0]>
 ) {
   return ExerciseAccordionItem({
-    exercise: makeExercise(),
+    exercise: makeActiveExercise(),
     exerciseIndex: 0,
     isExpanded: false,
     onToggle: vi.fn(),
-    onSetDotPress: vi.fn(),
     ...overrides
   })
 }
 
 describe('ExerciseAccordionItem', () => {
-  describe('compact view rendering', () => {
-    it('renders exercise name', () => {
-      const result = renderAccordion()
-      const textNodes = findByType(result, 'Text')
-      const nameNode = textNodes.find(t => t.props.children === 'Bench Press')
-      expect(nameNode).toBeDefined()
-    })
-
-    it('renders set meta with completed/total count', () => {
-      const result = renderAccordion()
-      const textNodes = findByType(result, 'Text')
-      const metaNode = textNodes.find(
-        t =>
-          typeof t.props.children === 'string' &&
-          t.props.children.startsWith('0/4')
-      )
-      expect(metaNode).toBeDefined()
-    })
-
-    it('renders correct number of SetDot pressables', () => {
-      const result = renderAccordion()
-      const touchables = findByType(result, 'TouchableOpacity')
-      const dotTouchables = touchables.filter(
-        p =>
-          typeof p.props.accessibilityHint === 'string' &&
-          (p.props.accessibilityHint as string).includes('navigate to this set')
-      )
-      expect(dotTouchables.length).toBe(4)
-    })
-
-    it('renders set meta with weight when sets have confirmed weight', () => {
-      const exercise = makeExercise({
-        sets: [
-          {
-            reps: 8,
-            weight: 135,
-            status: 'completed',
-            confirmedReps: 8,
-            confirmedWeight: 135
-          },
-          { reps: 8, weight: 135, status: 'pending' }
-        ]
-      })
-      const result = renderAccordion({ exercise })
-      const textNodes = findByType(result, 'Text')
-      const metaNode = textNodes.find(
-        t =>
-          typeof t.props.children === 'string' &&
-          (t.props.children as string).includes('135 lbs')
-      )
-      expect(metaNode).toBeDefined()
-    })
-  })
-
-  describe('completed exercise', () => {
-    it('renders exercise name with success color', () => {
-      const exercise = makeCompletedExercise()
-      const result = renderAccordion({ exercise })
-      const textNodes = findByType(result, 'Text')
-      const nameNode = textNodes.find(t => t.props.children === 'Squat')
-      expect(nameNode).toBeDefined()
-      const style = nameNode!.props.style as unknown[]
-      const hasSuccessColor = style.some(
-        (s: unknown) =>
-          s &&
-          typeof s === 'object' &&
-          (s as { color: string }).color === theme.colors.success
-      )
-      expect(hasSuccessColor).toBe(true)
-    })
-
-    it('renders all SetDots as completed', () => {
-      const exercise = makeCompletedExercise()
-      const result = renderAccordion({ exercise })
-      const touchables = findByType(result, 'TouchableOpacity')
-      const dotTouchables = touchables.filter(
-        p =>
-          typeof p.props.accessibilityHint === 'string' &&
-          (p.props.accessibilityHint as string).includes(
-            'navigate to this set'
-          ) &&
-          typeof p.props.accessibilityLabel === 'string' &&
-          (p.props.accessibilityLabel as string).includes('completed')
-      )
-      expect(dotTouchables.length).toBe(3)
-    })
-  })
-
-  describe('accessibility labels', () => {
-    it('has correct compact accessibility label', () => {
-      const result = renderAccordion()
-      const node = findByAccessibilityLabel(
-        result,
-        'Bench Press, 0 of 4 sets complete, tap to expand'
-      )
-      expect(node).toBeDefined()
-    })
-
-    it('has correct expanded accessibility label', () => {
-      const result = renderAccordion({ isExpanded: true })
-      const node = findByAccessibilityLabel(
+  describe('expanded card', () => {
+    it('renders the header with a collapse label and fires onToggle', () => {
+      const onToggle = vi.fn()
+      const result = render({ isExpanded: true, onToggle })
+      const header = findByAccessibilityLabel(
         result,
         'Bench Press, expanded, tap to collapse'
       )
-      expect(node).toBeDefined()
-    })
-  })
-
-  describe('interactions', () => {
-    it('fires onToggle when compact row is pressed', () => {
-      const onToggle = vi.fn()
-      const result = renderAccordion({ onToggle })
-      const pressable = findByAccessibilityLabel(
-        result,
-        'Bench Press, 0 of 4 sets complete, tap to expand'
-      )
-      expect(pressable).toBeDefined()
-      const onPress = pressable!.props.onPress as () => void
-      onPress()
+      expect(header).toBeDefined()
+      ;(header!.props.onPress as () => void)()
       expect(onToggle).toHaveBeenCalledOnce()
     })
 
-    it('fires onSetDotPress when a SetDot is tapped', () => {
-      const onSetDotPress = vi.fn()
-      const result = renderAccordion({ onSetDotPress })
-      const dotTouchables = findByType(result, 'TouchableOpacity').filter(
-        p =>
-          typeof p.props.accessibilityLabel === 'string' &&
-          (p.props.accessibilityLabel as string).startsWith('Set ')
+    it('shows the NOW badge for the active exercise', () => {
+      const result = render({ isExpanded: true })
+      const texts = findByType(result, 'Text')
+      expect(texts.some(t => t.props.children === 'NOW')).toBe(true)
+    })
+
+    it('shows the UP NEXT badge for a pending exercise', () => {
+      const result = render({ exercise: makePendingExercise(), isExpanded: true })
+      const texts = findByType(result, 'Text')
+      expect(texts.some(t => t.props.children === 'UP NEXT')).toBe(true)
+    })
+
+    it('shows the DONE badge for a completed exercise', () => {
+      const result = render({ exercise: makeCompletedExercise(), isExpanded: true })
+      const texts = findByType(result, 'Text')
+      expect(texts.some(t => t.props.children === 'DONE')).toBe(true)
+    })
+
+    it('renders the prefill sub-line from the first set', () => {
+      const result = render({ isExpanded: true })
+      const texts = findByType(result, 'Text')
+      const sub = texts.find(
+        t => Array.isArray(t.props.children) && t.props.children.join('') === 'Last · 135 × 8'
       )
-      expect(dotTouchables.length).toBeGreaterThan(0)
-      const firstDot = dotTouchables[0]
-      const onPress = firstDot.props.onPress as () => void
-      onPress()
-      expect(onSetDotPress).toHaveBeenCalledWith(0)
+      expect(sub).toBeDefined()
+    })
+
+    it('renders the Add set control for the active exercise and fires onAddSet', () => {
+      const onAddSet = vi.fn()
+      const result = render({ isExpanded: true, onAddSet })
+      const addSet = findByAccessibilityLabel(result, 'Add set')
+      expect(addSet).toBeDefined()
+      ;(addSet!.props.onPress as () => void)()
+      expect(onAddSet).toHaveBeenCalledOnce()
+    })
+
+    it('does not render Add set for a pending exercise', () => {
+      const result = render({ exercise: makePendingExercise(), isExpanded: true })
+      expect(findByAccessibilityLabel(result, 'Add set')).toBeUndefined()
     })
   })
 
-  describe('compact-active state', () => {
-    it('applies primaryLight background when exercise has active set and not expanded', () => {
-      const exercise = makeExercise()
-      const result = renderAccordion({
-        exercise,
-        isExpanded: false
-      })
-      const allNodes = collectAllNodes(result)
-      const rootView = allNodes[0]
-      expect(rootView).toBeDefined()
-      const style = rootView.props.style as unknown[]
-      const hasPrimaryLight = style.some(
-        (s: unknown) =>
-          s &&
-          typeof s === 'object' &&
-          (s as { backgroundColor: string }).backgroundColor ===
-            theme.colors.primaryLight
+  describe('collapsed — done', () => {
+    it('renders the done summary and expands on press', () => {
+      const onToggle = vi.fn()
+      const result = render({ exercise: makeCompletedExercise(), onToggle })
+      const row = findByAccessibilityLabel(
+        result,
+        'Squat, done, 3 of 3 sets, tap to expand'
       )
-      expect(hasPrimaryLight).toBe(true)
+      expect(row).toBeDefined()
+      ;(row!.props.onPress as () => void)()
+      expect(onToggle).toHaveBeenCalledOnce()
+      const texts = findByType(result, 'Text')
+      expect(
+        texts.some(
+          t => Array.isArray(t.props.children) && t.props.children.join('') === '3/3 · top 245 lb'
+        )
+      ).toBe(true)
     })
   })
 
-  describe('progress bar', () => {
-    it('renders progress bar with correct accessibility attributes at 0%', () => {
-      const result = renderAccordion({ isExpanded: true })
-      const allNodes = collectAllNodes(result)
-      const progressBar = allNodes.find(
-        n => n.props?.accessibilityRole === 'progressbar'
+  describe('collapsed — current', () => {
+    it('renders the current-exercise summary', () => {
+      const result = render({ exercise: makeActiveExercise(), isExpanded: false })
+      const row = findByAccessibilityLabel(
+        result,
+        'Bench Press, current exercise, set 1 of 4, tap to expand'
       )
-      expect(progressBar).toBeDefined()
-      expect(progressBar!.props.accessibilityLabel).toBe(
-        'Set completion progress'
-      )
-      const value = progressBar!.props.accessibilityValue as {
-        min: number
-        max: number
-        now: number
-      }
-      expect(value).toEqual({ min: 0, max: 100, now: 0 })
+      expect(row).toBeDefined()
+      const texts = findByType(result, 'Text')
+      expect(
+        texts.some(
+          t => Array.isArray(t.props.children) && t.props.children.join('') === 'Set 1 of 4'
+        )
+      ).toBe(true)
     })
+  })
 
-    it('renders progress bar at 100% for completed exercise', () => {
-      const exercise = makeCompletedExercise()
-      const result = renderAccordion({ exercise, isExpanded: true })
-      const allNodes = collectAllNodes(result)
-      const progressBar = allNodes.find(
-        n => n.props?.accessibilityRole === 'progressbar'
-      )
-      expect(progressBar).toBeDefined()
-      const value = progressBar!.props.accessibilityValue as {
-        min: number
-        max: number
-        now: number
-      }
-      expect(value).toEqual({ min: 0, max: 100, now: 100 })
-    })
-
-    it('renders progress bar at 50% for partially completed exercise', () => {
-      const exercise = makeExercise({
-        sets: [
-          { reps: 8, weight: 135, status: 'completed' },
-          { reps: 8, weight: 135, status: 'skipped' },
-          { reps: 8, weight: 135, status: 'active' },
-          { reps: 8, weight: 135, status: 'pending' }
-        ]
+  describe('collapsed — pending with reorder', () => {
+    it('renders reorder chevrons and fires move callbacks', () => {
+      const onMoveUp = vi.fn()
+      const onMoveDown = vi.fn()
+      const result = render({
+        exercise: makePendingExercise(),
+        onMoveUp,
+        onMoveDown,
+        canMoveUp: true,
+        canMoveDown: true
       })
-      const result = renderAccordion({ exercise, isExpanded: true })
-      const allNodes = collectAllNodes(result)
-      const progressBar = allNodes.find(
-        n => n.props?.accessibilityRole === 'progressbar'
+      const up = findByAccessibilityLabel(result, 'Move Barbell Row up')
+      const down = findByAccessibilityLabel(result, 'Move Barbell Row down')
+      expect(up).toBeDefined()
+      expect(down).toBeDefined()
+      ;(up!.props.onPress as () => void)()
+      ;(down!.props.onPress as () => void)()
+      expect(onMoveUp).toHaveBeenCalledOnce()
+      expect(onMoveDown).toHaveBeenCalledOnce()
+    })
+
+    it('disables the up chevron when canMoveUp is false', () => {
+      const result = render({
+        exercise: makePendingExercise(),
+        canMoveUp: false
+      })
+      const up = findByAccessibilityLabel(result, 'Move Barbell Row up')
+      expect(up!.props.disabled).toBe(true)
+    })
+
+    it('expands on tapping the name area', () => {
+      const onToggle = vi.fn()
+      const result = render({ exercise: makePendingExercise(), onToggle })
+      const name = findByAccessibilityLabel(
+        result,
+        'Barbell Row, upcoming, 2 sets, tap to expand'
       )
-      expect(progressBar).toBeDefined()
-      const value = progressBar!.props.accessibilityValue as {
-        min: number
-        max: number
-        now: number
-      }
-      expect(value).toEqual({ min: 0, max: 100, now: 50 })
+      expect(name).toBeDefined()
+      ;(name!.props.onPress as () => void)()
+      expect(onToggle).toHaveBeenCalledOnce()
+    })
+  })
+
+  describe('overall structure', () => {
+    it('expanded card includes a progress fill', () => {
+      const result = render({ isExpanded: true })
+      const views = collectAllNodes(result)
+      // the progress bar fill carries an explicit backgroundColor + width
+      const fill = views.find(n => {
+        const s = n.props?.style as unknown[] | undefined
+        return (
+          Array.isArray(s) &&
+          s.some(x => x && typeof x === 'object' && 'width' in x)
+        )
+      })
+      expect(fill).toBeDefined()
     })
   })
 })

@@ -1,5 +1,6 @@
 import { theme } from '@/theme/theme'
 import type { SetStatus } from '@/types/workout'
+import { Ionicons } from '@expo/vector-icons'
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
@@ -21,7 +22,7 @@ function statusLabel(status: SetStatus): string {
     case 'pending':
       return 'pending'
     case 'active':
-      return 'ready to confirm'
+      return 'ready to log'
     case 'completed':
       return 'completed'
     case 'editing':
@@ -29,12 +30,6 @@ function statusLabel(status: SetStatus): string {
     case 'skipped':
       return 'skipped'
   }
-}
-
-function confirmLabel(setNumber: number, status: SetStatus): string {
-  return status === 'editing'
-    ? `Re-confirm set ${setNumber}`
-    : `Confirm set ${setNumber}`
 }
 
 export function SetRow({
@@ -49,102 +44,92 @@ export function SetRow({
   isRepsFocused = false,
   isWeightFocused = false
 }: SetRowProps) {
-  const isActive = status === 'active'
+  const isActive = status === 'active' || status === 'editing'
   const isCompleted = status === 'completed'
-  const isPending = status === 'pending'
-  const isEditing = status === 'editing'
   const isSkipped = status === 'skipped'
 
-  const valueColor = isCompleted
-    ? theme.colors.success
-    : isPending || isSkipped
-      ? theme.colors.muted
-      : theme.colors.text
+  const valueStyle = [
+    styles.value,
+    isActive && styles.valueActive,
+    isCompleted && styles.valueCompleted,
+    isSkipped && styles.valueSkipped,
+    status === 'pending' && styles.valuePending
+  ]
 
-  const setNumColor = isCompleted
-    ? theme.colors.success
-    : isPending || isSkipped
-      ? theme.colors.subtext
-      : theme.colors.primary
+  const numStyle = [
+    styles.setNum,
+    isActive && styles.setNumActive,
+    isCompleted && styles.setNumCompleted,
+    isSkipped && styles.setNumSkipped
+  ]
 
   const a11yLabel = isCompleted
-    ? `Set ${setNumber}, completed, ${reps} reps at ${weight} lbs`
-    : `Set ${setNumber}, ${statusLabel(status)}`
+    ? `Set ${setNumber}, completed, ${weight} pounds for ${reps} reps`
+    : `Set ${setNumber}, ${statusLabel(status)}, ${weight} pounds for ${reps} reps`
 
   return (
     <View
       accessibilityLabel={a11yLabel}
-      style={[
-        styles.row,
-        isCompleted && styles.rowCompleted,
-        isEditing && styles.rowEditing,
-        isSkipped && styles.rowSkipped
-      ]}
+      style={[styles.row, isActive && styles.rowActive, isSkipped && styles.rowSkipped]}
     >
-      <View style={styles.setNumContainer}>
-        <Pressable
-          onPress={onPress}
-          accessibilityLabel={`Set ${setNumber}`}
-          accessibilityRole="button"
-        >
-          <Text style={[styles.setNum, { color: setNumColor }]}>
-            {isEditing ? '✎' : isSkipped ? '–' : setNumber}
-          </Text>
-        </Pressable>
-      </View>
-
-      <Pressable
-        onPress={onRepsPress}
-        style={[
-          styles.inputField,
-          isCompleted && styles.inputCompleted,
-          isRepsFocused && styles.inputFocused
-        ]}
-        accessibilityLabel={`reps, ${reps}`}
-        accessibilityHint="Open keypad to edit reps"
-        accessibilityRole="button"
-      >
-        <Text style={[styles.inputValue, { color: valueColor }]}>{reps}</Text>
-        <Text style={styles.inputLabel}>reps</Text>
-      </Pressable>
+      <Text style={numStyle}>{setNumber}</Text>
 
       <Pressable
         onPress={onWeightPress}
-        style={[
-          styles.inputField,
-          isCompleted && styles.inputCompleted,
-          isWeightFocused && styles.inputFocused
-        ]}
-        accessibilityLabel={`weight, ${weight}`}
-        accessibilityHint="Open keypad to edit weight"
+        style={[styles.valueCell, isWeightFocused && styles.valueCellFocused]}
         accessibilityRole="button"
+        accessibilityLabel={`Weight ${weight} pounds`}
       >
-        <Text style={[styles.inputValue, { color: valueColor }]}>{weight}</Text>
-        <Text style={styles.inputLabel}>lbs</Text>
+        <Text style={valueStyle}>{weight}</Text>
       </Pressable>
 
       <Pressable
-        onPress={onConfirm}
-        accessibilityLabel={confirmLabel(setNumber, status)}
-        accessibilityHint="Double tap to confirm this set"
+        onPress={onRepsPress}
+        style={[styles.valueCell, isRepsFocused && styles.valueCellFocused]}
         accessibilityRole="button"
+        accessibilityLabel={`Reps ${reps}`}
+      >
+        <Text style={valueStyle}>{reps}</Text>
+      </Pressable>
+
+      <Pressable
+        onPress={isActive ? onConfirm : onPress}
+        accessibilityRole="button"
+        accessibilityLabel={
+          isActive
+            ? `Log set ${setNumber}`
+            : isCompleted
+              ? `Edit set ${setNumber}`
+              : `Set ${setNumber}`
+        }
+        hitSlop={8}
         style={[
-          styles.confirmButton,
-          isPending && styles.confirmPending,
-          (status === 'active' || isEditing) && styles.confirmActive,
-          isCompleted && styles.confirmCompleted
+          styles.checkBox,
+          isActive && styles.checkActive,
+          isCompleted && styles.checkCompleted,
+          isSkipped && styles.checkSkipped,
+          status === 'pending' && styles.checkPending
         ]}
       >
-        <Text
-          style={[
-            styles.confirmIcon,
-            isPending && styles.confirmIconPending,
-            (status === 'active' || isEditing) && styles.confirmIconActive,
-            isCompleted && styles.confirmIconCompleted
-          ]}
-        >
-          {isPending ? '○' : '✓'}
-        </Text>
+        {isActive ? (
+          <Ionicons
+            name="checkmark"
+            size={18}
+            color={theme.colors.session.onLime}
+          />
+        ) : isCompleted ? (
+          <Ionicons
+            name="checkmark"
+            size={15}
+            color={theme.colors.session.green}
+          />
+        ) : isSkipped ? (
+          <Ionicons
+            name="remove"
+            size={15}
+            color={theme.colors.session.skippedNum}
+          />
+        ) : null}
       </Pressable>
     </View>
   )
@@ -154,83 +139,93 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
-    paddingVertical: 10,
-    paddingHorizontal: theme.spacing.lg
+    gap: 6,
+    paddingVertical: 6
   },
-  rowCompleted: {
-    backgroundColor: theme.colors.phases.doneBg
-  },
-  rowEditing: {
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: theme.colors.primary
+  rowActive: {
+    backgroundColor: theme.colors.session.limeTintBg,
+    borderRadius: 13,
+    marginHorizontal: -4,
+    paddingHorizontal: 8,
+    paddingVertical: 10
   },
   rowSkipped: {
-    opacity: 0.5
-  },
-  setNumContainer: {
-    width: 20,
-    alignItems: 'center'
+    opacity: 0.7
   },
   setNum: {
-    ...theme.typography.caption
+    width: 26,
+    textAlign: 'center',
+    fontSize: 14,
+    fontFamily: theme.fonts.displayMed,
+    color: theme.colors.session.completedNum
   },
-  inputField: {
+  setNumActive: {
+    fontFamily: theme.fonts.display,
+    color: theme.colors.session.lime
+  },
+  setNumCompleted: {
+    color: theme.colors.session.completedNum
+  },
+  setNumSkipped: {
+    color: theme.colors.session.skippedNum
+  },
+  valueCell: {
     flex: 1,
-    minWidth: 56,
-    height: 44,
-    alignItems: 'center',
+    minHeight: 44,
     justifyContent: 'center',
-    borderRadius: theme.radius.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface
+    borderRadius: theme.radius.sm
   },
-  inputCompleted: {
-    backgroundColor: theme.colors.phases.doneBg,
-    borderColor: 'transparent'
+  valueCellFocused: {
+    backgroundColor: theme.colors.session.limeTintBg
   },
-  inputFocused: {
-    borderColor: theme.colors.primary
+  value: {
+    fontSize: 15,
+    fontFamily: theme.fonts.medium,
+    fontVariant: ['tabular-nums']
   },
-  inputValue: {
-    fontSize: 16,
-    fontFamily: theme.fonts.medium
+  valueActive: {
+    fontSize: 20,
+    fontFamily: theme.fonts.displayMed,
+    color: theme.colors.session.textPrimary
   },
-  inputLabel: {
-    ...theme.typography.small,
-    color: theme.colors.muted
+  valueCompleted: {
+    color: theme.colors.session.completedValue
   },
-  confirmButton: {
-    width: 44,
-    height: 44,
-    borderRadius: theme.radius.sm,
+  valuePending: {
+    color: theme.colors.session.subtext
+  },
+  valueSkipped: {
+    color: theme.colors.session.skippedText,
+    textDecorationLine: 'line-through'
+  },
+  checkBox: {
+    width: 34,
     alignItems: 'center',
     justifyContent: 'center'
   },
-  confirmPending: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface
+  checkActive: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: theme.colors.session.lime
   },
-  confirmActive: {
-    backgroundColor: theme.colors.primary
+  checkCompleted: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.session.greenCheckBg
   },
-  confirmCompleted: {
-    backgroundColor: theme.colors.success
+  checkSkipped: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.session.trackBg
   },
-  confirmIcon: {
-    fontSize: 18,
-    fontFamily: theme.fonts.semiBold
-  },
-  confirmIconPending: {
-    color: theme.colors.muted
-  },
-  confirmIconActive: {
-    color: theme.colors.primaryTextOn
-  },
-  confirmIconCompleted: {
-    color: theme.colors.primaryTextOn
+  checkPending: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.radius.sm,
+    borderWidth: 1.5,
+    borderColor: theme.colors.session.pendingCheckBorder
   }
 })
