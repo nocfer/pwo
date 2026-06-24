@@ -3,6 +3,8 @@
  */
 
 export { daysBetween, formatDate } from './date'
+export { formatCategoryLabel, getCategoryColors } from './exerciseCategory'
+export { getSourceBadge, type ItemSource } from './sourceBadge'
 export {
   formatCount,
   formatDuration,

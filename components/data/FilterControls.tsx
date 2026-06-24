@@ -95,8 +95,12 @@ export function FilterControls({
     onSortChange('name', 'asc')
   }
 
+  const hasCategoryFilter = Boolean(
+    filters.category && filters.category.length > 0
+  )
+
   const hasActiveFilters =
-    (filters.category && filters.category.length > 0) ||
+    hasCategoryFilter ||
     (filters.source && filters.source.length > 0) ||
     sortBy !== 'name'
 
@@ -121,7 +125,11 @@ export function FilterControls({
                 <Ionicons
                   name={option.icon}
                   size={14}
-                  color={isActive ? theme.colors.primary : theme.colors.muted}
+                  color={
+                    isActive
+                      ? theme.colors.primaryTextOn
+                      : theme.colors.subtext
+                  }
                 />
                 <Text
                   style={[styles.pillText, isActive && styles.pillTextActive]}
@@ -132,7 +140,7 @@ export function FilterControls({
                   <Ionicons
                     name={sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'}
                     size={12}
-                    color={theme.colors.primary}
+                    color={theme.colors.primaryTextOn}
                   />
                 )}
               </Pressable>
@@ -150,6 +158,20 @@ export function FilterControls({
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.pillsContainer}
           >
+            <Pressable
+              key="all"
+              style={[styles.pill, !hasCategoryFilter && styles.pillActive]}
+              onPress={() => onFiltersChange({ ...filters, category: undefined })}
+            >
+              <Text
+                style={[
+                  styles.pillText,
+                  !hasCategoryFilter && styles.pillTextActive
+                ]}
+              >
+                All
+              </Text>
+            </Pressable>
             {EXERCISE_CATEGORIES.map(category => {
               const isSelected = filters.category?.includes(category) || false
               return (
@@ -241,20 +263,22 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.background
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.inset
   },
   pillActive: {
-    backgroundColor: theme.colors.primaryLight
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary
   },
   pillText: {
     ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.subtext
   },
   pillTextActive: {
-    ...theme.typography.caption,
-    fontFamily: theme.fonts.semiBold,
-    color: theme.colors.primary
+    color: theme.colors.primaryTextOn
   },
   clearButton: {
     flexDirection: 'row',

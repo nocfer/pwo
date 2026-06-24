@@ -8,15 +8,9 @@ import { theme } from '@/theme/theme'
 import type { DataType } from '@/types'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { router } from 'expo-router'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
-// Challenges were removed in v1.1 — only programs/exercises remain.
-const TAB_COLORS: Partial<Record<DataType, string>> = {
-  programs: theme.colors.success,
-  exercises: theme.colors.primary
-}
 
 export default function LibraryScreen() {
   const [activeTab, setActiveTab] = useState<DataType>('programs')
@@ -28,11 +22,6 @@ export default function LibraryScreen() {
     ],
     staggerDelay: 100
   })
-
-  const addButtonColor = useMemo(
-    () => ({ backgroundColor: TAB_COLORS[activeTab] }),
-    [activeTab]
-  )
 
   const handleCreateNew = useCallback(() => {
     haptics.buttonTap()
@@ -70,14 +59,14 @@ export default function LibraryScreen() {
               <Ionicons
                 name="scan-outline"
                 size={22}
-                color={theme.colors.text}
+                color={theme.colors.subtext}
               />
             </AnimatedIcon>
           </Pressable>
           <Pressable
             style={({ pressed }) => [
               styles.circleButton,
-              addButtonColor,
+              styles.addButton,
               pressed && styles.circleButtonPressed
             ]}
             onPress={handleCreateNew}
@@ -129,18 +118,22 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   circleButton: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     borderRadius: theme.radius.full,
     alignItems: 'center',
-    justifyContent: 'center',
-    ...theme.shadows.sm
+    justifyContent: 'center'
   },
   circleButtonPressed: {
     transform: [{ scale: 0.95 }]
   },
   scanButton: {
-    backgroundColor: theme.colors.surface
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border
+  },
+  addButton: {
+    backgroundColor: theme.colors.primary
   },
   dataManager: {
     flex: 1

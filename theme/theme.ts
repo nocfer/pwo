@@ -1,20 +1,24 @@
 const colors = {
-  // Core surfaces — dark-first palette
-  background: '#0B0C10',
-  surface: '#14151A',
-  surfaceElevated: '#1C1D24',
-  text: '#ECEDF0',
-  textInverse: '#0B0C10',
-  subtext: '#8C8EA0',
-  muted: '#53556A',
-  border: '#1F2029',
+  // Core surfaces — dark-first "electric" palette (aligned to redesign spec)
+  background: '#0A0B0E',
+  surface: '#14161B',
+  surfaceElevated: '#1C1D24', // ≈ #1c1e25 — also the neutral built-in badge fill
+  inset: '#0E0F13', // recessed input / segmented-control bg
+  text: '#F2F3F5',
+  textInverse: '#0A0B0E',
+  subtext: '#9A9DAB',
+  muted: '#6B6E7A',
+  faint: '#5B5E6B', // faintest text — section labels
+  border: '#23262F',
   borderLight: '#2A2B36',
+  borderActive: '#2C3424', // active/selected card border (lime-tinted)
 
   // Brand — electric lime, bright on dark backgrounds
   primary: '#C6F24E',
   primaryDark: '#AEDB37',
   primaryLight: 'rgba(198, 242, 78, 0.12)',
   primaryMuted: 'rgba(198, 242, 78, 0.25)',
+  primaryTint: '#1B1E14', // solid lime tint — badges / selected rows
   primaryTextOn: '#0A0B0E', // ⚠ dark: lime is a light color, content on a primary fill must be dark
 
   // Accent — amber-400 (supporting role: streak/flame)
@@ -28,10 +32,24 @@ const colors = {
   // Status
   success: '#34D399',
   successLight: 'rgba(52, 211, 153, 0.12)',
-  danger: '#F87171',
-  dangerLight: 'rgba(248, 113, 113, 0.12)',
+  danger: '#FB7185',
+  dangerLight: 'rgba(251, 113, 133, 0.12)',
+  dangerTint: '#241317', // danger toolbar / destructive chip fill
+  dangerBorder: '#3A2226',
   warning: '#FBBF24',
   warningLight: 'rgba(251, 191, 36, 0.12)',
+
+  // Exercise category accents — icon tiles + category chips
+  category: {
+    strength: '#C6F24E',
+    strengthBg: 'rgba(198, 242, 78, 0.12)',
+    cardio: '#56E0F0',
+    cardioBg: 'rgba(86, 224, 240, 0.1)',
+    flexibility: '#FBBF24',
+    flexibilityBg: 'rgba(251, 191, 36, 0.12)',
+    skill: '#34D399',
+    skillBg: 'rgba(52, 211, 153, 0.12)'
+  },
 
   // Phase palette — solid hex pre-computed against surface #14151A
   phases: {

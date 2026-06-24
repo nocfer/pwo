@@ -1,13 +1,22 @@
 /**
- * Program Form Component
- * Clean, professional form for creating and editing workout programs
+ * Program Form Component — "builder v2".
+ * Single-session program builder: name, options (warmup / rest), and a list of
+ * exercise blocks with ± steppers (sets / reps / rest), a per-block Advanced
+ * panel (Reps/Timed type, per-set reps, note), reorder, and a searchable
+ * multi-select add-exercises picker.
  */
 
 import { haptics } from '@/lib/haptics'
-import { validateProgram } from '@/lib/validation'
+import {
+  formatCategoryLabel,
+  getCategoryColors,
+  getSourceBadge
+} from '@/lib/utils'
+import { VALID_EXERCISE_CATEGORIES, validateProgram } from '@/lib/validation'
 import { theme } from '@/theme/theme'
-import type { ProgramBlock } from '@/types'
+import type { ExerciseCategory, ProgramBlock } from '@/types'
 import Ionicons from '@expo/vector-icons/Ionicons'
+import { router } from 'expo-router'
 import { useCallback, useMemo, useState } from 'react'
 import {
   Alert,
@@ -21,13 +30,29 @@ import {
   TextInput,
   View
 } from 'react-native'
+import SegmentedControl from '../../common/SegmentedControl'
+import { SearchInput } from '../../common/SearchInput'
+import ToggleSwitch from '../../common/ToggleSwitch'
+
+type PickerExercise = {
+  id: string
+  name: string
+  source: 'builtin' | 'user' | 'pt'
+  category?: ExerciseCategory
+  icon?: string
+}
 
 type BlockDraft = {
-  type: 'exercise'
   exerciseId: string
-  targetReps?: string
-  sets?: string
-  restBetweenSets?: string
+  sets: number
+  restBetweenSets: number // seconds
+  mode: 'reps' | 'timed'
+  reps: number
+  perSetReps: boolean
+  perSetRepsValues: number[]
+  durationSeconds: number
+  note: string
+  advancedOpen: boolean
 }
 
 export type ProgramFormData = {
@@ -43,13 +68,17 @@ export type ProgramFormProps = {
   onSave: (data: ProgramFormData) => Promise<void>
   onCancel: () => void
   saving?: boolean
-  exercises: { id: string; name: string; source: 'builtin' | 'user' | 'pt' }[]
+  exercises: PickerExercise[]
 }
 
 const DEFAULT_WARMUP_SECONDS = 300
 const DEFAULT_REST_BETWEEN_EXERCISES = 60
 const DEFAULT_SETS = 3
 const DEFAULT_REST_BETWEEN_SETS = 60
+const DEFAULT_REPS = 10
+const DEFAULT_DURATION = 30
+const REST_STEP = 5
+const SECONDS_PER_REP = 4 // rough work-rate used only for the time estimate
 
 function secondsToMmss(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60)
@@ -69,48 +98,99 @@ function mmssToSeconds(mmss: string): number {
   return parseInt(trimmed, 10) || 0
 }
 
+function makeDraft(exerciseId: string): BlockDraft {
+  return {
+    exerciseId,
+    sets: DEFAULT_SETS,
+    restBetweenSets: DEFAULT_REST_BETWEEN_SETS,
+    mode: 'reps',
+    reps: DEFAULT_REPS,
+    perSetReps: false,
+    perSetRepsValues: Array(DEFAULT_SETS).fill(DEFAULT_REPS),
+    durationSeconds: DEFAULT_DURATION,
+    note: '',
+    advancedOpen: false
+  }
+}
+
 function convertBlocksToDraft(blocks: ProgramBlock[]): BlockDraft[] {
   return blocks
     .filter(block => block.type === 'exercise')
-    .map(block => ({
-      type: 'exercise' as const,
-      exerciseId: (block as { exerciseId: string }).exerciseId,
-      targetReps: (block as { targetReps?: number }).targetReps
-        ? String((block as { targetReps?: number }).targetReps)
-        : '',
-      sets: (block as { sets?: number }).sets
-        ? String((block as { sets?: number }).sets)
-        : String(DEFAULT_SETS),
-      restBetweenSets: (block as { restBetweenSets?: number }).restBetweenSets
-        ? secondsToMmss(
-            (block as { restBetweenSets?: number }).restBetweenSets!
+    .map(block => {
+      const sets = block.sets && block.sets >= 1 ? block.sets : DEFAULT_SETS
+      const isTimed = typeof block.durationSeconds === 'number'
+      const perSetReps = Array.isArray(block.targetReps)
+      const perSetRepsValues = perSetReps
+        ? (block.targetReps as number[])
+        : Array(sets).fill(
+            typeof block.targetReps === 'number'
+              ? block.targetReps
+              : DEFAULT_REPS
           )
-        : secondsToMmss(DEFAULT_REST_BETWEEN_SETS)
-    }))
+      return {
+        exerciseId: block.exerciseId,
+        sets,
+        restBetweenSets: block.restBetweenSets ?? DEFAULT_REST_BETWEEN_SETS,
+        mode: isTimed ? 'timed' : 'reps',
+        reps:
+          typeof block.targetReps === 'number' ? block.targetReps : DEFAULT_REPS,
+        perSetReps,
+        perSetRepsValues: resizeReps(perSetRepsValues, sets),
+        durationSeconds: block.durationSeconds ?? DEFAULT_DURATION,
+        note: block.note ?? '',
+        advancedOpen: false
+      }
+    })
+}
+
+function resizeReps(values: number[], sets: number): number[] {
+  const next = values.slice(0, sets)
+  const fill = values[values.length - 1] ?? DEFAULT_REPS
+  while (next.length < sets) next.push(fill)
+  return next
 }
 
 function convertDraftToBlocks(drafts: BlockDraft[]): ProgramBlock[] {
   return drafts.map(draft => {
-    const parsedSets = draft.sets ? Number(draft.sets) : DEFAULT_SETS
-    const sets =
-      Number.isInteger(parsedSets) && parsedSets >= 1
-        ? parsedSets
-        : DEFAULT_SETS
-
-    const parsedRest = draft.restBetweenSets
-      ? mmssToSeconds(draft.restBetweenSets)
-      : DEFAULT_REST_BETWEEN_SETS
-    const restBetweenSets =
-      parsedRest >= 0 ? parsedRest : DEFAULT_REST_BETWEEN_SETS
-
-    return {
-      type: 'exercise',
+    const base = {
+      type: 'exercise' as const,
       exerciseId: draft.exerciseId,
-      targetReps: draft.targetReps ? Number(draft.targetReps) : undefined,
-      sets,
-      restBetweenSets
+      sets: draft.sets,
+      restBetweenSets: draft.restBetweenSets,
+      ...(draft.note.trim() ? { note: draft.note.trim() } : {})
+    }
+    if (draft.mode === 'timed') {
+      return { ...base, durationSeconds: draft.durationSeconds }
+    }
+    return {
+      ...base,
+      targetReps: draft.perSetReps
+        ? resizeReps(draft.perSetRepsValues, draft.sets)
+        : draft.reps
     }
   })
+}
+
+function estimateMinutes(
+  blocks: BlockDraft[],
+  warmupEnabled: boolean,
+  warmupSeconds: number,
+  restEnabled: boolean,
+  restBetween: number
+): number {
+  let total = warmupEnabled ? warmupSeconds : 0
+  blocks.forEach((b, i) => {
+    const work =
+      b.mode === 'timed'
+        ? b.sets * b.durationSeconds
+        : b.perSetReps
+          ? resizeReps(b.perSetRepsValues, b.sets).reduce((s, r) => s + r, 0) *
+            SECONDS_PER_REP
+          : b.sets * b.reps * SECONDS_PER_REP
+    total += work + b.sets * b.restBetweenSets
+    if (restEnabled && i < blocks.length - 1) total += restBetween
+  })
+  return Math.max(1, Math.round(total / 60))
 }
 
 export function ProgramForm({
@@ -122,12 +202,9 @@ export function ProgramForm({
   exercises
 }: ProgramFormProps) {
   const [name, setName] = useState(initialData?.name || '')
-  const [blocksDraft, setBlocksDraft] = useState<BlockDraft[]>(
+  const [nameFocused, setNameFocused] = useState(false)
+  const [blocks, setBlocks] = useState<BlockDraft[]>(
     convertBlocksToDraft(initialData?.blocks || [])
-  )
-  const [exercisePickerOpen, setExercisePickerOpen] = useState(false)
-  const [pickerTargetIndex, setPickerTargetIndex] = useState<number | null>(
-    null
   )
 
   const [warmupEnabled, setWarmupEnabled] = useState(
@@ -145,61 +222,160 @@ export function ProgramForm({
     )
   )
 
-  const exerciseNameById = useMemo(
-    () =>
-      exercises.reduce((map, ex) => {
-        map.set(ex.id, ex.name)
-        return map
-      }, new Map<string, string>()),
-    [exercises]
+  // Add-exercises picker state
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pickerQuery, setPickerQuery] = useState('')
+  const [pickerCategory, setPickerCategory] = useState<ExerciseCategory | 'all'>(
+    'all'
   )
+  const [pickerSelected, setPickerSelected] = useState<string[]>([])
 
-  const addExercise = useCallback(() => {
-    haptics.buttonTap()
-    const firstExercise = exercises[0]?.id || ''
-    setBlocksDraft(prev => [
-      ...prev,
-      {
-        type: 'exercise',
-        exerciseId: firstExercise,
-        targetReps: '',
-        sets: String(DEFAULT_SETS),
-        restBetweenSets: secondsToMmss(DEFAULT_REST_BETWEEN_SETS)
-      }
-    ])
+  const exerciseById = useMemo(() => {
+    const map = new Map<string, PickerExercise>()
+    exercises.forEach(ex => map.set(ex.id, ex))
+    return map
   }, [exercises])
 
-  const removeExercise = useCallback((index: number) => {
-    haptics.deleteItem()
-    setBlocksDraft(prev => prev.filter((_, i) => i !== index))
-  }, [])
-
-  const moveExercise = useCallback(
-    (fromIndex: number, direction: 'up' | 'down') => {
-      haptics.buttonTap()
-      const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1
-      setBlocksDraft(prev => {
-        const newBlocks = [...prev]
-        const [movedBlock] = newBlocks.splice(fromIndex, 1)
-        newBlocks.splice(toIndex, 0, movedBlock)
-        return newBlocks
-      })
-    },
-    []
+  const estimatedMinutes = useMemo(
+    () =>
+      estimateMinutes(
+        blocks,
+        warmupEnabled,
+        mmssToSeconds(warmupTime),
+        restEnabled,
+        mmssToSeconds(restTime)
+      ),
+    [blocks, warmupEnabled, warmupTime, restEnabled, restTime]
   )
 
-  const updateExerciseField = useCallback(
-    (index: number, field: string, value: string) => {
-      setBlocksDraft(prev =>
-        prev.map((b, i) => (i === index ? { ...b, [field]: value } : b))
+  const updateBlock = useCallback(
+    (index: number, patch: Partial<BlockDraft>) => {
+      setBlocks(prev =>
+        prev.map((b, i) => (i === index ? { ...b, ...patch } : b))
       )
     },
     []
   )
 
+  const adjustSets = useCallback((index: number, delta: number) => {
+    haptics.buttonTap()
+    setBlocks(prev =>
+      prev.map((b, i) => {
+        if (i !== index) return b
+        const sets = Math.max(1, b.sets + delta)
+        return { ...b, sets, perSetRepsValues: resizeReps(b.perSetRepsValues, sets) }
+      })
+    )
+  }, [])
+
+  const adjustReps = useCallback((index: number, delta: number) => {
+    haptics.buttonTap()
+    setBlocks(prev =>
+      prev.map((b, i) =>
+        i === index ? { ...b, reps: Math.max(1, b.reps + delta) } : b
+      )
+    )
+  }, [])
+
+  const adjustRest = useCallback((index: number, delta: number) => {
+    haptics.buttonTap()
+    setBlocks(prev =>
+      prev.map((b, i) =>
+        i === index
+          ? { ...b, restBetweenSets: Math.max(0, b.restBetweenSets + delta) }
+          : b
+      )
+    )
+  }, [])
+
+  const adjustDuration = useCallback((index: number, delta: number) => {
+    haptics.buttonTap()
+    setBlocks(prev =>
+      prev.map((b, i) =>
+        i === index
+          ? { ...b, durationSeconds: Math.max(5, b.durationSeconds + delta) }
+          : b
+      )
+    )
+  }, [])
+
+  const setPerSetValue = useCallback(
+    (index: number, setIdx: number, value: number) => {
+      setBlocks(prev =>
+        prev.map((b, i) => {
+          if (i !== index) return b
+          const values = resizeReps(b.perSetRepsValues, b.sets)
+          values[setIdx] = value
+          return { ...b, perSetRepsValues: values }
+        })
+      )
+    },
+    []
+  )
+
+  const removeBlock = useCallback((index: number) => {
+    haptics.deleteItem()
+    setBlocks(prev => prev.filter((_, i) => i !== index))
+  }, [])
+
+  const moveBlock = useCallback(
+    (fromIndex: number, direction: 'up' | 'down') => {
+      haptics.buttonTap()
+      const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1
+      setBlocks(prev => {
+        if (toIndex < 0 || toIndex >= prev.length) return prev
+        const next = [...prev]
+        const [moved] = next.splice(fromIndex, 1)
+        next.splice(toIndex, 0, moved)
+        return next
+      })
+    },
+    []
+  )
+
+  // Picker
+  const openPicker = useCallback(() => {
+    haptics.buttonTap()
+    setPickerQuery('')
+    setPickerCategory('all')
+    setPickerSelected([])
+    setPickerOpen(true)
+  }, [])
+
+  const togglePickerSelect = useCallback((id: string) => {
+    haptics.itemSelection()
+    setPickerSelected(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    )
+  }, [])
+
+  const confirmPicker = useCallback(() => {
+    if (pickerSelected.length === 0) return
+    haptics.buttonTap()
+    setBlocks(prev => [...prev, ...pickerSelected.map(makeDraft)])
+    setPickerOpen(false)
+  }, [pickerSelected])
+
+  const handleCreateExercise = useCallback(() => {
+    haptics.buttonTap()
+    setPickerOpen(false)
+    router.push('/library/exercises/new')
+  }, [])
+
+  const filteredPickerExercises = useMemo(() => {
+    const q = pickerQuery.trim().toLowerCase()
+    return exercises.filter(ex => {
+      if (pickerCategory !== 'all' && ex.category !== pickerCategory) {
+        return false
+      }
+      if (q && !ex.name.toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [exercises, pickerQuery, pickerCategory])
+
   const handleSave = useCallback(async () => {
     const trimmed = name.trim()
-    const finalBlocks = convertDraftToBlocks(blocksDraft)
+    const finalBlocks = convertDraftToBlocks(blocks)
 
     const warmupSeconds = warmupEnabled ? mmssToSeconds(warmupTime) : 0
     if (warmupEnabled && warmupSeconds <= 0) {
@@ -215,27 +391,26 @@ export function ProgramForm({
       return
     }
 
-    for (let i = 0; i < blocksDraft.length; i++) {
-      const block = blocksDraft[i]
-      const setsValue = block.sets ? Number(block.sets) : DEFAULT_SETS
-      const restValue = block.restBetweenSets
-        ? mmssToSeconds(block.restBetweenSets)
-        : DEFAULT_REST_BETWEEN_SETS
-
-      if (!Number.isInteger(setsValue) || setsValue < 1) {
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i]
+      if (!Number.isInteger(block.sets) || block.sets < 1) {
         haptics.formValidationError()
-        Alert.alert(
-          'Validation Error',
-          `Exercise ${i + 1}: Sets must be at least 1`
-        )
+        Alert.alert('Validation Error', `Exercise ${i + 1}: Sets must be at least 1`)
         return
       }
-
-      if (restValue < 0) {
+      if (block.restBetweenSets < 0) {
         haptics.formValidationError()
         Alert.alert(
           'Validation Error',
           `Exercise ${i + 1}: Rest duration must be 0 or greater`
+        )
+        return
+      }
+      if (block.mode === 'timed' && block.durationSeconds <= 0) {
+        haptics.formValidationError()
+        Alert.alert(
+          'Validation Error',
+          `Exercise ${i + 1}: Duration must be greater than 0`
         )
         return
       }
@@ -244,7 +419,6 @@ export function ProgramForm({
     const initialWarmup = warmupEnabled
       ? { seconds: warmupSeconds || DEFAULT_WARMUP_SECONDS }
       : undefined
-
     const defaultRestBetweenExercises = restEnabled
       ? defaultRestSeconds || DEFAULT_REST_BETWEEN_EXERCISES
       : undefined
@@ -257,19 +431,9 @@ export function ProgramForm({
     }
 
     const validationResult = validateProgram(programData as never)
-
     if (!validationResult.isValid) {
       haptics.formValidationError()
       Alert.alert('Validation Error', validationResult.errors[0].message)
-      return
-    }
-
-    if (exercises.length === 0) {
-      haptics.formValidationError()
-      Alert.alert(
-        'Add an exercise first',
-        'Create at least one exercise before creating a program.'
-      )
       return
     }
 
@@ -277,10 +441,7 @@ export function ProgramForm({
     for (const block of finalBlocks) {
       if (block.type === 'exercise' && !exerciseIds.has(block.exerciseId)) {
         haptics.formValidationError()
-        Alert.alert(
-          'Invalid exercise',
-          'One or more exercises no longer exist.'
-        )
+        Alert.alert('Invalid exercise', 'One or more exercises no longer exist.')
         return
       }
     }
@@ -295,21 +456,14 @@ export function ProgramForm({
         error instanceof Error ? error.message : String(error)
       )
     }
-  }, [
-    name,
-    blocksDraft,
-    warmupEnabled,
-    warmupTime,
-    restEnabled,
-    restTime,
-    exercises,
-    onSave
-  ])
+  }, [name, blocks, warmupEnabled, warmupTime, restEnabled, restTime, exercises, onSave])
 
   const handleCancel = useCallback(() => {
     haptics.formCancel()
     onCancel()
   }, [onCancel])
+
+  const saveDisabled = saving || !name.trim()
 
   return (
     <KeyboardAvoidingView
@@ -321,424 +475,529 @@ export function ProgramForm({
         <Pressable
           onPress={handleCancel}
           style={({ pressed }) => [
-            styles.backButton,
-            pressed && styles.backButtonPressed
+            styles.closeButton,
+            pressed && styles.closeButtonPressed
           ]}
         >
-          <Ionicons name="close" size={24} color={theme.colors.text} />
+          <Ionicons name="close" size={22} color={theme.colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>
           {mode === 'create' ? 'New Program' : 'Edit Program'}
         </Text>
         <Pressable
           onPress={handleSave}
-          disabled={saving || !name.trim()}
+          disabled={saveDisabled}
           style={({ pressed }) => [
             styles.saveButton,
             pressed && !saving && styles.saveButtonPressed,
-            (saving || !name.trim()) && styles.saveButtonDisabled
+            saveDisabled && styles.saveButtonDisabled
           ]}
         >
           <Text
             style={[
               styles.saveButtonText,
-              (saving || !name.trim()) && styles.saveButtonTextDisabled
+              saveDisabled && styles.saveButtonTextDisabled
             ]}
           >
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? 'Saving…' : 'Save'}
           </Text>
         </Pressable>
       </View>
 
-      {/* Form Content */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Name */}
+        {/* Program name */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Program Name</Text>
-          <View style={styles.card}>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="e.g. Upper Body Strength"
-              placeholderTextColor={theme.colors.muted}
-              style={styles.nameInput}
-              autoFocus={mode === 'create'}
-            />
-          </View>
+          <Text style={styles.sectionLabel}>Program Name</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder="e.g. Upper Body Strength"
+            placeholderTextColor={theme.colors.muted}
+            style={[styles.nameInput, nameFocused && styles.nameInputFocused]}
+            selectionColor={theme.colors.primary}
+            cursorColor={theme.colors.primary}
+            onFocus={() => setNameFocused(true)}
+            onBlur={() => setNameFocused(false)}
+            autoFocus={mode === 'create'}
+          />
         </View>
 
         {/* Options */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Options</Text>
-          <View style={styles.card}>
-            {/* Warmup Toggle */}
-            <Pressable
-              onPress={() => {
-                haptics.buttonTap()
-                setWarmupEnabled(prev => !prev)
-              }}
-              style={styles.optionRow}
-            >
+          <Text style={styles.sectionLabel}>Options</Text>
+          <View style={styles.optionsCard}>
+            <View style={styles.optionRow}>
               <View style={styles.optionLeft}>
-                <View
-                  style={[
-                    styles.optionIcon,
-                    warmupEnabled && styles.optionIconWarmup
-                  ]}
-                >
-                  <Ionicons
-                    name="flame"
-                    size={18}
-                    color={
-                      warmupEnabled
-                        ? theme.colors.phases.warmup
-                        : theme.colors.muted
-                    }
+                <View style={[styles.optionIcon, { backgroundColor: theme.colors.accentLight }]}>
+                  <Ionicons name="flame" size={16} color={theme.colors.accent} />
+                </View>
+                <Text style={styles.optionLabel}>Initial warmup</Text>
+              </View>
+              <View style={styles.optionRight}>
+                {warmupEnabled && (
+                  <TextInput
+                    value={warmupTime}
+                    onChangeText={setWarmupTime}
+                    style={[styles.timePill, styles.timePillWarmup]}
+                    placeholder="5:00"
+                    placeholderTextColor={theme.colors.muted}
                   />
-                </View>
-                <View>
-                  <Text style={styles.optionLabel}>Initial Warmup</Text>
-                  {warmupEnabled && (
-                    <Text style={styles.optionValue}>{warmupTime}</Text>
-                  )}
-                </View>
-              </View>
-              <View
-                style={[styles.toggle, warmupEnabled && styles.toggleActive]}
-              >
-                <View
-                  style={[
-                    styles.toggleKnob,
-                    warmupEnabled && styles.toggleKnobActive
-                  ]}
+                )}
+                <ToggleSwitch
+                  value={warmupEnabled}
+                  onValueChange={setWarmupEnabled}
+                  accessibilityLabel="Initial warmup"
                 />
               </View>
-            </Pressable>
+            </View>
 
-            {warmupEnabled && (
-              <View style={styles.optionExpanded}>
-                <Text style={styles.optionExpandedLabel}>Duration (mm:ss)</Text>
-                <TextInput
-                  value={warmupTime}
-                  onChangeText={setWarmupTime}
-                  style={styles.timeInput}
-                  placeholder="5:00"
-                  placeholderTextColor={theme.colors.muted}
-                />
-              </View>
-            )}
+            <View style={styles.optionDivider} />
 
-            <View style={styles.divider} />
-
-            {/* Rest Toggle */}
-            <Pressable
-              onPress={() => {
-                haptics.buttonTap()
-                setRestEnabled(prev => !prev)
-              }}
-              style={styles.optionRow}
-            >
+            <View style={styles.optionRow}>
               <View style={styles.optionLeft}>
-                <View
-                  style={[
-                    styles.optionIcon,
-                    restEnabled && styles.optionIconRest
-                  ]}
-                >
-                  <Ionicons
-                    name="timer"
-                    size={18}
-                    color={
-                      restEnabled
-                        ? theme.colors.phases.break
-                        : theme.colors.muted
-                    }
+                <View style={[styles.optionIcon, { backgroundColor: theme.colors.infoLight }]}>
+                  <Ionicons name="timer" size={16} color={theme.colors.info} />
+                </View>
+                <Text style={styles.optionLabel}>Rest between exercises</Text>
+              </View>
+              <View style={styles.optionRight}>
+                {restEnabled && (
+                  <TextInput
+                    value={restTime}
+                    onChangeText={setRestTime}
+                    style={[styles.timePill, styles.timePillRest]}
+                    placeholder="1:00"
+                    placeholderTextColor={theme.colors.muted}
                   />
-                </View>
-                <View>
-                  <Text style={styles.optionLabel}>Rest Between Exercises</Text>
-                  {restEnabled && (
-                    <Text style={styles.optionValue}>{restTime}</Text>
-                  )}
-                </View>
-              </View>
-              <View style={[styles.toggle, restEnabled && styles.toggleActive]}>
-                <View
-                  style={[
-                    styles.toggleKnob,
-                    restEnabled && styles.toggleKnobActive
-                  ]}
+                )}
+                <ToggleSwitch
+                  value={restEnabled}
+                  onValueChange={setRestEnabled}
+                  accessibilityLabel="Rest between exercises"
                 />
               </View>
-            </Pressable>
-
-            {restEnabled && (
-              <View style={styles.optionExpanded}>
-                <Text style={styles.optionExpandedLabel}>Duration (mm:ss)</Text>
-                <TextInput
-                  value={restTime}
-                  onChangeText={setRestTime}
-                  style={styles.timeInput}
-                  placeholder="1:00"
-                  placeholderTextColor={theme.colors.muted}
-                />
-              </View>
-            )}
+            </View>
           </View>
         </View>
 
         {/* Exercises */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Exercises</Text>
-            <Pressable
-              onPress={addExercise}
-              style={({ pressed }) => [
-                styles.addButton,
-                pressed && styles.addButtonPressed
-              ]}
-            >
-              <Ionicons name="add" size={18} color={theme.colors.primary} />
-              <Text style={styles.addButtonText}>Add</Text>
-            </Pressable>
+          <View style={styles.exercisesHeader}>
+            <Text style={styles.sectionLabel}>
+              {blocks.length > 0
+                ? `Exercises · ${blocks.length} · ~${estimatedMinutes} min`
+                : 'Exercises'}
+            </Text>
+            {blocks.length > 1 && (
+              <Text style={styles.reorderHint}>reorder ↑↓</Text>
+            )}
           </View>
 
-          {blocksDraft.length === 0 ? (
+          {blocks.length === 0 ? (
             <View style={styles.emptyCard}>
               <Ionicons
                 name="barbell-outline"
-                size={40}
+                size={36}
                 color={theme.colors.muted}
               />
               <Text style={styles.emptyText}>
                 Add exercises to build your program
               </Text>
-              <Pressable
-                onPress={addExercise}
-                style={({ pressed }) => [
-                  styles.emptyButton,
-                  pressed && styles.emptyButtonPressed
-                ]}
-              >
-                <Ionicons
-                  name="add"
-                  size={20}
-                  color={theme.colors.primaryTextOn}
-                />
-                <Text style={styles.emptyButtonText}>Add Exercise</Text>
-              </Pressable>
             </View>
           ) : (
-            <View style={styles.exerciseList}>
-              {blocksDraft.map((block, index) => (
-                <View key={index} style={styles.exerciseCard}>
-                  <View style={styles.exerciseHeader}>
-                    <View style={styles.exerciseNumber}>
-                      <Text style={styles.exerciseNumberText}>{index + 1}</Text>
-                    </View>
-                    <Pressable
-                      onPress={() => {
-                        haptics.buttonTap()
-                        setPickerTargetIndex(index)
-                        setExercisePickerOpen(true)
-                      }}
-                      style={({ pressed }) => [
-                        styles.exercisePicker,
-                        pressed && styles.exercisePickerPressed
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.exercisePickerText,
-                          !block.exerciseId && styles.exercisePickerPlaceholder
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {exerciseNameById.get(block.exerciseId) ||
-                          'Select exercise'}
-                      </Text>
+            <View style={styles.blockList}>
+              {blocks.map((block, index) => {
+                const ex = exerciseById.get(block.exerciseId)
+                const showRepsStepper = block.mode === 'reps' && !block.perSetReps
+                return (
+                  <View
+                    key={`${block.exerciseId}-${index}`}
+                    style={[
+                      styles.blockCard,
+                      block.advancedOpen && styles.blockCardActive
+                    ]}
+                  >
+                    <View style={styles.blockHeader}>
                       <Ionicons
-                        name="chevron-down"
-                        size={16}
-                        color={theme.colors.muted}
+                        name="reorder-three"
+                        size={20}
+                        color={theme.colors.faint}
                       />
-                    </Pressable>
-                    <View style={styles.exerciseActions}>
+                      <View style={styles.blockNumber}>
+                        <Text style={styles.blockNumberText}>{index + 1}</Text>
+                      </View>
+                      <Text style={styles.blockName} numberOfLines={1}>
+                        {ex?.name ?? 'Exercise'}
+                      </Text>
                       {index > 0 && (
                         <Pressable
-                          onPress={() => moveExercise(index, 'up')}
-                          style={styles.actionButton}
+                          onPress={() => moveBlock(index, 'up')}
+                          style={styles.blockIconBtn}
+                          hitSlop={6}
                         >
                           <Ionicons
                             name="chevron-up"
-                            size={18}
+                            size={16}
                             color={theme.colors.muted}
                           />
                         </Pressable>
                       )}
-                      {index < blocksDraft.length - 1 && (
+                      {index < blocks.length - 1 && (
                         <Pressable
-                          onPress={() => moveExercise(index, 'down')}
-                          style={styles.actionButton}
+                          onPress={() => moveBlock(index, 'down')}
+                          style={styles.blockIconBtn}
+                          hitSlop={6}
                         >
                           <Ionicons
                             name="chevron-down"
-                            size={18}
+                            size={16}
                             color={theme.colors.muted}
                           />
                         </Pressable>
                       )}
                       <Pressable
-                        onPress={() => removeExercise(index)}
-                        style={styles.actionButton}
+                        onPress={() => removeBlock(index)}
+                        style={styles.blockDeleteBtn}
+                        hitSlop={6}
                       >
                         <Ionicons
                           name="trash-outline"
-                          size={18}
+                          size={16}
                           color={theme.colors.danger}
                         />
                       </Pressable>
                     </View>
-                  </View>
 
-                  <View style={styles.exerciseFields}>
-                    <View style={styles.exerciseField}>
-                      <Text style={styles.exerciseFieldLabel}>Reps</Text>
-                      <TextInput
-                        value={block.targetReps || ''}
-                        onChangeText={v =>
-                          updateExerciseField(index, 'targetReps', v)
-                        }
-                        keyboardType="number-pad"
-                        style={styles.exerciseFieldInput}
-                        placeholder="10"
-                        placeholderTextColor={theme.colors.muted}
+                    {/* Steppers */}
+                    <View style={styles.steppersRow}>
+                      <Stepper
+                        label="SETS"
+                        display={String(block.sets)}
+                        onDecrement={() => adjustSets(index, -1)}
+                        onIncrement={() => adjustSets(index, 1)}
+                      />
+                      {showRepsStepper && (
+                        <Stepper
+                          label="REPS"
+                          display={String(block.reps)}
+                          onDecrement={() => adjustReps(index, -1)}
+                          onIncrement={() => adjustReps(index, 1)}
+                        />
+                      )}
+                      {block.mode === 'timed' && (
+                        <Stepper
+                          label="TIME"
+                          display={secondsToMmss(block.durationSeconds)}
+                          onDecrement={() => adjustDuration(index, -REST_STEP)}
+                          onIncrement={() => adjustDuration(index, REST_STEP)}
+                        />
+                      )}
+                      <Stepper
+                        label="REST"
+                        display={secondsToMmss(block.restBetweenSets)}
+                        onDecrement={() => adjustRest(index, -REST_STEP)}
+                        onIncrement={() => adjustRest(index, REST_STEP)}
                       />
                     </View>
-                    <View style={styles.exerciseField}>
-                      <Text style={styles.exerciseFieldLabel}>Sets</Text>
-                      <TextInput
-                        value={block.sets || String(DEFAULT_SETS)}
-                        onChangeText={v => {
-                          const cleaned = v.replace(/[^0-9]/g, '')
-                          updateExerciseField(index, 'sets', cleaned)
-                        }}
-                        keyboardType="number-pad"
-                        style={styles.exerciseFieldInput}
-                        placeholder="3"
-                        placeholderTextColor={theme.colors.muted}
+
+                    {/* Advanced */}
+                    {block.advancedOpen && (
+                      <View style={styles.advanced}>
+                        <View style={styles.advancedRow}>
+                          <Text style={styles.advancedLabel}>Type</Text>
+                          <SegmentedControl
+                            options={[
+                              { value: 'reps', label: 'Reps' },
+                              { value: 'timed', label: 'Timed' }
+                            ]}
+                            value={block.mode}
+                            onChange={value =>
+                              updateBlock(index, {
+                                mode: value as 'reps' | 'timed'
+                              })
+                            }
+                          />
+                        </View>
+
+                        {block.mode === 'reps' && (
+                          <View>
+                            <View style={styles.advancedRow}>
+                              <Text style={styles.advancedLabel}>
+                                Per-set reps
+                              </Text>
+                              <ToggleSwitch
+                                value={block.perSetReps}
+                                onValueChange={value =>
+                                  updateBlock(index, { perSetReps: value })
+                                }
+                                accessibilityLabel="Per-set reps"
+                              />
+                            </View>
+                            {block.perSetReps && (
+                              <View style={styles.perSetRow}>
+                                {resizeReps(
+                                  block.perSetRepsValues,
+                                  block.sets
+                                ).map((value, setIdx) => (
+                                  <View key={setIdx} style={styles.perSetBox}>
+                                    <Text style={styles.perSetLabel}>
+                                      SET {setIdx + 1}
+                                    </Text>
+                                    <TextInput
+                                      value={String(value)}
+                                      onChangeText={v =>
+                                        setPerSetValue(
+                                          index,
+                                          setIdx,
+                                          Math.max(1, parseInt(v, 10) || 0)
+                                        )
+                                      }
+                                      keyboardType="number-pad"
+                                      style={styles.perSetInput}
+                                      selectionColor={theme.colors.primary}
+                                    />
+                                  </View>
+                                ))}
+                              </View>
+                            )}
+                          </View>
+                        )}
+
+                        <View>
+                          <Text style={styles.advancedLabel}>Note</Text>
+                          <TextInput
+                            value={block.note}
+                            onChangeText={v => updateBlock(index, { note: v })}
+                            placeholder="e.g. Pause 1s at the bottom"
+                            placeholderTextColor={theme.colors.muted}
+                            style={styles.noteInput}
+                            selectionColor={theme.colors.primary}
+                          />
+                        </View>
+                      </View>
+                    )}
+
+                    {/* Advanced toggle */}
+                    <Pressable
+                      onPress={() =>
+                        updateBlock(index, { advancedOpen: !block.advancedOpen })
+                      }
+                      style={styles.advancedToggle}
+                    >
+                      <Text style={styles.advancedToggleText}>
+                        {block.advancedOpen ? 'Hide advanced' : 'Advanced'}
+                      </Text>
+                      <Ionicons
+                        name={block.advancedOpen ? 'chevron-up' : 'chevron-down'}
+                        size={14}
+                        color={theme.colors.primaryDark}
                       />
-                    </View>
-                    <View style={styles.exerciseField}>
-                      <Text style={styles.exerciseFieldLabel}>Rest</Text>
-                      <TextInput
-                        value={
-                          block.restBetweenSets ||
-                          secondsToMmss(DEFAULT_REST_BETWEEN_SETS)
-                        }
-                        onChangeText={v =>
-                          updateExerciseField(index, 'restBetweenSets', v)
-                        }
-                        style={styles.exerciseFieldInput}
-                        placeholder="1:00"
-                        placeholderTextColor={theme.colors.muted}
-                      />
-                    </View>
+                    </Pressable>
                   </View>
-                </View>
-              ))}
+                )
+              })}
             </View>
           )}
+
+          <Pressable
+            onPress={openPicker}
+            style={({ pressed }) => [
+              styles.addButton,
+              pressed && styles.addButtonPressed
+            ]}
+          >
+            <Ionicons name="add" size={20} color={theme.colors.primaryTextOn} />
+            <Text style={styles.addButtonText}>Add exercises</Text>
+          </Pressable>
         </View>
       </ScrollView>
 
-      {/* Exercise Picker Modal */}
+      {/* Add-exercises picker */}
       <Modal
-        visible={exercisePickerOpen}
-        transparent
+        visible={pickerOpen}
         animationType="slide"
-        onRequestClose={() => setExercisePickerOpen(false)}
+        onRequestClose={() => setPickerOpen(false)}
       >
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => setExercisePickerOpen(false)}
-        >
-          <View
-            style={styles.modalContent}
-            onStartShouldSetResponder={() => true}
-          >
-            <View style={styles.modalHandle} />
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Exercise</Text>
-            </View>
-            <ScrollView
-              style={styles.modalList}
-              showsVerticalScrollIndicator={false}
+        <View style={styles.pickerContainer}>
+          <View style={styles.pickerHeader}>
+            <Pressable
+              onPress={() => setPickerOpen(false)}
+              style={styles.closeButton}
             >
-              {exercises.map(exercise => {
-                const isSelected =
-                  pickerTargetIndex !== null &&
-                  blocksDraft[pickerTargetIndex]?.exerciseId === exercise.id
-                return (
-                  <Pressable
-                    key={exercise.id}
-                    onPress={() => {
-                      if (pickerTargetIndex === null) return
-                      haptics.buttonTap()
-                      updateExerciseField(
-                        pickerTargetIndex,
-                        'exerciseId',
-                        exercise.id
-                      )
-                      setExercisePickerOpen(false)
-                      setPickerTargetIndex(null)
-                    }}
-                    style={({ pressed }) => [
-                      styles.modalItem,
-                      isSelected && styles.modalItemSelected,
-                      pressed && styles.modalItemPressed
+              <Ionicons name="close" size={20} color={theme.colors.subtext} />
+            </Pressable>
+            <Text style={styles.pickerTitle}>Add exercises</Text>
+            <View style={styles.closeButtonSpacer} />
+          </View>
+
+          <View style={styles.pickerSearch}>
+            <SearchInput
+              value={pickerQuery}
+              onChangeText={setPickerQuery}
+              placeholder="Search or create…"
+            />
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.pickerChipsScroll}
+            contentContainerStyle={styles.pickerChips}
+          >
+            {(['all', ...VALID_EXERCISE_CATEGORIES] as const).map(cat => {
+              const active = pickerCategory === cat
+              return (
+                <Pressable
+                  key={cat}
+                  onPress={() => setPickerCategory(cat)}
+                  style={[styles.pickerChip, active && styles.pickerChipActive]}
+                >
+                  <Text
+                    style={[
+                      styles.pickerChipText,
+                      active && styles.pickerChipTextActive
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.modalItemText,
-                        isSelected && styles.modalItemTextSelected
-                      ]}
-                    >
-                      {exercise.name}
+                    {cat === 'all' ? 'All' : formatCategoryLabel(cat)}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </ScrollView>
+
+          <ScrollView
+            style={styles.pickerList}
+            contentContainerStyle={styles.pickerListContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Pressable
+              onPress={handleCreateExercise}
+              style={styles.createRow}
+            >
+              <View style={styles.createIcon}>
+                <Ionicons name="add" size={16} color={theme.colors.primary} />
+              </View>
+              <Text style={styles.createText}>Create new exercise</Text>
+            </Pressable>
+
+            {filteredPickerExercises.map(ex => {
+              const selected = pickerSelected.includes(ex.id)
+              const cat = getCategoryColors(ex.category)
+              const badge = getSourceBadge(ex.source)
+              return (
+                <Pressable
+                  key={ex.id}
+                  onPress={() => togglePickerSelect(ex.id)}
+                  style={[
+                    styles.pickerRow,
+                    selected && styles.pickerRowSelected
+                  ]}
+                >
+                  <View style={[styles.pickerRowIcon, { backgroundColor: cat.bg }]}>
+                    <Ionicons
+                      name={
+                        (ex.icon as keyof typeof Ionicons.glyphMap) ||
+                        'fitness-outline'
+                      }
+                      size={18}
+                      color={cat.color}
+                    />
+                  </View>
+                  <View style={styles.pickerRowContent}>
+                    <Text style={styles.pickerRowName} numberOfLines={1}>
+                      {ex.name}
                     </Text>
-                    {isSelected && (
+                    <Text style={styles.pickerRowMeta}>
+                      {ex.category ? `${formatCategoryLabel(ex.category)} · ` : ''}
+                      {badge.label}
+                    </Text>
+                  </View>
+                  <View
+                    style={[styles.checkbox, selected && styles.checkboxChecked]}
+                  >
+                    {selected && (
                       <Ionicons
-                        name="checkmark-circle"
-                        size={22}
-                        color={theme.colors.primary}
+                        name="checkmark"
+                        size={16}
+                        color={theme.colors.primaryTextOn}
                       />
                     )}
-                  </Pressable>
-                )
-              })}
-              {exercises.length === 0 && (
-                <View style={styles.modalEmpty}>
-                  <Ionicons
-                    name="fitness-outline"
-                    size={32}
-                    color={theme.colors.muted}
-                  />
-                  <Text style={styles.modalEmptyText}>
-                    No exercises available.{'\n'}Create an exercise first.
-                  </Text>
-                </View>
-              )}
-            </ScrollView>
+                  </View>
+                </Pressable>
+              )
+            })}
+
+            {filteredPickerExercises.length === 0 && (
+              <View style={styles.pickerEmpty}>
+                <Ionicons
+                  name="search-outline"
+                  size={28}
+                  color={theme.colors.muted}
+                />
+                <Text style={styles.pickerEmptyText}>
+                  No exercises match your search
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+
+          <View style={styles.pickerFooter}>
+            <Pressable
+              onPress={confirmPicker}
+              disabled={pickerSelected.length === 0}
+              style={({ pressed }) => [
+                styles.pickerConfirm,
+                pickerSelected.length === 0 && styles.pickerConfirmDisabled,
+                pressed &&
+                  pickerSelected.length > 0 &&
+                  styles.pickerConfirmPressed
+              ]}
+            >
+              <Text style={styles.pickerConfirmText}>
+                {pickerSelected.length > 0
+                  ? `Add ${pickerSelected.length} exercise${
+                      pickerSelected.length === 1 ? '' : 's'
+                    }`
+                  : 'Select exercises'}
+              </Text>
+            </Pressable>
           </View>
-        </Pressable>
+        </View>
       </Modal>
     </KeyboardAvoidingView>
+  )
+}
+
+function Stepper({
+  label,
+  display,
+  onDecrement,
+  onIncrement
+}: {
+  label: string
+  display: string
+  onDecrement: () => void
+  onIncrement: () => void
+}) {
+  return (
+    <View style={styles.stepperField}>
+      <Text style={styles.stepperLabel}>{label}</Text>
+      <View style={styles.stepperBox}>
+        <Pressable style={styles.stepperBtn} onPress={onDecrement} hitSlop={4}>
+          <Ionicons name="remove" size={16} color={theme.colors.subtext} />
+        </Pressable>
+        <Text style={styles.stepperValue}>{display}</Text>
+        <Pressable style={styles.stepperBtn} onPress={onIncrement} hitSlop={4}>
+          <Ionicons name="add" size={16} color={theme.colors.primary} />
+        </Pressable>
+      </View>
+    </View>
   )
 }
 
@@ -752,18 +1011,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background
+    paddingVertical: theme.spacing.md
   },
-  backButton: {
-    width: 44,
-    height: 44,
+  closeButton: {
+    width: 42,
+    height: 42,
     borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     alignItems: 'center',
     justifyContent: 'center'
   },
-  backButtonPressed: {
-    backgroundColor: theme.colors.surface
+  closeButtonPressed: {
+    backgroundColor: theme.colors.surfaceElevated
+  },
+  closeButtonSpacer: {
+    width: 42
   },
   headerTitle: {
     ...theme.typography.h2,
@@ -799,305 +1063,446 @@ const styles = StyleSheet.create({
   section: {
     gap: theme.spacing.sm
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  sectionTitle: {
+  sectionLabel: {
     ...theme.typography.small,
-    color: theme.colors.muted,
+    color: theme.colors.faint,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1.2,
     marginLeft: theme.spacing.xs
   },
-  card: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    ...theme.shadows.sm
-  },
   nameInput: {
-    ...theme.typography.body,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.lg,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.lg,
     color: theme.colors.text,
-    padding: theme.spacing.lg
+    ...theme.typography.bodyBold
+  },
+  nameInputFocused: {
+    borderColor: theme.colors.borderActive
+  },
+  optionsCard: {
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.lg
   },
   optionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: theme.spacing.lg
+    padding: theme.spacing.md
   },
   optionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md
+    gap: theme.spacing.md,
+    flex: 1
   },
   optionIcon: {
-    width: 40,
-    height: 40,
+    width: 34,
+    height: 34,
     borderRadius: theme.radius.md,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.background
-  },
-  optionIconWarmup: {
-    backgroundColor: theme.colors.phases.warmupBg
-  },
-  optionIconRest: {
-    backgroundColor: theme.colors.phases.breakBg
+    justifyContent: 'center'
   },
   optionLabel: {
     ...theme.typography.body,
-    color: theme.colors.text
-  },
-  optionValue: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    marginTop: 2
-  },
-  toggle: {
-    width: 48,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: theme.colors.border,
-    padding: 2,
-    justifyContent: 'center'
-  },
-  toggleActive: {
-    backgroundColor: theme.colors.primary
-  },
-  toggleKnob: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: theme.colors.surface
-  },
-  toggleKnobActive: {
-    alignSelf: 'flex-end'
-  },
-  optionExpanded: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
-    paddingLeft: 72
-  },
-  optionExpandedLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.muted
-  },
-  timeInput: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.primary,
-    textAlign: 'center',
-    width: 80,
-    padding: theme.spacing.sm,
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.md
-  },
-  divider: {
-    height: 1,
-    backgroundColor: theme.colors.borderLight,
-    marginHorizontal: theme.spacing.lg
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.primaryLight
-  },
-  addButtonPressed: {
-    opacity: 0.7
-  },
-  addButtonText: {
-    ...theme.typography.caption,
     fontFamily: theme.fonts.semiBold,
-    color: theme.colors.primary
+    color: theme.colors.text,
+    flexShrink: 1
+  },
+  optionRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm
+  },
+  optionDivider: {
+    height: 1,
+    backgroundColor: theme.colors.surfaceElevated,
+    marginHorizontal: theme.spacing.md
+  },
+  timePill: {
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.displayMed,
+    backgroundColor: theme.colors.inset,
+    borderWidth: 1,
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+    textAlign: 'center',
+    minWidth: 56
+  },
+  timePillWarmup: {
+    color: theme.colors.primary,
+    borderColor: theme.colors.borderActive
+  },
+  timePillRest: {
+    color: theme.colors.info,
+    borderColor: theme.colors.border
+  },
+  exercisesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  reorderHint: {
+    ...theme.typography.small,
+    color: theme.colors.faint
   },
   emptyCard: {
     backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.xxl,
     alignItems: 'center',
-    gap: theme.spacing.md,
-    ...theme.shadows.sm
+    gap: theme.spacing.md
   },
   emptyText: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textAlign: 'center'
   },
-  emptyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.primary,
-    marginTop: theme.spacing.sm
-  },
-  emptyButtonPressed: {
-    opacity: 0.9
-  },
-  emptyButtonText: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.primaryTextOn
-  },
-  exerciseList: {
+  blockList: {
     gap: theme.spacing.sm
   },
-  exerciseCard: {
+  blockCard: {
     backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.md,
-    gap: theme.spacing.md,
-    ...theme.shadows.sm
+    padding: theme.spacing.md
   },
-  exerciseHeader: {
+  blockCardActive: {
+    borderColor: theme.colors.borderActive
+  },
+  blockHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm
   },
-  exerciseNumber: {
-    width: 28,
-    height: 28,
+  blockNumber: {
+    width: 24,
+    height: 24,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center'
   },
-  exerciseNumberText: {
-    ...theme.typography.caption,
-    fontFamily: theme.fonts.semiBold,
+  blockNumberText: {
+    ...theme.typography.small,
+    fontFamily: theme.fonts.display,
     color: theme.colors.primaryTextOn
   },
-  exercisePicker: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.background
-  },
-  exercisePickerPressed: {
-    backgroundColor: theme.colors.border
-  },
-  exercisePickerText: {
-    ...theme.typography.bodyBold,
+  blockName: {
+    ...theme.typography.body,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.text,
     flex: 1
   },
-  exercisePickerPlaceholder: {
-    color: theme.colors.muted,
-    fontFamily: theme.fonts.regular
-  },
-  exerciseActions: {
-    flexDirection: 'row',
-    gap: theme.spacing.xs
-  },
-  actionButton: {
-    width: 32,
-    height: 32,
+  blockIconBtn: {
+    width: 28,
+    height: 28,
     borderRadius: theme.radius.sm,
     alignItems: 'center',
     justifyContent: 'center'
   },
-  exerciseFields: {
+  blockDeleteBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.dangerTint,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  steppersRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.md
+  },
+  stepperField: {
+    flex: 1
+  },
+  stepperLabel: {
+    ...theme.typography.small,
+    fontSize: 9,
+    letterSpacing: 1,
+    color: theme.colors.faint,
+    marginBottom: theme.spacing.xs
+  },
+  stepperBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.inset,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    height: 40
+  },
+  stepperBtn: {
+    width: 32,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  stepperValue: {
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: theme.fonts.displayMed,
+    fontSize: 16,
+    color: theme.colors.text
+  },
+  advanced: {
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.surfaceElevated,
+    gap: theme.spacing.lg
+  },
+  advancedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  advancedLabel: {
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
+    color: theme.colors.subtext,
+    marginBottom: theme.spacing.sm
+  },
+  perSetRow: {
     flexDirection: 'row',
     gap: theme.spacing.sm
   },
-  exerciseField: {
+  perSetBox: {
     flex: 1,
-    gap: theme.spacing.xs
+    backgroundColor: theme.colors.inset,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    paddingVertical: theme.spacing.sm,
+    alignItems: 'center'
   },
-  exerciseFieldLabel: {
+  perSetLabel: {
     ...theme.typography.small,
-    color: theme.colors.muted,
-    textAlign: 'center'
+    fontSize: 8,
+    letterSpacing: 0.5,
+    color: theme.colors.faint
   },
-  exerciseFieldInput: {
-    ...theme.typography.bodyBold,
+  perSetInput: {
+    fontFamily: theme.fonts.displayMed,
+    fontSize: 15,
     color: theme.colors.text,
     textAlign: 'center',
+    paddingVertical: 2,
+    minWidth: 40
+  },
+  noteInput: {
+    backgroundColor: theme.colors.inset,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.sm,
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.md
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: theme.colors.overlay,
-    justifyContent: 'flex-end'
-  },
-  modalContent: {
-    backgroundColor: theme.colors.surface,
-    borderTopLeftRadius: theme.radius.xl,
-    borderTopRightRadius: theme.radius.xl,
-    maxHeight: '60%',
-    paddingBottom: theme.spacing.xxl
-  },
-  modalHandle: {
-    width: 36,
-    height: 4,
-    backgroundColor: theme.colors.border,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: theme.spacing.sm,
-    marginBottom: theme.spacing.sm
-  },
-  modalHeader: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderLight
-  },
-  modalTitle: {
-    ...theme.typography.h2,
     color: theme.colors.text,
-    textAlign: 'center'
+    ...theme.typography.caption
   },
-  modalList: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md
+  advancedToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.surfaceElevated
   },
-  modalItem: {
+  advancedToggleText: {
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
+    color: theme.colors.primaryDark
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.sm,
+    height: 50,
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.primary,
+    marginTop: theme.spacing.sm
+  },
+  addButtonPressed: {
+    opacity: 0.9
+  },
+  addButtonText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primaryTextOn
+  },
+  // Picker
+  pickerContainer: {
+    flex: 1,
+    backgroundColor: theme.colors.background
+  },
+  pickerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    marginBottom: theme.spacing.xs
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.xxl,
+    paddingBottom: theme.spacing.md
   },
-  modalItemSelected: {
-    backgroundColor: theme.colors.primaryLight
-  },
-  modalItemPressed: {
-    backgroundColor: theme.colors.background
-  },
-  modalItemText: {
-    ...theme.typography.body,
+  pickerTitle: {
+    ...theme.typography.h2,
+    fontFamily: theme.fonts.displayMed,
     color: theme.colors.text
   },
-  modalItemTextSelected: {
-    ...theme.typography.bodyBold,
+  pickerSearch: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.md
+  },
+  pickerChipsScroll: {
+    flexGrow: 0
+  },
+  pickerChips: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
+    gap: theme.spacing.sm
+  },
+  pickerChip: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface
+  },
+  pickerChipActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary
+  },
+  pickerChipText: {
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
+    color: theme.colors.subtext
+  },
+  pickerChipTextActive: {
+    color: theme.colors.primaryTextOn
+  },
+  pickerList: {
+    flex: 1
+  },
+  pickerListContent: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg,
+    gap: theme.spacing.sm
+  },
+  createRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    backgroundColor: theme.colors.primaryTint,
+    borderWidth: 1.5,
+    borderColor: theme.colors.borderActive,
+    borderStyle: 'dashed',
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.md
+  },
+  createIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  createText: {
+    ...theme.typography.body,
+    fontFamily: theme.fonts.semiBold,
     color: theme.colors.primary
   },
-  modalEmpty: {
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.md
+  },
+  pickerRowSelected: {
+    backgroundColor: theme.colors.primaryTint,
+    borderColor: theme.colors.borderActive
+  },
+  pickerRowIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: theme.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  pickerRowContent: {
+    flex: 1
+  },
+  pickerRowName: {
+    ...theme.typography.body,
+    fontFamily: theme.fonts.semiBold,
+    color: theme.colors.text
+  },
+  pickerRowMeta: {
+    ...theme.typography.caption,
+    color: theme.colors.subtext,
+    marginTop: 2
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.radius.sm,
+    borderWidth: 1.5,
+    borderColor: theme.colors.borderLight,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  checkboxChecked: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary
+  },
+  pickerEmpty: {
     alignItems: 'center',
     paddingVertical: theme.spacing.xxl,
     gap: theme.spacing.md
   },
-  modalEmptyText: {
+  pickerEmptyText: {
     ...theme.typography.body,
     color: theme.colors.muted,
     textAlign: 'center'
+  },
+  pickerFooter: {
+    padding: theme.spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border
+  },
+  pickerConfirm: {
+    height: 54,
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  pickerConfirmDisabled: {
+    backgroundColor: theme.colors.border
+  },
+  pickerConfirmPressed: {
+    opacity: 0.9
+  },
+  pickerConfirmText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primaryTextOn
   }
 })
+
+export default ProgramForm

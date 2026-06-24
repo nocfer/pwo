@@ -2,6 +2,11 @@
  * SearchableList - Enhanced list component with metadata display and search capabilities
  */
 
+import {
+  formatCategoryLabel,
+  getCategoryColors,
+  getSourceBadge
+} from '@/lib/utils'
 import { theme } from '@/theme/theme'
 import type { Program } from '@/types'
 import type { DataType } from '@/types/enhanced'
@@ -144,6 +149,7 @@ export function SearchableList({
           program={program}
           onStart={() => onItemPress?.(item)}
           onEdit={() => onItemEdit?.(item)}
+          onDelete={canDelete ? () => onItemDelete?.(item) : undefined}
           selected={isSelected}
           onSelectionChange={
             selectionMode
@@ -172,6 +178,8 @@ export function SearchableList({
     }
 
     // Default exercise item rendering
+    const catColors = getCategoryColors(item.category)
+    const sourceBadge = getSourceBadge(item.source)
     const content = (
       <Pressable
         style={({ pressed }) => [
@@ -183,51 +191,58 @@ export function SearchableList({
         onPress={() => handleItemPress(item)}
         onLongPress={() => handleItemLongPress(item)}
       >
-        {selectionMode && (
-          <View style={styles.selectionIndicator}>
-            <Ionicons
-              name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
-              size={22}
-              color={isSelected ? theme.colors.primary : theme.colors.muted}
-            />
-          </View>
-        )}
-
-        <View
-          style={[
-            styles.itemIcon,
-            { backgroundColor: theme.colors.primaryLight }
-          ]}
-        >
+        <View style={[styles.itemIcon, { backgroundColor: catColors.bg }]}>
           <Ionicons
             name={
               (item.icon as keyof typeof Ionicons.glyphMap) || 'fitness-outline'
             }
             size={20}
-            color={theme.colors.primary}
+            color={catColors.color}
           />
         </View>
 
         <View style={styles.itemContent}>
-          <View style={styles.itemHeader}>
-            <Text style={styles.itemName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            {item.source === 'builtin' && (
-              <View style={styles.builtinBadge}>
-                <Text style={styles.builtinBadgeText}>Built-in</Text>
-              </View>
-            )}
-          </View>
+          <Text style={styles.itemName} numberOfLines={1}>
+            {item.name}
+          </Text>
 
-          {showMetadata && item.category && (
-            <Text style={styles.itemCategory}>
-              {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
-            </Text>
+          {showMetadata && (
+            <View style={styles.chipsRow}>
+              {item.category && (
+                <View style={[styles.chip, { backgroundColor: catColors.bg }]}>
+                  <Text style={[styles.chipText, { color: catColors.color }]}>
+                    {formatCategoryLabel(item.category)}
+                  </Text>
+                </View>
+              )}
+              <View
+                style={[
+                  styles.chip,
+                  { backgroundColor: sourceBadge.bg },
+                  sourceBadge.border
+                    ? { borderWidth: 1, borderColor: sourceBadge.border }
+                    : null
+                ]}
+              >
+                <Text style={[styles.chipText, { color: sourceBadge.color }]}>
+                  {sourceBadge.label}
+                </Text>
+              </View>
+            </View>
           )}
         </View>
 
-        {!selectionMode && (
+        {selectionMode ? (
+          <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
+            {isSelected && (
+              <Ionicons
+                name="checkmark"
+                size={16}
+                color={theme.colors.primaryTextOn}
+              />
+            )}
+          </View>
+        ) : (
           <Ionicons
             name="chevron-forward"
             size={18}
@@ -335,23 +350,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    ...theme.shadows.sm
+    marginBottom: theme.spacing.sm
   },
   itemSelected: {
-    backgroundColor: theme.colors.primaryLight
+    backgroundColor: theme.colors.primaryTint,
+    borderColor: theme.colors.borderActive
   },
   itemPressed: {
     transform: [{ scale: 0.98 }]
   },
-  selectionIndicator: {
-    marginRight: theme.spacing.md
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.radius.sm,
+    borderWidth: 1.5,
+    borderColor: theme.colors.borderLight,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  checkboxChecked: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary
   },
   itemIcon: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: theme.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -361,29 +388,22 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 4
   },
-  itemHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm
-  },
   itemName: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text,
-    flex: 1
+    color: theme.colors.text
   },
-  builtinBadge: {
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.full,
+  chipsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.xs
+  },
+  chip: {
+    borderRadius: theme.radius.xs,
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 2
   },
-  builtinBadgeText: {
+  chipText: {
     ...theme.typography.small,
-    color: theme.colors.muted
-  },
-  itemCategory: {
-    ...theme.typography.caption,
-    color: theme.colors.muted
+    fontFamily: theme.fonts.semiBold
   },
   itemNoMargin: {
     marginBottom: 0

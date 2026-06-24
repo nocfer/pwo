@@ -23,7 +23,7 @@ export default function ImportPreviewScreen() {
   if (!programDataParam) {
     return (
       <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
-        <ScreenHeader title="Import Program" />
+        <ScreenHeader title="Import program" />
         <ErrorScreen message="No program data provided." />
       </SafeAreaView>
     )
@@ -39,7 +39,7 @@ export default function ImportPreviewScreen() {
   } catch (error) {
     return (
       <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
-        <ScreenHeader title="Import Program" />
+        <ScreenHeader title="Import program" />
         <ErrorScreen
           message={
             error instanceof Error
@@ -86,7 +86,7 @@ export default function ImportPreviewScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
-      <ScreenHeader title="Import Program" onBack={handleBack} />
+      <ScreenHeader title="Import program" onBack={handleBack} />
       <ProgramImportPreview
         programData={programData}
         onConfirm={handleConfirm}

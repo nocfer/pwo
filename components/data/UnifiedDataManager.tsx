@@ -82,50 +82,39 @@ export function UnifiedDataManager({
     }
   }, [activeTab, state.exercises, state.programs])
 
-  const handleTabChange = (tab: DataType) => {
-    haptics.dataTabSwitch()
-    setActiveTab(tab)
-    setSelectedItems([])
-    setShowFilters(false)
-    onActiveTabChange?.(tab)
-  }
+  const handleTabChange = useCallback(
+    (tab: DataType) => {
+      haptics.dataTabSwitch()
+      setActiveTab(tab)
+      setSelectedItems([])
+      setShowFilters(false)
+      onActiveTabChange?.(tab)
+    },
+    [onActiveTabChange]
+  )
 
   const renderTabButton = useCallback(
-    (
-      tab: DataType,
-      label: string,
-      icon: string,
-      activeColor: string,
-      activeBg: string
-    ) => (
-      <TouchableOpacity
-        key={tab}
-        style={[
-          styles.tabButton,
-          activeTab === tab && { backgroundColor: activeBg }
-        ]}
-        onPress={() => handleTabChange(tab)}
-        activeOpacity={0.7}
-      >
-        <Ionicons
-          name={icon as any}
-          size={18}
-          color={activeTab === tab ? activeColor : theme.colors.muted}
-        />
-        <Text
-          style={[
-            styles.tabButtonText,
-            activeTab === tab && {
-              color: activeColor,
-              fontFamily: theme.fonts.semiBold
-            }
-          ]}
+    (tab: DataType, label: string, count: number) => {
+      const isActive = activeTab === tab
+      return (
+        <TouchableOpacity
+          key={tab}
+          style={[styles.tabButton, isActive && styles.tabButtonActive]}
+          onPress={() => handleTabChange(tab)}
+          activeOpacity={0.8}
         >
-          {label}
-        </Text>
-      </TouchableOpacity>
-    ),
-    [activeTab]
+          <Text
+            style={[
+              styles.tabButtonText,
+              isActive && styles.tabButtonTextActive
+            ]}
+          >
+            {label} <Text style={styles.tabButtonCount}>{count}</Text>
+          </Text>
+        </TouchableOpacity>
+      )
+    },
+    [activeTab, handleTabChange]
   )
 
   const handleSearchChange = (query: string) => {
@@ -349,21 +338,13 @@ export function UnifiedDataManager({
 
   return (
     <View style={[styles.container, style]}>
-      {/* Tab Navigation */}
+      {/* Segmented control */}
       <View style={styles.tabContainer}>
-        {renderTabButton(
-          'programs',
-          'Programs',
-          'barbell',
-          theme.colors.success,
-          theme.colors.successLight
-        )}
+        {renderTabButton('programs', 'Programs', state.programs.length)}
         {renderTabButton(
           'exercises',
           'Exercises',
-          'fitness',
-          theme.colors.primary,
-          theme.colors.primaryLight
+          state.exercisePagination.totalItems
         )}
       </View>
 
@@ -390,7 +371,7 @@ export function UnifiedDataManager({
               color={
                 showFilters || hasActiveFilters
                   ? theme.colors.primary
-                  : theme.colors.muted
+                  : theme.colors.subtext
               }
             />
             {hasActiveFilters && !showFilters && (
@@ -470,11 +451,6 @@ export function UnifiedDataManager({
               color={theme.colors.danger}
             />
             <Text style={styles.bulkDeleteButtonText}>Delete</Text>
-            <View style={styles.bulkDeleteBadge}>
-              <Text style={styles.bulkDeleteBadgeText}>
-                {selectedItems.length}
-              </Text>
-            </View>
           </Pressable>
         </View>
       )}
@@ -580,27 +556,37 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.inset,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     borderRadius: theme.radius.md,
     padding: theme.spacing.xs,
+    gap: theme.spacing.xs,
     marginHorizontal: theme.spacing.lg,
     marginTop: theme.spacing.md,
     marginBottom: theme.spacing.md
   },
   tabButton: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.radius.sm,
-    gap: theme.spacing.xs
+    borderRadius: theme.radius.sm
+  },
+  tabButtonActive: {
+    backgroundColor: theme.colors.primary
   },
   tabButtonText: {
     ...theme.typography.caption,
-    color: theme.colors.muted,
-    fontFamily: theme.fonts.medium
+    fontFamily: theme.fonts.semiBold,
+    color: theme.colors.subtext
+  },
+  tabButtonTextActive: {
+    color: theme.colors.primaryTextOn,
+    fontFamily: theme.fonts.bold
+  },
+  tabButtonCount: {
+    opacity: 0.6
   },
   controls: {
     paddingHorizontal: theme.spacing.lg,
@@ -619,12 +605,15 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative'
   },
   filterButtonActive: {
-    backgroundColor: theme.colors.primaryLight
+    backgroundColor: theme.colors.primaryLight,
+    borderColor: theme.colors.borderActive
   },
   filterButtonPressed: {
     transform: [{ scale: 0.95 }]
@@ -677,12 +666,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.inset,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     paddingBottom: theme.spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border
+    borderTopColor: theme.colors.surfaceElevated
   },
   bulkToolbarText: {
     ...theme.typography.bodyBold,
@@ -692,11 +681,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
-    backgroundColor: theme.colors.dangerLight,
+    backgroundColor: theme.colors.dangerTint,
+    borderWidth: 1,
+    borderColor: theme.colors.dangerBorder,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm,
-    borderRadius: theme.radius.md,
-    position: 'relative'
+    borderRadius: theme.radius.md
   },
   bulkDeleteButtonPressed: {
     opacity: 0.7,
@@ -705,23 +695,6 @@ const styles = StyleSheet.create({
   bulkDeleteButtonText: {
     ...theme.typography.bodyBold,
     color: theme.colors.danger
-  },
-  bulkDeleteBadge: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-    backgroundColor: theme.colors.danger,
-    borderRadius: theme.radius.full,
-    minWidth: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.xs
-  },
-  bulkDeleteBadgeText: {
-    ...theme.typography.small,
-    color: theme.colors.primaryTextOn,
-    fontFamily: theme.fonts.bold
   },
   modalOverlay: {
     flex: 1,

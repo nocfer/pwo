@@ -69,14 +69,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     paddingHorizontal: theme.spacing.md,
     height: 44
   },
   containerFocused: {
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.md - 1
+    borderColor: theme.colors.primary
   },
   icon: {
     marginRight: theme.spacing.sm

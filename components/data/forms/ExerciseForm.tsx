@@ -54,6 +54,7 @@ export function ExerciseForm({
   })
 
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
+  const [nameFocused, setNameFocused] = useState(false)
 
   const updateField = useCallback(
     <K extends keyof ExerciseFormData>(
@@ -160,7 +161,11 @@ export function ExerciseForm({
             onChangeText={value => updateField('name', value)}
             placeholder="e.g. Bench Press"
             placeholderTextColor={theme.colors.muted}
-            style={styles.textInput}
+            style={[styles.textInput, nameFocused && styles.textInputFocused]}
+            selectionColor={theme.colors.primary}
+            cursorColor={theme.colors.primary}
+            onFocus={() => setNameFocused(true)}
+            onBlur={() => setNameFocused(false)}
             autoFocus={mode === 'create'}
           />
         </View>
@@ -297,14 +302,17 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background
   },
   backButton: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     alignItems: 'center',
     justifyContent: 'center'
   },
   backButtonPressed: {
-    backgroundColor: theme.colors.surface
+    backgroundColor: theme.colors.surfaceElevated
   },
   headerTitle: {
     ...theme.typography.h2,
@@ -348,12 +356,16 @@ const styles = StyleSheet.create({
   },
   textInput: {
     backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     borderRadius: theme.radius.lg,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.lg,
     color: theme.colors.text,
-    ...theme.typography.body,
-    ...theme.shadows.sm
+    ...theme.typography.body
+  },
+  textInputFocused: {
+    borderColor: theme.colors.primary
   },
   categoryGrid: {
     flexDirection: 'row',
@@ -365,10 +377,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.surface,
-    ...theme.shadows.sm
+    borderWidth: 1,
+    borderColor: theme.colors.border
   },
   categoryOptionSelected: {
-    backgroundColor: theme.colors.primary
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary
   },
   categoryText: {
     ...theme.typography.bodyBold,
@@ -382,9 +396,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.md,
-    ...theme.shadows.sm
+    padding: theme.spacing.md
   },
   iconSelectorPressed: {
     transform: [{ scale: 0.98 }]
@@ -410,7 +425,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.background
+    backgroundColor: theme.colors.primaryLight
   },
   changeButtonText: {
     ...theme.typography.caption,
@@ -426,13 +441,15 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     maxHeight: '70%',
     paddingBottom: theme.spacing.xxl
   },
   modalHandle: {
     width: 36,
     height: 4,
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.borderLight,
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: theme.spacing.sm,
@@ -464,9 +481,12 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.background
+    backgroundColor: theme.colors.inset,
+    borderWidth: 1,
+    borderColor: theme.colors.border
   },
   iconOptionSelected: {
-    backgroundColor: theme.colors.primaryLight
+    backgroundColor: theme.colors.primaryLight,
+    borderColor: theme.colors.primary
   }
 })

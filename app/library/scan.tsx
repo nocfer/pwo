@@ -67,15 +67,26 @@ export default function ScanScreen() {
     router.back()
   }
 
+  const handleImportFile = () => {
+    Alert.alert(
+      'Import from file',
+      'Importing a QR image from your library is coming soon. Point the camera at a program QR to import for now.'
+    )
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
       <ScreenHeader
-        title="Scan QR Code"
-        subtitle="Scan a program QR code to import"
+        title="Scan QR code"
+        subtitle="Point at a program QR to import"
         showBackButton={false}
         rightElement={null}
       />
-      <QRCodeScanner onScan={handleScan} onClose={handleClose} />
+      <QRCodeScanner
+        onScan={handleScan}
+        onClose={handleClose}
+        onImportFile={handleImportFile}
+      />
     </SafeAreaView>
   )
 }

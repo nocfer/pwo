@@ -1,42 +1,72 @@
 /**
- * ProgramListItem - Specialized list item for programs with inline actions
+ * ProgramListItem - Specialized list item for programs with inline actions.
+ * Custom (editable) programs expose a kebab → Edit / Delete action sheet;
+ * read-only programs (Built-in / Coach) show a chevron only.
  */
 
+import { haptics } from '@/lib/haptics'
+import { getSourceBadge } from '@/lib/utils'
 import { theme } from '@/theme/theme'
 import type { Program } from '@/types'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native'
+import { useState } from 'react'
+import { Modal, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native'
 
 export interface ProgramListItemProps {
   program: Program
   onStart: (program: Program) => void
   onEdit: (program: Program) => void
+  onDelete?: (program: Program) => void
   selected?: boolean
   onSelectionChange?: (selected: boolean) => void
   showMetadata?: boolean
   style?: ViewStyle
 }
 
+const ICON_TINT: Record<Program['source'], string> = {
+  user: theme.colors.primaryLight,
+  pt: theme.colors.infoLight,
+  builtin: theme.colors.surfaceElevated
+}
+
 export function ProgramListItem({
   program,
   onStart,
   onEdit,
+  onDelete,
   selected = false,
   onSelectionChange,
   showMetadata = true,
   style
 }: ProgramListItemProps) {
-  const isChallenge = Boolean(program.challengeConfig)
+  const [menuVisible, setMenuVisible] = useState(false)
 
-  // Calculate stats
+  const inSelectionMode = Boolean(onSelectionChange)
+  const editable = program.source === 'user'
+  const badge = getSourceBadge(program.source)
+
+  // Stats
   const exerciseCount = program.blocks.filter(b => b.type === 'exercise').length
   const totalSets = program.blocks
     .filter(b => b.type === 'exercise')
     .reduce((sum, b) => sum + (b.sets ?? 1), 0)
 
   const handleItemPress = () => onStart(program)
-  const handleEditPress = () => onEdit(program)
   const handleSelectionPress = () => onSelectionChange?.(!selected)
+
+  const openMenu = () => {
+    haptics.buttonTap()
+    setMenuVisible(true)
+  }
+  const closeMenu = () => setMenuVisible(false)
+  const handleEditFromMenu = () => {
+    setMenuVisible(false)
+    onEdit(program)
+  }
+  const handleDeleteFromMenu = () => {
+    setMenuVisible(false)
+    onDelete?.(program)
+  }
 
   return (
     <Pressable
@@ -46,36 +76,12 @@ export function ProgramListItem({
         pressed && styles.containerPressed,
         style
       ]}
-      onPress={handleItemPress}
+      onPress={inSelectionMode ? handleSelectionPress : handleItemPress}
     >
-      {onSelectionChange && (
-        <Pressable
-          style={styles.selectionIndicator}
-          onPress={handleSelectionPress}
-        >
-          <Ionicons
-            name={selected ? 'checkmark-circle' : 'ellipse-outline'}
-            size={22}
-            color={selected ? theme.colors.primary : theme.colors.muted}
-          />
-        </Pressable>
-      )}
-
       <View
-        style={[
-          styles.iconContainer,
-          {
-            backgroundColor: isChallenge
-              ? theme.colors.accentLight
-              : theme.colors.successLight
-          }
-        ]}
+        style={[styles.iconContainer, { backgroundColor: ICON_TINT[program.source] }]}
       >
-        <Ionicons
-          name={isChallenge ? 'trophy' : 'barbell'}
-          size={20}
-          color={isChallenge ? theme.colors.accent : theme.colors.success}
-        />
+        <Ionicons name="barbell" size={20} color={badge.color} />
       </View>
 
       <View style={styles.content}>
@@ -83,58 +89,96 @@ export function ProgramListItem({
           <Text style={styles.name} numberOfLines={1}>
             {program.name}
           </Text>
-          {program.source === 'builtin' && (
-            <View style={styles.builtinBadge}>
-              <Text style={styles.builtinBadgeText}>Built-in</Text>
-            </View>
-          )}
+          <View
+            style={[
+              styles.badge,
+              { backgroundColor: badge.bg },
+              badge.border
+                ? { borderWidth: 1, borderColor: badge.border }
+                : null
+            ]}
+          >
+            {badge.locked && (
+              <Ionicons
+                name="lock-closed"
+                size={9}
+                color={badge.color}
+                style={styles.badgeLock}
+              />
+            )}
+            <Text style={[styles.badgeText, { color: badge.color }]}>
+              {badge.label}
+            </Text>
+          </View>
         </View>
 
-        {program.description && (
-          <Text style={styles.description} numberOfLines={1}>
-            {program.description}
-          </Text>
-        )}
-
         {showMetadata && (
-          <View style={styles.stats}>
-            <View style={styles.stat}>
-              <Ionicons
-                name="fitness-outline"
-                size={12}
-                color={theme.colors.muted}
-              />
-              <Text style={styles.statText}>{exerciseCount}</Text>
-            </View>
-            <View style={styles.stat}>
-              <Ionicons
-                name="repeat-outline"
-                size={12}
-                color={theme.colors.muted}
-              />
-              <Text style={styles.statText}>{totalSets} sets</Text>
-            </View>
-          </View>
+          <Text style={styles.meta} numberOfLines={1}>
+            {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'} ·{' '}
+            {totalSets} {totalSets === 1 ? 'set' : 'sets'}
+          </Text>
         )}
       </View>
 
-      <View style={styles.actions}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.editButton,
-            pressed && styles.editButtonPressed
-          ]}
-          onPress={handleEditPress}
-          hitSlop={8}
-        >
+      {inSelectionMode ? (
+        <View style={[styles.checkbox, selected && styles.checkboxChecked]}>
+          {selected && (
+            <Ionicons
+              name="checkmark"
+              size={16}
+              color={theme.colors.primaryTextOn}
+            />
+          )}
+        </View>
+      ) : editable ? (
+        <Pressable style={styles.kebab} onPress={openMenu} hitSlop={8}>
           <Ionicons
-            name="create-outline"
+            name="ellipsis-vertical"
             size={18}
             color={theme.colors.muted}
           />
         </Pressable>
+      ) : (
         <Ionicons name="chevron-forward" size={18} color={theme.colors.muted} />
-      </View>
+      )}
+
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeMenu}
+      >
+        <Pressable style={styles.menuOverlay} onPress={closeMenu}>
+          <View style={styles.menuSheet}>
+            <Pressable style={styles.menuItem} onPress={handleEditFromMenu}>
+              <Ionicons
+                name="create-outline"
+                size={20}
+                color={theme.colors.text}
+              />
+              <Text style={styles.menuItemText}>Edit</Text>
+            </Pressable>
+            {onDelete && (
+              <>
+                <View style={styles.menuDivider} />
+                <Pressable
+                  style={styles.menuItem}
+                  onPress={handleDeleteFromMenu}
+                >
+                  <Ionicons
+                    name="trash-outline"
+                    size={20}
+                    color={theme.colors.danger}
+                  />
+                  <Text style={[styles.menuItemText, styles.menuItemDanger]}>
+                    Delete
+                  </Text>
+                </Pressable>
+              </>
+            )}
+          </View>
+        </Pressable>
+      </Modal>
     </Pressable>
   )
 }
@@ -144,32 +188,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.sm,
-    ...theme.shadows.sm
+    gap: theme.spacing.md
   },
   containerSelected: {
-    backgroundColor: theme.colors.primaryLight
+    backgroundColor: theme.colors.primaryTint,
+    borderColor: theme.colors.borderActive
   },
   containerPressed: {
     transform: [{ scale: 0.98 }]
   },
-  selectionIndicator: {
-    marginRight: theme.spacing.md,
-    padding: theme.spacing.xs
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.radius.sm,
+    borderWidth: 1.5,
+    borderColor: theme.colors.borderLight,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  checkboxChecked: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary
   },
   iconContainer: {
-    width: 44,
-    height: 44,
+    width: 46,
+    height: 46,
     borderRadius: theme.radius.md,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: theme.spacing.md
+    justifyContent: 'center'
   },
   content: {
     flex: 1,
-    gap: 4
+    gap: 3
   },
   header: {
     flexDirection: 'row',
@@ -179,52 +234,64 @@ const styles = StyleSheet.create({
   name: {
     ...theme.typography.bodyBold,
     color: theme.colors.text,
-    flex: 1
+    flexShrink: 1
   },
-  builtinBadge: {
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.full,
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: theme.radius.xs,
     paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 2
+    paddingVertical: 3
   },
-  builtinBadgeText: {
+  badgeLock: {
+    marginTop: -1
+  },
+  badgeText: {
     ...theme.typography.small,
-    color: theme.colors.muted
+    fontFamily: theme.fonts.bold,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase'
   },
-  description: {
+  meta: {
     ...theme.typography.caption,
     color: theme.colors.muted
   },
-  stats: {
+  kebab: {
+    padding: theme.spacing.xs
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: theme.colors.overlay,
+    justifyContent: 'flex-end'
+  },
+  menuSheet: {
+    backgroundColor: theme.colors.surface,
+    borderTopLeftRadius: theme.radius.xl,
+    borderTopRightRadius: theme.radius.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    paddingVertical: theme.spacing.sm,
+    paddingBottom: theme.spacing.xl
+  },
+  menuItem: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md,
-    marginTop: 2
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md
   },
-  stat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4
+  menuItemText: {
+    ...theme.typography.body,
+    color: theme.colors.text
   },
-  statText: {
-    ...theme.typography.small,
-    color: theme.colors.muted
+  menuItemDanger: {
+    color: theme.colors.danger
   },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginLeft: theme.spacing.sm
-  },
-  editButton: {
-    width: 32,
-    height: 32,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.background,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  editButtonPressed: {
-    backgroundColor: theme.colors.border
+  menuDivider: {
+    height: 1,
+    backgroundColor: theme.colors.border,
+    marginHorizontal: theme.spacing.lg
   }
 })
 
