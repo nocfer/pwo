@@ -9,6 +9,7 @@ import { Camera, CameraView } from 'expo-camera'
 import { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -47,6 +48,7 @@ export default function QRCodeScanner({ onScan, onClose, onImportFile }: Props) 
       -1,
       true
     )
+    return () => cancelAnimation(scanY)
   }, [scanY])
 
   const scanLineStyle = useAnimatedStyle(() => ({
@@ -169,7 +171,7 @@ export default function QRCodeScanner({ onScan, onClose, onImportFile }: Props) 
           {scanned ? (
             <Text style={styles.scannedText}>QR code scanned!</Text>
           ) : (
-            <Text style={styles.hint}>Camera access is required to scan</Text>
+            <Text style={styles.hint}>Position the QR code within the frame</Text>
           )}
         </View>
       </View>
@@ -293,7 +295,7 @@ const styles = StyleSheet.create({
     height: 2,
     borderRadius: 2,
     backgroundColor: theme.colors.primary,
-    boxShadow: '0 0 12px 2px rgba(198, 242, 78, 0.6)'
+    boxShadow: `0 0 12px 2px ${theme.colors.primaryGlow}`
   },
   bottomBar: {
     padding: theme.spacing.lg,

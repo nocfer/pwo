@@ -24,6 +24,7 @@ export { LoadingScreen } from './LoadingScreen'
 export { ScreenHeader } from './ScreenHeader'
 export { default as SegmentedControl } from './SegmentedControl'
 export { SearchInput } from './SearchInput'
+export { default as SelectionCheckbox } from './SelectionCheckbox'
 export { default as ToggleSwitch } from './ToggleSwitch'
 export { SessionListItem } from './SessionListItem'
 export {

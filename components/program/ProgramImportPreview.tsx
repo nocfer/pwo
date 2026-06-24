@@ -6,7 +6,7 @@
 
 import { useExercises } from '@/hooks/data'
 import { getSourceBadge } from '@/lib/utils'
-import { getFirstReps } from '@/lib/utils/format'
+import { formatCount, getFirstReps } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import { Exercise, Program, ProgramBlock } from '@/types'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -28,10 +28,12 @@ function blockReps(block: ProgramBlock): string {
   if (typeof block.durationSeconds === 'number') {
     return `${sets} × ${block.durationSeconds}s`
   }
-  if (block.targetReps != null) {
-    return `${sets} × ${getFirstReps(block.targetReps)}`
+  const reps = block.targetReps
+  const hasReps = Array.isArray(reps) ? reps.length > 0 : reps != null
+  if (hasReps) {
+    return `${sets} × ${getFirstReps(reps)}`
   }
-  return `${sets} set${sets === 1 ? '' : 's'}`
+  return formatCount(sets, 'set')
 }
 
 function estimateMinutes(program: Program): number {
@@ -43,7 +45,7 @@ function estimateMinutes(program: Program): number {
       typeof block.durationSeconds === 'number'
         ? block.durationSeconds
         : getFirstReps(block.targetReps ?? 0) * SECONDS_PER_REP
-    total += sets * work + sets * (block.restBetweenSets ?? 60)
+    total += sets * work + Math.max(0, sets - 1) * (block.restBetweenSets ?? 60)
     if (i < program.blocks.length - 1) total += rest
   })
   return Math.max(1, Math.round(total / 60))

@@ -2,6 +2,7 @@
  * FilterControls - Provides filtering and sorting controls for data lists
  */
 
+import { formatCategoryLabel } from '@/lib/utils'
 import { theme } from '@/theme/theme'
 import type { DataType, ExerciseCategory, SearchState } from '@/types'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -186,7 +187,7 @@ export function FilterControls({
                       isSelected && styles.pillTextActive
                     ]}
                   >
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                    {formatCategoryLabel(category)}
                   </Text>
                 </Pressable>
               )

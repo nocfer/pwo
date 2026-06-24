@@ -488,11 +488,16 @@ export function validateProgramBlock(
       }
 
       if (block.targetReps !== undefined && block.targetReps !== null) {
-        if (typeof block.targetReps !== 'number' || block.targetReps <= 0) {
+        const reps = block.targetReps
+        const invalidReps = Array.isArray(reps)
+          ? reps.length === 0 ||
+            reps.some(r => typeof r !== 'number' || r <= 0)
+          : typeof reps !== 'number' || reps <= 0
+        if (invalidReps) {
           errors.push(
             createValidationError(
               `${fieldPath}.targetReps`,
-              'Target reps must be a positive number',
+              'Target reps must be a positive number (or per-set array of positive numbers)',
               ValidationErrorCode.INVALID_RANGE
             )
           )

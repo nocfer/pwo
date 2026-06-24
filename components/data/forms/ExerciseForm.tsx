@@ -4,6 +4,7 @@
  */
 
 import { haptics } from '@/lib/haptics'
+import { formatCategoryLabel } from '@/lib/utils'
 import {
   VALID_EXERCISE_CATEGORIES,
   VALID_EXERCISE_ICONS,
@@ -191,7 +192,7 @@ export function ExerciseForm({
                       isSelected && styles.categoryTextSelected
                     ]}
                   >
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                    {formatCategoryLabel(category)}
                   </Text>
                 </Pressable>
               )

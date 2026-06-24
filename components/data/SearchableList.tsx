@@ -21,7 +21,12 @@ import {
   View,
   ViewStyle
 } from 'react-native'
-import { EmptyState, LoadingScreen, SwipeableListItem } from '../common'
+import {
+  EmptyState,
+  LoadingScreen,
+  SelectionCheckbox,
+  SwipeableListItem
+} from '../common'
 import { SearchInput } from '../common/SearchInput'
 import { ProgramListItem } from './ProgramListItem'
 
@@ -233,15 +238,7 @@ export function SearchableList({
         </View>
 
         {selectionMode ? (
-          <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
-            {isSelected && (
-              <Ionicons
-                name="checkmark"
-                size={16}
-                color={theme.colors.primaryTextOn}
-              />
-            )}
-          </View>
+          <SelectionCheckbox checked={isSelected} />
         ) : (
           <Ionicons
             name="chevron-forward"
@@ -362,19 +359,6 @@ const styles = StyleSheet.create({
   },
   itemPressed: {
     transform: [{ scale: 0.98 }]
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: theme.radius.sm,
-    borderWidth: 1.5,
-    borderColor: theme.colors.borderLight,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  checkboxChecked: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary
   },
   itemIcon: {
     width: 40,

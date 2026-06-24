@@ -18,6 +18,7 @@ const colors = {
   primaryDark: '#AEDB37',
   primaryLight: 'rgba(198, 242, 78, 0.12)',
   primaryMuted: 'rgba(198, 242, 78, 0.25)',
+  primaryGlow: 'rgba(198, 242, 78, 0.6)', // lime glow for shadows/scan line
   primaryTint: '#1B1E14', // solid lime tint — badges / selected rows
   primaryTextOn: '#0A0B0E', // ⚠ dark: lime is a light color, content on a primary fill must be dark
 

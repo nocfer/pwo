@@ -9,6 +9,8 @@
 import { haptics } from '@/lib/haptics'
 import {
   formatCategoryLabel,
+  formatCount,
+  formatTime,
   getCategoryColors,
   getSourceBadge
 } from '@/lib/utils'
@@ -32,6 +34,7 @@ import {
 } from 'react-native'
 import SegmentedControl from '../../common/SegmentedControl'
 import { SearchInput } from '../../common/SearchInput'
+import SelectionCheckbox from '../../common/SelectionCheckbox'
 import ToggleSwitch from '../../common/ToggleSwitch'
 
 type PickerExercise = {
@@ -79,12 +82,6 @@ const DEFAULT_REPS = 10
 const DEFAULT_DURATION = 30
 const REST_STEP = 5
 const SECONDS_PER_REP = 4 // rough work-rate used only for the time estimate
-
-function secondsToMmss(totalSeconds: number): string {
-  const mins = Math.floor(totalSeconds / 60)
-  const secs = totalSeconds % 60
-  return `${mins}:${secs.toString().padStart(2, '0')}`
-}
 
 function mmssToSeconds(mmss: string): number {
   const trimmed = mmss.trim()
@@ -165,7 +162,9 @@ function convertDraftToBlocks(drafts: BlockDraft[]): ProgramBlock[] {
     return {
       ...base,
       targetReps: draft.perSetReps
-        ? resizeReps(draft.perSetRepsValues, draft.sets)
+        ? resizeReps(draft.perSetRepsValues, draft.sets).map(r =>
+            Math.max(1, r)
+          )
         : draft.reps
     }
   })
@@ -211,13 +210,13 @@ export function ProgramForm({
     initialData?.initialWarmup !== undefined
   )
   const [warmupTime, setWarmupTime] = useState(
-    secondsToMmss(initialData?.initialWarmup?.seconds ?? DEFAULT_WARMUP_SECONDS)
+    formatTime(initialData?.initialWarmup?.seconds ?? DEFAULT_WARMUP_SECONDS)
   )
   const [restEnabled, setRestEnabled] = useState(
     initialData?.defaultRestBetweenExercises !== undefined
   )
   const [restTime, setRestTime] = useState(
-    secondsToMmss(
+    formatTime(
       initialData?.defaultRestBetweenExercises ?? DEFAULT_REST_BETWEEN_EXERCISES
     )
   )
@@ -268,36 +267,22 @@ export function ProgramForm({
     )
   }, [])
 
-  const adjustReps = useCallback((index: number, delta: number) => {
-    haptics.buttonTap()
-    setBlocks(prev =>
-      prev.map((b, i) =>
-        i === index ? { ...b, reps: Math.max(1, b.reps + delta) } : b
+  const adjustField = useCallback(
+    (
+      index: number,
+      field: 'reps' | 'restBetweenSets' | 'durationSeconds',
+      delta: number,
+      min: number
+    ) => {
+      haptics.buttonTap()
+      setBlocks(prev =>
+        prev.map((b, i) =>
+          i === index ? { ...b, [field]: Math.max(min, b[field] + delta) } : b
+        )
       )
-    )
-  }, [])
-
-  const adjustRest = useCallback((index: number, delta: number) => {
-    haptics.buttonTap()
-    setBlocks(prev =>
-      prev.map((b, i) =>
-        i === index
-          ? { ...b, restBetweenSets: Math.max(0, b.restBetweenSets + delta) }
-          : b
-      )
-    )
-  }, [])
-
-  const adjustDuration = useCallback((index: number, delta: number) => {
-    haptics.buttonTap()
-    setBlocks(prev =>
-      prev.map((b, i) =>
-        i === index
-          ? { ...b, durationSeconds: Math.max(5, b.durationSeconds + delta) }
-          : b
-      )
-    )
-  }, [])
+    },
+    []
+  )
 
   const setPerSetValue = useCallback(
     (index: number, setIdx: number, value: number) => {
@@ -364,14 +349,16 @@ export function ProgramForm({
 
   const filteredPickerExercises = useMemo(() => {
     const q = pickerQuery.trim().toLowerCase()
+    const existingIds = new Set(blocks.map(b => b.exerciseId))
     return exercises.filter(ex => {
+      if (existingIds.has(ex.id)) return false // already in the program
       if (pickerCategory !== 'all' && ex.category !== pickerCategory) {
         return false
       }
       if (q && !ex.name.toLowerCase().includes(q)) return false
       return true
     })
-  }, [exercises, pickerQuery, pickerCategory])
+  }, [exercises, pickerQuery, pickerCategory, blocks])
 
   const handleSave = useCallback(async () => {
     const trimmed = name.trim()
@@ -685,23 +672,31 @@ export function ProgramForm({
                         <Stepper
                           label="REPS"
                           display={String(block.reps)}
-                          onDecrement={() => adjustReps(index, -1)}
-                          onIncrement={() => adjustReps(index, 1)}
+                          onDecrement={() => adjustField(index, 'reps', -1, 1)}
+                          onIncrement={() => adjustField(index, 'reps', 1, 1)}
                         />
                       )}
                       {block.mode === 'timed' && (
                         <Stepper
                           label="TIME"
-                          display={secondsToMmss(block.durationSeconds)}
-                          onDecrement={() => adjustDuration(index, -REST_STEP)}
-                          onIncrement={() => adjustDuration(index, REST_STEP)}
+                          display={formatTime(block.durationSeconds)}
+                          onDecrement={() =>
+                            adjustField(index, 'durationSeconds', -REST_STEP, 5)
+                          }
+                          onIncrement={() =>
+                            adjustField(index, 'durationSeconds', REST_STEP, 5)
+                          }
                         />
                       )}
                       <Stepper
                         label="REST"
-                        display={secondsToMmss(block.restBetweenSets)}
-                        onDecrement={() => adjustRest(index, -REST_STEP)}
-                        onIncrement={() => adjustRest(index, REST_STEP)}
+                        display={formatTime(block.restBetweenSets)}
+                        onDecrement={() =>
+                          adjustField(index, 'restBetweenSets', -REST_STEP, 0)
+                        }
+                        onIncrement={() =>
+                          adjustField(index, 'restBetweenSets', REST_STEP, 0)
+                        }
                       />
                     </View>
 
@@ -754,7 +749,10 @@ export function ProgramForm({
                                         setPerSetValue(
                                           index,
                                           setIdx,
-                                          Math.max(1, parseInt(v, 10) || 0)
+                                          parseInt(
+                                            v.replace(/[^0-9]/g, ''),
+                                            10
+                                          ) || 0
                                         )
                                       }
                                       keyboardType="number-pad"
@@ -918,17 +916,7 @@ export function ProgramForm({
                       {badge.label}
                     </Text>
                   </View>
-                  <View
-                    style={[styles.checkbox, selected && styles.checkboxChecked]}
-                  >
-                    {selected && (
-                      <Ionicons
-                        name="checkmark"
-                        size={16}
-                        color={theme.colors.primaryTextOn}
-                      />
-                    )}
-                  </View>
+                  <SelectionCheckbox checked={selected} />
                 </Pressable>
               )
             })}
@@ -961,9 +949,7 @@ export function ProgramForm({
             >
               <Text style={styles.pickerConfirmText}>
                 {pickerSelected.length > 0
-                  ? `Add ${pickerSelected.length} exercise${
-                      pickerSelected.length === 1 ? '' : 's'
-                    }`
+                  ? `Add ${formatCount(pickerSelected.length, 'exercise')}`
                   : 'Select exercises'}
               </Text>
             </Pressable>
@@ -1457,19 +1443,6 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.subtext,
     marginTop: 2
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: theme.radius.sm,
-    borderWidth: 1.5,
-    borderColor: theme.colors.borderLight,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  checkboxChecked: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary
   },
   pickerEmpty: {
     alignItems: 'center',

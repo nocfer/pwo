@@ -5,12 +5,13 @@
  */
 
 import { haptics } from '@/lib/haptics'
-import { getSourceBadge } from '@/lib/utils'
+import { formatCount, getSourceBadge } from '@/lib/utils'
 import { theme } from '@/theme/theme'
 import type { Program } from '@/types'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useState } from 'react'
 import { Modal, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native'
+import SelectionCheckbox from '../common/SelectionCheckbox'
 
 export interface ProgramListItemProps {
   program: Program
@@ -114,22 +115,14 @@ export function ProgramListItem({
 
         {showMetadata && (
           <Text style={styles.meta} numberOfLines={1}>
-            {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'} ·{' '}
-            {totalSets} {totalSets === 1 ? 'set' : 'sets'}
+            {formatCount(exerciseCount, 'exercise')} ·{' '}
+            {formatCount(totalSets, 'set')}
           </Text>
         )}
       </View>
 
       {inSelectionMode ? (
-        <View style={[styles.checkbox, selected && styles.checkboxChecked]}>
-          {selected && (
-            <Ionicons
-              name="checkmark"
-              size={16}
-              color={theme.colors.primaryTextOn}
-            />
-          )}
-        </View>
+        <SelectionCheckbox checked={selected} />
       ) : editable ? (
         <Pressable style={styles.kebab} onPress={openMenu} hitSlop={8}>
           <Ionicons
@@ -142,6 +135,7 @@ export function ProgramListItem({
         <Ionicons name="chevron-forward" size={18} color={theme.colors.muted} />
       )}
 
+      {menuVisible && (
       <Modal
         visible={menuVisible}
         transparent
@@ -179,6 +173,7 @@ export function ProgramListItem({
           </View>
         </Pressable>
       </Modal>
+      )}
     </Pressable>
   )
 }
@@ -201,19 +196,6 @@ const styles = StyleSheet.create({
   },
   containerPressed: {
     transform: [{ scale: 0.98 }]
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: theme.radius.sm,
-    borderWidth: 1.5,
-    borderColor: theme.colors.borderLight,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  checkboxChecked: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary
   },
   iconContainer: {
     width: 46,
