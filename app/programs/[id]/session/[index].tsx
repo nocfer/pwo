@@ -6,7 +6,7 @@ import {
   type EditorField
 } from '@/components/workout/InlineSetEditor'
 import { LogActionBar } from '@/components/workout/LogActionBar'
-import { RestTimerBar } from '@/components/workout/RestTimerBar'
+import { RestSheet } from '@/components/workout/RestSheet'
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader'
 import {
   findNextPendingSet,
@@ -63,6 +63,7 @@ function WorkoutSessionContent() {
     completeWorkout,
     addSet,
     moveExercise,
+    extendRest,
     unlogSet,
     restoreSet
   } = useWorkoutExecution()
@@ -365,10 +366,23 @@ function WorkoutSessionContent() {
         </ScrollView>
       </View>
 
-      {restTimerActive ? (
-        <RestTimerBar
+      {restTimerActive && activeLoc ? (
+        <RestSheet
           remainingMs={restRemainingMs}
-          isActive={restTimerActive}
+          durationMs={state.restTimer.durationMs}
+          nextSetNumber={activeLoc.setIndex + 1}
+          nextExerciseName={
+            state.exercises[activeLoc.exerciseIndex].exerciseName
+          }
+          nextWeight={
+            state.exercises[activeLoc.exerciseIndex].sets[activeLoc.setIndex]
+              .weight
+          }
+          nextReps={
+            state.exercises[activeLoc.exerciseIndex].sets[activeLoc.setIndex]
+              .reps
+          }
+          onExtend={extendRest}
           onSkip={dismissRest}
         />
       ) : activeLoc ? (

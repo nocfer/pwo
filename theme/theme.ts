@@ -105,7 +105,9 @@ const colors = {
     // inline editor
     editorBorder: '#2C303B',
     editorScrim: 'rgba(5, 6, 8, 0.62)',
-    doneBtnBg: '#2A2E38'
+    doneBtnBg: '#2A2E38',
+    // rest sheet
+    ringTrack: '#1A1E24'
   }
 } as const
 
