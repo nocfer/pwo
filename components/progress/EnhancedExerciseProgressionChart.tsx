@@ -146,11 +146,8 @@ export function EnhancedExerciseProgressionChart({
           return dp.reps
       }
     })
-    const maxValue = Math.max(...values, 1)
-
     const bars = dataPoints.map((point, index) => {
       const value = values[index]
-      const heightPercent = (value / maxValue) * 100
 
       const isPR = exercisePRs.some((pr: PersonalRecord) => {
         const prDate = new Date(pr.achievedAt).toISOString().split('T')[0]
@@ -162,7 +159,7 @@ export function EnhancedExerciseProgressionChart({
         )
       })
 
-      return { point, value, heightPercent, isPR }
+      return { point, value, isPR }
     })
 
     return { bars, trend }
@@ -170,7 +167,11 @@ export function EnhancedExerciseProgressionChart({
 
   const lineData: DataPoint[] = useMemo(
     () =>
-      chartData?.bars.map(b => ({ date: b.point.date, value: b.value })) ?? [],
+      chartData?.bars.map(b => ({
+        date: b.point.date,
+        value: b.value,
+        highlight: b.isPR
+      })) ?? [],
     [chartData]
   )
   const metricUnit =

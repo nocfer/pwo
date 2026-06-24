@@ -18,6 +18,8 @@ export type DataPoint = {
   date: string
   value: number
   label?: string
+  /** Render this point emphasized (e.g. a personal record). */
+  highlight?: boolean
 }
 
 type Props = {
@@ -132,19 +134,22 @@ export default function LineChart({
           strokeLinejoin="round"
         />
 
-        {/* Data points */}
-        {showDots &&
-          data.map((point, index) => (
+        {/* Data points — highlighted points (e.g. PRs) always render */}
+        {data.map((point, index) => {
+          const highlighted = point.highlight
+          if (!showDots && !highlighted) return null
+          return (
             <Circle
               key={`dot-${index}`}
               cx={getX(index)}
               cy={getY(point.value)}
-              r={4}
-              fill={theme.colors.surface}
-              stroke={color}
+              r={highlighted ? 5 : 4}
+              fill={highlighted ? theme.colors.accent : theme.colors.surface}
+              stroke={highlighted ? theme.colors.accent : color}
               strokeWidth={2}
             />
-          ))}
+          )
+        })}
 
         {/* Y-axis labels */}
         {showLabels &&

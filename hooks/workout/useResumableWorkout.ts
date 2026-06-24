@@ -64,7 +64,7 @@ function buildSummary(): ResumableWorkout | null {
 /**
  * Returns the resumable workout summary (refreshed whenever Home regains
  * focus) plus a `resume()` action that navigates into the live session.
- * Replaces the auto-redirect behavior of useActiveWorkoutRedirect on Home.
+ * Replaces the previous auto-redirect-into-session behavior on Home.
  */
 export function useResumableWorkout(): {
   workout: ResumableWorkout | null

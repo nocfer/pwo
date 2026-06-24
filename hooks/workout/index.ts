@@ -1,4 +1,3 @@
-export { useActiveWorkoutRedirect } from './useActiveWorkoutRedirect'
 export {
   useResumableWorkout,
   type ResumableWorkout

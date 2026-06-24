@@ -1,6 +1,7 @@
 import { Button, SegmentedControl, ToggleSwitch } from '@/components/common'
 import { useAuth } from '@/context/AuthContext'
 import { usePrograms } from '@/hooks/data'
+import { getInitials } from '@/lib/utils/format'
 import { encodeProgramForShare } from '@/lib/utils/programShare'
 import { theme } from '@/theme/theme'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -50,13 +51,6 @@ function showConfirm(
       { text: confirmText, style: 'destructive', onPress: onConfirm }
     ])
   }
-}
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
 export default function ProfileScreen() {
@@ -123,7 +117,8 @@ export default function ProfileScreen() {
         title: 'PWO programs export'
       })
     } catch {
-      // Share cancelled or failed.
+      // Share resolves on user cancel, so reaching here means a real failure.
+      showAlert('Export failed', 'Could not export your data. Please try again.')
     }
   }, [programs])
 

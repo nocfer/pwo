@@ -3,7 +3,6 @@
  */
 
 import { useConsistencyData, useWeeklyStats } from '@/hooks/data'
-import { getWeekStart } from '@/lib/utils/date'
 import { theme } from '@/theme/theme'
 import { Ionicons } from '@expo/vector-icons'
 import { useEffect, useMemo, useRef } from 'react'
@@ -16,18 +15,11 @@ type Props = {
 
 const MINI_BARS = 5
 
-function lastWeekStart(): Date {
-  const start = getWeekStart(new Date())
-  start.setDate(start.getDate() - 7)
-  return start
-}
-
 export default function WeeklySummaryCard({ onStartWorkout }: Props) {
   const { stats, loading } = useWeeklyStats()
-  // Previous week, for the "vs last week" delta (extra fetch).
-  const prevWeek = useMemo(() => lastWeekStart(), [])
-  const { stats: lastStats } = useWeeklyStats(prevWeek)
-  // Recent weekly totals for the mini bar chart.
+  // Recent weekly totals — drives both the mini bar chart and the
+  // "vs last week" delta (one source avoids a redundant fetch and the
+  // timezone skew of a client-computed previous-week date).
   const { data: consistency } = useConsistencyData(MINI_BARS)
 
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -61,7 +53,8 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
   }
 
   const completed = stats?.workoutsCompleted ?? 0
-  const delta = completed - (lastStats?.workoutsCompleted ?? 0)
+  // Current vs previous week from the same consistency series (0 until loaded).
+  const delta = weeklyTotals[MINI_BARS - 1] - weeklyTotals[MINI_BARS - 2]
 
   const parseLocalDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split('-').map(Number)

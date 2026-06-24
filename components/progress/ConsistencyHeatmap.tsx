@@ -113,10 +113,10 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
 
       <View style={styles.legend}>
         <Text style={styles.legendLabel}>Less</Text>
-        {RAMP.map((color, i) => (
+        {([0, 1, 2, 3] as ConsistencyLevel[]).map(level => (
           <View
-            key={i}
-            style={[styles.legendCell, { backgroundColor: color }]}
+            key={level}
+            style={[styles.legendCell, { backgroundColor: levelColors[level] }]}
           />
         ))}
         <Text style={styles.legendLabel}>More</Text>
