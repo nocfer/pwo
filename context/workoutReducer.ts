@@ -5,11 +5,15 @@
 import type { WorkoutAction, WorkoutState } from '@/types/workout'
 import {
   activateInExercise,
-  findNextPendingSet,
+  resolveSetAndAdvance,
   revertEditingSets
 } from './reducerHelpers'
 
 export { findNextPendingSet, revertEditingSets } from './reducerHelpers'
+
+// Rest-timer extension bounds.
+const REST_EXTEND_MS = 15000
+const MAX_REST_MS = 15 * 60 * 1000 // hard ceiling so repeated +15s can't run away
 
 // ---------------------------------------------------------------------------
 // Reducer (pure function)
@@ -65,6 +69,18 @@ export function workoutReducer(
     }
 
     case 'LOG_SET': {
+      // Only editable sets accept new values. Guarding completed/skipped sets
+      // prevents a stale or duplicate dispatch from silently overwriting an
+      // already-committed set (edit those via EDIT_SET / RESTORE_SET first).
+      const target =
+        state.exercises[action.exerciseIndex]?.sets[action.setIndex]
+      if (
+        !target ||
+        target.status === 'completed' ||
+        target.status === 'skipped'
+      ) {
+        return state
+      }
       const exercises = state.exercises.map((ex, eIdx) =>
         eIdx === action.exerciseIndex
           ? {
@@ -80,98 +96,26 @@ export function workoutReducer(
       return { ...state, exercises }
     }
 
-    case 'CONFIRM_SET': {
-      let exercises = state.exercises.map((ex, eIdx) =>
-        eIdx === action.exerciseIndex
-          ? {
-              ...ex,
-              sets: ex.sets.map((s, sIdx) =>
-                sIdx === action.setIndex
-                  ? {
-                      ...s,
-                      status: 'completed' as const,
-                      confirmedReps: s.reps,
-                      confirmedWeight: s.weight
-                    }
-                  : s
-              )
-            }
-          : ex
-      )
-
-      const next = findNextPendingSet(
-        exercises,
+    case 'CONFIRM_SET':
+      return resolveSetAndAdvance(
+        state,
         action.exerciseIndex,
-        action.setIndex
+        action.setIndex,
+        s => ({
+          ...s,
+          status: 'completed' as const,
+          confirmedReps: s.reps,
+          confirmedWeight: s.weight
+        })
       )
 
-      if (next) {
-        exercises = exercises.map((ex, eIdx) =>
-          eIdx === next.exerciseIndex
-            ? {
-                ...ex,
-                sets: ex.sets.map((s, sIdx) =>
-                  sIdx === next.setIndex
-                    ? { ...s, status: 'active' as const }
-                    : s
-                )
-              }
-            : ex
-        )
-        return {
-          ...state,
-          exercises,
-          expandedExerciseIndex: next.exerciseIndex,
-          activeSetIndex: next.setIndex
-        }
-      }
-
-      return { ...state, exercises }
-    }
-
-    case 'SKIP_SET': {
-      let exercises = state.exercises.map((ex, eIdx) =>
-        eIdx === action.exerciseIndex
-          ? {
-              ...ex,
-              sets: ex.sets.map((s, sIdx) =>
-                sIdx === action.setIndex
-                  ? { ...s, status: 'skipped' as const }
-                  : s
-              )
-            }
-          : ex
-      )
-
-      const next = findNextPendingSet(
-        exercises,
+    case 'SKIP_SET':
+      return resolveSetAndAdvance(
+        state,
         action.exerciseIndex,
-        action.setIndex
+        action.setIndex,
+        s => ({ ...s, status: 'skipped' as const })
       )
-
-      if (next) {
-        exercises = exercises.map((ex, eIdx) =>
-          eIdx === next.exerciseIndex
-            ? {
-                ...ex,
-                sets: ex.sets.map((s, sIdx) =>
-                  sIdx === next.setIndex
-                    ? { ...s, status: 'active' as const }
-                    : s
-                )
-              }
-            : ex
-        )
-        return {
-          ...state,
-          exercises,
-          expandedExerciseIndex: next.exerciseIndex,
-          activeSetIndex: next.setIndex
-        }
-      }
-
-      return { ...state, exercises }
-    }
 
     case 'EDIT_SET': {
       const target =
@@ -286,15 +230,21 @@ export function workoutReducer(
       return { ...state, exercises }
     }
 
-    case 'EXTEND_REST':
+    case 'EXTEND_REST': {
       if (!state.restTimer.isActive) return state
+      const proposed = state.restTimer.startedAt + REST_EXTEND_MS
+      // Cap remaining time at MAX_REST_MS using the dispatch clock (action.now),
+      // and never move startedAt backward (so a tap at the cap is a no-op).
+      const maxStartedAt = action.now + MAX_REST_MS - state.restTimer.durationMs
+      const startedAt = Math.max(
+        state.restTimer.startedAt,
+        Math.min(proposed, maxStartedAt)
+      )
       return {
         ...state,
-        restTimer: {
-          ...state.restTimer,
-          startedAt: state.restTimer.startedAt + 15000
-        }
+        restTimer: { ...state.restTimer, startedAt }
       }
+    }
 
     case 'UNLOG_SET':
     case 'RESTORE_SET': {

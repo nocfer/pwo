@@ -142,17 +142,18 @@ export function ExerciseAccordionItem({
     const pf = prefill(exercise)
     return (
       <View style={styles.expandedCard}>
-        <Pressable
+        {/* Informational header. Under the one-card-expanded model there is no
+            collapse-to-none; you switch focus by tapping another card. */}
+        <View
           style={styles.expandedHeaderRow}
-          onPress={handleToggle}
-          accessibilityRole="button"
-          accessibilityLabel={`${exercise.exerciseName}, expanded, tap to collapse`}
+          accessibilityRole="header"
+          accessibilityLabel={`${exercise.exerciseName}, expanded`}
         >
           <Text style={styles.expandedName} numberOfLines={1}>
             {exercise.exerciseName}
           </Text>
           <StatusBadge status={status} />
-        </Pressable>
+        </View>
 
         <Text style={styles.subLine}>
           Last · {pf.weight} × {pf.reps}
@@ -285,6 +286,7 @@ export function ExerciseAccordionItem({
           style={[styles.chevron, !canMoveUp && styles.chevronDisabled]}
           onPress={onMoveUp}
           disabled={!canMoveUp}
+          hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={`Move ${exercise.exerciseName} up`}
         >
@@ -298,6 +300,7 @@ export function ExerciseAccordionItem({
           style={[styles.chevron, !canMoveDown && styles.chevronDisabled]}
           onPress={onMoveDown}
           disabled={!canMoveDown}
+          hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={`Move ${exercise.exerciseName} down`}
         >

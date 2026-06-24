@@ -930,22 +930,126 @@ describe('workoutReducer — MOVE_EXERCISE', () => {
 // ---------------------------------------------------------------------------
 
 describe('workoutReducer — EXTEND_REST', () => {
-  it('adds 15s to the rest timer startedAt when active', () => {
+  it('adds 15s to the rest timer startedAt when active and under the cap', () => {
     const state = createMockWorkoutState({
       restTimer: { isActive: true, startedAt: 1000, durationMs: 60000 }
     })
-    const next = workoutReducer(state, { type: 'EXTEND_REST' })
+    const next = workoutReducer(state, { type: 'EXTEND_REST', now: 5000 })
 
     expect(next.restTimer.startedAt).toBe(16000)
     expect(next.restTimer.durationMs).toBe(60000)
     expect(next.restTimer.isActive).toBe(true)
   })
 
+  it('clamps remaining time at the 15-minute ceiling', () => {
+    // remaining is already ~890s; +15s would exceed the 900s cap.
+    const state = createMockWorkoutState({
+      restTimer: { isActive: true, startedAt: 830000, durationMs: 60000 }
+    })
+    const next = workoutReducer(state, { type: 'EXTEND_REST', now: 0 })
+
+    // capped: startedAt + durationMs - now === 900000 (MAX_REST_MS)
+    expect(next.restTimer.startedAt).toBe(840000)
+  })
+
+  it('does not move startedAt backward once at the cap (tap is a no-op)', () => {
+    const state = createMockWorkoutState({
+      restTimer: { isActive: true, startedAt: 850000, durationMs: 60000 }
+    })
+    const next = workoutReducer(state, { type: 'EXTEND_REST', now: 0 })
+
+    expect(next.restTimer.startedAt).toBe(850000)
+  })
+
   it('is a no-op when the rest timer is not active', () => {
     const state = createMockWorkoutState({
       restTimer: { isActive: false, startedAt: 0, durationMs: 0 }
     })
-    expect(workoutReducer(state, { type: 'EXTEND_REST' })).toBe(state)
+    expect(workoutReducer(state, { type: 'EXTEND_REST', now: 0 })).toBe(state)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// workoutReducer — LOG_SET guards committed sets
+// ---------------------------------------------------------------------------
+
+describe('workoutReducer — LOG_SET guards', () => {
+  it('ignores a completed set (no silent overwrite)', () => {
+    const state = createMockWorkoutState({
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [
+            {
+              reps: 10,
+              weight: 60,
+              status: 'completed',
+              confirmedReps: 10,
+              confirmedWeight: 60
+            }
+          ]
+        }
+      ]
+    })
+    const next = workoutReducer(state, {
+      type: 'LOG_SET',
+      exerciseIndex: 0,
+      setIndex: 0,
+      reps: 99,
+      weight: 99
+    })
+    expect(next).toBe(state)
+  })
+
+  it('ignores a skipped set', () => {
+    const state = createMockWorkoutState({
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [{ reps: 10, weight: 60, status: 'skipped' }]
+        }
+      ]
+    })
+    const next = workoutReducer(state, {
+      type: 'LOG_SET',
+      exerciseIndex: 0,
+      setIndex: 0,
+      reps: 99,
+      weight: 99
+    })
+    expect(next).toBe(state)
+  })
+
+  it('still updates an editing set', () => {
+    const state = createMockWorkoutState({
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'A',
+          sets: [
+            {
+              reps: 10,
+              weight: 60,
+              status: 'editing',
+              confirmedReps: 10,
+              confirmedWeight: 60
+            }
+          ]
+        }
+      ]
+    })
+    const next = workoutReducer(state, {
+      type: 'LOG_SET',
+      exerciseIndex: 0,
+      setIndex: 0,
+      reps: 12,
+      weight: 70
+    })
+    expect(next.exercises[0].sets[0].reps).toBe(12)
+    expect(next.exercises[0].sets[0].weight).toBe(70)
+    expect(next.exercises[0].sets[0].status).toBe('editing')
   })
 })
 

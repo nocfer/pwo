@@ -1,44 +1,54 @@
 import { ConfirmationModal } from '@/components/common/ConfirmationModal'
 import { MaxWidthContainer } from '@/components/common/MaxWidthContainer'
 import { ExerciseAccordionItem } from '@/components/workout/ExerciseAccordionItem'
-import { KeypadOverlay } from '@/components/workout/KeypadOverlay'
+import {
+  InlineSetEditor,
+  type EditorField
+} from '@/components/workout/InlineSetEditor'
 import { LogActionBar } from '@/components/workout/LogActionBar'
-import { RestTimerBar } from '@/components/workout/RestTimerBar'
+import { RestSheet } from '@/components/workout/RestSheet'
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader'
+import { WorkoutRecap } from '@/components/workout/WorkoutRecap'
 import {
   findNextPendingSet,
   WorkoutExecutionProvider
 } from '@/context/WorkoutExecutionContext'
-import { useExercises, usePrograms } from '@/hooks/data'
+import { useExercises, usePrograms, usePRs } from '@/hooks/data'
 import {
   useElapsedTimer,
   useEndWorkout,
-  useKeypadState,
   usePrefill,
   useRestTimer,
   useScrollToExercise,
-  useWorkoutKeyboardHandlers,
+  useWebKeyboardShortcuts,
   useWorkoutExecution,
   useWorkoutPersistence
 } from '@/hooks/workout'
 import { haptics } from '@/lib/haptics'
 import { buildInitialState } from '@/lib/buildInitialState'
+import { buildWorkoutRecap } from '@/lib/workoutRecap'
 import { showToast } from '@/lib/toast'
 import { readPersistedWorkout } from '@/lib/workout-persistence'
 import { theme } from '@/theme/theme'
 import type { Program } from '@/types'
 import type { ExerciseState } from '@/types/workout'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   BackHandler,
-  Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   useWindowDimensions,
   View
 } from 'react-native'
+
+type EditorTarget = {
+  exerciseIndex: number
+  setIndex: number
+  field: EditorField
+}
 
 function isExercisePending(exercise: ExerciseState): boolean {
   return exercise.sets.every(s => s.status === 'pending')
@@ -50,11 +60,15 @@ function WorkoutSessionContent() {
     expandExercise,
     logSet,
     confirmSet,
+    skipSet,
     editSet,
     startRestTimer,
     completeWorkout,
     addSet,
-    moveExercise
+    moveExercise,
+    extendRest,
+    unlogSet,
+    restoreSet
   } = useWorkoutExecution()
   useWorkoutPersistence()
   const {
@@ -74,15 +88,7 @@ function WorkoutSessionContent() {
     confirmEnd,
     cancelEnd
   } = useEndWorkout()
-  const {
-    keypadState,
-    openKeypad,
-    handleDigit,
-    handleBackspace,
-    handleDone,
-    switchField,
-    dismissKeypad
-  } = useKeypadState()
+  const { data: prsData } = usePRs(100)
   const navigation = useNavigation()
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
@@ -92,58 +98,53 @@ function WorkoutSessionContent() {
     screenHeight
   )
 
+  const [editor, setEditor] = useState<EditorTarget | null>(null)
+
   const handleExpandExercise = useCallback(
     (exerciseIndex: number) => {
-      dismissKeypad()
+      setEditor(null)
       expandExercise(exerciseIndex)
       scrollToExercise(exerciseIndex)
       haptics.navigationTap()
     },
-    [dismissKeypad, expandExercise, scrollToExercise]
+    [expandExercise, scrollToExercise]
   )
 
-  const keypadVisibleRef = useRef(keypadState.visible)
-  keypadVisibleRef.current = keypadState.visible
-
-  const openFieldEditor = useCallback(
-    (exerciseIndex: number, setIndex: number, field: 'reps' | 'weight') => {
-      if (keypadVisibleRef.current) {
-        switchField(exerciseIndex, setIndex, field)
-      } else {
-        openKeypad(exerciseIndex, setIndex, field)
-      }
-    },
-    [openKeypad, switchField]
-  )
-
-  // Tapping a number: enter edit mode for a completed set, then open the editor.
-  const handleValuePress = useCallback(
-    (exerciseIndex: number, setIndex: number, field: 'reps' | 'weight') => {
+  // Open the stepper editor for a set's weight/reps value. Promote the set into
+  // an editable status first so stepper changes actually take effect and commit:
+  //  - completed → editing (EDIT_SET); Done re-confirms
+  //  - skipped   → pending/active (RESTORE_SET); no longer silently discarded
+  //  - pending   → active (EXPAND_EXERCISE)
+  const openEditor = useCallback(
+    (exerciseIndex: number, setIndex: number, field: EditorField) => {
       const set = state.exercises[exerciseIndex]?.sets[setIndex]
       if (!set) return
       if (set.status === 'completed') {
         editSet(exerciseIndex, setIndex)
+      } else if (set.status === 'skipped') {
+        restoreSet(exerciseIndex, setIndex)
+      } else if (set.status === 'pending') {
+        expandExercise(exerciseIndex, setIndex)
       }
-      openFieldEditor(exerciseIndex, setIndex, field)
+      setEditor({ exerciseIndex, setIndex, field })
     },
-    [state.exercises, editSet, openFieldEditor]
+    [state.exercises, editSet, restoreSet, expandExercise]
   )
 
-  // Tapping the trailing box of a non-active row: edit (completed) or navigate.
+  // Trailing box on a non-active row: edit (completed/skipped) or navigate.
   const handleSetPress = useCallback(
     (exerciseIndex: number, setIndex: number) => {
       const set = state.exercises[exerciseIndex]?.sets[setIndex]
       if (!set) return
-      if (set.status === 'completed') {
-        editSet(exerciseIndex, setIndex)
-        openFieldEditor(exerciseIndex, setIndex, 'reps')
+      if (set.status === 'completed' || set.status === 'skipped') {
+        openEditor(exerciseIndex, setIndex, 'reps')
       } else {
         expandExercise(exerciseIndex, setIndex)
         scrollToExercise(exerciseIndex)
         haptics.navigationTap()
       }
     },
-    [state.exercises, editSet, openFieldEditor, expandExercise, scrollToExercise]
+    [state.exercises, openEditor, expandExercise, scrollToExercise]
   )
 
   // One-tap log: commit the set, advance, rest or complete.
@@ -153,9 +154,9 @@ function WorkoutSessionContent() {
       const set = exercise?.sets[setIndex]
       if (!set) return
 
+      setEditor(null)
       logSet(exerciseIndex, setIndex, set.reps, set.weight)
       confirmSet(exerciseIndex, setIndex)
-      dismissKeypad()
       haptics.setConfirmed()
 
       const volume = set.weight * set.reps
@@ -167,21 +168,18 @@ function WorkoutSessionContent() {
 
       const next = findNextPendingSet(state.exercises, exerciseIndex, setIndex)
       if (next) {
-        const durationMs = exercise.restDurationMs ?? 60000
+        // Rest precedes the next set, so use that set's exercise duration —
+        // findNextPendingSet can wrap to a different exercise than the one
+        // just finished, and the RestSheet previews the next set.
+        const durationMs =
+          state.exercises[next.exerciseIndex].restDurationMs ?? 60000
         if (durationMs > 0) startRestTimer(durationMs)
       } else {
         haptics.workoutCompleted()
         completeWorkout()
       }
     },
-    [
-      state.exercises,
-      logSet,
-      confirmSet,
-      dismissKeypad,
-      startRestTimer,
-      completeWorkout
-    ]
+    [state.exercises, logSet, confirmSet, startRestTimer, completeWorkout]
   )
 
   const handleAddSet = useCallback(
@@ -199,6 +197,52 @@ function WorkoutSessionContent() {
     },
     [moveExercise]
   )
+
+  // ---- Editor adjust / done / secondary ----
+  const handleEditorChange = useCallback(
+    (nextValue: number) => {
+      if (!editor) return
+      const set = state.exercises[editor.exerciseIndex]?.sets[editor.setIndex]
+      if (!set) return
+      const reps = editor.field === 'reps' ? nextValue : set.reps
+      const weight = editor.field === 'weight' ? nextValue : set.weight
+      logSet(editor.exerciseIndex, editor.setIndex, reps, weight)
+    },
+    [editor, state.exercises, logSet]
+  )
+
+  const handleEditorDone = useCallback(() => {
+    if (!editor) return
+    const set = state.exercises[editor.exerciseIndex]?.sets[editor.setIndex]
+    if (set?.status === 'editing') {
+      confirmSet(editor.exerciseIndex, editor.setIndex)
+    }
+    haptics.buttonTap()
+    setEditor(null)
+  }, [editor, state.exercises, confirmSet])
+
+  const handleEditorSecondary = useCallback(() => {
+    if (!editor) return
+    const { exerciseIndex, setIndex } = editor
+    const set = state.exercises[exerciseIndex]?.sets[setIndex]
+    if (!set) return
+    if (set.status === 'editing') {
+      unlogSet(exerciseIndex, setIndex)
+      haptics.buttonTap()
+    } else if (set.status === 'skipped') {
+      restoreSet(exerciseIndex, setIndex)
+      haptics.buttonTap()
+    } else {
+      skipSet(exerciseIndex, setIndex)
+      haptics.skipAction()
+    }
+    setEditor(null)
+  }, [editor, state.exercises, unlogSet, restoreSet, skipSet])
+
+  const handleExtendRest = useCallback(() => {
+    extendRest()
+    haptics.buttonTap()
+  }, [extendRest])
 
   const handleBackPress = useCallback(() => {
     if (state.isCompleted) return false
@@ -223,17 +267,6 @@ function WorkoutSessionContent() {
     return unsubscribe
   }, [navigation, requestEnd, state.isCompleted])
 
-  useWorkoutKeyboardHandlers({
-    state,
-    keypadState,
-    onSetConfirm: handleLogSet,
-    openKeypad,
-    switchField,
-    dismissKeypad,
-    onDigit: handleDigit,
-    onBackspace: handleBackspace
-  })
-
   // Locate the single active/editing set (drives the footer Log bar).
   const activeLoc = useMemo(() => {
     for (let i = 0; i < state.exercises.length; i++) {
@@ -244,6 +277,33 @@ function WorkoutSessionContent() {
     }
     return null
   }, [state.exercises])
+
+  // Web keyboard: Enter logs the active set (or commits the editor), Esc closes
+  // the editor. Re-uses the generic shortcut primitive (no-op off web).
+  useWebKeyboardShortcuts({
+    onEnter: () => {
+      if (editor) {
+        handleEditorDone()
+        return true
+      }
+      if (activeLoc) {
+        handleLogSet(activeLoc.exerciseIndex, activeLoc.setIndex)
+        return true
+      }
+      return false
+    },
+    onTab: () => false,
+    onEscape: () => {
+      if (editor) {
+        // Commit on close (same as tapping the scrim) so an edited set never
+        // lingers in 'editing' with uncommitted values.
+        handleEditorDone()
+        return true
+      }
+      return false
+    },
+    enabled: !state.isCompleted
+  })
 
   const overall = useMemo(() => {
     let total = 0
@@ -264,45 +324,72 @@ function WorkoutSessionContent() {
     [state.exercises, state.expandedExerciseIndex]
   )
 
-  if (state.isCompleted) {
+  // Best all-time weight per exercise (before this session) → PR detection.
+  const bestWeightById = useMemo(() => {
+    const map = new Map<string, number>()
+    const best = prsData?.bestPRs
+    if (!best) return map
+    for (const [exerciseId, byType] of best) {
+      const weightPR = byType.get('max_weight')
+      if (weightPR) map.set(exerciseId, weightPR.value)
+    }
+    return map
+  }, [prsData])
+
+  // Only compute the recap once completed — it is the only time it is rendered,
+  // and gating avoids the per-second recompute while the workout is live. PR
+  // flags still self-heal: bestWeightById updates when usePRs resolves, which
+  // re-runs this memo even on the (still-mounted) recap screen.
+  const recap = useMemo(
+    () =>
+      state.isCompleted
+        ? buildWorkoutRecap(state.exercises, elapsedMs, bestWeightById)
+        : null,
+    [state.isCompleted, state.exercises, elapsedMs, bestWeightById]
+  )
+
+  const handleDone = useCallback(() => {
+    if (navigation.canGoBack()) navigation.goBack()
+    else router.replace('/(tabs)')
+  }, [navigation, router])
+
+  const handleShare = useCallback(() => {
+    if (!recap) return
+    Share.share({
+      message: `Finished ${state.sessionName} — ${recap.setsCount} sets · ${recap.volume.toLocaleString('en-US')} lb · ${recap.timeStr}`
+    }).catch(() => {})
+  }, [state.sessionName, recap])
+
+  if (state.isCompleted && recap) {
     return (
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        <MaxWidthContainer>
-          <Text style={styles.completedText}>Workout Complete!</Text>
-          <Pressable
-            style={styles.doneButton}
-            onPress={() =>
-              navigation.canGoBack()
-                ? navigation.goBack()
-                : router.replace('/(tabs)')
-            }
-            accessibilityRole="button"
-            accessibilityLabel="Done"
-          >
-            <Text style={styles.doneButtonText}>Done</Text>
-          </Pressable>
-        </MaxWidthContainer>
-      </ScrollView>
+      <WorkoutRecap
+        programName={state.sessionName}
+        recap={recap}
+        onShare={handleShare}
+        onDone={handleDone}
+      />
     )
   }
 
   const focusForExercise = (exerciseIndex: number) =>
-    keypadState.focus?.exerciseIndex === exerciseIndex
-      ? { setIndex: keypadState.focus.setIndex, field: keypadState.focus.field }
+    editor?.exerciseIndex === exerciseIndex
+      ? { setIndex: editor.setIndex, field: editor.field }
       : null
+
+  const editorSet = editor
+    ? state.exercises[editor.exerciseIndex]?.sets[editor.setIndex]
+    : null
+  const editorBaseSet = editor
+    ? state.exercises[editor.exerciseIndex]?.sets[0]
+    : null
 
   return (
     <View style={styles.sessionRoot}>
-      <Pressable style={styles.scrollWrapper} onPress={dismissKeypad}>
+      <View style={styles.scrollWrapper}>
         <ScrollView
           ref={scrollRef}
           style={styles.scroll}
-          contentContainerStyle={[
-            styles.content,
-            keypadState.visible && {
-              paddingBottom: screenHeight * 0.4 + theme.spacing.lg
-            }
-          ]}
+          contentContainerStyle={styles.content}
         >
           <MaxWidthContainer>
             <WorkoutHeader
@@ -335,10 +422,8 @@ function WorkoutSessionContent() {
                     exerciseIndex={idx}
                     isExpanded={idx === state.expandedExerciseIndex}
                     onToggle={() => handleExpandExercise(idx)}
-                    onSetRepsPress={sIdx => handleValuePress(idx, sIdx, 'reps')}
-                    onSetWeightPress={sIdx =>
-                      handleValuePress(idx, sIdx, 'weight')
-                    }
+                    onSetRepsPress={sIdx => openEditor(idx, sIdx, 'reps')}
+                    onSetWeightPress={sIdx => openEditor(idx, sIdx, 'weight')}
                     onSetConfirm={sIdx => handleLogSet(idx, sIdx)}
                     onSetPress={sIdx => handleSetPress(idx, sIdx)}
                     onAddSet={() => handleAddSet(idx)}
@@ -353,12 +438,25 @@ function WorkoutSessionContent() {
             </View>
           </MaxWidthContainer>
         </ScrollView>
-      </Pressable>
+      </View>
 
-      {restTimerActive ? (
-        <RestTimerBar
+      {restTimerActive && activeLoc ? (
+        <RestSheet
           remainingMs={restRemainingMs}
-          isActive={restTimerActive}
+          durationMs={state.restTimer.durationMs}
+          nextSetNumber={activeLoc.setIndex + 1}
+          nextExerciseName={
+            state.exercises[activeLoc.exerciseIndex].exerciseName
+          }
+          nextWeight={
+            state.exercises[activeLoc.exerciseIndex].sets[activeLoc.setIndex]
+              .weight
+          }
+          nextReps={
+            state.exercises[activeLoc.exerciseIndex].sets[activeLoc.setIndex]
+              .reps
+          }
+          onExtend={handleExtendRest}
           onSkip={dismissRest}
         />
       ) : activeLoc ? (
@@ -373,18 +471,27 @@ function WorkoutSessionContent() {
             state.exercises[activeLoc.exerciseIndex].sets[activeLoc.setIndex]
               .reps
           }
-          onLog={() =>
-            handleLogSet(activeLoc.exerciseIndex, activeLoc.setIndex)
-          }
+          onLog={() => handleLogSet(activeLoc.exerciseIndex, activeLoc.setIndex)}
         />
       ) : null}
 
-      <KeypadOverlay
-        visible={keypadState.visible}
-        onDigit={handleDigit}
-        onBackspace={handleBackspace}
-        onDone={handleDone}
-      />
+      {editor && editorSet ? (
+        <InlineSetEditor
+          visible
+          field={editor.field}
+          setNumber={editor.setIndex + 1}
+          status={editorSet.status}
+          value={editor.field === 'weight' ? editorSet.weight : editorSet.reps}
+          prefillBase={
+            editor.field === 'weight'
+              ? editorBaseSet?.weight ?? 0
+              : editorBaseSet?.reps ?? 0
+          }
+          onChange={handleEditorChange}
+          onDone={handleEditorDone}
+          onSecondary={handleEditorSecondary}
+        />
+      ) : null}
 
       <ConfirmationModal
         visible={showEndConfirmation}
@@ -507,26 +614,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     gap: 10
-  },
-  completedText: {
-    ...theme.typography.h1,
-    color: theme.colors.session.green,
-    textAlign: 'center',
-    marginTop: theme.spacing.xxl
-  },
-  doneButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.xl,
-    alignSelf: 'center',
-    marginTop: theme.spacing.xl
-  },
-  doneButtonText: {
-    ...theme.typography.body,
-    color: theme.colors.primaryTextOn,
-    fontFamily: theme.fonts.bold,
-    textAlign: 'center'
   },
   loadingText: {
     ...theme.typography.body,

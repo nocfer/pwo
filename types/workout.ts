@@ -75,6 +75,6 @@ export type WorkoutAction =
   | { type: 'RESTORE_STATE'; state: WorkoutState }
   | { type: 'ADD_SET'; exerciseIndex: number }
   | { type: 'MOVE_EXERCISE'; from: number; to: number }
-  | { type: 'EXTEND_REST' }
+  | { type: 'EXTEND_REST'; now: number }
   | { type: 'UNLOG_SET'; exerciseIndex: number; setIndex: number }
   | { type: 'RESTORE_SET'; exerciseIndex: number; setIndex: number }

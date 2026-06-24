@@ -12,6 +12,21 @@ export function formatTime(total: number): string {
 }
 
 /**
+ * Format milliseconds into a clock string: M:SS, or H:MM:SS past an hour.
+ * Shared by the workout session header, rest countdown, and recap.
+ */
+export function formatClock(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+  const pad2 = (n: number) => String(n).padStart(2, '0')
+  return hours > 0
+    ? `${hours}:${pad2(minutes)}:${pad2(seconds)}`
+    : `${minutes}:${pad2(seconds)}`
+}
+
+/**
  * Format seconds into human-readable duration.
  *
  * @param seconds - Total seconds

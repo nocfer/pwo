@@ -1,3 +1,4 @@
+import { formatClock } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
@@ -6,20 +7,6 @@ export type WorkoutHeaderProps = {
   subtitle?: string
   elapsedMs: number
   onEnd: () => void
-}
-
-export function formatElapsedTime(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
-
-  const pad2 = (n: number) => String(n).padStart(2, '0')
-
-  if (hours > 0) {
-    return `${hours}:${pad2(minutes)}:${pad2(seconds)}`
-  }
-  return `${minutes}:${pad2(seconds)}`
 }
 
 export function WorkoutHeader({
@@ -46,9 +33,9 @@ export function WorkoutHeader({
           style={styles.elapsedPill}
           accessibilityRole="timer"
           accessibilityLiveRegion="polite"
-          accessibilityLabel={`Elapsed time ${formatElapsedTime(elapsedMs)}`}
+          accessibilityLabel={`Elapsed time ${formatClock(elapsedMs)}`}
         >
-          <Text style={styles.elapsedText}>{formatElapsedTime(elapsedMs)}</Text>
+          <Text style={styles.elapsedText}>{formatClock(elapsedMs)}</Text>
         </View>
 
         <Pressable
