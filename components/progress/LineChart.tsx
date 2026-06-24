@@ -1,9 +1,13 @@
 /**
- * LineChart - Simple line chart with gradient fill
+ * LineChart - Simple line chart with gradient fill.
+ *
+ * Measures its own width (onLayout) and renders the SVG 1:1 at that width, so
+ * geometry and axis labels stay correctly positioned at any container size.
  */
 
 import { theme } from '@/theme/theme'
-import { StyleSheet, Text, View } from 'react-native'
+import { useState } from 'react'
+import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native'
 import Svg, {
   Circle,
   Defs,
@@ -32,6 +36,9 @@ type Props = {
   color?: string
 }
 
+// Sensible first-paint width before onLayout reports the real one.
+const DEFAULT_WIDTH = 320
+
 export default function LineChart({
   data,
   height = 180,
@@ -41,64 +48,64 @@ export default function LineChart({
   valueFormatter = v => String(v),
   color = theme.colors.primary
 }: Props) {
+  const [width, setWidth] = useState(DEFAULT_WIDTH)
+
+  const onLayout = (e: LayoutChangeEvent) => {
+    const w = e.nativeEvent.layout.width
+    if (w > 0 && Math.abs(w - width) > 1) setWidth(w)
+  }
+
   if (data.length === 0) {
     return (
-      <View style={[styles.container, { height }]}>
+      <View style={[styles.container, { height }]} onLayout={onLayout}>
         <Text style={styles.emptyText}>No data available</Text>
       </View>
     )
   }
 
-  const width = 300 // Will be stretched via aspectRatio
   const padding = { top: 20, right: 20, bottom: 40, left: 40 }
-  const chartWidth = width - padding.left - padding.right
-  const chartHeight = height - padding.top - padding.bottom
+  const chartWidth = Math.max(1, width - padding.left - padding.right)
+  const chartHeight = Math.max(1, height - padding.top - padding.bottom)
 
-  const values = data.map(d => d.value)
+  // Drop non-finite values so a bad point can't NaN the whole path.
+  const values = data.map(d => (Number.isFinite(d.value) ? d.value : 0))
   const minValue = Math.min(...values)
   const maxValue = Math.max(...values)
-  const valueRange = maxValue - minValue || 1
+  const valueRange = maxValue - minValue
 
-  // Scale values to chart dimensions
   const getX = (index: number) =>
     padding.left + (index / (data.length - 1 || 1)) * chartWidth
   const getY = (value: number) =>
-    padding.top + chartHeight - ((value - minValue) / valueRange) * chartHeight
+    // A flat series (range 0) is centered rather than pinned to the axis.
+    valueRange === 0
+      ? padding.top + chartHeight / 2
+      : padding.top + chartHeight - ((value - minValue) / valueRange) * chartHeight
 
-  // Build line path
   const linePath = data
     .map((point, index) => {
       const x = getX(index)
-      const y = getY(point.value)
+      const y = getY(values[index])
       return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`
     })
     .join(' ')
 
-  // Build fill path (closed polygon)
+  // Closed polygon for the gradient fill, anchored to the baseline.
+  const baseline = padding.top + chartHeight
   const fillPath =
-    linePath +
-    ` L ${getX(data.length - 1)} ${padding.top + chartHeight}` +
-    ` L ${padding.left} ${padding.top + chartHeight}` +
-    ' Z'
+    `${linePath} L ${getX(data.length - 1)} ${baseline}` +
+    ` L ${getX(0)} ${baseline} Z`
 
-  // Y-axis labels (3 values: min, mid, max)
   const yLabels = [
     { value: maxValue, y: padding.top },
     { value: (maxValue + minValue) / 2, y: padding.top + chartHeight / 2 },
-    { value: minValue, y: padding.top + chartHeight }
+    { value: minValue, y: baseline }
   ]
 
-  // X-axis labels (first, middle, last)
   const xLabelIndices = [0, Math.floor(data.length / 2), data.length - 1]
 
   return (
-    <View style={styles.container}>
-      <Svg
-        width="100%"
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="xMidYMid meet"
-      >
+    <View style={styles.container} onLayout={onLayout}>
+      <Svg width={width} height={height}>
         <Defs>
           <LinearGradient id="fillGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <Stop offset="0%" stopColor={color} stopOpacity="0.3" />
@@ -121,8 +128,8 @@ export default function LineChart({
             />
           ))}
 
-        {/* Fill area */}
-        <Path d={fillPath} fill="url(#fillGradient)" />
+        {/* Fill area — only meaningful with at least a segment */}
+        {data.length > 1 && <Path d={fillPath} fill="url(#fillGradient)" />}
 
         {/* Line */}
         <Path
@@ -142,7 +149,7 @@ export default function LineChart({
             <Circle
               key={`dot-${index}`}
               cx={getX(index)}
-              cy={getY(point.value)}
+              cy={getY(values[index])}
               r={highlighted ? 5 : 4}
               fill={highlighted ? theme.colors.accent : theme.colors.surface}
               stroke={highlighted ? theme.colors.accent : color}
