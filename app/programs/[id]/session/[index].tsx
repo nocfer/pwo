@@ -8,11 +8,12 @@ import {
 import { LogActionBar } from '@/components/workout/LogActionBar'
 import { RestSheet } from '@/components/workout/RestSheet'
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader'
+import { WorkoutRecap } from '@/components/workout/WorkoutRecap'
 import {
   findNextPendingSet,
   WorkoutExecutionProvider
 } from '@/context/WorkoutExecutionContext'
-import { useExercises, usePrograms } from '@/hooks/data'
+import { useExercises, usePrograms, usePRs } from '@/hooks/data'
 import {
   useElapsedTimer,
   useEndWorkout,
@@ -24,6 +25,7 @@ import {
 } from '@/hooks/workout'
 import { haptics } from '@/lib/haptics'
 import { buildInitialState } from '@/lib/buildInitialState'
+import { buildWorkoutRecap } from '@/lib/workoutRecap'
 import { showToast } from '@/lib/toast'
 import { readPersistedWorkout } from '@/lib/workout-persistence'
 import { theme } from '@/theme/theme'
@@ -33,8 +35,8 @@ import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   BackHandler,
-  Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -85,6 +87,7 @@ function WorkoutSessionContent() {
     confirmEnd,
     cancelEnd
   } = useEndWorkout()
+  const { data: prsData } = usePRs(100)
   const navigation = useNavigation()
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
@@ -275,25 +278,42 @@ function WorkoutSessionContent() {
     [state.exercises, state.expandedExerciseIndex]
   )
 
+  // Best all-time weight per exercise (before this session) → PR detection.
+  const bestWeightById = useMemo(() => {
+    const map = new Map<string, number>()
+    const best = prsData?.bestPRs
+    if (!best) return map
+    for (const [exerciseId, byType] of best) {
+      const weightPR = byType.get('max_weight')
+      if (weightPR) map.set(exerciseId, weightPR.value)
+    }
+    return map
+  }, [prsData])
+
+  const recap = useMemo(
+    () => buildWorkoutRecap(state.exercises, elapsedMs, bestWeightById),
+    [state.exercises, elapsedMs, bestWeightById]
+  )
+
+  const handleDone = useCallback(() => {
+    if (navigation.canGoBack()) navigation.goBack()
+    else router.replace('/(tabs)')
+  }, [navigation, router])
+
+  const handleShare = useCallback(() => {
+    Share.share({
+      message: `Finished ${state.sessionName} — ${recap.setsCount} sets · ${recap.volume.toLocaleString('en-US')} lb · ${recap.timeStr}`
+    }).catch(() => {})
+  }, [state.sessionName, recap])
+
   if (state.isCompleted) {
     return (
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        <MaxWidthContainer>
-          <Text style={styles.completedText}>Workout Complete!</Text>
-          <Pressable
-            style={styles.doneButton}
-            onPress={() =>
-              navigation.canGoBack()
-                ? navigation.goBack()
-                : router.replace('/(tabs)')
-            }
-            accessibilityRole="button"
-            accessibilityLabel="Done"
-          >
-            <Text style={styles.doneButtonText}>Done</Text>
-          </Pressable>
-        </MaxWidthContainer>
-      </ScrollView>
+      <WorkoutRecap
+        programName={state.sessionName}
+        recap={recap}
+        onShare={handleShare}
+        onDone={handleDone}
+      />
     )
   }
 
@@ -540,26 +560,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     gap: 10
-  },
-  completedText: {
-    ...theme.typography.h1,
-    color: theme.colors.session.green,
-    textAlign: 'center',
-    marginTop: theme.spacing.xxl
-  },
-  doneButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.xl,
-    alignSelf: 'center',
-    marginTop: theme.spacing.xl
-  },
-  doneButtonText: {
-    ...theme.typography.body,
-    color: theme.colors.primaryTextOn,
-    fontFamily: theme.fonts.bold,
-    textAlign: 'center'
   },
   loadingText: {
     ...theme.typography.body,
