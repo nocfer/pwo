@@ -12,10 +12,10 @@ import { useCallback, useMemo, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-const TAB_COLORS: Record<DataType, string> = {
+// Challenges were removed in v1.1 — only programs/exercises remain.
+const TAB_COLORS: Partial<Record<DataType, string>> = {
   programs: theme.colors.success,
-  exercises: theme.colors.primary,
-  challenges: theme.colors.accent
+  exercises: theme.colors.primary
 }
 
 export default function LibraryScreen() {

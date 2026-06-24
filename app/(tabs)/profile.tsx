@@ -1,25 +1,30 @@
-import Button from '@/components/common/Button'
+import { Button, SegmentedControl, ToggleSwitch } from '@/components/common'
 import { useAuth } from '@/context/AuthContext'
-import {
-  AnimatedIcon,
-  type IconAnimationConfig,
-  useScreenIconAnimation
-} from '@/hooks/useScreenIconAnimation'
-import type { SharedValue } from 'react-native-reanimated'
+import { usePrograms } from '@/hooks/data'
+import { encodeProgramForShare } from '@/lib/utils/programShare'
 import { theme } from '@/theme/theme'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { useCallback, useMemo, useState } from 'react'
+import Constants from 'expo-constants'
+import { router } from 'expo-router'
+import { Fragment, type ReactNode, useCallback, useMemo, useState } from 'react'
 import {
   Alert,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
+  TextInput,
   View
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const isWeb = Platform.OS === 'web'
+
+// NOTE: the preference toggles below are mocked with local state. A dedicated
+// settings backend is planned — wire these to it (and persist) when it lands.
 
 function showAlert(title: string, message: string) {
   if (isWeb) {
@@ -47,29 +52,43 @@ function showConfirm(
   }
 }
 
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
 export default function ProfileScreen() {
-  const { user, isAnonymous, signOut } = useAuth()
+  const { user, isAnonymous, signOut, linkAccount } = useAuth()
+  const { data: programs } = usePrograms()
   const [loggingOut, setLoggingOut] = useState(false)
 
-  const { trigger, staggerDelay } = useScreenIconAnimation({
-    icons: [
-      { type: 'springScale', duration: 600 },
-      { type: 'slideX', duration: 400, delay: 200 },
-      { type: 'rotate', duration: 400, delay: 300 },
-      { type: 'bounceDrop', duration: 500, delay: 400 }
-    ],
-    staggerDelay: 100
-  })
+  // Mocked preference state (see note above).
+  const [units, setUnits] = useState<'lb' | 'kg'>('kg')
+  const [workoutReminders, setWorkoutReminders] = useState(false)
+  const [autoStartRest, setAutoStartRest] = useState(true)
+  const [soundEffects, setSoundEffects] = useState(true)
+  const [hapticFeedback, setHapticFeedback] = useState(true)
 
+  // Guest-upgrade modal state.
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
+  const [upgradeEmail, setUpgradeEmail] = useState('')
+  const [upgradePassword, setUpgradePassword] = useState('')
+  const [upgradeBusy, setUpgradeBusy] = useState(false)
+  const [upgradeError, setUpgradeError] = useState<string | null>(null)
+
+  const displayName = useMemo(
+    () => user?.displayName || user?.email?.split('@')[0] || 'Guest',
+    [user]
+  )
   const emailLabel = useMemo(() => {
-    if (!user) {
-      return 'No account'
-    }
-    if (isAnonymous || !user.email) {
-      return 'Guest account'
-    }
+    if (!user) return 'No account'
+    if (isAnonymous || !user.email) return 'Guest account'
     return user.email
   }, [isAnonymous, user])
+
+  const appVersion = Constants.expoConfig?.version ?? '1.1.0'
 
   const handleSignOut = useCallback(async () => {
     setLoggingOut(true)
@@ -92,135 +111,419 @@ export default function ProfileScreen() {
     )
   }, [handleSignOut])
 
+  const handleExport = useCallback(async () => {
+    if (!programs || programs.length === 0) {
+      showAlert('Nothing to export', 'You have no programs to export yet.')
+      return
+    }
+    try {
+      const payload = programs.map(p => JSON.parse(encodeProgramForShare(p)))
+      await Share.share({
+        message: JSON.stringify(payload, null, 2),
+        title: 'PWO programs export'
+      })
+    } catch {
+      // Share cancelled or failed.
+    }
+  }, [programs])
+
+  const handleImport = useCallback(() => {
+    router.navigate('/library/scan')
+  }, [])
+
+  const handleUpgrade = useCallback(async () => {
+    setUpgradeBusy(true)
+    setUpgradeError(null)
+    try {
+      await linkAccount(upgradeEmail, upgradePassword)
+      setUpgradeOpen(false)
+      setUpgradeEmail('')
+      setUpgradePassword('')
+      showAlert('Account created', 'Your data is now backed up and synced.')
+    } catch (err) {
+      setUpgradeError(
+        err instanceof Error ? err.message : 'Could not create account.'
+      )
+    } finally {
+      setUpgradeBusy(false)
+    }
+  }, [linkAccount, upgradeEmail, upgradePassword])
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'right', 'left']}>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.heroCard}>
-          <View style={styles.iconContainer}>
-            <AnimatedIcon
-              config={{ type: 'springScale', duration: 600 }}
-              trigger={trigger}
-              index={0}
-              staggerDelay={staggerDelay}
-            >
-              <Ionicons name="barbell" size={36} color={theme.colors.primary} />
-            </AnimatedIcon>
+        {/* Account hero */}
+        <View style={styles.accountHero}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{getInitials(displayName)}</Text>
           </View>
-          <Text style={styles.title}>PWO</Text>
-          <Text style={styles.subtitle}>Personal Workout Organizer</Text>
-          <Text style={styles.caption}>Version 1.0.0</Text>
+          <View style={styles.accountInfo}>
+            <Text style={styles.accountName} numberOfLines={1}>
+              {displayName}
+            </Text>
+            <Text style={styles.accountEmail} numberOfLines={1}>
+              {emailLabel}
+            </Text>
+            {!isAnonymous && user && (
+              <View style={styles.syncPill}>
+                <Text style={styles.syncDot}>●</Text>
+                <Text style={styles.syncText}>Synced</Text>
+              </View>
+            )}
+          </View>
         </View>
 
-        <View style={styles.card}>
-          <FeatureRow
-            icon="fitness-outline"
+        {/* Guest upgrade */}
+        {isAnonymous && (
+          <Pressable
+            style={styles.upgradeCard}
+            onPress={() => setUpgradeOpen(true)}
+          >
+            <View style={styles.upgradeIcon}>
+              <Ionicons name="add" size={22} color={theme.colors.primary} />
+            </View>
+            <View style={styles.upgradeText}>
+              <Text style={styles.upgradeTitle}>Back up & sync</Text>
+              <Text style={styles.upgradeSub}>
+                Create an account to keep your data across devices
+              </Text>
+            </View>
+            <View style={styles.upgradeButton}>
+              <Text style={styles.upgradeButtonText}>Create</Text>
+            </View>
+          </Pressable>
+        )}
+
+        {/* Preferences */}
+        <SettingsSection label="Preferences">
+          <SettingsRow
+            icon="barbell"
             iconColor={theme.colors.primary}
-            title="Track Your Progress"
-            description="Monitor your workout streaks and achievements"
-            animationConfig={{ type: 'slideX', duration: 400, delay: 200 }}
-            trigger={trigger}
-            index={1}
-            staggerDelay={staggerDelay}
+            iconBg={theme.colors.primaryLight}
+            label="Units"
+            right={
+              <SegmentedControl
+                options={[
+                  { value: 'lb', label: 'lb' },
+                  { value: 'kg', label: 'kg' }
+                ]}
+                value={units}
+                onChange={setUnits}
+              />
+            }
           />
-          <View style={styles.divider} />
-          <FeatureRow
-            icon="time-outline"
-            iconColor={theme.colors.success}
-            title="Guided Sessions"
-            description="Follow structured sessions with timers"
-            animationConfig={{ type: 'rotate', duration: 400, delay: 300 }}
-            trigger={trigger}
-            index={2}
-            staggerDelay={staggerDelay}
+          <SettingsRow
+            icon="timer-outline"
+            iconColor={theme.colors.info}
+            iconBg={theme.colors.infoLight}
+            label="Default rest"
+            right={<ValueChevron value="1:30" />}
+            onPress={() =>
+              showAlert('Default rest', 'Rest settings sync is coming soon.')
+            }
           />
-          <View style={styles.divider} />
-          <FeatureRow
-            icon="trophy-outline"
+          <SettingsRow
+            icon="calendar-outline"
             iconColor={theme.colors.accent}
-            title="Set Goals"
-            description="Define targets and work towards them"
-            animationConfig={{ type: 'bounceDrop', duration: 500, delay: 400 }}
-            trigger={trigger}
-            index={3}
-            staggerDelay={staggerDelay}
+            iconBg={theme.colors.accentLight}
+            label="Week starts"
+            right={<ValueChevron value="Monday" />}
+            onPress={() =>
+              showAlert('Week starts', 'This preference is coming soon.')
+            }
           />
-        </View>
+        </SettingsSection>
 
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Signed in as</Text>
-            <Text style={styles.infoValue}>{emailLabel}</Text>
-          </View>
-          <View style={styles.divider} />
-          <Text style={styles.caption}>
-            {isAnonymous
-              ? 'Create an account to keep your data across devices.'
-              : 'Your account stays synced across devices.'}
+        {/* Reminders */}
+        <SettingsSection label="Reminders">
+          <SettingsRow
+            icon="notifications-outline"
+            iconColor={theme.colors.primary}
+            iconBg={theme.colors.primaryLight}
+            label="Workout reminders"
+            sub="Weekdays · 6:00 PM"
+            right={
+              <ToggleSwitch
+                value={workoutReminders}
+                onValueChange={setWorkoutReminders}
+                accessibilityLabel="Workout reminders"
+              />
+            }
+          />
+          <SettingsRow
+            icon="play-outline"
+            iconColor={theme.colors.info}
+            iconBg={theme.colors.infoLight}
+            label="Auto-start rest timer"
+            right={
+              <ToggleSwitch
+                value={autoStartRest}
+                onValueChange={setAutoStartRest}
+                accessibilityLabel="Auto-start rest timer"
+              />
+            }
+          />
+        </SettingsSection>
+
+        {/* Sound & haptics */}
+        <SettingsSection label="Sound & haptics">
+          <SettingsRow
+            icon="volume-medium-outline"
+            iconColor={theme.colors.accent}
+            iconBg={theme.colors.accentLight}
+            label="Sound effects"
+            right={
+              <ToggleSwitch
+                value={soundEffects}
+                onValueChange={setSoundEffects}
+                accessibilityLabel="Sound effects"
+              />
+            }
+          />
+          <SettingsRow
+            icon="phone-portrait-outline"
+            iconColor={theme.colors.success}
+            iconBg={theme.colors.successLight}
+            label="Haptic feedback"
+            right={
+              <ToggleSwitch
+                value={hapticFeedback}
+                onValueChange={setHapticFeedback}
+                accessibilityLabel="Haptic feedback"
+              />
+            }
+          />
+        </SettingsSection>
+
+        {/* Data */}
+        <SettingsSection label="Data">
+          <SettingsRow
+            icon="download-outline"
+            iconColor={theme.colors.primary}
+            iconBg={theme.colors.primaryLight}
+            label="Export data (JSON)"
+            sub="Share your programs"
+            right={<ValueChevron />}
+            onPress={handleExport}
+          />
+          <SettingsRow
+            icon="qr-code-outline"
+            iconColor={theme.colors.info}
+            iconBg={theme.colors.infoLight}
+            label="Import / Scan QR"
+            right={<ValueChevron />}
+            onPress={handleImport}
+          />
+        </SettingsSection>
+
+        {/* Account */}
+        <SettingsSection label="Account">
+          <SettingsRow
+            icon="person-circle-outline"
+            iconColor={theme.colors.accent}
+            iconBg={theme.colors.accentLight}
+            label="Manage account"
+            right={<ValueChevron />}
+            onPress={() =>
+              isAnonymous
+                ? setUpgradeOpen(true)
+                : showAlert(
+                    'Manage account',
+                    'Account management is coming soon.'
+                  )
+            }
+          />
+        </SettingsSection>
+
+        {/* About */}
+        <SettingsSection label="About">
+          <SettingsRow
+            icon="information-circle-outline"
+            iconColor={theme.colors.info}
+            iconBg={theme.colors.infoLight}
+            label="Version"
+            right={<ValueChevron value={appVersion} hideChevron />}
+          />
+          <SettingsRow
+            icon="shield-checkmark-outline"
+            iconColor={theme.colors.success}
+            iconBg={theme.colors.successLight}
+            label="Privacy & terms"
+            right={<ValueChevron />}
+            onPress={() => showAlert('Privacy & terms', 'Coming soon.')}
+          />
+          <SettingsRow
+            icon="star-outline"
+            iconColor={theme.colors.accent}
+            iconBg={theme.colors.accentLight}
+            label="Rate PWO"
+            right={<ValueChevron />}
+            onPress={() => showAlert('Rate PWO', 'Thanks for your support!')}
+          />
+        </SettingsSection>
+
+        {/* Sign out */}
+        <Pressable
+          onPress={confirmSignOut}
+          disabled={loggingOut}
+          style={({ pressed }) => [
+            styles.signOutButton,
+            pressed && styles.signOutButtonPressed
+          ]}
+          accessibilityRole="button"
+        >
+          <Ionicons
+            name="log-out-outline"
+            size={18}
+            color={theme.colors.danger}
+          />
+          <Text style={styles.signOutText}>
+            {loggingOut ? 'Logging out...' : 'Sign out'}
           </Text>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Session</Text>
-          <Button
-            label={loggingOut ? 'Logging out...' : 'Log Out'}
-            variant="secondary"
-            size="lg"
-            icon="log-out-outline"
-            onPress={confirmSignOut}
-            disabled={loggingOut}
-            fullWidth
-          />
-        </View>
+        </Pressable>
       </ScrollView>
+
+      {/* Guest upgrade modal */}
+      <Modal
+        visible={upgradeOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setUpgradeOpen(false)}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setUpgradeOpen(false)}
+        >
+          <Pressable
+            style={styles.modalCard}
+            onPress={e => e.stopPropagation()}
+          >
+            <Text style={styles.modalTitle}>Create your account</Text>
+            <Text style={styles.modalSubtitle}>
+              Back up & sync your data across devices.
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={theme.colors.muted}
+              value={upgradeEmail}
+              onChangeText={setUpgradeEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password (min 6 characters)"
+              placeholderTextColor={theme.colors.muted}
+              value={upgradePassword}
+              onChangeText={setUpgradePassword}
+              secureTextEntry
+            />
+            {upgradeError && (
+              <Text style={styles.modalError}>{upgradeError}</Text>
+            )}
+            <Button
+              label={upgradeBusy ? 'Creating...' : 'Create account'}
+              variant="primary"
+              size="lg"
+              onPress={handleUpgrade}
+              disabled={upgradeBusy}
+              fullWidth
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   )
 }
 
-function FeatureRow({
+function SettingsSection({
+  label,
+  children
+}: {
+  label: string
+  children: ReactNode
+}) {
+  const items = Array.isArray(children) ? children.filter(Boolean) : [children]
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionLabel}>{label}</Text>
+      <View style={styles.card}>
+        {items.map((child, i) => (
+          <Fragment key={i}>
+            {i > 0 && <View style={styles.divider} />}
+            {child}
+          </Fragment>
+        ))}
+      </View>
+    </View>
+  )
+}
+
+function SettingsRow({
   icon,
   iconColor,
-  title,
-  description,
-  animationConfig,
-  trigger,
-  index,
-  staggerDelay
+  iconBg,
+  label,
+  sub,
+  right,
+  onPress
 }: {
   icon: keyof typeof Ionicons.glyphMap
   iconColor: string
-  title: string
-  description: string
-  animationConfig?: IconAnimationConfig
-  trigger?: SharedValue<number>
-  index?: number
-  staggerDelay?: number
+  iconBg: string
+  label: string
+  sub?: string
+  right?: ReactNode
+  onPress?: () => void
 }) {
-  const iconElement = <Ionicons name={icon} size={18} color={iconColor} />
+  const content = (
+    <View style={styles.row}>
+      <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={17} color={iconColor} />
+      </View>
+      <View style={styles.rowText}>
+        <Text style={styles.rowLabel}>{label}</Text>
+        {sub && <Text style={styles.rowSub}>{sub}</Text>}
+      </View>
+      {right}
+    </View>
+  )
+
+  if (!onPress) return content
 
   return (
-    <View style={styles.featureRow}>
-      <View style={[styles.featureIcon, { backgroundColor: `${iconColor}15` }]}>
-        {animationConfig && trigger != null && index != null ? (
-          <AnimatedIcon
-            config={animationConfig}
-            trigger={trigger}
-            index={index}
-            staggerDelay={staggerDelay}
-          >
-            {iconElement}
-          </AnimatedIcon>
-        ) : (
-          iconElement
-        )}
-      </View>
-      <View style={styles.featureContent}>
-        <Text style={styles.featureTitle}>{title}</Text>
-        <Text style={styles.featureDescription}>{description}</Text>
-      </View>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => pressed && styles.rowPressed}
+      accessibilityRole="button"
+    >
+      {content}
+    </Pressable>
+  )
+}
+
+function ValueChevron({
+  value,
+  hideChevron = false
+}: {
+  value?: string
+  hideChevron?: boolean
+}) {
+  return (
+    <View style={styles.rowRight}>
+      {value && <Text style={styles.rowValue}>{value}</Text>}
+      {!hideChevron && (
+        <Ionicons
+          name="chevron-forward"
+          size={18}
+          color={theme.colors.muted}
+        />
+      )}
     </View>
   )
 }
@@ -232,96 +535,211 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl * 2
+    paddingBottom: theme.spacing.xxl * 2,
+    gap: theme.spacing.lg
   },
-  heroCard: {
+  accountHero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.xl,
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
+    padding: theme.spacing.lg,
     ...theme.shadows.sm
   },
-  iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: theme.radius.lg,
+  avatar: {
+    width: 54,
+    height: 54,
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primaryLight,
+    borderWidth: 1,
+    borderColor: theme.colors.session.activeBorder,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: theme.spacing.md
+    justifyContent: 'center'
   },
-  title: {
-    ...theme.typography.h1,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs
+  avatarText: {
+    fontFamily: theme.fonts.display,
+    fontSize: 18,
+    color: theme.colors.primary
   },
-  subtitle: {
-    ...theme.typography.body,
-    color: theme.colors.muted,
-    textAlign: 'center',
-    marginBottom: theme.spacing.sm
+  accountInfo: {
+    flex: 1,
+    gap: 2
+  },
+  accountName: {
+    fontFamily: theme.fonts.display,
+    fontSize: 17,
+    color: theme.colors.text
+  },
+  accountEmail: {
+    ...theme.typography.caption,
+    color: theme.colors.muted
+  },
+  syncPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    alignSelf: 'flex-start',
+    backgroundColor: theme.colors.infoLight,
+    borderRadius: theme.radius.full,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 2,
+    marginTop: theme.spacing.xs
+  },
+  syncDot: {
+    color: theme.colors.info,
+    fontSize: 8
+  },
+  syncText: {
+    ...theme.typography.small,
+    color: theme.colors.info,
+    fontFamily: theme.fonts.semiBold
+  },
+  upgradeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    backgroundColor: theme.colors.primaryLight,
+    borderWidth: 1,
+    borderColor: theme.colors.session.activeBorder,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.lg
+  },
+  upgradeIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  upgradeText: {
+    flex: 1,
+    gap: 2
+  },
+  upgradeTitle: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.text
+  },
+  upgradeSub: {
+    ...theme.typography.caption,
+    color: theme.colors.subtext
+  },
+  upgradeButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm
+  },
+  upgradeButtonText: {
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.bold,
+    color: theme.colors.primaryTextOn
+  },
+  section: {
+    gap: theme.spacing.sm
+  },
+  sectionLabel: {
+    ...theme.typography.small,
+    color: theme.colors.session.faint,
+    fontFamily: theme.fonts.semiBold,
+    textTransform: 'uppercase',
+    letterSpacing: 1.4,
+    marginLeft: theme.spacing.xs
   },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-    ...theme.shadows.sm
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    overflow: 'hidden'
   },
-  featureRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: theme.spacing.sm
+    gap: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    minHeight: 56
   },
-  featureIcon: {
-    width: 36,
-    height: 36,
+  rowPressed: {
+    backgroundColor: theme.colors.surfaceElevated
+  },
+  rowIcon: {
+    width: 32,
+    height: 32,
     borderRadius: theme.radius.sm,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: theme.spacing.md
+    justifyContent: 'center'
   },
-  featureContent: {
-    flex: 1
+  rowText: {
+    flex: 1,
+    gap: 1
   },
-  featureTitle: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.text,
-    marginBottom: 2
+  rowLabel: {
+    ...theme.typography.body,
+    fontFamily: theme.fonts.medium,
+    color: theme.colors.text
   },
-  featureDescription: {
+  rowSub: {
     ...theme.typography.caption,
     color: theme.colors.muted
   },
-  sectionTitle: {
-    ...theme.typography.h2,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md
-  },
-  infoRow: {
+  rowRight: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.sm
+    gap: theme.spacing.xs
   },
-  infoLabel: {
-    ...theme.typography.body,
-    color: theme.colors.muted
-  },
-  infoValue: {
-    ...theme.typography.bodyBold,
-    color: theme.colors.text,
-    maxWidth: '65%',
-    textAlign: 'right'
+  rowValue: {
+    ...theme.typography.caption,
+    fontFamily: theme.fonts.semiBold,
+    color: theme.colors.subtext
   },
   divider: {
     height: 1,
-    backgroundColor: theme.colors.borderLight,
-    marginVertical: theme.spacing.sm
+    backgroundColor: theme.colors.border,
+    marginLeft: theme.spacing.lg + 32 + theme.spacing.md
   },
-  caption: {
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+    marginTop: theme.spacing.sm
+  },
+  signOutButtonPressed: {
+    opacity: 0.6
+  },
+  signOutText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.danger
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: theme.colors.overlay,
+    justifyContent: 'center',
+    padding: theme.spacing.xl
+  },
+  modalCard: {
+    backgroundColor: theme.colors.surfaceElevated,
+    borderRadius: theme.radius.xl,
+    padding: theme.spacing.xl,
+    gap: theme.spacing.md
+  },
+  modalTitle: {
+    ...theme.typography.h1,
+    color: theme.colors.text
+  },
+  modalSubtitle: {
+    ...theme.typography.body,
+    color: theme.colors.subtext
+  },
+  input: {
+    ...theme.presets.input
+  },
+  modalError: {
     ...theme.typography.caption,
-    color: theme.colors.muted
+    color: theme.colors.danger
   }
 })
