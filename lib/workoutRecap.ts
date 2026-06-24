@@ -8,6 +8,7 @@
  */
 
 import type { ExerciseState } from '@/types/workout'
+import { formatClock, formatCount } from '@/lib/utils/format'
 
 export type RecapRow = {
   exerciseId: string
@@ -24,15 +25,8 @@ export type WorkoutRecap = {
   rows: RecapRow[]
 }
 
-export function formatRecapTime(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
-  const pad2 = (n: number) => String(n).padStart(2, '0')
-  if (hours > 0) return `${hours}:${pad2(minutes)}:${pad2(seconds)}`
-  return `${minutes}:${pad2(seconds)}`
-}
+/** @deprecated use formatClock from lib/utils/format */
+export const formatRecapTime = formatClock
 
 function topCompletedWeight(exercise: ExerciseState): number {
   return exercise.sets.reduce((max, s) => {
@@ -67,10 +61,10 @@ export function buildWorkoutRecap(
 
     let detail: string
     if (completed.length === 0) {
-      detail = `${skipped} ${skipped === 1 ? 'set' : 'sets'} skipped`
+      detail = `${formatCount(skipped, 'set')} skipped`
     } else {
       detail =
-        `${completed.length} ${completed.length === 1 ? 'set' : 'sets'} · top ${topW} lb` +
+        `${formatCount(completed.length, 'set')} · top ${topW} lb` +
         (skipped ? ` · ${skipped} skipped` : '')
     }
 

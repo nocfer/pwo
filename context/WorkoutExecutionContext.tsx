@@ -134,7 +134,10 @@ export function WorkoutExecutionProvider({
     []
   )
 
-  const extendRest = useCallback(() => dispatch({ type: 'EXTEND_REST' }), [])
+  const extendRest = useCallback(
+    () => dispatch({ type: 'EXTEND_REST', now: Date.now() }),
+    []
+  )
 
   const unlogSet = useCallback(
     (exerciseIndex: number, setIndex: number) =>

@@ -1,3 +1,4 @@
+import { formatClock } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
@@ -19,13 +20,6 @@ const RING_SIZE = 72
 const RING_STROKE = 7
 const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
-
-function formatCountdown(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${minutes}:${String(seconds).padStart(2, '0')}`
-}
 
 function accessibilityTime(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000))
@@ -83,7 +77,7 @@ export function RestSheet({
               transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
             />
           </Svg>
-          <Text style={styles.ringLabel}>{formatCountdown(remainingMs)}</Text>
+          <Text style={styles.ringLabel}>{formatClock(remainingMs)}</Text>
         </View>
 
         <View style={styles.info}>

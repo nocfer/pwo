@@ -96,16 +96,12 @@ function render(
 
 describe('ExerciseAccordionItem', () => {
   describe('expanded card', () => {
-    it('renders the header with a collapse label and fires onToggle', () => {
-      const onToggle = vi.fn()
-      const result = render({ isExpanded: true, onToggle })
-      const header = findByAccessibilityLabel(
-        result,
-        'Bench Press, expanded, tap to collapse'
-      )
+    it('renders an informational expanded header (no collapse toggle)', () => {
+      const result = render({ isExpanded: true })
+      const header = findByAccessibilityLabel(result, 'Bench Press, expanded')
       expect(header).toBeDefined()
-      ;(header!.props.onPress as () => void)()
-      expect(onToggle).toHaveBeenCalledOnce()
+      expect(header!.props.accessibilityRole).toBe('header')
+      expect(header!.props.onPress).toBeUndefined()
     })
 
     it('shows the NOW badge for the active exercise', () => {

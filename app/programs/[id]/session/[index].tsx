@@ -110,19 +110,25 @@ function WorkoutSessionContent() {
     [expandExercise, scrollToExercise]
   )
 
-  // Open the stepper editor for a set's weight/reps value.
+  // Open the stepper editor for a set's weight/reps value. Promote the set into
+  // an editable status first so stepper changes actually take effect and commit:
+  //  - completed → editing (EDIT_SET); Done re-confirms
+  //  - skipped   → pending/active (RESTORE_SET); no longer silently discarded
+  //  - pending   → active (EXPAND_EXERCISE)
   const openEditor = useCallback(
     (exerciseIndex: number, setIndex: number, field: EditorField) => {
       const set = state.exercises[exerciseIndex]?.sets[setIndex]
       if (!set) return
       if (set.status === 'completed') {
         editSet(exerciseIndex, setIndex)
+      } else if (set.status === 'skipped') {
+        restoreSet(exerciseIndex, setIndex)
       } else if (set.status === 'pending') {
         expandExercise(exerciseIndex, setIndex)
       }
       setEditor({ exerciseIndex, setIndex, field })
     },
-    [state.exercises, editSet, expandExercise]
+    [state.exercises, editSet, restoreSet, expandExercise]
   )
 
   // Trailing box on a non-active row: edit (completed/skipped) or navigate.
@@ -162,7 +168,11 @@ function WorkoutSessionContent() {
 
       const next = findNextPendingSet(state.exercises, exerciseIndex, setIndex)
       if (next) {
-        const durationMs = exercise.restDurationMs ?? 60000
+        // Rest precedes the next set, so use that set's exercise duration —
+        // findNextPendingSet can wrap to a different exercise than the one
+        // just finished, and the RestSheet previews the next set.
+        const durationMs =
+          state.exercises[next.exerciseIndex].restDurationMs ?? 60000
         if (durationMs > 0) startRestTimer(durationMs)
       } else {
         haptics.workoutCompleted()
@@ -285,7 +295,9 @@ function WorkoutSessionContent() {
     onTab: () => false,
     onEscape: () => {
       if (editor) {
-        setEditor(null)
+        // Commit on close (same as tapping the scrim) so an edited set never
+        // lingers in 'editing' with uncommitted values.
+        handleEditorDone()
         return true
       }
       return false
@@ -324,9 +336,16 @@ function WorkoutSessionContent() {
     return map
   }, [prsData])
 
+  // Only compute the recap once completed — it is the only time it is rendered,
+  // and gating avoids the per-second recompute while the workout is live. PR
+  // flags still self-heal: bestWeightById updates when usePRs resolves, which
+  // re-runs this memo even on the (still-mounted) recap screen.
   const recap = useMemo(
-    () => buildWorkoutRecap(state.exercises, elapsedMs, bestWeightById),
-    [state.exercises, elapsedMs, bestWeightById]
+    () =>
+      state.isCompleted
+        ? buildWorkoutRecap(state.exercises, elapsedMs, bestWeightById)
+        : null,
+    [state.isCompleted, state.exercises, elapsedMs, bestWeightById]
   )
 
   const handleDone = useCallback(() => {
@@ -335,12 +354,13 @@ function WorkoutSessionContent() {
   }, [navigation, router])
 
   const handleShare = useCallback(() => {
+    if (!recap) return
     Share.share({
       message: `Finished ${state.sessionName} — ${recap.setsCount} sets · ${recap.volume.toLocaleString('en-US')} lb · ${recap.timeStr}`
     }).catch(() => {})
   }, [state.sessionName, recap])
 
-  if (state.isCompleted) {
+  if (state.isCompleted && recap) {
     return (
       <WorkoutRecap
         programName={state.sessionName}

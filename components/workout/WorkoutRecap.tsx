@@ -1,6 +1,7 @@
 import { ConfettiCelebration } from '@/components/ConfettiCelebration'
 import { MaxWidthContainer } from '@/components/common/MaxWidthContainer'
 import { theme } from '@/theme/theme'
+import { formatCount } from '@/lib/utils/format'
 import type { WorkoutRecap as WorkoutRecapModel } from '@/lib/workoutRecap'
 import React from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -61,8 +62,7 @@ export function WorkoutRecap({
           {recap.totalSkipped > 0 ? (
             <View style={styles.skippedPill}>
               <Text style={styles.skippedText}>
-                {recap.totalSkipped}{' '}
-                {recap.totalSkipped === 1 ? 'set' : 'sets'} skipped
+                {formatCount(recap.totalSkipped, 'set')} skipped
               </Text>
             </View>
           ) : null}

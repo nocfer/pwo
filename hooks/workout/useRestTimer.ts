@@ -53,6 +53,13 @@ export function useRestTimer(
   useEffect(() => {
     if (restTimer.isActive) {
       didFireFinishRef.current = false
+      // Cancel any previously scheduled notification before (re)scheduling —
+      // e.g. after EXTEND_REST shifts startedAt — so the old one can't fire
+      // early and orphaned notifications don't accumulate.
+      if (notificationIdRef.current) {
+        cancelRestTimerNotification(notificationIdRef.current)
+        notificationIdRef.current = null
+      }
       const remaining =
         restTimer.startedAt + restTimer.durationMs - nowRef.current()
       if (remaining > 0) {

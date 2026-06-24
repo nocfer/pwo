@@ -3,7 +3,11 @@
  * Extracted from workoutReducer.ts to keep file sizes under ~300 lines.
  */
 
-import type { ExerciseSetState, ExerciseState } from '@/types/workout'
+import type {
+  ExerciseSetState,
+  ExerciseState,
+  WorkoutState
+} from '@/types/workout'
 
 // ---------------------------------------------------------------------------
 // Forward-scan helper (pure)
@@ -75,6 +79,51 @@ export function activateInExercise(
       return s
     })
   }
+}
+
+// ---------------------------------------------------------------------------
+// Mark the target set (via `mark`) then activate the next pending set (pure).
+// Shared by CONFIRM_SET and SKIP_SET, which differ only in how the target set
+// is marked.
+// ---------------------------------------------------------------------------
+
+export function resolveSetAndAdvance(
+  state: WorkoutState,
+  exerciseIndex: number,
+  setIndex: number,
+  mark: (set: ExerciseSetState) => ExerciseSetState
+): WorkoutState {
+  let exercises = state.exercises.map((ex, eIdx) =>
+    eIdx === exerciseIndex
+      ? {
+          ...ex,
+          sets: ex.sets.map((s, sIdx) => (sIdx === setIndex ? mark(s) : s))
+        }
+      : ex
+  )
+
+  const next = findNextPendingSet(exercises, exerciseIndex, setIndex)
+
+  if (next) {
+    exercises = exercises.map((ex, eIdx) =>
+      eIdx === next.exerciseIndex
+        ? {
+            ...ex,
+            sets: ex.sets.map((s, sIdx) =>
+              sIdx === next.setIndex ? { ...s, status: 'active' as const } : s
+            )
+          }
+        : ex
+    )
+    return {
+      ...state,
+      exercises,
+      expandedExerciseIndex: next.exerciseIndex,
+      activeSetIndex: next.setIndex
+    }
+  }
+
+  return { ...state, exercises }
 }
 
 // ---------------------------------------------------------------------------
