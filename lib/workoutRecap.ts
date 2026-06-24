@@ -25,9 +25,6 @@ export type WorkoutRecap = {
   rows: RecapRow[]
 }
 
-/** @deprecated use formatClock from lib/utils/format */
-export const formatRecapTime = formatClock
-
 function topCompletedWeight(exercise: ExerciseState): number {
   return exercise.sets.reduce((max, s) => {
     if (s.status !== 'completed') return max
@@ -72,7 +69,7 @@ export function buildWorkoutRecap(
   })
 
   return {
-    timeStr: formatRecapTime(elapsedMs),
+    timeStr: formatClock(elapsedMs),
     setsCount,
     volume,
     totalSkipped,

@@ -1,4 +1,5 @@
-import { buildWorkoutRecap, formatRecapTime } from '@/lib/workoutRecap'
+import { buildWorkoutRecap } from '@/lib/workoutRecap'
+import { formatClock } from '@/lib/utils/format'
 import type { ExerciseState } from '@/types/workout'
 import { describe, expect, it } from 'vitest'
 
@@ -10,12 +11,12 @@ function ex(
   return { exerciseId, exerciseName, sets }
 }
 
-describe('formatRecapTime', () => {
+describe('formatClock', () => {
   it('formats m:ss', () => {
-    expect(formatRecapTime(90_000)).toBe('1:30')
+    expect(formatClock(90_000)).toBe('1:30')
   })
   it('formats h:mm:ss past an hour', () => {
-    expect(formatRecapTime(3_661_000)).toBe('1:01:01')
+    expect(formatClock(3_661_000)).toBe('1:01:01')
   })
 })
 

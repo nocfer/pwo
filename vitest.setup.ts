@@ -23,7 +23,7 @@ vi.mock('@expo/vector-icons', () => ({
 }))
 
 // Mock react-native-reanimated — Animated.View passes through; entering builders
-// are chainable no-ops. (Per-file mocks, e.g. RestTimerBar, still take precedence.)
+// are chainable no-ops. (Any per-file mock still takes precedence.)
 vi.mock('react-native-reanimated', () => {
   const builder = () => {
     const b: Record<string, () => unknown> = {

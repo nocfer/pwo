@@ -1,4 +1,4 @@
-import { formatElapsedTime } from '@/components/workout/WorkoutHeader'
+import { formatClock } from '@/lib/utils/format'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useEffect } from 'react'
@@ -11,45 +11,45 @@ vi.mock('react', () => ({
 }))
 
 // ---------------------------------------------------------------------------
-// formatElapsedTime — pure function tests
+// formatClock — pure function tests
 // ---------------------------------------------------------------------------
 
-describe('formatElapsedTime', () => {
+describe('formatClock', () => {
   it('formats 0ms as "0:00"', () => {
-    expect(formatElapsedTime(0)).toBe('0:00')
+    expect(formatClock(0)).toBe('0:00')
   })
 
   it('formats 5 seconds as "0:05"', () => {
-    expect(formatElapsedTime(5000)).toBe('0:05')
+    expect(formatClock(5000)).toBe('0:05')
   })
 
   it('formats 65 seconds as "1:05"', () => {
-    expect(formatElapsedTime(65000)).toBe('1:05')
+    expect(formatClock(65000)).toBe('1:05')
   })
 
   it('formats 605 seconds as "10:05"', () => {
-    expect(formatElapsedTime(605000)).toBe('10:05')
+    expect(formatClock(605000)).toBe('10:05')
   })
 
   it('formats 3661 seconds as "1:01:01"', () => {
-    expect(formatElapsedTime(3661000)).toBe('1:01:01')
+    expect(formatClock(3661000)).toBe('1:01:01')
   })
 
   it('formats exactly 1 hour as "1:00:00"', () => {
-    expect(formatElapsedTime(3600000)).toBe('1:00:00')
+    expect(formatClock(3600000)).toBe('1:00:00')
   })
 
   it('formats 59:59 correctly', () => {
-    expect(formatElapsedTime(3599000)).toBe('59:59')
+    expect(formatClock(3599000)).toBe('59:59')
   })
 
   it('handles sub-second values by truncating to seconds', () => {
-    expect(formatElapsedTime(1500)).toBe('0:01')
-    expect(formatElapsedTime(999)).toBe('0:00')
+    expect(formatClock(1500)).toBe('0:01')
+    expect(formatClock(999)).toBe('0:00')
   })
 
   it('treats negative values as 0:00', () => {
-    expect(formatElapsedTime(-5000)).toBe('0:00')
+    expect(formatClock(-5000)).toBe('0:00')
   })
 })
 
@@ -107,6 +107,6 @@ describe('useElapsedTimer', () => {
       completedAt: 7200000
     })
     expect(result.elapsedMs).toBe(7200000)
-    expect(formatElapsedTime(result.elapsedMs)).toBe('2:00:00')
+    expect(formatClock(result.elapsedMs)).toBe('2:00:00')
   })
 })

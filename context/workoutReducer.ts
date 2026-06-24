@@ -5,7 +5,6 @@
 import type { WorkoutAction, WorkoutState } from '@/types/workout'
 import {
   activateInExercise,
-  findNextPendingSet,
   resolveSetAndAdvance,
   revertEditingSets
 } from './reducerHelpers'

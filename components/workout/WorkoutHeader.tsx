@@ -9,9 +9,6 @@ export type WorkoutHeaderProps = {
   onEnd: () => void
 }
 
-/** @deprecated use formatClock from lib/utils/format */
-export const formatElapsedTime = formatClock
-
 export function WorkoutHeader({
   programName,
   subtitle,
@@ -36,9 +33,9 @@ export function WorkoutHeader({
           style={styles.elapsedPill}
           accessibilityRole="timer"
           accessibilityLiveRegion="polite"
-          accessibilityLabel={`Elapsed time ${formatElapsedTime(elapsedMs)}`}
+          accessibilityLabel={`Elapsed time ${formatClock(elapsedMs)}`}
         >
-          <Text style={styles.elapsedText}>{formatElapsedTime(elapsedMs)}</Text>
+          <Text style={styles.elapsedText}>{formatClock(elapsedMs)}</Text>
         </View>
 
         <Pressable
