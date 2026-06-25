@@ -61,7 +61,7 @@ export type APIWorkoutCreateInput = {
  *
  * - reps[] → targetReps: single-element → number, multi-element → array, empty → undefined
  * - reps.length → sets (default 1)
- * - rests[0] → restBetweenSets (default 60)
+ * - rests[] → restBetweenSets: single-element → number, multi-element → array, empty → 60
  * - durations → durationSeconds: first non-zero element, or undefined if all zeros/empty
  * - type is always 'exercise'
  * - expanded exercise.name is carried into exerciseName (display-only); the rest
@@ -82,8 +82,15 @@ export function workoutBlockToProgram(block: APIWorkoutBlock): ProgramBlock {
   }
   // else: undefined (empty reps)
 
-  // Derive restBetweenSets from first element, default 60
-  const restBetweenSets = rests.length > 0 ? rests[0] : 60
+  // Derive restBetweenSets: single → number, multiple → per-set array, empty → 60
+  let restBetweenSets: number | number[]
+  if (rests.length === 0) {
+    restBetweenSets = 60
+  } else if (rests.length === 1) {
+    restBetweenSets = rests[0]
+  } else {
+    restBetweenSets = [...rests]
+  }
 
   // Derive durationSeconds: first non-zero element, or undefined
   let durationSeconds: number | undefined
@@ -156,7 +163,8 @@ export function workoutToProgram(workout: APIWorkout): Program {
  * Convert a frontend ProgramBlock to an API workout block (without expanded exercise).
  *
  * - targetReps → reps[]: number expanded to array of length sets, array as-is, undefined → []
- * - restBetweenSets → rests[]: array of length max(0, sets-1) filled with restBetweenSets
+ * - restBetweenSets → rests[]: array of length max(0, sets-1); number filled, array
+ *   taken element-wise (padded with its last value)
  * - durationSeconds → durations[]: expanded to array of length sets if defined, [] if undefined
  */
 export function programBlockToWorkout(
@@ -177,7 +185,13 @@ export function programBlockToWorkout(
 
   // Build rests array: length max(0, sets - 1)
   const restsLength = Math.max(0, sets - 1)
-  const rests = Array(restsLength).fill(restBetweenSets)
+  const rests = Array.isArray(restBetweenSets)
+    ? Array.from(
+        { length: restsLength },
+        (_, i) =>
+          restBetweenSets[i] ?? restBetweenSets[restBetweenSets.length - 1] ?? 60
+      )
+    : Array(restsLength).fill(restBetweenSets)
 
   // Build durations array
   let durations: number[]

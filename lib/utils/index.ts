@@ -13,6 +13,7 @@ export {
   formatTime,
   getFirstReps,
   getTotalReps,
+  getTotalRest,
   mmssToSeconds
 } from './format'
 export {

@@ -539,19 +539,20 @@ export function validateProgramBlock(
         }
       }
 
-      // Validate restBetweenSets (must be non-negative)
+      // Validate restBetweenSets (non-negative number, or per-set array)
       if (
         block.restBetweenSets !== undefined &&
         block.restBetweenSets !== null
       ) {
-        if (
-          typeof block.restBetweenSets !== 'number' ||
-          block.restBetweenSets < 0
-        ) {
+        const rest = block.restBetweenSets
+        const invalidRest = Array.isArray(rest)
+          ? rest.length === 0 || rest.some(r => !Number.isFinite(r) || r < 0)
+          : !Number.isFinite(rest) || rest < 0
+        if (invalidRest) {
           errors.push(
             createValidationError(
               `${fieldPath}.restBetweenSets`,
-              'Rest duration must be 0 or greater',
+              'Rest duration must be 0 or greater (or a per-set array of non-negative numbers)',
               ValidationErrorCode.INVALID_RANGE
             )
           )

@@ -35,9 +35,13 @@ export type ProgramExerciseBlock = {
    */
   sets?: number
   /**
-   * Rest duration in seconds between consecutive sets (defaults to 60).
+   * Rest in seconds between consecutive sets (defaults to 60).
+   * Can be a single number (same rest after every set) or a per-set array of
+   * the (sets - 1) inter-set rests.
+   * @example restBetweenSets: 90 // 90s after every set
+   * @example restBetweenSets: [90, 60] // 90s after set 1, 60s after set 2
    */
-  restBetweenSets?: number
+  restBetweenSets?: number | number[]
 }
 
 export type ProgramBlock = ProgramExerciseBlock

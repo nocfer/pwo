@@ -25,6 +25,19 @@ function resolveSetValues(
   return { reps, weight: 0 }
 }
 
+/** Rest after a given set (ms). Mirrors per-set reps resolution. */
+function resolveSetRestMs(
+  block: Program['blocks'][number],
+  setIndex: number
+): number {
+  const rest = block.type === 'exercise' ? block.restBetweenSets : undefined
+  if (typeof rest === 'number') return rest * 1000
+  if (Array.isArray(rest) && rest.length > 0) {
+    return (rest[setIndex] ?? rest[rest.length - 1]) * 1000
+  }
+  return 60_000
+}
+
 export function buildInitialState(
   program: Program,
   sessionIndex: number,
@@ -39,9 +52,10 @@ export function buildInitialState(
         block.exerciseName ??
         exerciseNameById.get(block.exerciseId) ??
         block.exerciseId,
-      restDurationMs: (block.restBetweenSets ?? 60) * 1000,
+      restDurationMs: resolveSetRestMs(block, 0),
       sets: Array.from({ length: block.sets ?? 1 }, (_, i) => ({
         ...resolveSetValues(block, i, prefillMap),
+        restDurationMs: resolveSetRestMs(block, i),
         status: 'pending' as SetStatus
       }))
     }))

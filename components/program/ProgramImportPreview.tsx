@@ -6,7 +6,11 @@
 
 import { useExerciseNames, useExercises } from '@/hooks/data'
 import { getSourceBadge } from '@/lib/utils'
-import { formatCount, getFirstReps } from '@/lib/utils/format'
+import {
+  estimateSessionMinutes,
+  formatCount,
+  getFirstReps
+} from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import { Exercise, Program, ProgramBlock } from '@/types'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -21,7 +25,6 @@ type Props = {
 }
 
 const PREVIEW_LIMIT = 4
-const SECONDS_PER_REP = 4
 
 function blockReps(block: ProgramBlock): string {
   const sets = block.sets ?? 1
@@ -36,20 +39,6 @@ function blockReps(block: ProgramBlock): string {
   return formatCount(sets, 'set')
 }
 
-function estimateMinutes(program: Program): number {
-  let total = program.initialWarmup?.seconds ?? 0
-  const rest = program.defaultRestBetweenExercises ?? 60
-  program.blocks.forEach((block, i) => {
-    const sets = block.sets ?? 1
-    const work =
-      typeof block.durationSeconds === 'number'
-        ? block.durationSeconds
-        : getFirstReps(block.targetReps ?? 0) * SECONDS_PER_REP
-    total += sets * work + Math.max(0, sets - 1) * (block.restBetweenSets ?? 60)
-    if (i < program.blocks.length - 1) total += rest
-  })
-  return Math.max(1, Math.round(total / 60))
-}
 
 export default function ProgramImportPreview({
   programData,
@@ -75,7 +64,14 @@ export default function ProgramImportPreview({
   const badge = programData.source ? getSourceBadge(programData.source) : null
   const previewBlocks = programData.blocks.slice(0, PREVIEW_LIMIT)
   const remaining = programData.blocks.length - previewBlocks.length
-  const estMinutes = useMemo(() => estimateMinutes(programData), [programData])
+  const estMinutes = useMemo(
+    () =>
+      estimateSessionMinutes(programData.blocks, {
+        warmupSeconds: programData.initialWarmup?.seconds ?? 0,
+        restBetweenExercises: programData.defaultRestBetweenExercises ?? 60
+      }),
+    [programData]
+  )
 
   return (
     <View style={styles.container}>

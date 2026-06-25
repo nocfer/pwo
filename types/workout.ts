@@ -18,12 +18,15 @@ export type ExerciseSetState = {
   status: SetStatus
   confirmedReps?: number
   confirmedWeight?: number
+  /** Rest after this set (ms). Falls back to ExerciseState.restDurationMs. */
+  restDurationMs?: number
 }
 
 export type ExerciseState = {
   exerciseId: string
   exerciseName: string
   sets: ExerciseSetState[]
+  /** Representative/default rest (ms) — used as fallback and for estimates. */
   restDurationMs?: number
 }
 

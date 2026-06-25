@@ -115,12 +115,14 @@ export function validateProgramData(
           return false
         }
       }
-      // Validate restBetweenSets if present (must be non-negative number)
+      // Validate restBetweenSets if present (non-negative number or per-set array)
       if (blockObj.restBetweenSets !== undefined) {
-        if (
-          typeof blockObj.restBetweenSets !== 'number' ||
-          blockObj.restBetweenSets < 0
-        ) {
+        const rest = blockObj.restBetweenSets
+        const validRest = Array.isArray(rest)
+          ? rest.length > 0 &&
+            rest.every(r => typeof r === 'number' && Number.isFinite(r) && r >= 0)
+          : typeof rest === 'number' && Number.isFinite(rest) && rest >= 0
+        if (!validRest) {
           return false
         }
       }

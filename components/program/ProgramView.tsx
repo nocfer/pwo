@@ -1,5 +1,5 @@
 import { ProgramProgressMetrics, useExerciseNames } from '@/hooks/data'
-import { getFirstReps, getTotalReps } from '@/lib/utils/format'
+import { getFirstReps, getTotalReps, getTotalRest } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import { Program } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
@@ -46,9 +46,7 @@ export default function ProgramView({ program, programMetrics }: Props) {
       totalSets += sets
       totalReps += getTotalReps(block.targetReps, sets)
       // Add rest between sets
-      if (sets > 1) {
-        restSeconds += (block.restBetweenSets ?? 60) * (sets - 1)
-      }
+      restSeconds += getTotalRest(block.restBetweenSets, sets)
     })
 
     if (program.initialWarmup) {

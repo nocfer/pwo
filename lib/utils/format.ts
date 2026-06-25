@@ -46,10 +46,29 @@ export function estimateSessionMinutes(
       typeof block.durationSeconds === 'number'
         ? sets * block.durationSeconds
         : getTotalReps(block.targetReps, sets) * SECONDS_PER_REP
-    total += work + Math.max(0, sets - 1) * (block.restBetweenSets ?? 60)
+    total += work + getTotalRest(block.restBetweenSets, sets)
     if (i < blocks.length - 1) total += restBetweenExercises
   })
   return Math.max(1, Math.round(total / 60))
+}
+
+/**
+ * Total inter-set rest (seconds) for an exercise across its (sets - 1) intervals.
+ * Accepts a single rest value or a per-set array (padded with its last value).
+ */
+export function getTotalRest(
+  restBetweenSets: number | number[] | undefined,
+  sets: number
+): number {
+  const intervals = Math.max(0, sets - 1)
+  if (restBetweenSets === undefined) return 60 * intervals
+  if (typeof restBetweenSets === 'number') return restBetweenSets * intervals
+  let total = 0
+  for (let i = 0; i < intervals; i++) {
+    total +=
+      restBetweenSets[i] ?? restBetweenSets[restBetweenSets.length - 1] ?? 60
+  }
+  return total
 }
 
 /**

@@ -50,11 +50,13 @@ type PickerExercise = {
 type BlockDraft = {
   exerciseId: string
   sets: number
-  restBetweenSets: number // seconds
+  restBetweenSets: number // seconds (single value, used when perSetRest is off)
   mode: 'reps' | 'timed'
   reps: number
   perSetReps: boolean
   perSetRepsValues: number[]
+  perSetRest: boolean
+  perSetRestValues: number[] // seconds, length sets-1 (one per inter-set interval)
   durationSeconds: number
   note: string
   advancedOpen: boolean
@@ -93,6 +95,10 @@ function makeDraft(exerciseId: string): BlockDraft {
     reps: DEFAULT_REPS,
     perSetReps: false,
     perSetRepsValues: Array(DEFAULT_SETS).fill(DEFAULT_REPS),
+    perSetRest: false,
+    perSetRestValues: Array(Math.max(0, DEFAULT_SETS - 1)).fill(
+      DEFAULT_REST_BETWEEN_SETS
+    ),
     durationSeconds: DEFAULT_DURATION,
     note: '',
     advancedOpen: false
@@ -105,6 +111,8 @@ function convertBlocksToDraft(blocks: ProgramBlock[]): BlockDraft[] {
     .map(block => {
       const sets = block.sets && block.sets >= 1 ? block.sets : DEFAULT_SETS
       const isTimed = typeof block.durationSeconds === 'number'
+      const restIntervals = Math.max(0, sets - 1)
+
       const perSetReps = Array.isArray(block.targetReps)
       const perSetRepsValues = perSetReps
         ? (block.targetReps as number[])
@@ -113,15 +121,33 @@ function convertBlocksToDraft(blocks: ProgramBlock[]): BlockDraft[] {
               ? block.targetReps
               : DEFAULT_REPS
           )
+
+      const perSetRest = Array.isArray(block.restBetweenSets)
+      const singleRest =
+        typeof block.restBetweenSets === 'number'
+          ? block.restBetweenSets
+          : Array.isArray(block.restBetweenSets)
+            ? (block.restBetweenSets[0] ?? DEFAULT_REST_BETWEEN_SETS)
+            : DEFAULT_REST_BETWEEN_SETS
+      const perSetRestValues = perSetRest
+        ? (block.restBetweenSets as number[])
+        : Array(restIntervals).fill(singleRest)
+
       return {
         exerciseId: block.exerciseId,
         sets,
-        restBetweenSets: block.restBetweenSets ?? DEFAULT_REST_BETWEEN_SETS,
+        restBetweenSets: singleRest,
         mode: isTimed ? 'timed' : 'reps',
         reps:
           typeof block.targetReps === 'number' ? block.targetReps : DEFAULT_REPS,
         perSetReps,
-        perSetRepsValues: resizeReps(perSetRepsValues, sets),
+        perSetRepsValues: resizeValues(perSetRepsValues, sets, DEFAULT_REPS),
+        perSetRest,
+        perSetRestValues: resizeValues(
+          perSetRestValues,
+          restIntervals,
+          DEFAULT_REST_BETWEEN_SETS
+        ),
         durationSeconds: block.durationSeconds ?? DEFAULT_DURATION,
         note: block.note ?? '',
         advancedOpen: false
@@ -129,20 +155,32 @@ function convertBlocksToDraft(blocks: ProgramBlock[]): BlockDraft[] {
     })
 }
 
-function resizeReps(values: number[], sets: number): number[] {
-  const next = values.slice(0, sets)
-  const fill = values[values.length - 1] ?? DEFAULT_REPS
-  while (next.length < sets) next.push(fill)
+function resizeValues(
+  values: number[],
+  length: number,
+  fallback: number
+): number[] {
+  const next = values.slice(0, Math.max(0, length))
+  const fill = values[values.length - 1] ?? fallback
+  while (next.length < length) next.push(fill)
   return next
 }
 
 function convertDraftToBlocks(drafts: BlockDraft[]): ProgramBlock[] {
   return drafts.map(draft => {
+    const restBetweenSets =
+      draft.perSetRest && draft.sets > 1
+        ? resizeValues(
+            draft.perSetRestValues,
+            draft.sets - 1,
+            DEFAULT_REST_BETWEEN_SETS
+          )
+        : draft.restBetweenSets
     const base = {
       type: 'exercise' as const,
       exerciseId: draft.exerciseId,
       sets: draft.sets,
-      restBetweenSets: draft.restBetweenSets,
+      restBetweenSets,
       ...(draft.note.trim() ? { note: draft.note.trim() } : {})
     }
     if (draft.mode === 'timed') {
@@ -151,7 +189,7 @@ function convertDraftToBlocks(drafts: BlockDraft[]): ProgramBlock[] {
     return {
       ...base,
       targetReps: draft.perSetReps
-        ? resizeReps(draft.perSetRepsValues, draft.sets)
+        ? resizeValues(draft.perSetRepsValues, draft.sets, DEFAULT_REPS)
         : draft.reps
     }
   })
@@ -224,7 +262,16 @@ export function ProgramForm({
       prev.map((b, i) => {
         if (i !== index) return b
         const sets = Math.max(1, b.sets + delta)
-        return { ...b, sets, perSetRepsValues: resizeReps(b.perSetRepsValues, sets) }
+        return {
+          ...b,
+          sets,
+          perSetRepsValues: resizeValues(b.perSetRepsValues, sets, DEFAULT_REPS),
+          perSetRestValues: resizeValues(
+            b.perSetRestValues,
+            Math.max(0, sets - 1),
+            DEFAULT_REST_BETWEEN_SETS
+          )
+        }
       })
     )
   }, [])
@@ -251,9 +298,27 @@ export function ProgramForm({
       setBlocks(prev =>
         prev.map((b, i) => {
           if (i !== index) return b
-          const values = resizeReps(b.perSetRepsValues, b.sets)
+          const values = resizeValues(b.perSetRepsValues, b.sets, DEFAULT_REPS)
           values[setIdx] = value
           return { ...b, perSetRepsValues: values }
+        })
+      )
+    },
+    []
+  )
+
+  const setPerSetRestValue = useCallback(
+    (index: number, restIdx: number, value: number) => {
+      setBlocks(prev =>
+        prev.map((b, i) => {
+          if (i !== index) return b
+          const values = resizeValues(
+            b.perSetRestValues,
+            Math.max(0, b.sets - 1),
+            DEFAULT_REST_BETWEEN_SETS
+          )
+          values[restIdx] = value
+          return { ...b, perSetRestValues: values }
         })
       )
     },
@@ -561,6 +626,7 @@ export function ProgramForm({
               {blocks.map((block, index) => {
                 const ex = exerciseById.get(block.exerciseId)
                 const showRepsStepper = block.mode === 'reps' && !block.perSetReps
+                const showRestStepper = !block.perSetRest
                 return (
                   <View
                     key={`${block.exerciseId}-${index}`}
@@ -648,16 +714,18 @@ export function ProgramForm({
                           }
                         />
                       )}
-                      <Stepper
-                        label="REST"
-                        display={formatTime(block.restBetweenSets)}
-                        onDecrement={() =>
-                          adjustField(index, 'restBetweenSets', -REST_STEP, 0)
-                        }
-                        onIncrement={() =>
-                          adjustField(index, 'restBetweenSets', REST_STEP, 0)
-                        }
-                      />
+                      {showRestStepper && (
+                        <Stepper
+                          label="REST"
+                          display={formatTime(block.restBetweenSets)}
+                          onDecrement={() =>
+                            adjustField(index, 'restBetweenSets', -REST_STEP, 0)
+                          }
+                          onIncrement={() =>
+                            adjustField(index, 'restBetweenSets', REST_STEP, 0)
+                          }
+                        />
+                      )}
                     </View>
 
                     {/* Advanced */}
@@ -695,9 +763,10 @@ export function ProgramForm({
                             </View>
                             {block.perSetReps && (
                               <View style={styles.perSetRow}>
-                                {resizeReps(
+                                {resizeValues(
                                   block.perSetRepsValues,
-                                  block.sets
+                                  block.sets,
+                                  DEFAULT_REPS
                                 ).map((value, setIdx) => (
                                   <View key={setIdx} style={styles.perSetBox}>
                                     <Text style={styles.perSetLabel}>
@@ -709,6 +778,54 @@ export function ProgramForm({
                                         setPerSetValue(
                                           index,
                                           setIdx,
+                                          parseInt(
+                                            v.replace(/[^0-9]/g, ''),
+                                            10
+                                          ) || 0
+                                        )
+                                      }
+                                      keyboardType="number-pad"
+                                      style={styles.perSetInput}
+                                      selectionColor={theme.colors.primary}
+                                    />
+                                  </View>
+                                ))}
+                              </View>
+                            )}
+                          </View>
+                        )}
+
+                        {block.sets > 1 && (
+                          <View>
+                            <View style={styles.advancedRow}>
+                              <Text style={styles.advancedLabel}>
+                                Per-set rest
+                              </Text>
+                              <ToggleSwitch
+                                value={block.perSetRest}
+                                onValueChange={value =>
+                                  updateBlock(index, { perSetRest: value })
+                                }
+                                accessibilityLabel="Per-set rest"
+                              />
+                            </View>
+                            {block.perSetRest && (
+                              <View style={styles.perSetRow}>
+                                {resizeValues(
+                                  block.perSetRestValues,
+                                  block.sets - 1,
+                                  DEFAULT_REST_BETWEEN_SETS
+                                ).map((value, restIdx) => (
+                                  <View key={restIdx} style={styles.perSetBox}>
+                                    <Text style={styles.perSetLabel}>
+                                      {restIdx + 1}→{restIdx + 2} (S)
+                                    </Text>
+                                    <TextInput
+                                      value={String(value)}
+                                      onChangeText={v =>
+                                        setPerSetRestValue(
+                                          index,
+                                          restIdx,
                                           parseInt(
                                             v.replace(/[^0-9]/g, ''),
                                             10

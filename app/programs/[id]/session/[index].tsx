@@ -175,11 +175,14 @@ function WorkoutSessionContent() {
 
       const next = findNextPendingSet(state.exercises, exerciseIndex, setIndex)
       if (next) {
-        // Rest precedes the next set, so use that set's exercise duration —
-        // findNextPendingSet can wrap to a different exercise than the one
-        // just finished, and the RestSheet previews the next set.
+        // Within the same exercise, honor the just-finished set's per-set rest;
+        // when wrapping to another exercise, fall back to that exercise's rest.
         const durationMs =
-          state.exercises[next.exerciseIndex].restDurationMs ?? 60000
+          next.exerciseIndex === exerciseIndex
+            ? (set.restDurationMs ??
+              exercise.restDurationMs ??
+              60000)
+            : (state.exercises[next.exerciseIndex].restDurationMs ?? 60000)
         if (durationMs > 0) startRestTimer(durationMs)
       } else {
         haptics.workoutCompleted()
