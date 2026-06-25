@@ -2,7 +2,7 @@ import { formatClock, spokenDuration } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import Animated, { SlideInDown } from 'react-native-reanimated'
+import Animated, { SlideInDown, useReducedMotion } from 'react-native-reanimated'
 import { CountdownRing } from './CountdownRing'
 
 export type RestSheetProps = {
@@ -28,9 +28,15 @@ export function RestSheet({
 }: RestSheetProps) {
   const progress =
     durationMs > 0 ? Math.min(1, Math.max(0, remainingMs / durationMs)) : 0
+  const reduced = useReducedMotion()
 
   return (
-    <Animated.View style={styles.sheet} entering={SlideInDown.duration(350)}>
+    <Animated.View
+      style={styles.sheet}
+      entering={
+        reduced ? undefined : SlideInDown.duration(theme.motion.durationSheet)
+      }
+    >
       <View style={styles.topRow}>
         <View
           accessibilityRole="timer"

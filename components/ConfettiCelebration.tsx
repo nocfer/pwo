@@ -2,6 +2,7 @@ import { haptics } from '@/lib/haptics'
 import { theme } from '@/theme/theme'
 import React, { useEffect, useRef, useState } from 'react'
 import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native'
+import { useReducedMotion } from 'react-native-reanimated'
 import ConfettiCannon from 'react-native-confetti-cannon'
 
 type ConfettiCelebrationProps = {
@@ -31,28 +32,39 @@ export function ConfettiCelebration({
   const [isVisible, setIsVisible] = useState(false)
   const fadeAnim = useRef(new Animated.Value(0)).current
   const scaleAnim = useRef(new Animated.Value(0.8)).current
+  const reduced = useReducedMotion()
 
   useEffect(() => {
     if (show) {
       setIsVisible(true)
 
-      // Trigger haptics
+      // Trigger haptics (fires regardless of reduce-motion)
       haptics.celebration()
 
-      // Animate message in
-      Animated.parallel([
+      // Animate message in. Under reduce-motion: fade only, no scale spring
+      // (and the confetti cannons below are skipped entirely).
+      if (reduced) {
+        scaleAnim.setValue(1)
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 300,
           useNativeDriver: true
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 4,
-          tension: 100,
-          useNativeDriver: true
-        })
-      ]).start()
+        }).start()
+      } else {
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true
+          }),
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            friction: 4,
+            tension: 100,
+            useNativeDriver: true
+          })
+        ]).start()
+      }
 
       // Auto-hide after delay
       const timer = setTimeout(() => {
@@ -72,31 +84,35 @@ export function ConfettiCelebration({
       scaleAnim.setValue(0.8)
       setIsVisible(false)
     }
-  }, [show, fadeAnim, scaleAnim, onComplete])
+  }, [show, fadeAnim, scaleAnim, onComplete, reduced])
 
   if (!isVisible) return null
 
   return (
     <View style={[styles.container, { pointerEvents: 'none' }]}>
-      {/* Confetti cannons from both sides */}
-      <ConfettiCannon
-        count={80}
-        origin={{ x: 0, y: SCREEN_HEIGHT * 0.3 }}
-        autoStart={true}
-        fadeOut={true}
-        fallSpeed={3000}
-        explosionSpeed={400}
-        colors={CONFETTI_COLORS}
-      />
-      <ConfettiCannon
-        count={80}
-        origin={{ x: SCREEN_WIDTH, y: SCREEN_HEIGHT * 0.3 }}
-        autoStart={true}
-        fadeOut={true}
-        fallSpeed={3000}
-        explosionSpeed={400}
-        colors={CONFETTI_COLORS}
-      />
+      {/* Confetti cannons from both sides — skipped under reduce-motion. */}
+      {!reduced && (
+        <>
+          <ConfettiCannon
+            count={80}
+            origin={{ x: 0, y: SCREEN_HEIGHT * 0.3 }}
+            autoStart={true}
+            fadeOut={true}
+            fallSpeed={3000}
+            explosionSpeed={400}
+            colors={CONFETTI_COLORS}
+          />
+          <ConfettiCannon
+            count={80}
+            origin={{ x: SCREEN_WIDTH, y: SCREEN_HEIGHT * 0.3 }}
+            autoStart={true}
+            fadeOut={true}
+            fallSpeed={3000}
+            explosionSpeed={400}
+            colors={CONFETTI_COLORS}
+          />
+        </>
+      )}
 
       {/* Celebration message */}
       <Animated.View

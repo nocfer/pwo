@@ -12,6 +12,7 @@ import Animated, {
   cancelAnimation,
   Easing,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming
@@ -30,6 +31,7 @@ export default function QRCodeScanner({ onScan, onClose, onImportFile }: Props) 
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
   const [scanned, setScanned] = useState(false)
   const scanY = useSharedValue(0)
+  const reduced = useReducedMotion()
 
   useEffect(() => {
     const getCameraPermissions = async () => {
@@ -40,6 +42,12 @@ export default function QRCodeScanner({ onScan, onClose, onImportFile }: Props) 
   }, [])
 
   useEffect(() => {
+    // The sweeping scan line is a loop — disabled under reduce-motion, where it
+    // rests centered in the frame instead.
+    if (reduced) {
+      scanY.value = SCAN_TRAVEL / 2
+      return
+    }
     scanY.value = withRepeat(
       withTiming(SCAN_TRAVEL, {
         duration: 2600,
@@ -49,7 +57,7 @@ export default function QRCodeScanner({ onScan, onClose, onImportFile }: Props) 
       true
     )
     return () => cancelAnimation(scanY)
-  }, [scanY])
+  }, [scanY, reduced])
 
   const scanLineStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: scanY.value }]

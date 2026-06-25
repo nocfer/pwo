@@ -3,7 +3,7 @@ import type { SetStatus } from '@/types/workout'
 import { Ionicons } from '@expo/vector-icons'
 import React from 'react'
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
-import Animated, { SlideInDown } from 'react-native-reanimated'
+import Animated, { SlideInDown, useReducedMotion } from 'react-native-reanimated'
 
 export type EditorField = 'weight' | 'reps'
 
@@ -61,6 +61,7 @@ export function InlineSetEditor({
 
   const decrement = () => onChange(Math.max(floor, value - step))
   const increment = () => onChange(value + step)
+  const reduced = useReducedMotion()
 
   return (
     <Modal
@@ -76,7 +77,9 @@ export function InlineSetEditor({
       >
         <Animated.View
           style={styles.cardWrap}
-          entering={SlideInDown.duration(350)}
+          entering={
+            reduced ? undefined : SlideInDown.duration(theme.motion.durationSheet)
+          }
         >
           <Pressable style={styles.card} onPress={() => {}}>
           <Text style={styles.title}>

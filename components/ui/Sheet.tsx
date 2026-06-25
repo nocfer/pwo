@@ -42,7 +42,9 @@ export default function Sheet({ visible, onClose, title, children }: Props) {
           entering={
             reducedMotion ? undefined : SlideInDown.duration(theme.motion.durationSheet)
           }
-          exiting={reducedMotion ? undefined : SlideOutDown.duration(220)}
+          exiting={
+            reducedMotion ? undefined : SlideOutDown.duration(theme.motion.duration.base)
+          }
           style={[styles.sheet, { paddingBottom: insets.bottom + theme.spacing.lg }]}
         >
           {/* Stop taps inside the sheet from closing it. */}

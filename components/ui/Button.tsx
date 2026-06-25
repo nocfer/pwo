@@ -3,11 +3,12 @@
  *
  * Variants: primary (lime fill + dark text) · secondary (panel + border) ·
  * ghost (lime text, no fill) · danger (danger tint + danger text/border).
- * Sizes: sm | md | lg — md is 48 tall (the spec default). Pressed = scale 0.98;
- * disabled = recessed #1c1e25 fill + muted text; loading swaps the label for a
- * spinner and blocks presses.
+ * Sizes: sm | md | lg — md is 48 tall (the spec default). Press feedback (scale
+ * + fade + light haptic) comes from usePressScale; disabled = recessed #1c1e25
+ * fill + muted text; loading swaps the label for a spinner and blocks presses.
  */
 
+import { usePressScale } from '@/hooks/usePressScale'
 import { theme } from '@/theme/theme'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import {
@@ -18,6 +19,9 @@ import {
   View,
   ViewStyle
 } from 'react-native'
+import Animated from 'react-native-reanimated'
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 export type ButtonSize = 'sm' | 'md' | 'lg'
@@ -51,24 +55,30 @@ export default function Button({
 }: Props) {
   const isDisabled = disabled || loading
   const fg = foreground(variant, isDisabled)
+  const press = usePressScale({
+    enabled: !isDisabled,
+    // Ghost has no fill, so it leans on a deeper fade to register the press.
+    pressedOpacity: variant === 'ghost' ? 0.6 : 0.9
+  })
 
   return (
     <View style={[styles.container, fullWidth && styles.fullWidth, style]}>
-      <Pressable
+      <AnimatedPressable
         onPress={onPress}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
         disabled={isDisabled}
         // Guarantee a ≥44px touch target even for the sm size.
         hitSlop={size === 'sm' ? 8 : 0}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? label}
         accessibilityState={{ disabled: isDisabled, busy: loading }}
-        style={({ pressed }) => [
+        style={[
           styles.base,
           sizeStyles[size],
           variantStyles[variant],
-          pressed && !isDisabled && styles.pressed,
-          pressed && !isDisabled && variant === 'ghost' && styles.pressedGhost,
-          isDisabled && styles.disabled
+          isDisabled && styles.disabled,
+          !isDisabled && press.animatedStyle
         ]}
       >
         {loading ? (
@@ -91,7 +101,7 @@ export default function Button({
             </Text>
           </>
         )}
-      </Pressable>
+      </AnimatedPressable>
     </View>
   )
 }
@@ -124,13 +134,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: 'transparent'
-  },
-  pressed: {
-    transform: [{ scale: theme.motion.pressScale }],
-    opacity: 0.9
-  },
-  pressedGhost: {
-    opacity: 0.6
   },
   disabled: {
     backgroundColor: theme.colors.disabledBg,

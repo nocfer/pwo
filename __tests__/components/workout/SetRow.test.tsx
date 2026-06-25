@@ -31,7 +31,8 @@ vi.mock('react-native', () => ({
   }),
   StyleSheet: {
     create: <T extends Record<string, unknown>>(styles: T): T => styles
-  }
+  },
+  Platform: { OS: 'ios' }
 }))
 
 function renderSetRow(overrides?: Partial<Parameters<typeof SetRow>[0]>) {

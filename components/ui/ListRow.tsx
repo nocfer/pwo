@@ -6,10 +6,14 @@
  * Press feedback matches the kit's standard scale.
  */
 
+import { usePressScale } from '@/hooks/usePressScale'
 import { theme } from '@/theme/theme'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import Animated from 'react-native-reanimated'
 import Checkbox from './Checkbox'
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export type ListRowTrailing = 'chevron' | 'check' | 'none'
 
@@ -32,17 +36,21 @@ export default function ListRow({
   onPress,
   disabled = false
 }: Props) {
+  const interactive = !!onPress && !disabled
+  const press = usePressScale({ enabled: interactive, pressedOpacity: 0.95 })
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
       disabled={disabled || !onPress}
       accessibilityRole="button"
       accessibilityState={{ selected, disabled }}
-      style={({ pressed }) => [
+      style={[
         styles.row,
         selected && styles.rowSelected,
-        pressed && !disabled && styles.pressed,
-        disabled && styles.disabled
+        disabled && styles.disabled,
+        interactive && press.animatedStyle
       ]}
     >
       {leadingIcon && (
@@ -70,7 +78,7 @@ export default function ListRow({
         />
       )}
       {trailing === 'check' && <Checkbox checked={selected} />}
-    </Pressable>
+    </AnimatedPressable>
   )
 }
 
@@ -88,10 +96,6 @@ const styles = StyleSheet.create({
   rowSelected: {
     backgroundColor: theme.colors.primaryTint,
     borderColor: theme.colors.borderActive
-  },
-  pressed: {
-    transform: [{ scale: theme.motion.pressScale }],
-    opacity: 0.95
   },
   disabled: {
     opacity: 0.5

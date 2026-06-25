@@ -1,8 +1,18 @@
+import { haptics } from '@/lib/haptics'
+import { popScale } from '@/lib/motion'
+import { ActiveGlow } from '@/components/workout/ActiveGlow'
 import { theme } from '@/theme/theme'
 import type { SetStatus } from '@/types/workout'
 import { Ionicons } from '@expo/vector-icons'
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue
+} from 'react-native-reanimated'
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export type SetRowProps = {
   setNumber: number
@@ -48,6 +58,23 @@ export function SetRow({
   const isCompleted = status === 'completed'
   const isSkipped = status === 'skipped'
 
+  // Log pop: pressing the active check logs the set — the check pops (overshoot
+  // → settle) and the success haptic fires at the same instant as the tap.
+  const reduced = useReducedMotion()
+  const checkScale = useSharedValue(1)
+  const checkAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: checkScale.value }]
+  }))
+  const onCheckPress = () => {
+    if (isActive) {
+      checkScale.value = popScale(reduced)
+      haptics.setComplete()
+      onConfirm()
+    } else {
+      onPress()
+    }
+  }
+
   const valueStyle = [
     styles.value,
     isActive && styles.valueActive,
@@ -72,6 +99,7 @@ export function SetRow({
       accessibilityLabel={a11yLabel}
       style={[styles.row, isActive && styles.rowActive, isSkipped && styles.rowSkipped]}
     >
+      {isActive && <ActiveGlow />}
       <Text style={numStyle}>{setNumber}</Text>
 
       <Pressable
@@ -92,8 +120,8 @@ export function SetRow({
         <Text style={valueStyle}>{reps}</Text>
       </Pressable>
 
-      <Pressable
-        onPress={isActive ? onConfirm : onPress}
+      <AnimatedPressable
+        onPress={onCheckPress}
         accessibilityRole="button"
         accessibilityLabel={
           isActive
@@ -108,7 +136,8 @@ export function SetRow({
           isActive && styles.checkActive,
           isCompleted && styles.checkCompleted,
           isSkipped && styles.checkSkipped,
-          status === 'pending' && styles.checkPending
+          status === 'pending' && styles.checkPending,
+          checkAnimStyle
         ]}
       >
         {isActive ? (
@@ -130,7 +159,7 @@ export function SetRow({
             color={theme.colors.session.skippedNum}
           />
         ) : null}
-      </Pressable>
+      </AnimatedPressable>
     </View>
   )
 }

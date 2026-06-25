@@ -3,6 +3,7 @@ import type { ExerciseState } from '@/types/workout'
 import { Ionicons } from '@expo/vector-icons'
 import React, { useCallback } from 'react'
 import { LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native'
+import { useReducedMotion } from 'react-native-reanimated'
 import { SetRow } from './SetRow'
 
 export type ExerciseAccordionItemProps = {
@@ -131,11 +132,15 @@ export function ExerciseAccordionItem({
   const status = getStatus(exercise)
   const total = exercise.sets.length
   const resolved = resolvedCount(exercise)
+  const reduced = useReducedMotion()
 
   const handleToggle = useCallback(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+    // Skip the expand/collapse height animation under reduce-motion (snap open).
+    if (!reduced) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+    }
     onToggle()
-  }, [onToggle])
+  }, [onToggle, reduced])
 
   // ---- Expanded card ----
   if (isExpanded) {

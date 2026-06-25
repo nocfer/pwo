@@ -6,9 +6,13 @@
  * whole card a pressable (adds the standard press-scale).
  */
 
+import { usePressScale } from '@/hooks/usePressScale'
 import { theme } from '@/theme/theme'
 import { ReactNode } from 'react'
 import { Pressable, StyleSheet, View, ViewStyle } from 'react-native'
+import Animated from 'react-native-reanimated'
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export type CardTone = 'panel' | 'elevated' | 'accent'
 
@@ -31,19 +35,24 @@ export default function Card({
 }: Props) {
   const base = [styles.card, toneStyles[tone], { padding }, style]
 
+  // Hooks must run unconditionally; the result is only used when pressable.
+  const press = usePressScale()
+
   if (!onPress) {
     return <View style={base}>{children}</View>
   }
 
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      style={({ pressed }) => [...base, pressed && styles.pressed]}
+      style={[...base, press.animatedStyle]}
     >
       {children}
-    </Pressable>
+    </AnimatedPressable>
   )
 }
 
@@ -51,10 +60,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: theme.radius.card,
     borderWidth: 1
-  },
-  pressed: {
-    transform: [{ scale: theme.motion.pressScale }],
-    opacity: 0.95
   }
 })
 

@@ -8,6 +8,7 @@ import type { PersonalRecord } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
 import { useEffect, useRef } from 'react'
 import { Animated, StyleSheet, Text, View } from 'react-native'
+import { useReducedMotion } from 'react-native-reanimated'
 
 type Props = {
   pr: PersonalRecord
@@ -49,8 +50,16 @@ export default function PRItem({
   const scaleAnim = useRef(new Animated.Value(0.95)).current
   const opacityAnim = useRef(new Animated.Value(0)).current
   const pulseAnim = useRef(new Animated.Value(1)).current
+  const reduced = useReducedMotion()
 
   useEffect(() => {
+    // Reduce-motion: no entrance, no "NEW" badge pulse loop — render at rest.
+    if (reduced) {
+      scaleAnim.setValue(1)
+      opacityAnim.setValue(1)
+      pulseAnim.setValue(1)
+      return
+    }
     // Staggered entrance animation
     const entranceAnim = Animated.sequence([
       Animated.delay(index * 50),
@@ -93,7 +102,7 @@ export default function PRItem({
       entranceAnim.stop()
       pulseLoop?.stop()
     }
-  }, [index, isNew, scaleAnim, opacityAnim, pulseAnim])
+  }, [index, isNew, scaleAnim, opacityAnim, pulseAnim, reduced])
 
   return (
     <Animated.View

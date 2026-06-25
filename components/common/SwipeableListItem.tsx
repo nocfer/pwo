@@ -8,6 +8,7 @@ import ReanimatedSwipeable, {
 } from 'react-native-gesture-handler/ReanimatedSwipeable'
 import Animated, {
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withDelay,
   withSpring,
@@ -54,6 +55,7 @@ export function SwipeableListItem({
 }: SwipeableListItemProps) {
   const swipeableRef = useRef<SwipeableMethods>(null)
   const appeared = useSharedValue(0)
+  const reduced = useReducedMotion()
 
   const handleDelete = useCallback(() => {
     haptics.deleteItem()
@@ -63,10 +65,11 @@ export function SwipeableListItem({
 
   const handleWillOpen = useCallback(() => {
     haptics.swipeAction()
-    // Trigger the bounce animation when the panel opens
+    // Trigger the bounce when the panel opens; under reduce-motion the trash
+    // icon simply appears (no scale/rotate spring).
     appeared.value = 0
-    appeared.value = withDelay(50, withSpring(1, BOUNCE_SPRING))
-  }, [appeared])
+    appeared.value = reduced ? 1 : withDelay(50, withSpring(1, BOUNCE_SPRING))
+  }, [appeared, reduced])
 
   const handleClose = useCallback(() => {
     appeared.value = 0

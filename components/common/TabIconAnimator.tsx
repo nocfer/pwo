@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import Animated, {
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSpring
 } from 'react-native-reanimated'
@@ -127,9 +128,24 @@ export function TabIconAnimator({
   const translateY = useSharedValue(0)
   const dotScale = useSharedValue(focused ? 1 : 0)
   const dotOpacity = useSharedValue(focused ? 1 : 0)
+  const reduced = useReducedMotion()
 
   // ---- React to focused changes ----
   useEffect(() => {
+    // Under reduce-motion, jump to the focused/unfocused target with no spring
+    // overshoot and no vertical bounce — the indicator just swaps state.
+    if (reduced) {
+      scale.value = focused
+        ? ANIMATION_PARAMS.activeScale
+        : ANIMATION_PARAMS.inactiveScale
+      opacity.value = focused
+        ? ANIMATION_PARAMS.activeOpacity
+        : ANIMATION_PARAMS.inactiveOpacity
+      translateY.value = 0
+      dotScale.value = focused ? 1 : 0
+      dotOpacity.value = focused ? 1 : 0
+      return
+    }
     if (focused) {
       // Active targets with spring overshoot
       scale.value = withSpring(ANIMATION_PARAMS.activeScale, TAB_SPRING_CONFIG)
@@ -161,7 +177,7 @@ export function TabIconAnimator({
       dotScale.value = withSpring(0, TAB_SPRING_CONFIG)
       dotOpacity.value = withSpring(0, TAB_SPRING_CONFIG)
     }
-  }, [focused, scale, opacity, translateY, dotScale, dotOpacity])
+  }, [focused, reduced, scale, opacity, translateY, dotScale, dotOpacity])
 
   // ---- Animated styles for the icon container ----
   const iconAnimatedStyle = useAnimatedStyle(() => ({

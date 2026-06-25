@@ -25,7 +25,9 @@ export function OfflineBanner() {
   return (
     <Animated.View
       entering={reducedMotion ? undefined : SlideInUp.duration(theme.motion.durationBanner)}
-      exiting={reducedMotion ? undefined : SlideOutUp.duration(200)}
+      exiting={
+        reducedMotion ? undefined : SlideOutUp.duration(theme.motion.duration.fast)
+      }
     >
       <Banner
         tone="offline"

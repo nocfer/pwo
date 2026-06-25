@@ -42,7 +42,8 @@ vi.mock('react-native', () => ({
   }),
   StyleSheet: {
     create: <T extends Record<string, unknown>>(styles: T): T => styles
-  }
+  },
+  Platform: { OS: 'ios' }
 }))
 
 function makeActiveExercise(overrides?: Partial<ExerciseState>): ExerciseState {

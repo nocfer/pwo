@@ -1,6 +1,7 @@
 import { theme } from '@/theme/theme'
 import React, { useEffect, useRef } from 'react'
 import { Animated, ViewStyle } from 'react-native'
+import { useReducedMotion } from 'react-native-reanimated'
 
 type AnimatedCardProps = {
   children: React.ReactNode
@@ -19,8 +20,15 @@ export function AnimatedCard({
 }: AnimatedCardProps) {
   const fadeAnim = useRef(new Animated.Value(1)).current
   const slideAnim = useRef(new Animated.Value(0)).current
+  const reduced = useReducedMotion()
 
   useEffect(() => {
+    // Reduce-motion: no slide — rest fully visible and in place.
+    if (reduced) {
+      fadeAnim.setValue(1)
+      slideAnim.setValue(0)
+      return
+    }
     // Start from slightly offset, already visible
     fadeAnim.setValue(0.85)
     slideAnim.setValue(6)
@@ -39,7 +47,7 @@ export function AnimatedCard({
         useNativeDriver: true
       })
     ]).start()
-  }, [fadeAnim, slideAnim, delay])
+  }, [fadeAnim, slideAnim, delay, reduced])
 
   return (
     <Animated.View
@@ -114,8 +122,14 @@ export function PulseAnimation({
   style
 }: PulseAnimationProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current
+  const reduced = useReducedMotion()
 
   useEffect(() => {
+    // Reduce-motion: no continuous pulse loop — hold at rest scale.
+    if (reduced) {
+      scaleAnim.setValue(1)
+      return
+    }
     if (isActive) {
       const pulse = Animated.loop(
         Animated.sequence([
@@ -136,7 +150,7 @@ export function PulseAnimation({
     } else {
       scaleAnim.setValue(1)
     }
-  }, [isActive, scaleAnim])
+  }, [isActive, scaleAnim, reduced])
 
   return (
     <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, style]}>

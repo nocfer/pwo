@@ -1,6 +1,7 @@
 import { Button, Segmented, Toggle } from '@/components/ui'
 import { useAuth } from '@/context/AuthContext'
 import { usePrograms } from '@/hooks/data'
+import { getHapticsEnabled, haptics, setHapticsEnabled } from '@/lib/haptics'
 import { getInitials } from '@/lib/utils/format'
 import { encodeProgramForShare } from '@/lib/utils/programShare'
 import { theme } from '@/theme/theme'
@@ -24,8 +25,9 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 const isWeb = Platform.OS === 'web'
 
-// NOTE: the preference toggles below are mocked with local state. A dedicated
-// settings backend is planned — wire these to it (and persist) when it lands.
+// NOTE: most preference toggles below are still mocked with local state pending
+// a dedicated settings backend. The "Haptic feedback" toggle is real — it
+// persists to MMKV via lib/haptics and gates every haptic in the app.
 
 function showAlert(title: string, message: string) {
   if (isWeb) {
@@ -63,7 +65,14 @@ export default function ProfileScreen() {
   const [workoutReminders, setWorkoutReminders] = useState(false)
   const [autoStartRest, setAutoStartRest] = useState(true)
   const [soundEffects, setSoundEffects] = useState(true)
-  const [hapticFeedback, setHapticFeedback] = useState(true)
+  // Real, persisted preference (MMKV-backed via lib/haptics).
+  const [hapticFeedback, setHapticFeedback] = useState(getHapticsEnabled)
+  const handleHapticsChange = useCallback((enabled: boolean) => {
+    setHapticsEnabled(enabled)
+    setHapticFeedback(enabled)
+    // Fire a confirming tap when turning on (no-ops when off, by design).
+    if (enabled) haptics.buttonTap()
+  }, [])
 
   // Guest-upgrade modal state.
   const [upgradeOpen, setUpgradeOpen] = useState(false)
@@ -286,7 +295,7 @@ export default function ProfileScreen() {
             right={
               <Toggle
                 value={hapticFeedback}
-                onChange={setHapticFeedback}
+                onChange={handleHapticsChange}
                 accessibilityLabel="Haptic feedback"
               />
             }

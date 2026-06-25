@@ -1,12 +1,26 @@
 import * as Haptics from 'expo-haptics'
 import { Platform } from 'react-native'
+import { storage } from './mmkv'
 
 /**
  * Centralized haptics utility for consistent feedback throughout the app
  */
 
-// Check if haptics are available (iOS only for expo-haptics)
-const isHapticsAvailable = () => Platform.OS === 'ios'
+const HAPTICS_ENABLED_KEY = 'settings.hapticsEnabled'
+
+/** Whether the user has haptics turned on (default true). */
+export function getHapticsEnabled(): boolean {
+  return storage.getBoolean(HAPTICS_ENABLED_KEY) ?? true
+}
+
+/** Persist the user's haptics preference. */
+export function setHapticsEnabled(enabled: boolean): void {
+  storage.set(HAPTICS_ENABLED_KEY, enabled)
+}
+
+// Haptics fire only on iOS (expo-haptics no-ops elsewhere) and only when the
+// user hasn't disabled them in settings.
+const isHapticsAvailable = () => Platform.OS === 'ios' && getHapticsEnabled()
 
 /**
  * Light tap - for minor interactions like button taps, toggles

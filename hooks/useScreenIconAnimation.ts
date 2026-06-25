@@ -10,6 +10,7 @@ import Animated, {
   type SharedValue,
   useAnimatedReaction,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withDelay,
   withSequence,
@@ -170,6 +171,7 @@ export function AnimatedIcon({
   const translateX = useSharedValue(0)
   const rotate = useSharedValue(0)
   const hasAnimated = useSharedValue(0)
+  const reduced = useReducedMotion()
 
   const duration = config.duration ?? DEFAULT_DURATIONS[config.type]
   const delay = config.delay ?? index * staggerDelay
@@ -183,6 +185,17 @@ export function AnimatedIcon({
     () => trigger.value,
     (current, previous) => {
       if (current !== previous) {
+        // Reduce-motion: reveal the icon at rest — no scale/rotate/translate
+        // entrance — just ensure it's visible.
+        if (reduced) {
+          scale.value = 1
+          opacity.value = 1
+          translateY.value = 0
+          translateX.value = 0
+          rotate.value = 0
+          hasAnimated.value = 1
+          return
+        }
         // Keep content visible if already animated once (prevents white flash)
         const keepVisible = hasAnimated.value === 1
         scale.value = keepVisible ? 1 : 0
@@ -200,7 +213,8 @@ export function AnimatedIcon({
           duration
         )
       }
-    }
+    },
+    [reduced]
   )
 
   const animatedStyle = useAnimatedStyle(() => ({

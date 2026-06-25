@@ -7,6 +7,7 @@ import {
   getCategoryColors,
   getSourceBadge
 } from '@/lib/utils'
+import { layoutShift } from '@/lib/motion'
 import { theme } from '@/theme/theme'
 import type { Program } from '@/types'
 import type { DataType } from '@/types/enhanced'
@@ -14,13 +15,13 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useMemo, useState } from 'react'
 import {
   ActivityIndicator,
-  FlatList,
   Pressable,
   StyleSheet,
   Text,
   View,
   ViewStyle
 } from 'react-native'
+import Animated, { useReducedMotion } from 'react-native-reanimated'
 import {
   Dot,
   EmptyState,
@@ -101,6 +102,7 @@ export function SearchableList({
 }: Props) {
   const [searchQuery, setSearchQuery] = useState('')
   const selectionMode = selectedItems.length > 0
+  const reduced = useReducedMotion()
 
   // Filter data based on search query
   const filteredData = useMemo(() => {
@@ -328,10 +330,13 @@ export function SearchableList({
           style={styles.emptyState}
         />
       ) : (
-        <FlatList
+        <Animated.FlatList
           data={filteredData}
           renderItem={renderItem}
           keyExtractor={item => item.id}
+          // Siblings slide to close/open the gap when an item is deleted,
+          // restored via undo, or created. Off under reduce-motion.
+          itemLayoutAnimation={layoutShift(reduced)}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
           onEndReached={onEndReached}
@@ -348,6 +353,10 @@ export function SearchableList({
     </View>
   )
 }
+
+// Note: itemLayoutAnimation only animates layout (reflow). Per-item entering/
+// exiting fades are intentionally omitted — FlatList view recycling re-fires
+// them while scrolling, which reads as flicker on long lists.
 
 const styles = StyleSheet.create({
   container: {

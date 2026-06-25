@@ -87,7 +87,9 @@ export default function UndoToast({
   return (
     <Animated.View
       entering={reducedMotion ? undefined : SlideInDown.duration(theme.motion.durationToast)}
-      exiting={reducedMotion ? undefined : SlideOutDown.duration(180)}
+      exiting={
+        reducedMotion ? undefined : SlideOutDown.duration(theme.motion.duration.fast)
+      }
       style={[styles.container, { paddingBottom: insets.bottom + theme.spacing.md }]}
       pointerEvents="box-none"
     >

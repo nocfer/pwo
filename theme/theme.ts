@@ -189,14 +189,35 @@ const shadows = {
   }
 } as const
 
-// Motion tokens — durations (ms) and the canonical press scale. Components must
-// gate animations behind useReducedMotion(); these are the values to use when
-// motion is allowed.
+// Motion tokens — the single source for every timing, easing and spring in the
+// app. Components must gate animations behind useReducedMotion(); these are the
+// values to use when motion is allowed. lib/motion.ts turns these into the
+// concrete Reanimated presets — never hand-write durations/curves in a component.
 const motion = {
-  pressScale: 0.98, // pressed-state shrink for buttons / rows / chips
-  durationSheet: 350, // bottom-sheet slide-up / backdrop fade
-  durationToast: 260, // toast slide-in
-  durationBanner: 280 // banner slide-down
+  // Duration scale (ms). instant→celebrate escalates with the weight of the
+  // change; loop durations drive the only two idle animations (glow, shimmer).
+  duration: {
+    instant: 80, // micro state flips (toggle, checkbox)
+    fast: 150, // press, tab/segment crossfade
+    base: 240, // sheet/bar/banner/toast enter, list layout shift
+    slow: 350, // larger surface transitions
+    celebrate: 600, // success pop / celebration
+    glowLoop: 2600, // active "log now" glow pulse (idle-allowed)
+    shimmerLoop: 1600 // skeleton shimmer sweep (loading-only)
+  },
+  // Easing control points — bezier tuples, kept dependency-free so theme.ts
+  // imports no animation lib. lib/motion.ts feeds these to Easing.bezier(...).
+  easing: {
+    standard: [0.4, 0, 0.2, 1], // most transitions
+    decelerate: [0, 0, 0.2, 1] // enters / sheets (ease-out)
+  },
+  // Spring for pops / success (Reanimated withSpring).
+  spring: { damping: 14, stiffness: 180 },
+  pressScale: 0.94, // pressed-state shrink for buttons / rows / chips
+  // Semantic aliases onto the scale — existing call sites keep their names.
+  durationSheet: 350, // → slow: bottom-sheet slide-up / backdrop fade
+  durationToast: 240, // → base: toast slide-in
+  durationBanner: 240 // → base: banner slide-down
 } as const
 
 const typography = {
