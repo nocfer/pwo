@@ -2,7 +2,7 @@
  * PersonalRecordsCard - Display recent PRs
  */
 
-import { isPRRecent, useExercises, usePRs } from '@/hooks/data'
+import { isPRRecent, useExerciseNames, useExercises, usePRs } from '@/hooks/data'
 import { theme } from '@/theme/theme'
 import { Exercise } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
@@ -19,6 +19,11 @@ type Props = {
 export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
   const { data: prsData, loading } = usePRs(limit)
   const { data: exercises } = useExercises()
+  const prIds = useMemo(
+    () => (prsData?.latestPRs ?? []).map(pr => pr.exerciseId),
+    [prsData]
+  )
+  const exerciseNames = useExerciseNames(prIds)
   const fadeAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
@@ -111,7 +116,11 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
             <PRItem
               key={pr.id}
               pr={pr}
-              exerciseName={exercise?.name ?? pr.exerciseId}
+              exerciseName={
+                exerciseNames.get(pr.exerciseId) ??
+                exercise?.name ??
+                pr.exerciseId
+              }
               exerciseIcon={exercise?.icon}
               index={index}
             />

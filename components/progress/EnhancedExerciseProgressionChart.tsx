@@ -8,6 +8,7 @@
  */
 
 import {
+  useExerciseNames,
   useExerciseProgression,
   useExercisePRs,
   useExercisesWithProgression
@@ -84,20 +85,24 @@ export function EnhancedExerciseProgressionChart({
   }, [exercises])
 
   // The backend's exercisesWithData (exerciseIds) is the source of truth for
-  // which exercises have progression. The local catalog is paginated, so we
-  // resolve names from it opportunistically and fall back to the id rather than
-  // hiding exercises that simply haven't been loaded into the catalog yet.
+  // which exercises have progression. The local catalog is paginated, so names
+  // are resolved via useExerciseNames, which fetches any id missing from the
+  // loaded catalog rather than showing a raw id. Category still comes from the
+  // catalog opportunistically (only used for grouping/icons).
+  const exerciseNames = useExerciseNames(exerciseIds)
+
   const progressionExercises = useMemo(
     () =>
-      exerciseIds.map(id => {
-        const ex = catalogById.get(id)
-        return { id, name: ex?.name ?? id, category: ex?.category ?? '' }
-      }),
-    [exerciseIds, catalogById]
+      exerciseIds.map(id => ({
+        id,
+        name: exerciseNames.get(id) ?? id,
+        category: catalogById.get(id)?.category ?? ''
+      })),
+    [exerciseIds, exerciseNames, catalogById]
   )
 
   const selectedExerciseName = selectedExerciseId
-    ? (catalogById.get(selectedExerciseId)?.name ?? selectedExerciseId)
+    ? (exerciseNames.get(selectedExerciseId) ?? selectedExerciseId)
     : undefined
 
   // Auto-select first exercise when available and no selection

@@ -8,6 +8,13 @@ export type ProgramExerciseBlock = {
   type: 'exercise'
   exerciseId: string
   /**
+   * Resolved exercise name, populated when the program is fetched with
+   * `?expand=blocks.exercise`. Display-only — never persisted back to the API.
+   * Lets the UI show the exercise name without depending on the (paginated)
+   * exercise catalog being fully loaded.
+   */
+  exerciseName?: string
+  /**
    * Optional rep target for the exercise.
    * Can be a single number (same reps for all sets) or an array (per-set targets).
    * If omitted, the step is self-guided (user does their reps).

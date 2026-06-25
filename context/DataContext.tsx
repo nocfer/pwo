@@ -12,6 +12,7 @@ import {
   deleteWorkout as apiDeleteWorkout,
   updateExercise as apiUpdateExercise,
   updateWorkout as apiUpdateWorkout,
+  fetchExercise,
   fetchExercises,
   fetchWorkouts,
   isAPIAvailable,
@@ -41,7 +42,9 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useReducer
+  useMemo,
+  useReducer,
+  useRef
 } from 'react'
 
 // ============================================================================
@@ -60,6 +63,13 @@ interface DataState {
   exercisesLoading: boolean
   exercisesLoadingMore: boolean
   exercisePagination: ExercisePagination
+  /**
+   * Supplemental exerciseId → name map for exercises referenced by programs,
+   * PRs, or progress data that are not in the currently-loaded catalog page.
+   * Populated on demand via ensureExerciseNames so the UI never has to fall
+   * back to showing a raw exercise id.
+   */
+  exerciseNameCache: Record<string, string>
   programs: Program[]
   programsLoading: boolean
   lastCompletedSlug: string | null
@@ -78,6 +88,7 @@ type DataAction =
       pagination: { page: number; totalPages: number; totalItems: number }
     }
   | { type: 'RESET_EXERCISES' }
+  | { type: 'MERGE_EXERCISE_NAMES'; names: Record<string, string> }
   | { type: 'SET_EXERCISES_LOADING_MORE'; loading: boolean }
   | { type: 'SET_PROGRAMS'; programs: Program[] }
   | { type: 'SET_PROGRAMS_LOADING'; loading: boolean }
@@ -108,6 +119,9 @@ type DataContextValue = {
 
     // Exercise pagination
     loadMoreExercises: () => Promise<void>
+
+    // Resolve names for exercise ids not in the loaded catalog (fetch + cache)
+    ensureExerciseNames: (ids: string[]) => void
 
     // Exercises CRUD
     upsertExercise: (
@@ -149,6 +163,7 @@ export const initialState: DataState & EnhancedDataState = {
     totalItems: 0,
     hasMore: true
   },
+  exerciseNameCache: {},
   programs: [],
   programsLoading: true,
   lastCompletedSlug: null,
@@ -197,7 +212,13 @@ export function dataReducer(
           totalPages: 0,
           totalItems: 0,
           hasMore: true
-        }
+        },
+        exerciseNameCache: {}
+      }
+    case 'MERGE_EXERCISE_NAMES':
+      return {
+        ...state,
+        exerciseNameCache: { ...state.exerciseNameCache, ...action.names }
       }
     case 'SET_EXERCISES_LOADING_MORE':
       return { ...state, exercisesLoadingMore: action.loading }
@@ -240,6 +261,14 @@ const DataContext = createContext<DataContextValue | null>(null)
 export function DataProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(dataReducer, initialState)
 
+  // Refs let ensureExerciseNames stay referentially stable while still reading
+  // the latest catalog/cache, and dedupe in-flight/attempted id fetches.
+  const exercisesRef = useRef<Exercise[]>(state.exercises)
+  exercisesRef.current = state.exercises
+  const nameCacheRef = useRef<Record<string, string>>(state.exerciseNameCache)
+  nameCacheRef.current = state.exerciseNameCache
+  const attemptedNameIdsRef = useRef<Set<string>>(new Set())
+
   // Load exercises from API on auth state change
   useEffect(() => {
     let mounted = true
@@ -250,6 +279,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (!mounted) return
 
         if (!currentUser) {
+          attemptedNameIdsRef.current.clear()
           dispatch({ type: 'RESET_EXERCISES' })
           return
         }
@@ -428,6 +458,43 @@ export function DataProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_EXERCISES_LOADING_MORE', loading: false })
     }
   }, [state.exercisesLoadingMore, state.exercisePagination])
+
+  const ensureExerciseNames = useCallback((ids: string[]) => {
+    if (!ids.length || !auth.currentUser || !isAPIAvailable()) return
+
+    const known = new Set(exercisesRef.current.map(e => e.id))
+    const cache = nameCacheRef.current
+    const toFetch = ids.filter(
+      id =>
+        Boolean(id) &&
+        !known.has(id) &&
+        !(id in cache) &&
+        !attemptedNameIdsRef.current.has(id)
+    )
+    if (!toFetch.length) return
+
+    // Mark as attempted up-front so concurrent renders don't refetch.
+    toFetch.forEach(id => attemptedNameIdsRef.current.add(id))
+    ;(async () => {
+      const entries = await Promise.all(
+        toFetch.map(async id => {
+          try {
+            const ex = await fetchExercise(id)
+            return [id, ex.name] as const
+          } catch {
+            return null
+          }
+        })
+      )
+      const names: Record<string, string> = {}
+      for (const entry of entries) {
+        if (entry) names[entry[0]] = entry[1]
+      }
+      if (Object.keys(names).length > 0) {
+        dispatch({ type: 'MERGE_EXERCISE_NAMES', names })
+      }
+    })()
+  }, [])
 
   const upsertExercise = useCallback(
     async (
@@ -669,6 +736,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       refreshAll,
       refreshProgress,
       loadMoreExercises,
+      ensureExerciseNames,
       upsertExercise,
       deleteExercise,
       upsertProgram,
@@ -697,6 +765,33 @@ export function useDataContext() {
 export function useDataActions() {
   const { actions } = useDataContext()
   return actions
+}
+
+/**
+ * Resolve exercise ids → names, regardless of which catalog page is loaded.
+ *
+ * Builds a map from the loaded catalog plus the on-demand name cache, and
+ * triggers background fetches for any still-unknown ids. Components should
+ * read `map.get(id)` and only fall back to the raw id as a last resort.
+ */
+export function useExerciseNames(ids: string[]): Map<string, string> {
+  const { state, actions } = useDataContext()
+  const { ensureExerciseNames } = actions
+  const idsKey = ids.join(',')
+
+  useEffect(() => {
+    ensureExerciseNames(ids)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- idsKey captures ids; ensureExerciseNames is stable
+  }, [idsKey, ensureExerciseNames])
+
+  return useMemo(() => {
+    const map = new Map<string, string>()
+    state.exercises.forEach(e => map.set(e.id, e.name))
+    for (const [id, name] of Object.entries(state.exerciseNameCache)) {
+      if (!map.has(id)) map.set(id, name)
+    }
+    return map
+  }, [state.exercises, state.exerciseNameCache])
 }
 
 export function useRefreshVersions() {

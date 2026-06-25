@@ -193,20 +193,6 @@ export async function fetchExercise(id: string): Promise<Exercise> {
 }
 
 /**
- * Fetch exercises by category
- */
-export async function fetchExercisesByCategory(
-  category: string,
-  page: number = 1,
-  limit: number = 20
-): Promise<PaginatedResponse<Exercise>> {
-  const encodedCategory = encodeURIComponent(category)
-  return request<PaginatedResponse<Exercise>>(
-    `/api/v1/exercises?category=${encodedCategory}&page=${page}&limit=${limit}`
-  )
-}
-
-/**
  * Fetch last-logged reps/weight per exercise for pre-filling workout sets.
  * Returns empty array on any error so callers fall back to program targets.
  */
@@ -261,17 +247,23 @@ export async function deleteExercise(id: string): Promise<void> {
 // ─── Workout API Functions ────────────────────────────────────────────────────
 
 /**
- * Fetch all workouts from the API
+ * Fetch all workouts from the API.
+ *
+ * Requests `?expand=blocks.exercise` so each block carries its full exercise
+ * object (including name). This lets the UI display exercise names without
+ * depending on the separately-paginated exercise catalog being fully loaded.
  */
 export async function fetchWorkouts(): Promise<APIWorkout[]> {
-  return request<APIWorkout[]>('/api/v1/workouts')
+  return request<APIWorkout[]>('/api/v1/workouts?expand=blocks.exercise')
 }
 
 /**
- * Fetch a single workout by ID
+ * Fetch a single workout by ID, with exercises expanded (see fetchWorkouts).
  */
 export async function fetchWorkout(id: string): Promise<APIWorkout> {
-  return request<APIWorkout>(`/api/v1/workouts/${id}`)
+  return request<APIWorkout>(
+    `/api/v1/workouts/${id}?expand=blocks.exercise`
+  )
 }
 
 /**

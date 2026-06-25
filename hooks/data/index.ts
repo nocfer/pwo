@@ -22,6 +22,7 @@ export {
   type ProgressionTrend
 } from './useExerciseProgression'
 export { useExercises } from './useExercises'
+export { useExerciseNames } from '@/context/DataContext'
 export { useLastCompletedSlug } from './useLastCompletedSlug'
 export { useLiveHistory, type HistoryEntry } from './useLiveHistory'
 export { useLiveProgress, type LiveProgress } from './useLiveProgress'

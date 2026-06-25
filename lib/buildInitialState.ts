@@ -35,7 +35,10 @@ export function buildInitialState(
     .filter(block => block.type === 'exercise')
     .map(block => ({
       exerciseId: block.exerciseId,
-      exerciseName: exerciseNameById.get(block.exerciseId) ?? block.exerciseId,
+      exerciseName:
+        block.exerciseName ??
+        exerciseNameById.get(block.exerciseId) ??
+        block.exerciseId,
       restDurationMs: (block.restBetweenSets ?? 60) * 1000,
       sets: Array.from({ length: block.sets ?? 1 }, (_, i) => ({
         ...resolveSetValues(block, i, prefillMap),

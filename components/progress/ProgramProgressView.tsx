@@ -1,4 +1,4 @@
-import { useProgramProgress, usePrograms } from '@/hooks/data'
+import { useExerciseNames, useProgramProgress, usePrograms } from '@/hooks/data'
 import { formatDuration } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import { useMemo } from 'react'
@@ -18,6 +18,12 @@ export default function ProgramProgressView({ programId }: Props) {
     [programs, programId]
   )
   const { metrics, loading } = useProgramProgress(program || undefined)
+
+  const exerciseIds = useMemo(
+    () => (metrics ? Array.from(metrics.exerciseCompletion.keys()) : []),
+    [metrics]
+  )
+  const exerciseNames = useExerciseNames(exerciseIds)
 
   const stats = useMemo(() => {
     if (!metrics) return []
@@ -46,7 +52,9 @@ export default function ProgramProgressView({ programId }: Props) {
         {Array.from(metrics.exerciseCompletion.entries()).map(
           ([exerciseId, progress]) => (
             <View key={exerciseId} style={styles.exerciseItem}>
-              <Text style={styles.exerciseLabel}>Exercise {exerciseId}</Text>
+              <Text style={styles.exerciseLabel}>
+                {exerciseNames.get(exerciseId) ?? 'Exercise'}
+              </Text>
               <View style={styles.exerciseProgress}>
                 <View
                   style={[

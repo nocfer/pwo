@@ -1,7 +1,7 @@
-import { ProgramProgressMetrics, useExercises } from '@/hooks/data'
+import { ProgramProgressMetrics, useExerciseNames } from '@/hooks/data'
 import { getFirstReps, getTotalReps } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
-import { Exercise, Program } from '@/types'
+import { Program } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useMemo } from 'react'
@@ -22,7 +22,11 @@ function formatEstimatedTime(seconds: number): string {
 }
 
 export default function ProgramView({ program, programMetrics }: Props) {
-  const { data: exercises } = useExercises()
+  const blockExerciseIds = useMemo(
+    () => program.blocks.map(b => b.exerciseId),
+    [program.blocks]
+  )
+  const exerciseNames = useExerciseNames(blockExerciseIds)
   const hasSessions = programMetrics.totalSessions > 0
   const nextSessionIndex = programMetrics.nextSessionIndex ?? 1
   const hasCompletedBefore = programMetrics.lifetimeSessionsCompleted > 0
@@ -65,10 +69,6 @@ export default function ProgramView({ program, programMetrics }: Props) {
 
   // Get unique exercises with details
   const exerciseDetails = useMemo(() => {
-    const exerciseMap = new Map(
-      (exercises ?? []).map((e: Exercise) => [e.id, e.name] as const)
-    )
-
     const details: {
       id: string
       name: string
@@ -81,7 +81,9 @@ export default function ProgramView({ program, programMetrics }: Props) {
       if (!seen.has(block.exerciseId)) {
         seen.add(block.exerciseId)
         const name =
-          (exerciseMap.get(block.exerciseId) as string) ?? block.exerciseId
+          block.exerciseName ??
+          exerciseNames.get(block.exerciseId) ??
+          block.exerciseId
         const sets = block.sets ?? 1
         const reps = getFirstReps(block.targetReps)
         details.push({ id: block.exerciseId, name, sets, reps })
@@ -89,7 +91,7 @@ export default function ProgramView({ program, programMetrics }: Props) {
     })
 
     return details
-  }, [program.blocks, exercises])
+  }, [program.blocks, exerciseNames])
 
   const handleStartWorkout = () => {
     router.navigate({

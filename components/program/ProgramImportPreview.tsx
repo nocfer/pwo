@@ -4,7 +4,7 @@
  * first few exercises with sets × reps, a privacy note, and Cancel / Add actions.
  */
 
-import { useExercises } from '@/hooks/data'
+import { useExerciseNames, useExercises } from '@/hooks/data'
 import { getSourceBadge } from '@/lib/utils'
 import { formatCount, getFirstReps } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
@@ -59,15 +59,12 @@ export default function ProgramImportPreview({
 }: Props) {
   const { data: exercises } = useExercises()
 
-  const exerciseMap = useMemo(
-    () => new Map((exercises ?? []).map((e: Exercise) => [e.id, e.name])),
-    [exercises]
-  )
-
   const exerciseIds = useMemo(
     () => Array.from(new Set(programData.blocks.map(b => b.exerciseId))),
     [programData]
   )
+
+  const exerciseNames = useExerciseNames(exerciseIds)
 
   const missingCount = useMemo(() => {
     if (!exercises) return 0
@@ -134,7 +131,9 @@ export default function ProgramImportPreview({
           {previewBlocks.map((block, i) => (
             <View key={`${block.exerciseId}-${i}`} style={styles.includeRow}>
               <Text style={styles.includeName} numberOfLines={1}>
-                {exerciseMap.get(block.exerciseId) || 'Unknown exercise'}
+                {block.exerciseName ??
+                  exerciseNames.get(block.exerciseId) ??
+                  'Unknown exercise'}
               </Text>
               <Text style={styles.includeReps}>{blockReps(block)}</Text>
             </View>

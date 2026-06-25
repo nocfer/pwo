@@ -64,10 +64,11 @@ export type APIWorkoutCreateInput = {
  * - rests[0] → restBetweenSets (default 60)
  * - durations → durationSeconds: first non-zero element, or undefined if all zeros/empty
  * - type is always 'exercise'
- * - expanded exercise field is stripped
+ * - expanded exercise.name is carried into exerciseName (display-only); the rest
+ *   of the expanded exercise field is stripped
  */
 export function workoutBlockToProgram(block: APIWorkoutBlock): ProgramBlock {
-  const { reps, rests, durations, exerciseId, note } = block
+  const { reps, rests, durations, exerciseId, note, exercise } = block
 
   // Derive sets from reps length, default 1
   const sets = reps.length > 0 ? reps.length : 1
@@ -106,6 +107,9 @@ export function workoutBlockToProgram(block: APIWorkoutBlock): ProgramBlock {
   }
   if (note !== undefined) {
     result.note = note
+  }
+  if (exercise?.name !== undefined) {
+    result.exerciseName = exercise.name
   }
 
   return result

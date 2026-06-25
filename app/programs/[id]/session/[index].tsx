@@ -14,7 +14,12 @@ import {
   findNextPendingSet,
   WorkoutExecutionProvider
 } from '@/context/WorkoutExecutionContext'
-import { useExercises, usePrograms, usePRs } from '@/hooks/data'
+import {
+  useExerciseNames,
+  useExercises,
+  usePrograms,
+  usePRs
+} from '@/hooks/data'
 import {
   useElapsedTimer,
   useEndWorkout,
@@ -577,18 +582,12 @@ export default function ProgramSession() {
   }, [])
 
   const { data: programs, loading: programsLoading } = usePrograms()
-  const { data: exercises, loading: exercisesLoading } = useExercises()
+  const { loading: exercisesLoading } = useExercises()
 
   const program = useMemo(
     () => programs?.find((p: Program) => p.id === id) ?? null,
     [programs, id]
   )
-
-  const exerciseNameById = useMemo(() => {
-    const map = new Map<string, string>()
-    exercises?.forEach(ex => map.set(ex.id, ex.name))
-    return map
-  }, [exercises])
 
   const exerciseIds = useMemo(
     () =>
@@ -597,6 +596,10 @@ export default function ProgramSession() {
         .map(b => b.exerciseId) ?? [],
     [program]
   )
+
+  // Resolves names for every referenced exercise, fetching any missing from
+  // the loaded catalog page so the session never displays a raw exercise id.
+  const exerciseNameById = useExerciseNames(exerciseIds)
 
   const { prefillMap, isLoading: prefillLoading } = usePrefill(exerciseIds)
 
