@@ -24,6 +24,11 @@ const withAppGroup = process.env.PWO_APP_GROUP === '1';
 module.exports = () => {
   const expo = { ...base.expo };
 
+  // Free personal team id — lets @bacons/apple-targets sign the widget
+  // extension at prebuild (otherwise "missing ios.appleTeamId" warning and the
+  // widget target builds without a team). Override via APPLE_TEAM_ID if needed.
+  expo.ios = { ...expo.ios, appleTeamId: process.env.APPLE_TEAM_ID ?? '7E7EER6C2U' };
+
   if (withAppGroup) {
     expo.ios = {
       ...expo.ios,
@@ -33,6 +38,10 @@ module.exports = () => {
       },
     };
   }
+
+  // Strip the push entitlement (added by expo-notifications) for free signing.
+  // No-op when PWO_APP_GROUP=1 (simulator); see plugins/withFreeSigning.js.
+  expo.plugins = [...(expo.plugins ?? []), './plugins/withFreeSigning'];
 
   return { expo };
 };
