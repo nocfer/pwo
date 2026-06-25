@@ -39,6 +39,7 @@ import { readPersistedWorkout } from '@/lib/workout-persistence'
 import { theme } from '@/theme/theme'
 import type { AccumulatedSet, Program } from '@/types'
 import type { ExerciseState } from '@/types/workout'
+import { usePreventRemove } from '@react-navigation/native'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -50,6 +51,7 @@ import {
   useWindowDimensions,
   View
 } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type EditorTarget = {
   exerciseIndex: number
@@ -270,14 +272,13 @@ function WorkoutSessionContent() {
     return () => handler.remove()
   }, [handleBackPress])
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', e => {
-      if (state.isCompleted) return
-      e.preventDefault()
-      requestEnd()
-    })
-    return unsubscribe
-  }, [navigation, requestEnd, state.isCompleted])
+  // native-stack doesn't reliably support the raw beforeRemove + preventDefault
+  // pattern (the screen is removed natively but stays in JS state, logging an
+  // error). usePreventRemove is the v7-supported equivalent: block leaving an
+  // in-progress workout and open the end-confirmation instead.
+  usePreventRemove(!state.isCompleted, () => {
+    requestEnd()
+  })
 
   // Locate the single active/editing set (drives the footer Log bar).
   const activeLoc = useMemo(() => {
@@ -638,9 +639,9 @@ export default function ProgramSession() {
 
   return (
     <WorkoutExecutionProvider initialState={initialState}>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <WorkoutSessionContent />
-      </View>
+      </SafeAreaView>
     </WorkoutExecutionProvider>
   )
 }
