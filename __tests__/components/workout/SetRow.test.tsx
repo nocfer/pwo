@@ -160,4 +160,47 @@ describe('SetRow', () => {
       expect(focused).toBe(true)
     })
   })
+
+  describe('timed (hold) rows', () => {
+    it('labels a completed hold in m:ss instead of reps×weight', () => {
+      const result = renderSetRow({
+        status: 'completed',
+        durationSeconds: 45,
+        setNumber: 1
+      })
+      expect(result.props.accessibilityLabel).toBe(
+        'Set 1, completed, hold 0:45'
+      )
+    })
+
+    it('renders a single HOLD cell with the m:ss value (no weight/reps cells)', () => {
+      const result = renderSetRow({ status: 'completed', durationSeconds: 90 })
+      const holdCell = findByAccessibilityLabel(result, 'Hold 1:30')
+      expect(holdCell).toBeDefined()
+      // the reps/weight cells must not be present on a timed row
+      expect(
+        findByAccessibilityLabel(result, 'Weight 135 pounds')
+      ).toBeUndefined()
+    })
+
+    it('uses a play ▶ trailing control for the active hold (start), not a check', () => {
+      const result = renderSetRow({ status: 'active', durationSeconds: 45 })
+      const start = findByAccessibilityLabel(result, 'Start hold for set 1')
+      expect(start).toBeDefined()
+      const icons = findByType(result, 'Icon')
+      expect(icons.some(i => i.props.name === 'play')).toBe(true)
+    })
+
+    it('routes a HOLD value tap to onHoldPress', () => {
+      const onHoldPress = vi.fn()
+      const result = renderSetRow({
+        status: 'completed',
+        durationSeconds: 30,
+        onHoldPress
+      })
+      const holdCell = findByAccessibilityLabel(result, 'Hold 0:30')
+      ;(holdCell!.props.onPress as () => void)()
+      expect(onHoldPress).toHaveBeenCalled()
+    })
+  })
 })

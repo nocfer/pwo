@@ -12,6 +12,8 @@ export type RestSheetProps = {
   nextExerciseName: string
   nextWeight: number
   nextReps: number
+  /** When the next set is a hold, its target seconds — shown as "Hold m:ss". */
+  nextDurationSeconds?: number | null
   onExtend: () => void
   onSkip: () => void
 }
@@ -23,6 +25,7 @@ export function RestSheet({
   nextExerciseName,
   nextWeight,
   nextReps,
+  nextDurationSeconds,
   onExtend,
   onSkip
 }: RestSheetProps) {
@@ -54,7 +57,9 @@ export function RestSheet({
             Next · Set {nextSetNumber} · {nextExerciseName}
           </Text>
           <Text style={styles.target} numberOfLines={1}>
-            {nextWeight} lb × {nextReps}
+            {nextDurationSeconds != null
+              ? `Hold ${formatClock(nextDurationSeconds * 1000)}`
+              : `${nextWeight} lb × ${nextReps}`}
           </Text>
         </View>
       </View>

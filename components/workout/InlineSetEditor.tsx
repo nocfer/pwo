@@ -1,3 +1,4 @@
+import { formatClock } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import type { SetStatus } from '@/types/workout'
 import { Ionicons } from '@expo/vector-icons'
@@ -5,7 +6,23 @@ import React from 'react'
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 import Animated, { SlideInDown, useReducedMotion } from 'react-native-reanimated'
 
-export type EditorField = 'weight' | 'reps'
+export type EditorField = 'weight' | 'reps' | 'duration'
+
+// Per-field stepper config — step size, floor, and how the numeric value reads.
+const FIELD_CONFIG: Record<
+  EditorField,
+  { step: number; floor: number; unit: string; format: (v: number) => string }
+> = {
+  weight: { step: 5, floor: 0, unit: 'lb', format: v => String(v) },
+  reps: { step: 1, floor: 1, unit: 'reps', format: v => String(v) },
+  // Timed hold: seconds under the hood, shown as m:ss, nudged in 5s steps.
+  duration: {
+    step: 5,
+    floor: 5,
+    unit: 'hold',
+    format: v => formatClock(v * 1000)
+  }
+}
 
 export type InlineSetEditorProps = {
   visible: boolean
@@ -30,8 +47,10 @@ function quickChips(field: EditorField, base: number): number[] {
   const raw =
     field === 'weight'
       ? [base - 5, base, base + 5, base + 10]
-      : [base - 1, base, base + 1, base + 2]
-  const floor = field === 'weight' ? 0 : 1
+      : field === 'duration'
+        ? [base - 5, base, base + 5, base + 10]
+        : [base - 1, base, base + 1, base + 2]
+  const { floor } = FIELD_CONFIG[field]
   // De-dupe while preserving order, drop values below the floor.
   const seen = new Set<number>()
   const chips: number[] = []
@@ -54,9 +73,7 @@ export function InlineSetEditor({
   onDone,
   onSecondary
 }: InlineSetEditorProps) {
-  const step = field === 'weight' ? 5 : 1
-  const floor = field === 'weight' ? 0 : 1
-  const unit = field === 'weight' ? 'lb' : 'reps'
+  const { step, floor, unit, format } = FIELD_CONFIG[field]
   const chips = quickChips(field, prefillBase)
 
   const decrement = () => onChange(Math.max(floor, value - step))
@@ -83,7 +100,7 @@ export function InlineSetEditor({
         >
           <Pressable style={styles.card} onPress={() => {}}>
           <Text style={styles.title}>
-            SET {setNumber} · {field.toUpperCase()}
+            SET {setNumber} · {field === 'duration' ? 'HOLD' : field.toUpperCase()}
           </Text>
 
           <View style={styles.stepperRow}>
@@ -101,8 +118,11 @@ export function InlineSetEditor({
             </Pressable>
 
             <View style={styles.valueWrap}>
-              <Text style={styles.value} accessibilityLabel={`${value} ${unit}`}>
-                {value}
+              <Text
+                style={styles.value}
+                accessibilityLabel={`${format(value)} ${unit}`}
+              >
+                {format(value)}
               </Text>
               <Text style={styles.unit}>{unit}</Text>
             </View>
@@ -131,12 +151,12 @@ export function InlineSetEditor({
                   onPress={() => onChange(chip)}
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
-                  accessibilityLabel={`Set ${field} to ${chip}`}
+                  accessibilityLabel={`Set ${field} to ${format(chip)}`}
                 >
                   <Text
                     style={[styles.chipText, selected && styles.chipTextSelected]}
                   >
-                    {chip}
+                    {format(chip)}
                   </Text>
                 </Pressable>
               )

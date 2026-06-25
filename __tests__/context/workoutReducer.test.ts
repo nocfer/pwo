@@ -1211,3 +1211,112 @@ describe('workoutReducer — natural completion endpoint', () => {
     ).toBe(true)
   })
 })
+
+// ---------------------------------------------------------------------------
+// LOG_DURATION + timed CONFIRM_SET
+// ---------------------------------------------------------------------------
+
+describe('workoutReducer — LOG_DURATION', () => {
+  function timedState() {
+    return createMockWorkoutState({
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'Plank',
+          sets: [
+            { reps: 0, weight: 0, durationSeconds: 45, status: 'active' },
+            { reps: 0, weight: 0, durationSeconds: 45, status: 'pending' }
+          ]
+        }
+      ]
+    })
+  }
+
+  it('records the held seconds onto an active timed set', () => {
+    const next = workoutReducer(timedState(), {
+      type: 'LOG_DURATION',
+      exerciseIndex: 0,
+      setIndex: 0,
+      durationSeconds: 52
+    })
+    expect(next.exercises[0].sets[0].durationSeconds).toBe(52)
+    expect(next.exercises[0].sets[0].status).toBe('active')
+  })
+
+  it('ignores a completed or skipped set (no silent overwrite)', () => {
+    const completed = createMockWorkoutState({
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'Plank',
+          sets: [
+            {
+              reps: 0,
+              weight: 0,
+              durationSeconds: 45,
+              status: 'completed',
+              confirmedDurationSeconds: 45
+            }
+          ]
+        }
+      ]
+    })
+    const next = workoutReducer(completed, {
+      type: 'LOG_DURATION',
+      exerciseIndex: 0,
+      setIndex: 0,
+      durationSeconds: 99
+    })
+    expect(next).toBe(completed)
+  })
+
+  it('CONFIRM_SET commits the held duration into confirmedDurationSeconds and advances', () => {
+    const logged = workoutReducer(timedState(), {
+      type: 'LOG_DURATION',
+      exerciseIndex: 0,
+      setIndex: 0,
+      durationSeconds: 38 // done early, below the 45s target
+    })
+    const confirmed = workoutReducer(logged, {
+      type: 'CONFIRM_SET',
+      exerciseIndex: 0,
+      setIndex: 0
+    })
+    const set0 = confirmed.exercises[0].sets[0]
+    expect(set0.status).toBe('completed')
+    expect(set0.confirmedDurationSeconds).toBe(38)
+    // next timed set becomes active (prefilled as a hold)
+    expect(confirmed.exercises[0].sets[1].status).toBe('active')
+    expect(confirmed.activeSetIndex).toBe(1)
+  })
+
+  it('does not set confirmedDurationSeconds for a reps set', () => {
+    const state = createMockWorkoutState() // reps×weight sets
+    const confirmed = workoutReducer(state, {
+      type: 'CONFIRM_SET',
+      exerciseIndex: 0,
+      setIndex: 0
+    })
+    expect(
+      confirmed.exercises[0].sets[0].confirmedDurationSeconds
+    ).toBeUndefined()
+  })
+})
+
+describe('workoutReducer — ADD_SET inherits timed-ness', () => {
+  it('an added set on a timed exercise keeps the target duration', () => {
+    const state = createMockWorkoutState({
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'Plank',
+          sets: [{ reps: 0, weight: 0, durationSeconds: 45, status: 'active' }]
+        }
+      ]
+    })
+    const next = workoutReducer(state, { type: 'ADD_SET', exerciseIndex: 0 })
+    expect(next.exercises[0].sets).toHaveLength(2)
+    expect(next.exercises[0].sets[1].durationSeconds).toBe(45)
+    expect(next.exercises[0].sets[1].status).toBe('pending')
+  })
+})

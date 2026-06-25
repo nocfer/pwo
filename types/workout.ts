@@ -18,8 +18,22 @@ export type ExerciseSetState = {
   status: SetStatus
   confirmedReps?: number
   confirmedWeight?: number
+  /**
+   * Target / actual hold duration (seconds) for a timed set. Presence of this
+   * field is what makes a set "timed" (see {@link isTimedSet}). Mirrors `reps`:
+   * starts at the program target, is adjusted via the stepper, and is
+   * overwritten with the seconds actually held when the set is logged.
+   */
+  durationSeconds?: number
+  /** Committed hold duration (seconds) — set on CONFIRM_SET, mirrors confirmedReps. */
+  confirmedDurationSeconds?: number
   /** Rest after this set (ms). Falls back to ExerciseState.restDurationMs. */
   restDurationMs?: number
+}
+
+/** A set is timed (hold) rather than reps×weight when it carries a duration. */
+export function isTimedSet(set: Pick<ExerciseSetState, 'durationSeconds'>): boolean {
+  return set.durationSeconds != null
 }
 
 export type ExerciseState = {
@@ -68,6 +82,12 @@ export type WorkoutAction =
       setIndex: number
       weight: number
       reps: number
+    }
+  | {
+      type: 'LOG_DURATION'
+      exerciseIndex: number
+      setIndex: number
+      durationSeconds: number
     }
   | { type: 'CONFIRM_SET'; exerciseIndex: number; setIndex: number }
   | { type: 'SKIP_SET'; exerciseIndex: number; setIndex: number }

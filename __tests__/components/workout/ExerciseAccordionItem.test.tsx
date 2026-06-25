@@ -242,4 +242,78 @@ describe('ExerciseAccordionItem', () => {
       expect(fill).toBeDefined()
     })
   })
+
+  describe('timed (hold) exercise', () => {
+    const doneTimed: ExerciseState = {
+      exerciseId: 'plank',
+      exerciseName: 'Plank Hold',
+      sets: [
+        {
+          reps: 0,
+          weight: 0,
+          durationSeconds: 45,
+          status: 'completed',
+          confirmedDurationSeconds: 45
+        },
+        {
+          reps: 0,
+          weight: 0,
+          durationSeconds: 60,
+          status: 'completed',
+          confirmedDurationSeconds: 60
+        }
+      ]
+    }
+    const pendingTimed: ExerciseState = {
+      exerciseId: 'hollow',
+      exerciseName: 'Hollow Hold',
+      sets: [
+        { reps: 0, weight: 0, durationSeconds: 30, status: 'pending' },
+        { reps: 0, weight: 0, durationSeconds: 30, status: 'pending' }
+      ]
+    }
+
+    it('collapsed done shows a TIMED badge and top hold in m:ss', () => {
+      const result = render({ exercise: doneTimed, isExpanded: false })
+      const texts = findByType(result, 'Text')
+      expect(texts.some(t => t.props.children === 'TIMED')).toBe(true)
+      expect(
+        texts.some(
+          t =>
+            Array.isArray(t.props.children) &&
+            t.props.children.join('') === '2/2 · top 1:00'
+        )
+      ).toBe(true)
+    })
+
+    it('collapsed pending shows a Hold m:ss summary', () => {
+      const result = render({ exercise: pendingTimed, isExpanded: false })
+      const texts = findByType(result, 'Text')
+      expect(texts.some(t => t.props.children === '0/2 · Hold 0:30')).toBe(true)
+    })
+
+    it('expanded (no active hold) renders the HOLD column, not WEIGHT/REPS', () => {
+      const result = render({ exercise: doneTimed, isExpanded: true })
+      const texts = findByType(result, 'Text')
+      expect(texts.some(t => t.props.children === 'HOLD')).toBe(true)
+      expect(texts.some(t => t.props.children === 'WEIGHT')).toBe(false)
+      expect(texts.some(t => t.props.children === 'REPS')).toBe(false)
+    })
+
+    it('expanded with an active hold renders the ring focus (TIMED HOLD tag)', () => {
+      const activeTimed: ExerciseState = {
+        exerciseId: 'plank',
+        exerciseName: 'Plank Hold',
+        sets: [{ reps: 0, weight: 0, durationSeconds: 45, status: 'active' }]
+      }
+      const result = render({
+        exercise: activeTimed,
+        isExpanded: true,
+        hold: { phase: 'ready', elapsedMs: 0 }
+      })
+      const texts = findByType(result, 'Text')
+      expect(texts.some(t => t.props.children === 'TIMED HOLD')).toBe(true)
+      expect(texts.some(t => t.props.children === 'target hold')).toBe(true)
+    })
+  })
 })

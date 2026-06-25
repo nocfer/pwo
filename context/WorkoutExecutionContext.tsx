@@ -32,6 +32,11 @@ export type WorkoutExecutionContextValue = {
     reps: number,
     weight: number
   ) => void
+  logDuration: (
+    exerciseIndex: number,
+    setIndex: number,
+    durationSeconds: number
+  ) => void
   confirmSet: (exerciseIndex: number, setIndex: number) => void
   skipSet: (exerciseIndex: number, setIndex: number) => void
   startRestTimer: (durationMs: number) => void
@@ -77,6 +82,17 @@ export function WorkoutExecutionProvider({
   const logSet = useCallback(
     (exerciseIndex: number, setIndex: number, reps: number, weight: number) =>
       dispatch({ type: 'LOG_SET', exerciseIndex, setIndex, reps, weight }),
+    []
+  )
+
+  const logDuration = useCallback(
+    (exerciseIndex: number, setIndex: number, durationSeconds: number) =>
+      dispatch({
+        type: 'LOG_DURATION',
+        exerciseIndex,
+        setIndex,
+        durationSeconds
+      }),
     []
   )
 
@@ -156,6 +172,7 @@ export function WorkoutExecutionProvider({
       state,
       expandExercise,
       logSet,
+      logDuration,
       confirmSet,
       skipSet,
       editSet,
@@ -173,6 +190,7 @@ export function WorkoutExecutionProvider({
       state,
       expandExercise,
       logSet,
+      logDuration,
       confirmSet,
       skipSet,
       editSet,

@@ -1,5 +1,6 @@
 import { popScale } from '@/lib/motion'
 import { ActiveGlow } from '@/components/workout/ActiveGlow'
+import { formatClock } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import type { SetStatus } from '@/types/workout'
 import { Ionicons } from '@expo/vector-icons'
@@ -24,6 +25,13 @@ export type SetRowProps = {
   onPress: () => void
   isRepsFocused?: boolean
   isWeightFocused?: boolean
+  /**
+   * When set, this is a timed (hold) row: a single HOLD column (m:ss) replaces
+   * the weight/reps cells and the active trailing control is a play ▶.
+   */
+  durationSeconds?: number | null
+  /** Tap the HOLD value (timed rows) — opens the duration stepper. */
+  onHoldPress?: () => void
 }
 
 function statusLabel(status: SetStatus): string {
@@ -51,11 +59,14 @@ export function SetRow({
   onConfirm,
   onPress,
   isRepsFocused = false,
-  isWeightFocused = false
+  isWeightFocused = false,
+  durationSeconds = null,
+  onHoldPress
 }: SetRowProps) {
   const isActive = status === 'active' || status === 'editing'
   const isCompleted = status === 'completed'
   const isSkipped = status === 'skipped'
+  const isTimed = durationSeconds != null
 
   // Log pop: pressing the active check logs the set — the check pops (overshoot
   // → settle) in step with the tap. The confirm haptic is owned by the session's
@@ -89,9 +100,12 @@ export function SetRow({
     isSkipped && styles.setNumSkipped
   ]
 
+  const valueDesc = isTimed
+    ? `hold ${formatClock((durationSeconds ?? 0) * 1000)}`
+    : `${weight} pounds for ${reps} reps`
   const a11yLabel = isCompleted
-    ? `Set ${setNumber}, completed, ${weight} pounds for ${reps} reps`
-    : `Set ${setNumber}, ${statusLabel(status)}, ${weight} pounds for ${reps} reps`
+    ? `Set ${setNumber}, completed, ${valueDesc}`
+    : `Set ${setNumber}, ${statusLabel(status)}, ${valueDesc}`
 
   return (
     <View
@@ -101,30 +115,47 @@ export function SetRow({
       {isActive && <ActiveGlow />}
       <Text style={numStyle}>{setNumber}</Text>
 
-      <Pressable
-        onPress={onWeightPress}
-        style={[styles.valueCell, isWeightFocused && styles.valueCellFocused]}
-        accessibilityRole="button"
-        accessibilityLabel={`Weight ${weight} pounds`}
-      >
-        <Text style={valueStyle}>{weight}</Text>
-      </Pressable>
+      {isTimed ? (
+        <Pressable
+          onPress={onHoldPress}
+          style={[styles.valueCell, styles.holdCell]}
+          accessibilityRole="button"
+          accessibilityLabel={`Hold ${formatClock((durationSeconds ?? 0) * 1000)}`}
+        >
+          <Text style={valueStyle}>
+            {formatClock((durationSeconds ?? 0) * 1000)}
+          </Text>
+        </Pressable>
+      ) : (
+        <>
+          <Pressable
+            onPress={onWeightPress}
+            style={[styles.valueCell, isWeightFocused && styles.valueCellFocused]}
+            accessibilityRole="button"
+            accessibilityLabel={`Weight ${weight} pounds`}
+          >
+            <Text style={valueStyle}>{weight}</Text>
+          </Pressable>
 
-      <Pressable
-        onPress={onRepsPress}
-        style={[styles.valueCell, isRepsFocused && styles.valueCellFocused]}
-        accessibilityRole="button"
-        accessibilityLabel={`Reps ${reps}`}
-      >
-        <Text style={valueStyle}>{reps}</Text>
-      </Pressable>
+          <Pressable
+            onPress={onRepsPress}
+            style={[styles.valueCell, isRepsFocused && styles.valueCellFocused]}
+            accessibilityRole="button"
+            accessibilityLabel={`Reps ${reps}`}
+          >
+            <Text style={valueStyle}>{reps}</Text>
+          </Pressable>
+        </>
+      )}
 
       <AnimatedPressable
         onPress={onCheckPress}
         accessibilityRole="button"
         accessibilityLabel={
           isActive
-            ? `Log set ${setNumber}`
+            ? isTimed
+              ? `Start hold for set ${setNumber}`
+              : `Log set ${setNumber}`
             : isCompleted
               ? `Edit set ${setNumber}`
               : `Set ${setNumber}`
@@ -141,8 +172,8 @@ export function SetRow({
       >
         {isActive ? (
           <Ionicons
-            name="checkmark"
-            size={18}
+            name={isTimed ? 'play' : 'checkmark'}
+            size={isTimed ? 15 : 18}
             color={theme.colors.session.onLime}
           />
         ) : isCompleted ? (
@@ -205,6 +236,10 @@ const styles = StyleSheet.create({
   },
   valueCellFocused: {
     backgroundColor: theme.colors.session.limeTintBg
+  },
+  holdCell: {
+    flex: 2,
+    alignItems: 'center'
   },
   value: {
     fontSize: 15,

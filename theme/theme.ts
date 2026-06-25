@@ -101,12 +101,14 @@ const colors = {
     onLime: '#0A0B0E',
     limeTintBg: '#1B1E14',
     limeMutedText: '#9AA86A',
+    limeGlow: 'rgba(198, 242, 78, 0.2)', // radial glow behind the live hold ring
     // cyan (rest/info)
     cyan: '#56E0F0',
     cyanPanel: '#0C1416',
     cyanBorder: '#163038',
     cyanControlBg: '#11181C',
     cyanControlBorder: '#1D2933',
+    cyanTintBg: 'rgba(86, 224, 240, 0.1)', // TIMED HOLD tag fill
     // green (completed)
     green: '#34D399',
     greenTintBg: '#0E1411',

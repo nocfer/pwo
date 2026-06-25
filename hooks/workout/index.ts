@@ -9,6 +9,11 @@ export {
 export { useElapsedTimer } from './useElapsedTimer'
 export { useLiveActivitySync } from './useLiveActivitySync'
 export { useRestTimer } from './useRestTimer'
+export {
+  useHoldTimer,
+  holdElapsedMs,
+  type HoldCompletionReason
+} from './useHoldTimer'
 export { useEndWorkout } from './useEndWorkout'
 export { usePrefill } from './usePrefill'
 export { useScrollToExercise } from './useScrollToExercise'

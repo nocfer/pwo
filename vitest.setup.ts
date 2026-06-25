@@ -68,6 +68,8 @@ vi.mock('react-native-reanimated', () => {
     }),
     useReducedMotion: () => false,
     useAnimatedReaction: () => {},
+    useAnimatedProps: (fn: unknown) =>
+      typeof fn === 'function' ? (fn as () => unknown)() : {},
     // Animation helpers — return the resolved target so reads stay sensible
     withTiming: (v: unknown) => v,
     withSpring: (v: unknown) => v,
@@ -98,3 +100,23 @@ vi.mock('react-native-reanimated', () => {
     LinearTransition: builder()
   }
 })
+
+// Mock react-native-svg — the real package can't be parsed under vitest. Nodes
+// render as simple resolvable stand-ins. (Per-file mocks still take precedence.)
+vi.mock('react-native-svg', () => ({
+  default: ({ children }: Record<string, unknown>) => ({
+    type: 'Svg',
+    props: { children }
+  }),
+  Svg: ({ children }: Record<string, unknown>) => ({
+    type: 'Svg',
+    props: { children }
+  }),
+  Circle: (props: Record<string, unknown>) => ({ type: 'Circle', props }),
+  Defs: (props: Record<string, unknown>) => ({ type: 'Defs', props }),
+  LinearGradient: (props: Record<string, unknown>) => ({
+    type: 'LinearGradient',
+    props
+  }),
+  Stop: (props: Record<string, unknown>) => ({ type: 'Stop', props })
+}))

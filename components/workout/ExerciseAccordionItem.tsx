@@ -1,10 +1,19 @@
+import { formatClock } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import type { ExerciseState } from '@/types/workout'
 import { Ionicons } from '@expo/vector-icons'
 import React, { useCallback } from 'react'
 import { LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useReducedMotion } from 'react-native-reanimated'
+import { HoldRing } from './HoldRing'
+import type { HoldPhase } from './HoldActionBar'
 import { SetRow } from './SetRow'
+
+/** Live hold runtime for the active timed set (supplied by the session). */
+export type HoldFocusState = {
+  phase: HoldPhase
+  elapsedMs: number
+}
 
 export type ExerciseAccordionItemProps = {
   exercise: ExerciseState
@@ -21,6 +30,14 @@ export type ExerciseAccordionItemProps = {
   canMoveUp?: boolean
   canMoveDown?: boolean
   focusedField?: { setIndex: number; field: 'reps' | 'weight' } | null
+  /**
+   * Live hold runtime — present only for the expanded exercise whose active set
+   * is timed. When set, the card body renders the count-up focus instead of the
+   * reps/weight table.
+   */
+  hold?: HoldFocusState | null
+  /** Tap the target duration to adjust it (timed focus, ready phase). */
+  onAdjustTarget?: () => void
 }
 
 type ExerciseStatus = 'now' | 'done' | 'next'
@@ -57,6 +74,33 @@ function topWeight(exercise: ExerciseState): number {
     const w = s.confirmedWeight ?? s.weight
     return w > max ? w : max
   }, 0)
+}
+
+/** A timed exercise: any set carries a hold duration. */
+function isTimedExercise(exercise: ExerciseState): boolean {
+  return exercise.sets.some(s => s.durationSeconds != null)
+}
+
+/** Representative target hold (seconds) — the first set's duration. */
+function timedTarget(exercise: ExerciseState): number {
+  return exercise.sets.find(s => s.durationSeconds != null)?.durationSeconds ?? 0
+}
+
+/** Longest completed hold (seconds) — the timed counterpart of topWeight. */
+function topHold(exercise: ExerciseState): number {
+  return exercise.sets.reduce((max, s) => {
+    if (s.status !== 'completed') return max
+    const d = s.confirmedDurationSeconds ?? s.durationSeconds ?? 0
+    return d > max ? d : max
+  }, 0)
+}
+
+function TimedBadge() {
+  return (
+    <View style={styles.timedBadge}>
+      <Text style={styles.timedBadgeText}>TIMED</Text>
+    </View>
+  )
 }
 
 function prefill(exercise: ExerciseState): { weight: number; reps: number } {
@@ -127,7 +171,9 @@ export function ExerciseAccordionItem({
   onMoveDown,
   canMoveUp = true,
   canMoveDown = true,
-  focusedField
+  focusedField,
+  hold,
+  onAdjustTarget
 }: ExerciseAccordionItemProps) {
   const status = getStatus(exercise)
   const total = exercise.sets.length
@@ -141,6 +187,144 @@ export function ExerciseAccordionItem({
     }
     onToggle()
   }, [onToggle, reduced])
+
+  // ---- Expanded card · TIMED focus (active set is a hold) ----
+  if (isExpanded && hold) {
+    const activeIdx = exercise.sets.findIndex(
+      s => s.status === 'active' || s.status === 'editing'
+    )
+    const activeSet = activeIdx === -1 ? undefined : exercise.sets[activeIdx]
+    const targetSeconds = activeSet?.durationSeconds ?? 0
+    const targetMs = targetSeconds * 1000
+    const ready = hold.phase === 'ready'
+    const progress = ready || targetMs === 0 ? 0 : hold.elapsedMs / targetMs
+    const centerMs = ready ? targetMs : hold.elapsedMs
+
+    return (
+      <View style={styles.expandedCard}>
+        <View
+          style={styles.expandedHeaderRow}
+          accessibilityRole="header"
+          accessibilityLabel={`${exercise.exerciseName}, ${ready ? 'ready to hold' : 'holding'}`}
+        >
+          <Text style={styles.expandedName} numberOfLines={1}>
+            {exercise.exerciseName}
+          </Text>
+          <StatusBadge status={status} />
+        </View>
+
+        <View style={styles.holdFocus}>
+          <Text style={styles.holdSetLabel}>
+            {ready ? 'SET' : 'HOLDING · SET'} {activeIdx + 1} OF {total}
+          </Text>
+
+          <View style={styles.timedTag}>
+            <Ionicons
+              name="timer-outline"
+              size={13}
+              color={theme.colors.session.cyan}
+            />
+            <Text style={styles.timedTagText}>TIMED HOLD</Text>
+          </View>
+
+          {ready && targetSeconds > 0 ? (
+            <Pressable
+              style={styles.ringPress}
+              onPress={onAdjustTarget}
+              accessibilityRole="button"
+              accessibilityLabel={`Hold target ${formatClock(targetMs)}, tap to adjust`}
+            >
+              <HoldRing progress={0} size={180} stroke={13}>
+                <View style={styles.ringCenter}>
+                  <Text style={styles.ringValue}>{formatClock(targetMs)}</Text>
+                  <Text style={styles.ringSub}>target hold</Text>
+                </View>
+              </HoldRing>
+            </Pressable>
+          ) : (
+            <View
+              style={styles.ringPress}
+              accessibilityRole="timer"
+              accessibilityLiveRegion="polite"
+              accessibilityLabel={`Holding, ${formatClock(centerMs)} of ${formatClock(targetMs)}`}
+            >
+              {!ready && <View style={styles.holdGlow} />}
+              <HoldRing progress={progress} size={180} stroke={13}>
+                <View style={styles.ringCenter}>
+                  <Text style={styles.ringValue}>{formatClock(centerMs)}</Text>
+                  <Text style={styles.ringSubLive}>
+                    of {formatClock(targetMs)}
+                  </Text>
+                </View>
+              </HoldRing>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.expandedProgress}>
+          <ProgressBar
+            ratio={total > 0 ? resolved / total : 0}
+            color={theme.colors.session.lime}
+          />
+        </View>
+      </View>
+    )
+  }
+
+  // ---- Expanded card · TIMED table (no active hold — e.g. reviewing a done
+  // timed exercise). The active hold uses the ring focus above. ----
+  if (isExpanded && isTimedExercise(exercise)) {
+    return (
+      <View style={styles.expandedCard}>
+        <View
+          style={styles.expandedHeaderRow}
+          accessibilityRole="header"
+          accessibilityLabel={`${exercise.exerciseName}, expanded`}
+        >
+          <Text style={styles.expandedName} numberOfLines={1}>
+            {exercise.exerciseName}
+          </Text>
+          <View style={styles.headerBadges}>
+            <TimedBadge />
+            <StatusBadge status={status} />
+          </View>
+        </View>
+
+        <Text style={styles.subLine}>
+          Target · {formatClock(timedTarget(exercise) * 1000)}
+        </Text>
+
+        <View style={styles.columnHeader}>
+          <Text style={[styles.columnLabel, styles.colNum]}>#</Text>
+          <Text style={[styles.columnLabel, styles.colHold]}>HOLD</Text>
+          <View style={styles.colCheck} />
+        </View>
+
+        {exercise.sets.map((set, sIdx) => (
+          <SetRow
+            key={`set-${sIdx}`}
+            setNumber={sIdx + 1}
+            reps={set.reps}
+            weight={set.weight}
+            status={set.status}
+            durationSeconds={set.durationSeconds ?? 0}
+            onRepsPress={() => onSetRepsPress?.(sIdx)}
+            onWeightPress={() => onSetWeightPress?.(sIdx)}
+            onHoldPress={() => onSetRepsPress?.(sIdx)}
+            onConfirm={() => onSetConfirm?.(sIdx)}
+            onPress={() => onSetPress?.(sIdx)}
+          />
+        ))}
+
+        <View style={styles.expandedProgress}>
+          <ProgressBar
+            ratio={total > 0 ? resolved / total : 0}
+            color={theme.colors.session.green}
+          />
+        </View>
+      </View>
+    )
+  }
 
   // ---- Expanded card ----
   if (isExpanded) {
@@ -237,9 +421,13 @@ export function ExerciseAccordionItem({
           <Text style={[styles.collapsedName, styles.collapsedNameDone]} numberOfLines={1}>
             {exercise.exerciseName}
           </Text>
+          {isTimedExercise(exercise) && <TimedBadge />}
         </View>
         <Text style={styles.doneSummary} numberOfLines={1}>
-          {completedCount(exercise)}/{total} · top {topWeight(exercise)} lb
+          {completedCount(exercise)}/{total} ·{' '}
+          {isTimedExercise(exercise)
+            ? `top ${formatClock(topHold(exercise) * 1000)}`
+            : `top ${topWeight(exercise)} lb`}
         </Text>
       </Pressable>
     )
@@ -259,6 +447,7 @@ export function ExerciseAccordionItem({
           <Text style={styles.collapsedName} numberOfLines={1}>
             {exercise.exerciseName}
           </Text>
+          {isTimedExercise(exercise) && <TimedBadge />}
         </View>
         <Text style={styles.currentSummary}>
           Set {activeSetNumber(exercise)} of {total}
@@ -277,12 +466,20 @@ export function ExerciseAccordionItem({
         accessibilityRole="button"
         accessibilityLabel={`${exercise.exerciseName}, upcoming, ${total} sets, tap to expand`}
       >
-        <View>
-          <Text style={[styles.collapsedName, styles.collapsedNamePending]} numberOfLines={1}>
-            {exercise.exerciseName}
-          </Text>
+        <View style={styles.pendingTextWrap}>
+          <View style={styles.pendingNameRow}>
+            <Text
+              style={[styles.collapsedName, styles.collapsedNamePending]}
+              numberOfLines={1}
+            >
+              {exercise.exerciseName}
+            </Text>
+            {isTimedExercise(exercise) && <TimedBadge />}
+          </View>
           <Text style={styles.pendingSummary} numberOfLines={1}>
-            0/{total} · {pf.weight} lb
+            {isTimedExercise(exercise)
+              ? `0/${total} · Hold ${formatClock(timedTarget(exercise) * 1000)}`
+              : `0/${total} · ${pf.weight} lb`}
           </Text>
         </View>
       </Pressable>
@@ -369,8 +566,31 @@ const styles = StyleSheet.create({
   colValue: {
     flex: 1
   },
+  colHold: {
+    flex: 2,
+    textAlign: 'center'
+  },
   colCheck: {
     width: 34
+  },
+  headerBadges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
+  },
+  timedBadge: {
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.session.cyanTintBg,
+    borderWidth: 1,
+    borderColor: theme.colors.session.cyanControlBorder
+  },
+  timedBadgeText: {
+    fontSize: 9,
+    fontFamily: theme.fonts.semiBold,
+    letterSpacing: 1,
+    color: theme.colors.session.cyan
   },
   addSet: {
     flexDirection: 'row',
@@ -391,6 +611,75 @@ const styles = StyleSheet.create({
   },
   expandedProgress: {
     marginTop: 12
+  },
+  // timed (hold) focus
+  holdFocus: {
+    alignItems: 'center',
+    paddingTop: 14,
+    paddingBottom: 6
+  },
+  holdSetLabel: {
+    fontSize: 11,
+    fontFamily: theme.fonts.semiBold,
+    letterSpacing: 1.6,
+    color: theme.colors.session.lime
+  },
+  timedTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 13,
+    borderRadius: 11,
+    backgroundColor: theme.colors.session.cyanTintBg,
+    borderWidth: 1,
+    borderColor: theme.colors.session.cyanControlBorder
+  },
+  timedTagText: {
+    fontSize: 11,
+    fontFamily: theme.fonts.semiBold,
+    letterSpacing: 0.6,
+    color: theme.colors.session.cyan
+  },
+  ringPress: {
+    width: 180,
+    height: 180,
+    marginTop: 18,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  holdGlow: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    right: 16,
+    bottom: 16,
+    borderRadius: 90,
+    backgroundColor: theme.colors.session.limeGlow
+  },
+  ringCenter: {
+    position: 'absolute',
+    alignItems: 'center'
+  },
+  ringValue: {
+    fontSize: 52,
+    lineHeight: 56,
+    fontFamily: theme.fonts.displayMed,
+    color: theme.colors.session.textPrimary,
+    fontVariant: ['tabular-nums']
+  },
+  ringSub: {
+    fontSize: 12,
+    fontFamily: theme.fonts.medium,
+    color: theme.colors.session.muted,
+    marginTop: 6
+  },
+  ringSubLive: {
+    fontSize: 12,
+    fontFamily: theme.fonts.medium,
+    color: theme.colors.session.limeMutedText,
+    marginTop: 6
   },
   // shared progress bar
   progressTrack: {
@@ -501,7 +790,16 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.session.collapsedPendingBorder
   },
   collapsedNamePending: {
-    color: theme.colors.session.subtext
+    color: theme.colors.session.subtext,
+    flexShrink: 1
+  },
+  pendingTextWrap: {
+    flex: 1
+  },
+  pendingNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
   },
   pendingSummary: {
     fontSize: 12,

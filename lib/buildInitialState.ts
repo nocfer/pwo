@@ -55,6 +55,10 @@ export function buildInitialState(
       restDurationMs: resolveSetRestMs(block, 0),
       sets: Array.from({ length: block.sets ?? 1 }, (_, i) => ({
         ...resolveSetValues(block, i, prefillMap),
+        // Timed blocks seed each set's target hold (seconds); reps/weight stay 0.
+        ...(block.type === 'exercise' && block.durationSeconds != null
+          ? { durationSeconds: block.durationSeconds }
+          : {}),
         restDurationMs: resolveSetRestMs(block, i),
         status: 'pending' as SetStatus
       }))

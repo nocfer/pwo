@@ -96,6 +96,33 @@ export function workoutReducer(
       return { ...state, exercises }
     }
 
+    case 'LOG_DURATION': {
+      // Mirror of LOG_SET for timed (hold) sets — records the seconds actually
+      // held. Same guard: only editable sets accept new values.
+      const target =
+        state.exercises[action.exerciseIndex]?.sets[action.setIndex]
+      if (
+        !target ||
+        target.status === 'completed' ||
+        target.status === 'skipped'
+      ) {
+        return state
+      }
+      const exercises = state.exercises.map((ex, eIdx) =>
+        eIdx === action.exerciseIndex
+          ? {
+              ...ex,
+              sets: ex.sets.map((s, sIdx) =>
+                sIdx === action.setIndex
+                  ? { ...s, durationSeconds: action.durationSeconds }
+                  : s
+              )
+            }
+          : ex
+      )
+      return { ...state, exercises }
+    }
+
     case 'CONFIRM_SET':
       return resolveSetAndAdvance(
         state,
@@ -105,7 +132,11 @@ export function workoutReducer(
           ...s,
           status: 'completed' as const,
           confirmedReps: s.reps,
-          confirmedWeight: s.weight
+          confirmedWeight: s.weight,
+          // Carry the held duration for timed sets; undefined for reps sets.
+          ...(s.durationSeconds != null
+            ? { confirmedDurationSeconds: s.durationSeconds }
+            : {})
         })
       )
 
@@ -196,6 +227,11 @@ export function workoutReducer(
             {
               reps: last ? last.reps : 0,
               weight: last ? last.weight : 0,
+              // Inherit timed-ness from the previous set so an added set on a
+              // hold exercise keeps the same target duration.
+              ...(last?.durationSeconds != null
+                ? { durationSeconds: last.durationSeconds }
+                : {}),
               status: 'pending' as const
             }
           ]

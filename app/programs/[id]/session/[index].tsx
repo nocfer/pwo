@@ -5,6 +5,7 @@ import {
   InlineSetEditor,
   type EditorField
 } from '@/components/workout/InlineSetEditor'
+import { HoldActionBar, type HoldPhase } from '@/components/workout/HoldActionBar'
 import { LogActionBar } from '@/components/workout/LogActionBar'
 import { RestSheet } from '@/components/workout/RestSheet'
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader'
@@ -23,6 +24,7 @@ import {
 import {
   useElapsedTimer,
   useEndWorkout,
+  useHoldTimer,
   useLiveActivitySync,
   usePrefill,
   useRestTimer,
@@ -34,11 +36,13 @@ import {
 import { haptics } from '@/lib/haptics'
 import { buildInitialState } from '@/lib/buildInitialState'
 import { buildWorkoutRecap } from '@/lib/workoutRecap'
+import { formatClock } from '@/lib/utils/format'
 import { showToast } from '@/lib/toast'
 import { readPersistedWorkout } from '@/lib/workout-persistence'
 import { theme } from '@/theme/theme'
 import type { AccumulatedSet, Program } from '@/types'
 import type { ExerciseState } from '@/types/workout'
+import { isTimedSet } from '@/types/workout'
 import { usePreventRemove } from '@react-navigation/native'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -68,6 +72,7 @@ function WorkoutSessionContent() {
     state,
     expandExercise,
     logSet,
+    logDuration,
     confirmSet,
     skipSet,
     editSet,
@@ -130,6 +135,9 @@ function WorkoutSessionContent() {
     (exerciseIndex: number, setIndex: number, field: EditorField) => {
       const set = state.exercises[exerciseIndex]?.sets[setIndex]
       if (!set) return
+      // Timed sets only have a hold duration to edit — ignore the reps/weight
+      // hint the row passed and always open the duration stepper.
+      const resolvedField: EditorField = isTimedSet(set) ? 'duration' : field
       if (set.status === 'completed') {
         editSet(exerciseIndex, setIndex)
       } else if (set.status === 'skipped') {
@@ -137,7 +145,7 @@ function WorkoutSessionContent() {
       } else if (set.status === 'pending') {
         expandExercise(exerciseIndex, setIndex)
       }
-      setEditor({ exerciseIndex, setIndex, field })
+      setEditor({ exerciseIndex, setIndex, field: resolvedField })
     },
     [state.exercises, editSet, restoreSet, expandExercise]
   )
@@ -164,6 +172,9 @@ function WorkoutSessionContent() {
       const exercise = state.exercises[exerciseIndex]
       const set = exercise?.sets[setIndex]
       if (!set) return
+      // Timed sets are logged via the hold timer (handleHoldComplete), never as
+      // a reps×weight set — guard against a stray confirm corrupting stats.
+      if (isTimedSet(set)) return
 
       setEditor(null)
       logSet(exerciseIndex, setIndex, set.reps, set.weight)
@@ -218,11 +229,15 @@ function WorkoutSessionContent() {
       if (!editor) return
       const set = state.exercises[editor.exerciseIndex]?.sets[editor.setIndex]
       if (!set) return
+      if (editor.field === 'duration') {
+        logDuration(editor.exerciseIndex, editor.setIndex, nextValue)
+        return
+      }
       const reps = editor.field === 'reps' ? nextValue : set.reps
       const weight = editor.field === 'weight' ? nextValue : set.weight
       logSet(editor.exerciseIndex, editor.setIndex, reps, weight)
     },
-    [editor, state.exercises, logSet]
+    [editor, state.exercises, logSet, logDuration]
   )
 
   const handleEditorDone = useCallback(() => {
@@ -291,6 +306,80 @@ function WorkoutSessionContent() {
     return null
   }, [state.exercises])
 
+  // ---- Timed (hold) active set ----
+  const activeSet = activeLoc
+    ? state.exercises[activeLoc.exerciseIndex].sets[activeLoc.setIndex]
+    : null
+  const activeIsTimed = activeSet ? isTimedSet(activeSet) : false
+  const holdTargetSeconds = activeSet?.durationSeconds ?? 0
+
+  // Commit a finished hold: record the seconds held, advance, then rest/complete
+  // — the timed mirror of handleLogSet's tail. reason distinguishes reaching the
+  // target (celebrate) from Done early (a normal log).
+  const handleHoldComplete = useCallback(
+    (heldSeconds: number, reason: 'target' | 'manual') => {
+      if (!activeLoc) return
+      const { exerciseIndex, setIndex } = activeLoc
+      const exercise = state.exercises[exerciseIndex]
+      const set = exercise?.sets[setIndex]
+      if (!set) return
+
+      logDuration(exerciseIndex, setIndex, heldSeconds)
+      confirmSet(exerciseIndex, setIndex)
+      if (reason === 'target') {
+        // Reached the target — celebrate (notifySuccess) + the timer-done cue.
+        haptics.setComplete()
+        haptics.restTimerFinished()
+      } else {
+        haptics.setConfirmed()
+      }
+      showToast({
+        type: 'success',
+        text1: `Set ${setIndex + 1} held · ${formatClock(heldSeconds * 1000)}`,
+        visibilityTime: 1500
+      })
+
+      const next = findNextPendingSet(state.exercises, exerciseIndex, setIndex)
+      if (next) {
+        const durationMs =
+          next.exerciseIndex === exerciseIndex
+            ? (set.restDurationMs ?? exercise.restDurationMs ?? 60000)
+            : (state.exercises[next.exerciseIndex].restDurationMs ?? 60000)
+        if (durationMs > 0) startRestTimer(durationMs)
+      } else {
+        haptics.workoutCompleted()
+        completeWorkout()
+      }
+    },
+    [activeLoc, state.exercises, logDuration, confirmSet, startRestTimer, completeWorkout]
+  )
+
+  const holdTimer = useHoldTimer({
+    targetSeconds: holdTargetSeconds,
+    onComplete: handleHoldComplete
+  })
+  const holdPhase: HoldPhase = holdTimer.isRunning
+    ? 'holding'
+    : holdTimer.isPaused
+      ? 'paused'
+      : 'ready'
+
+  const handleStartHold = useCallback(() => {
+    holdTimer.start()
+    haptics.buttonTap()
+  }, [holdTimer])
+  const handlePauseHold = useCallback(() => {
+    holdTimer.pause()
+    haptics.pauseTimer()
+  }, [holdTimer])
+  const handleResumeHold = useCallback(() => {
+    holdTimer.resume()
+    haptics.resumeTimer()
+  }, [holdTimer])
+  const handleDoneEarly = useCallback(() => {
+    holdTimer.done()
+  }, [holdTimer])
+
   // Web keyboard: Enter logs the active set (or commits the editor), Esc closes
   // the editor. Re-uses the generic shortcut primitive (no-op off web).
   useWebKeyboardShortcuts({
@@ -300,6 +389,12 @@ function WorkoutSessionContent() {
         return true
       }
       if (activeLoc) {
+        if (activeIsTimed) {
+          // Timed set: Enter starts the hold, or finishes it (Done early).
+          if (holdPhase === 'ready') handleStartHold()
+          else handleDoneEarly()
+          return true
+        }
         handleLogSet(activeLoc.exerciseIndex, activeLoc.setIndex)
         return true
       }
@@ -378,6 +473,11 @@ function WorkoutSessionContent() {
     for (const exercise of state.exercises) {
       for (const set of exercise.sets) {
         if (set.status !== 'completed') continue
+        // TODO(timed) #2: AccumulatedSet has no duration field, so timed (hold)
+        // sets can't be recorded to the backend yet — skip them so they don't
+        // pollute stats as 0-rep bodyweight sets. They still appear in the
+        // in-app recap. Revisit when the API models held seconds.
+        if (set.durationSeconds != null) continue
         const weight = set.confirmedWeight ?? set.weight
         const isBodyweight = !weight || weight <= 0
         accumulatedSets.push({
@@ -439,8 +539,9 @@ function WorkoutSessionContent() {
     )
   }
 
+  // Only the reps/weight cells highlight on focus; the timed focus has no cells.
   const focusForExercise = (exerciseIndex: number) =>
-    editor?.exerciseIndex === exerciseIndex
+    editor?.exerciseIndex === exerciseIndex && editor.field !== 'duration'
       ? { setIndex: editor.setIndex, field: editor.field }
       : null
 
@@ -500,6 +601,21 @@ function WorkoutSessionContent() {
                     canMoveUp={reorderable(idx - 1)}
                     canMoveDown={reorderable(idx + 1)}
                     focusedField={focusForExercise(idx)}
+                    hold={
+                      activeIsTimed && idx === activeLoc?.exerciseIndex
+                        ? { phase: holdPhase, elapsedMs: holdTimer.elapsedMs }
+                        : null
+                    }
+                    onAdjustTarget={
+                      activeIsTimed && idx === activeLoc?.exerciseIndex
+                        ? () =>
+                            openEditor(
+                              idx,
+                              activeLoc.setIndex,
+                              'duration'
+                            )
+                        : undefined
+                    }
                   />
                 </View>
               ))}
@@ -524,8 +640,23 @@ function WorkoutSessionContent() {
             state.exercises[activeLoc.exerciseIndex].sets[activeLoc.setIndex]
               .reps
           }
+          nextDurationSeconds={
+            state.exercises[activeLoc.exerciseIndex].sets[activeLoc.setIndex]
+              .durationSeconds ?? null
+          }
           onExtend={handleExtendRest}
           onSkip={dismissRest}
+        />
+      ) : activeLoc && activeIsTimed ? (
+        <HoldActionBar
+          phase={holdPhase}
+          setNumber={activeLoc.setIndex + 1}
+          exerciseName={state.exercises[activeLoc.exerciseIndex].exerciseName}
+          targetSeconds={holdTargetSeconds}
+          onStart={handleStartHold}
+          onPause={handlePauseHold}
+          onResume={handleResumeHold}
+          onDoneEarly={handleDoneEarly}
         />
       ) : activeLoc ? (
         <LogActionBar
@@ -549,11 +680,19 @@ function WorkoutSessionContent() {
           field={editor.field}
           setNumber={editor.setIndex + 1}
           status={editorSet.status}
-          value={editor.field === 'weight' ? editorSet.weight : editorSet.reps}
+          value={
+            editor.field === 'duration'
+              ? editorSet.durationSeconds ?? 0
+              : editor.field === 'weight'
+                ? editorSet.weight
+                : editorSet.reps
+          }
           prefillBase={
-            editor.field === 'weight'
-              ? editorBaseSet?.weight ?? 0
-              : editorBaseSet?.reps ?? 0
+            editor.field === 'duration'
+              ? editorBaseSet?.durationSeconds ?? editorSet.durationSeconds ?? 0
+              : editor.field === 'weight'
+                ? editorBaseSet?.weight ?? 0
+                : editorBaseSet?.reps ?? 0
           }
           onChange={handleEditorChange}
           onDone={handleEditorDone}
