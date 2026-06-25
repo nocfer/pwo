@@ -486,6 +486,19 @@ export function isAPIAvailable(): boolean {
 }
 
 /**
+ * Whether an error from a data hook is a genuine load failure worth surfacing
+ * as an error state (with retry). The API simply being disabled/unconfigured
+ * is not a failure — it should read as "no data yet" (an empty state).
+ */
+export function isLoadFailure(error: unknown): boolean {
+  if (!error) return false
+  if (error instanceof APIError) {
+    return error.code !== 'API_DISABLED'
+  }
+  return true
+}
+
+/**
  * Get API configuration status for debugging
  */
 export function getAPIStatus() {

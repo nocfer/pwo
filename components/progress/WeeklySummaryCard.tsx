@@ -2,8 +2,11 @@
  * WeeklySummaryCard - Hero card showing this week's progress
  */
 
+import { ErrorScreen } from '@/components/common/ErrorScreen'
 import { Skeleton } from '@/components/common/Skeleton'
+import { useDataContext } from '@/context/DataContext'
 import { useConsistencyData, useWeeklyStats } from '@/hooks/data'
+import { isLoadFailure } from '@/lib/api'
 import { theme } from '@/theme/theme'
 import { Ionicons } from '@expo/vector-icons'
 import { useEffect, useMemo, useRef } from 'react'
@@ -17,7 +20,8 @@ type Props = {
 const MINI_BARS = 5
 
 export default function WeeklySummaryCard({ onStartWorkout }: Props) {
-  const { stats, loading } = useWeeklyStats()
+  const { stats, loading, error } = useWeeklyStats()
+  const { actions } = useDataContext()
   // Recent weekly totals — drives both the mini bar chart and the
   // "vs last week" delta (one source avoids a redundant fetch and the
   // timezone skew of a client-computed previous-week date).
@@ -49,6 +53,20 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
     return (
       <View style={styles.card}>
         <Skeleton height={120} borderRadius={theme.radius.sm} />
+      </View>
+    )
+  }
+
+  // A real load failure with nothing cached → error (not "no data yet").
+  if (isLoadFailure(error) && !stats) {
+    return (
+      <View style={styles.card}>
+        <ErrorScreen
+          inline
+          title="Couldn't load this week"
+          message="Check your connection and try again."
+          onRetry={actions.refreshProgress}
+        />
       </View>
     )
   }

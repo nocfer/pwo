@@ -2,8 +2,11 @@
  * PersonalRecordsCard - Display recent PRs
  */
 
+import { ErrorScreen } from '@/components/common/ErrorScreen'
 import { Skeleton } from '@/components/common/Skeleton'
+import { useDataContext } from '@/context/DataContext'
 import { isPRRecent, useExerciseNames, useExercises, usePRs } from '@/hooks/data'
+import { isLoadFailure } from '@/lib/api'
 import { theme } from '@/theme/theme'
 import { Exercise } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
@@ -18,7 +21,8 @@ type Props = {
 }
 
 export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
-  const { data: prsData, loading } = usePRs(limit)
+  const { data: prsData, loading, error } = usePRs(limit)
+  const { actions } = useDataContext()
   const { data: exercises } = useExercises()
   const prIds = useMemo(
     () => (prsData?.latestPRs ?? []).map(pr => pr.exerciseId),
@@ -49,6 +53,19 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
     return (
       <View style={styles.card}>
         <Skeleton height={180} borderRadius={theme.radius.sm} />
+      </View>
+    )
+  }
+
+  if (isLoadFailure(error) && !prsData) {
+    return (
+      <View style={styles.card}>
+        <ErrorScreen
+          inline
+          title="Couldn't load records"
+          message="Check your connection and try again."
+          onRetry={actions.refreshProgress}
+        />
       </View>
     )
   }
