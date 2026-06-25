@@ -2,6 +2,8 @@
  * Formatting utility functions
  */
 
+import type { ProgramBlock } from '@/types'
+
 /**
  * Format seconds into M:SS format (e.g., "5:30")
  */
@@ -9,6 +11,45 @@ export function formatTime(total: number): string {
   const m = Math.floor(total / 60)
   const s = total % 60
   return `${m}:${s.toString().padStart(2, '0')}`
+}
+
+/**
+ * Parse an "M:SS" (or bare-seconds) string into total seconds. Inverse of
+ * formatTime; tolerant of empty / malformed input (returns 0).
+ */
+export function mmssToSeconds(mmss: string): number {
+  const trimmed = mmss.trim()
+  if (!trimmed) return 0
+  if (trimmed.includes(':')) {
+    const [mins, secs] = trimmed.split(':')
+    return (parseInt(mins, 10) || 0) * 60 + (parseInt(secs, 10) || 0)
+  }
+  return parseInt(trimmed, 10) || 0
+}
+
+const SECONDS_PER_REP = 4 // rough work-rate used only for time estimates
+
+/**
+ * Estimate a single session's duration in minutes from its exercise blocks.
+ * Shared by the program builder and import preview so both agree. Counts
+ * work + (sets-1) inter-set rests per block + rest between exercises.
+ */
+export function estimateSessionMinutes(
+  blocks: ProgramBlock[],
+  opts: { warmupSeconds?: number; restBetweenExercises?: number } = {}
+): number {
+  const { warmupSeconds = 0, restBetweenExercises = 60 } = opts
+  let total = warmupSeconds
+  blocks.forEach((block, i) => {
+    const sets = block.sets ?? 1
+    const work =
+      typeof block.durationSeconds === 'number'
+        ? sets * block.durationSeconds
+        : getTotalReps(block.targetReps, sets) * SECONDS_PER_REP
+    total += work + Math.max(0, sets - 1) * (block.restBetweenSets ?? 60)
+    if (i < blocks.length - 1) total += restBetweenExercises
+  })
+  return Math.max(1, Math.round(total / 60))
 }
 
 /**

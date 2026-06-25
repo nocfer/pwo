@@ -6,12 +6,14 @@ export { daysBetween, formatDate } from './date'
 export { formatCategoryLabel, getCategoryColors } from './exerciseCategory'
 export { getSourceBadge, type ItemSource } from './sourceBadge'
 export {
+  estimateSessionMinutes,
   formatCount,
   formatDuration,
   formatReps,
   formatTime,
   getFirstReps,
-  getTotalReps
+  getTotalReps,
+  mmssToSeconds
 } from './format'
 export {
   getTopPriorityPrograms,

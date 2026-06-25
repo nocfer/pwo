@@ -8,11 +8,13 @@
 
 import { haptics } from '@/lib/haptics'
 import {
+  estimateSessionMinutes,
   formatCategoryLabel,
   formatCount,
   formatTime,
   getCategoryColors,
-  getSourceBadge
+  getSourceBadge,
+  mmssToSeconds
 } from '@/lib/utils'
 import { VALID_EXERCISE_CATEGORIES, validateProgram } from '@/lib/validation'
 import { theme } from '@/theme/theme'
@@ -81,19 +83,6 @@ const DEFAULT_REST_BETWEEN_SETS = 60
 const DEFAULT_REPS = 10
 const DEFAULT_DURATION = 30
 const REST_STEP = 5
-const SECONDS_PER_REP = 4 // rough work-rate used only for the time estimate
-
-function mmssToSeconds(mmss: string): number {
-  const trimmed = mmss.trim()
-  if (!trimmed) return 0
-  if (trimmed.includes(':')) {
-    const parts = trimmed.split(':')
-    const mins = parseInt(parts[0], 10) || 0
-    const secs = parseInt(parts[1], 10) || 0
-    return mins * 60 + secs
-  }
-  return parseInt(trimmed, 10) || 0
-}
 
 function makeDraft(exerciseId: string): BlockDraft {
   return {
@@ -162,34 +151,10 @@ function convertDraftToBlocks(drafts: BlockDraft[]): ProgramBlock[] {
     return {
       ...base,
       targetReps: draft.perSetReps
-        ? resizeReps(draft.perSetRepsValues, draft.sets).map(r =>
-            Math.max(1, r)
-          )
+        ? resizeReps(draft.perSetRepsValues, draft.sets)
         : draft.reps
     }
   })
-}
-
-function estimateMinutes(
-  blocks: BlockDraft[],
-  warmupEnabled: boolean,
-  warmupSeconds: number,
-  restEnabled: boolean,
-  restBetween: number
-): number {
-  let total = warmupEnabled ? warmupSeconds : 0
-  blocks.forEach((b, i) => {
-    const work =
-      b.mode === 'timed'
-        ? b.sets * b.durationSeconds
-        : b.perSetReps
-          ? resizeReps(b.perSetRepsValues, b.sets).reduce((s, r) => s + r, 0) *
-            SECONDS_PER_REP
-          : b.sets * b.reps * SECONDS_PER_REP
-    total += work + b.sets * b.restBetweenSets
-    if (restEnabled && i < blocks.length - 1) total += restBetween
-  })
-  return Math.max(1, Math.round(total / 60))
 }
 
 export function ProgramForm({
@@ -237,13 +202,10 @@ export function ProgramForm({
 
   const estimatedMinutes = useMemo(
     () =>
-      estimateMinutes(
-        blocks,
-        warmupEnabled,
-        mmssToSeconds(warmupTime),
-        restEnabled,
-        mmssToSeconds(restTime)
-      ),
+      estimateSessionMinutes(convertDraftToBlocks(blocks), {
+        warmupSeconds: warmupEnabled ? mmssToSeconds(warmupTime) : 0,
+        restBetweenExercises: restEnabled ? mmssToSeconds(restTime) : 0
+      }),
     [blocks, warmupEnabled, warmupTime, restEnabled, restTime]
   )
 
@@ -349,16 +311,14 @@ export function ProgramForm({
 
   const filteredPickerExercises = useMemo(() => {
     const q = pickerQuery.trim().toLowerCase()
-    const existingIds = new Set(blocks.map(b => b.exerciseId))
     return exercises.filter(ex => {
-      if (existingIds.has(ex.id)) return false // already in the program
       if (pickerCategory !== 'all' && ex.category !== pickerCategory) {
         return false
       }
       if (q && !ex.name.toLowerCase().includes(q)) return false
       return true
     })
-  }, [exercises, pickerQuery, pickerCategory, blocks])
+  }, [exercises, pickerQuery, pickerCategory])
 
   const handleSave = useCallback(async () => {
     const trimmed = name.trim()

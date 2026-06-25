@@ -491,8 +491,8 @@ export function validateProgramBlock(
         const reps = block.targetReps
         const invalidReps = Array.isArray(reps)
           ? reps.length === 0 ||
-            reps.some(r => typeof r !== 'number' || r <= 0)
-          : typeof reps !== 'number' || reps <= 0
+            reps.some(r => !Number.isFinite(r) || r <= 0)
+          : !Number.isFinite(reps) || reps <= 0
         if (invalidReps) {
           errors.push(
             createValidationError(
