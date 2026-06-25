@@ -7,6 +7,10 @@
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
+    "ios:device": "expo run:ios --device",
+    "ios:sim": "PWO_APP_GROUP=1 expo run:ios",
+    "ios:prebuild": "expo prebuild -p ios --clean",
+    "ios:prebuild:sim": "PWO_APP_GROUP=1 expo prebuild -p ios --clean",
     "web": "expo start --web",
     "compile": "npx tsc --noEmit",
     "lint": "expo lint",
@@ -66,6 +70,7 @@
     "victory-native": "^41.20.2"
   },
   "devDependencies": {
+    "@bacons/apple-targets": "^4.0.7",
     "@types/react": "~19.2.14",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",

@@ -7,6 +7,7 @@ export {
   type ResumableWorkout
 } from './useResumableWorkout'
 export { useElapsedTimer } from './useElapsedTimer'
+export { useLiveActivitySync } from './useLiveActivitySync'
 export { useRestTimer } from './useRestTimer'
 export { useEndWorkout } from './useEndWorkout'
 export { usePrefill } from './usePrefill'

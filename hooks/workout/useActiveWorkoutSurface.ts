@@ -14,9 +14,11 @@ import { workoutReducer } from '@/context/workoutReducer'
 import { storage } from '@/lib/mmkv'
 import { STORAGE_KEYS } from '@/lib/storage-keys'
 import { readPersistedWorkout } from '@/lib/workout-persistence'
+import { consumePendingRestAction } from '@/modules/live-activity'
 import type { WorkoutAction, WorkoutState } from '@/types/workout'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { AppState } from 'react-native'
 
 export type ActiveWorkoutSurface = {
   /** Mini-bar is "resting" (cyan ring) when a rest timer is live, else "in progress" (lime). */
@@ -142,6 +144,22 @@ export function useActiveWorkoutSurface(): UseActiveWorkoutSurfaceReturn {
   const skipRest = useCallback(() => {
     mutatePersisted({ type: 'DISMISS_REST_TIMER' })
   }, [])
+
+  // Reconcile actions taken from the lock screen / Dynamic Island / notification
+  // while backgrounded: drain the queued +15s / Skip and apply it to persisted
+  // state (no-op when the native module is absent).
+  useEffect(() => {
+    const apply = () => {
+      const action = consumePendingRestAction()
+      if (action === 'extend') extendRest()
+      else if (action === 'skip') skipRest()
+    }
+    apply() // also handle the case where we mount already-foregrounded
+    const sub = AppState.addEventListener('change', next => {
+      if (next === 'active') apply()
+    })
+    return () => sub.remove()
+  }, [extendRest, skipRest])
 
   const surfaceRef = useRef<ActiveWorkoutSurface | null>(null)
   surfaceRef.current =

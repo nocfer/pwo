@@ -23,6 +23,7 @@ import {
 import {
   useElapsedTimer,
   useEndWorkout,
+  useLiveActivitySync,
   usePrefill,
   useRestTimer,
   useScrollToExercise,
@@ -77,6 +78,7 @@ function WorkoutSessionContent() {
     restoreSet
   } = useWorkoutExecution()
   useWorkoutPersistence()
+  useLiveActivitySync()
   const {
     remainingMs: restRemainingMs,
     isActive: restTimerActive,

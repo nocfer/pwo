@@ -9,9 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.progressiveworkout",
+      "bundleIdentifier": "com.ferdinandonocera.progressiveworkout",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSSupportsLiveActivities": true
       }
     },
     "android": {
@@ -24,7 +25,10 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
       ],
       "package": "com.anonymous.progressiveworkout"
     },
@@ -47,7 +51,8 @@
         }
       ],
       "expo-font",
-      "expo-audio"
+      "expo-audio",
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true,
