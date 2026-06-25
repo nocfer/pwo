@@ -1,4 +1,8 @@
 export {
+  useActiveWorkoutSurface,
+  type ActiveWorkoutSurface
+} from './useActiveWorkoutSurface'
+export {
   useResumableWorkout,
   type ResumableWorkout
 } from './useResumableWorkout'

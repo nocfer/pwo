@@ -3,13 +3,29 @@ import {
   TAB_CONFIG,
   TabIconAnimator
 } from '@/components/common/TabIconAnimator'
+import { ActiveWorkoutBar } from '@/components/workout/ActiveWorkoutBar'
 import { useAuth } from '@/context/AuthContext'
 import { haptics } from '@/lib/haptics'
 import { theme } from '@/theme/theme'
+import {
+  BottomTabBar,
+  type BottomTabBarProps
+} from '@react-navigation/bottom-tabs'
 import { Redirect, Tabs } from 'expo-router'
-import { Platform, StyleSheet } from 'react-native'
+import { Platform, StyleSheet, View } from 'react-native'
 
 const tabPressListener = { tabPress: () => haptics.tabSwitch() }
+
+// Custom tab bar = the global active-workout mini-bar docked directly above the
+// default bottom tab bar, so it follows the user across every tab screen.
+function TabBarWithActiveWorkout(props: BottomTabBarProps) {
+  return (
+    <View style={styles.tabBarHost} pointerEvents="box-none">
+      <ActiveWorkoutBar />
+      <BottomTabBar {...props} />
+    </View>
+  )
+}
 
 export default function TabLayout() {
   const { user, loading } = useAuth()
@@ -24,6 +40,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      tabBar={TabBarWithActiveWorkout}
       screenOptions={{
         headerShown: false,
         animation: 'none',
@@ -51,6 +68,9 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
+  tabBarHost: {
+    backgroundColor: 'transparent'
+  },
   tabBar: {
     backgroundColor: theme.colors.surface,
     borderTopColor: theme.colors.borderLight,
