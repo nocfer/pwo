@@ -22,6 +22,7 @@ import {
   ViewStyle
 } from 'react-native'
 import {
+  Dot,
   EmptyState,
   LoadingScreen,
   SelectionCheckbox,
@@ -221,7 +222,7 @@ export function SearchableList({
 
         <View style={styles.itemContent}>
           <View style={styles.itemNameRow}>
-            {isPending && <View style={styles.pendingDot} />}
+            {isPending && <Dot />}
             <Text style={styles.itemName} numberOfLines={1}>
               {item.name}
             </Text>
@@ -398,12 +399,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm
-  },
-  pendingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.colors.warning
   },
   itemName: {
     ...theme.typography.bodyBold,

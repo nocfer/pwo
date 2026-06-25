@@ -571,8 +571,10 @@ export function UnifiedDataManager({
         </Modal>
       )}
 
-      {/* Undo toast — reversible delete (single + bulk) */}
+      {/* Undo toast — reversible delete (single + bulk). The key restarts the
+          countdown when a new delete supersedes an in-flight one. */}
       <UndoToast
+        key={pendingDelete?.ids.join(',') ?? 'none'}
         visible={pendingDelete !== null}
         message={pendingDelete?.label ?? ''}
         subMessage={pendingDelete?.subLabel}

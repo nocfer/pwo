@@ -11,6 +11,7 @@ import type { Program } from '@/types'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useState } from 'react'
 import { Modal, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native'
+import { Dot } from '../common/Dot'
 import SelectionCheckbox from '../common/SelectionCheckbox'
 
 export interface ProgramListItemProps {
@@ -90,7 +91,7 @@ export function ProgramListItem({
 
       <View style={styles.content}>
         <View style={styles.header}>
-          {pending && <View style={styles.pendingDot} />}
+          {pending && <Dot />}
           <Text style={styles.name} numberOfLines={1}>
             {program.name}
           </Text>
@@ -221,12 +222,6 @@ const styles = StyleSheet.create({
     ...theme.typography.bodyBold,
     color: theme.colors.text,
     flexShrink: 1
-  },
-  pendingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.colors.warning
   },
   badge: {
     flexDirection: 'row',

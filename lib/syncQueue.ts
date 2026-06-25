@@ -66,6 +66,19 @@ export function clearQueue(): void {
   storage.remove(KEY)
 }
 
+/**
+ * Rewrite every queued entry that targets `from` to target `to`. Used after an
+ * offline-created entity is created on the server so later queued update/delete
+ * writes hit the real id instead of the temp id.
+ */
+export function remapEntityId(from: string, to: string): PendingMutation[] {
+  const next = loadQueue().map(e =>
+    e.entityId === from ? { ...e, entityId: to } : e
+  )
+  saveQueue(next)
+  return next
+}
+
 /** Set of entity ids that currently have a queued write (for pending dots). */
 export function pendingEntityIds(queue: PendingMutation[]): Set<string> {
   return new Set(queue.map(e => e.entityId))

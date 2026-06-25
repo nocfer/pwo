@@ -12,6 +12,7 @@ export { default as Button } from './Button'
 export { ConfirmationModal } from './ConfirmationModal'
 export { DeleteButton } from './DeleteButton'
 export { DependencyErrorModal } from './DependencyErrorModal'
+export { Dot } from './Dot'
 export {
   EmptyState,
   NoHistoryEmpty,

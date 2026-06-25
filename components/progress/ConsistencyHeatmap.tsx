@@ -2,9 +2,7 @@
  * ConsistencyHeatmap - GitHub-style activity heatmap
  */
 
-import { ErrorScreen } from '@/components/common/ErrorScreen'
 import { Skeleton } from '@/components/common/Skeleton'
-import { useDataContext } from '@/context/DataContext'
 import {
   getDayLabels,
   useConsistencyData,
@@ -14,6 +12,7 @@ import { isLoadFailure } from '@/lib/api'
 import { theme } from '@/theme/theme'
 import { useEffect, useRef } from 'react'
 import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native'
+import ProgressCardError from './ProgressCardError'
 import { CompactEmptyState } from './ProgressEmptyState'
 
 type Props = {
@@ -35,7 +34,6 @@ const levelColors: Record<ConsistencyLevel, string> = {
 
 export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
   const { data, loading, error } = useConsistencyData(weeks)
-  const { actions } = useDataContext()
   const fadeAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
@@ -57,16 +55,7 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
   }
 
   if (isLoadFailure(error) && !data) {
-    return (
-      <View style={styles.card}>
-        <ErrorScreen
-          inline
-          title="Couldn't load consistency"
-          message="Check your connection and try again."
-          onRetry={actions.refreshProgress}
-        />
-      </View>
-    )
+    return <ProgressCardError title="Couldn't load consistency" />
   }
 
   if (!data || data.totalWorkouts === 0) {

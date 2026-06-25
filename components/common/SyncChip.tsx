@@ -12,6 +12,7 @@
 import { useSyncStatus } from '@/context/DataContext'
 import { theme } from '@/theme/theme'
 import Ionicons from '@expo/vector-icons/Ionicons'
+import { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 function formatRelative(ts: number): string {
@@ -28,6 +29,15 @@ function formatRelative(ts: number): string {
 export function SyncChip() {
   const { isOnline, syncState, lastSyncAt, pendingCount, retrySync } =
     useSyncStatus()
+
+  // Re-render every 30s so the "Synced Xm ago" label doesn't go stale while
+  // the user lingers on the screen.
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    if (!lastSyncAt) return
+    const id = setInterval(() => setTick(t => t + 1), 30000)
+    return () => clearInterval(id)
+  }, [lastSyncAt])
 
   if (syncState === 'syncing') {
     return (

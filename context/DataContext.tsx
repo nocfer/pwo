@@ -23,10 +23,12 @@ import { canSafelyDelete } from '@/lib/dependencyChecker'
 import { auth } from '@/lib/firebase'
 import { programToWorkoutInput, workoutToProgram } from '@/lib/mappers/workout'
 import {
+  clearQueue,
   dequeue,
   enqueue,
   loadQueue,
   pendingEntityIds,
+  remapEntityId,
   updateEntry
 } from '@/lib/syncQueue'
 import { buildWorkoutLog } from '@/lib/utils/sessionBuilder'
@@ -358,6 +360,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
         if (!currentUser) {
           attemptedNameIdsRef.current.clear()
+          // Drop another user's queued offline writes so they can't replay
+          // into the next account signed in on this device.
+          clearQueue()
+          dispatch({ type: 'SET_PENDING_MUTATIONS', pending: [] })
+          dispatch({ type: 'SET_SYNC_STATE', syncState: 'idle' })
           dispatch({ type: 'RESET_EXERCISES' })
           return
         }
@@ -521,66 +528,75 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const isOnlineRef = useRef(isOnline)
   const flushingRef = useRef(false)
 
-  // Replay a single queued write against the API.
-  const replayEntry = useCallback(async (entry: PendingMutation) => {
-    if (entry.entity === 'exercise') {
-      if (entry.op === 'delete') {
-        await apiDeleteExercise(entry.entityId)
-        return
-      }
-      const input = entry.payload as Pick<
-        Exercise,
-        'name' | 'category' | 'icon'
-      >
-      if (entry.op === 'create') {
-        await apiCreateExercise({
-          name: input.name,
-          category: input.category,
-          icon: input.icon,
-          source: 'user'
-        })
-      } else {
-        await apiUpdateExercise(entry.entityId, {
+  // Replay a single queued write against the API. `entityId` is the resolved
+  // target (a temp id remapped to its server id once the create has replayed).
+  // Returns the server-assigned id for creates so callers can remap followers.
+  const replayEntry = useCallback(
+    async (
+      entry: PendingMutation,
+      entityId: string
+    ): Promise<string | undefined> => {
+      if (entry.entity === 'exercise') {
+        if (entry.op === 'delete') {
+          await apiDeleteExercise(entityId)
+          return
+        }
+        const input = entry.payload as Pick<
+          Exercise,
+          'name' | 'category' | 'icon'
+        >
+        if (entry.op === 'create') {
+          const saved = await apiCreateExercise({
+            name: input.name,
+            category: input.category,
+            icon: input.icon,
+            source: 'user'
+          })
+          return saved.id
+        }
+        await apiUpdateExercise(entityId, {
           name: input.name,
           category: input.category,
           icon: input.icon
         })
+        return
       }
-      return
-    }
 
-    // program
-    if (entry.op === 'delete') {
-      await apiDeleteWorkout(entry.entityId)
+      // program
+      if (entry.op === 'delete') {
+        await apiDeleteWorkout(entityId)
+        return
+      }
+      const input = entry.payload as Pick<
+        Program,
+        | 'name'
+        | 'description'
+        | 'blocks'
+        | 'initialWarmup'
+        | 'defaultRestBetweenExercises'
+      >
+      const now = new Date().toISOString()
+      const programForMapper: Program = {
+        id: entry.op === 'update' ? entityId : '',
+        name: input.name,
+        description: input.description,
+        blocks: input.blocks,
+        initialWarmup: input.initialWarmup,
+        defaultRestBetweenExercises: input.defaultRestBetweenExercises,
+        source: 'user',
+        createdAt: now,
+        updatedAt: now
+      }
+      const workoutInput = programToWorkoutInput(programForMapper)
+      if (entry.op === 'create') {
+        const apiWorkout = await apiCreateWorkout(workoutInput)
+        return workoutToProgram(apiWorkout).id
+      }
+      await apiUpdateWorkout(entityId, workoutInput)
       return
-    }
-    const input = entry.payload as Pick<
-      Program,
-      | 'name'
-      | 'description'
-      | 'blocks'
-      | 'initialWarmup'
-      | 'defaultRestBetweenExercises'
-    >
-    const now = new Date().toISOString()
-    const programForMapper: Program = {
-      id: entry.op === 'update' ? entry.entityId : '',
-      name: input.name,
-      description: input.description,
-      blocks: input.blocks,
-      initialWarmup: input.initialWarmup,
-      defaultRestBetweenExercises: input.defaultRestBetweenExercises,
-      source: 'user',
-      createdAt: now,
-      updatedAt: now
-    }
-    const workoutInput = programToWorkoutInput(programForMapper)
-    if (entry.op === 'create') {
-      await apiCreateWorkout(workoutInput)
-    } else {
-      await apiUpdateWorkout(entry.entityId, workoutInput)
-    }
-  }, [])
+    },
+    []
+  )
 
   // Flush the pending-write queue in FIFO order. Stops on a network error
   // (still offline) and drops poison entries after a retry cap.
@@ -591,10 +607,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     flushingRef.current = true
     dispatch({ type: 'SET_SYNC_STATE', syncState: 'syncing' })
+    // Temp id → server id, so an offline create's later update/delete writes
+    // hit the real id rather than the (now non-existent) temp id.
+    const idMap = new Map<string, string>()
     try {
       for (const entry of queue) {
+        const entityId = idMap.get(entry.entityId) ?? entry.entityId
         try {
-          await replayEntry(entry)
+          const serverId = await replayEntry(entry, entityId)
+          if (entry.op === 'create' && serverId && serverId !== entry.entityId) {
+            idMap.set(entry.entityId, serverId)
+            // Persist the remap so followers survive a mid-flush interruption.
+            remapEntityId(entry.entityId, serverId)
+          }
           dispatch({
             type: 'SET_PENDING_MUTATIONS',
             pending: dequeue(entry.id)
@@ -633,6 +658,33 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const retrySync = useCallback(() => {
     flushQueue()
   }, [flushQueue])
+
+  // Shared optimistic-write control flow for the CRUD mutations: when known
+  // offline, or when the online attempt fails with a network error, apply the
+  // optimistic change + enqueue and return the optimistic value; otherwise run
+  // the online path. Non-network errors (validation/permission) still throw.
+  const withOfflineFallback = useCallback(
+    async <T,>(
+      queueOffline: () => void,
+      online: () => Promise<T>,
+      offlineResult: T
+    ): Promise<T> => {
+      if (!isOnlineRef.current) {
+        queueOffline()
+        return offlineResult
+      }
+      try {
+        return await online()
+      } catch (e) {
+        if (isNetworkError(e)) {
+          queueOffline()
+          return offlineResult
+        }
+        throw e
+      }
+    },
+    []
+  )
 
   // Hydrate the queue once on mount.
   useEffect(() => {
@@ -782,50 +834,41 @@ export function DataProvider({ children }: { children: ReactNode }) {
         })
       }
 
-      // Known offline → apply optimistically and queue immediately.
-      if (!isOnlineRef.current) {
-        queueOffline()
-        return optimistic
-      }
+      return withOfflineFallback(
+        queueOffline,
+        async () => {
+          // Call API create or update — errors propagate directly to the caller
+          let saved: Exercise
+          if (id) {
+            saved = await apiUpdateExercise(id, {
+              name: input.name,
+              category: input.category,
+              icon: input.icon
+            })
+          } else {
+            saved = await apiCreateExercise({
+              name: input.name,
+              category: input.category,
+              icon: input.icon,
+              source: 'user'
+            })
+          }
 
-      try {
-        // Call API create or update — errors propagate directly to the caller
-        let saved: Exercise
-        if (id) {
-          saved = await apiUpdateExercise(id, {
-            name: input.name,
-            category: input.category,
-            icon: input.icon
+          // Fetch page 1 first, then replace atomically to avoid flash of empty state
+          const exerciseResponse = await fetchExercises(1)
+          dispatch({ type: 'RESET_EXERCISES' })
+          dispatch({
+            type: 'APPEND_EXERCISES',
+            exercises: exerciseResponse.data,
+            pagination: exerciseResponse.pagination
           })
-        } else {
-          saved = await apiCreateExercise({
-            name: input.name,
-            category: input.category,
-            icon: input.icon,
-            source: 'user'
-          })
-        }
 
-        // Fetch page 1 first, then replace atomically to avoid flash of empty state
-        const exerciseResponse = await fetchExercises(1)
-        dispatch({ type: 'RESET_EXERCISES' })
-        dispatch({
-          type: 'APPEND_EXERCISES',
-          exercises: exerciseResponse.data,
-          pagination: exerciseResponse.pagination
-        })
-
-        return saved
-      } catch (e) {
-        // Lost connectivity mid-write → fall back to the offline queue.
-        if (isNetworkError(e)) {
-          queueOffline()
-          return optimistic
-        }
-        throw e
-      }
+          return saved
+        },
+        optimistic
+      )
     },
-    [state.exercises]
+    [state.exercises, withOfflineFallback]
   )
 
   const deleteExercise = useCallback(
@@ -871,32 +914,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
         })
       }
 
-      if (!isOnlineRef.current) {
-        queueOffline()
-        return
-      }
+      await withOfflineFallback(
+        queueOffline,
+        async () => {
+          // Call API delete — errors propagate directly to the caller
+          await apiDeleteExercise(id)
 
-      try {
-        // Call API delete — errors propagate directly to the caller
-        await apiDeleteExercise(id)
-
-        // Fetch page 1 first, then replace atomically to avoid flash of empty state
-        const exerciseResponse = await fetchExercises(1)
-        dispatch({ type: 'RESET_EXERCISES' })
-        dispatch({
-          type: 'APPEND_EXERCISES',
-          exercises: exerciseResponse.data,
-          pagination: exerciseResponse.pagination
-        })
-      } catch (e) {
-        if (isNetworkError(e)) {
-          queueOffline()
-          return
-        }
-        throw e
-      }
+          // Fetch page 1 first, then replace atomically to avoid flash of empty state
+          const exerciseResponse = await fetchExercises(1)
+          dispatch({ type: 'RESET_EXERCISES' })
+          dispatch({
+            type: 'APPEND_EXERCISES',
+            exercises: exerciseResponse.data,
+            pagination: exerciseResponse.pagination
+          })
+        },
+        undefined
+      )
     },
-    [state.exercises, state.programs]
+    [state.exercises, state.programs, withOfflineFallback]
   )
 
   const upsertProgram = useCallback(
@@ -963,54 +999,47 @@ export function DataProvider({ children }: { children: ReactNode }) {
         })
       }
 
-      if (!isOnlineRef.current) {
-        queueOffline()
-        return optimistic
-      }
+      return withOfflineFallback(
+        queueOffline,
+        async () => {
+          const programForMapper: Program = {
+            ...optimistic,
+            id: id ?? ''
+          }
+          const workoutInput = programToWorkoutInput(programForMapper)
 
-      try {
-        const programForMapper: Program = {
-          ...optimistic,
-          id: id ?? ''
-        }
-        const workoutInput = programToWorkoutInput(programForMapper)
+          let saved: Program
+          if (id) {
+            const apiWorkout = await apiUpdateWorkout(id, workoutInput)
+            saved = workoutToProgram(apiWorkout)
+            console.debug('Program updated via API:', saved.id)
+          } else {
+            const apiWorkout = await apiCreateWorkout(workoutInput)
+            saved = workoutToProgram(apiWorkout)
+            console.debug('Program created via API:', saved.id)
+          }
 
-        let saved: Program
-        if (id) {
-          const apiWorkout = await apiUpdateWorkout(id, workoutInput)
-          saved = workoutToProgram(apiWorkout)
-          console.debug('Program updated via API:', saved.id)
-        } else {
-          const apiWorkout = await apiCreateWorkout(workoutInput)
-          saved = workoutToProgram(apiWorkout)
-          console.debug('Program created via API:', saved.id)
-        }
+          // Re-fetch all programs from API to ensure consistency
+          let apiPrograms: Program[] = []
+          try {
+            const workouts = await fetchWorkouts()
+            apiPrograms = workouts.map(workoutToProgram)
+          } catch (error) {
+            console.warn('Failed to fetch programs from API:', error)
+          }
 
-        // Re-fetch all programs from API to ensure consistency
-        let apiPrograms: Program[] = []
-        try {
-          const workouts = await fetchWorkouts()
-          apiPrograms = workouts.map(workoutToProgram)
-        } catch (error) {
-          console.warn('Failed to fetch programs from API:', error)
-        }
+          const merged = [
+            ...state.programs.filter((p: Program) => p.source === 'builtin'),
+            ...apiPrograms
+          ].sort((a, b) => a.name.localeCompare(b.name))
+          dispatch({ type: 'SET_PROGRAMS', programs: merged })
 
-        const merged = [
-          ...state.programs.filter((p: Program) => p.source === 'builtin'),
-          ...apiPrograms
-        ].sort((a, b) => a.name.localeCompare(b.name))
-        dispatch({ type: 'SET_PROGRAMS', programs: merged })
-
-        return saved
-      } catch (e) {
-        if (isNetworkError(e)) {
-          queueOffline()
-          return optimistic
-        }
-        throw e
-      }
+          return saved
+        },
+        optimistic
+      )
     },
-    [state.programs]
+    [state.programs, withOfflineFallback]
   )
 
   const deleteProgram = useCallback(
@@ -1041,38 +1070,31 @@ export function DataProvider({ children }: { children: ReactNode }) {
         })
       }
 
-      if (!isOnlineRef.current) {
-        queueOffline()
-        return
-      }
+      await withOfflineFallback(
+        queueOffline,
+        async () => {
+          // Delete via API — errors propagate to the caller
+          await apiDeleteWorkout(id)
 
-      try {
-        // Delete via API — errors propagate to the caller
-        await apiDeleteWorkout(id)
+          // Re-fetch all programs from API to ensure consistency
+          let apiPrograms: Program[] = []
+          try {
+            const workouts = await fetchWorkouts()
+            apiPrograms = workouts.map(workoutToProgram)
+          } catch (error) {
+            console.warn('Failed to fetch programs from API:', error)
+          }
 
-        // Re-fetch all programs from API to ensure consistency
-        let apiPrograms: Program[] = []
-        try {
-          const workouts = await fetchWorkouts()
-          apiPrograms = workouts.map(workoutToProgram)
-        } catch (error) {
-          console.warn('Failed to fetch programs from API:', error)
-        }
-
-        const merged = [
-          ...state.programs.filter(p => p.source === 'builtin'),
-          ...apiPrograms
-        ].sort((a, b) => a.name.localeCompare(b.name))
-        dispatch({ type: 'SET_PROGRAMS', programs: merged })
-      } catch (e) {
-        if (isNetworkError(e)) {
-          queueOffline()
-          return
-        }
-        throw e
-      }
+          const merged = [
+            ...state.programs.filter(p => p.source === 'builtin'),
+            ...apiPrograms
+          ].sort((a, b) => a.name.localeCompare(b.name))
+          dispatch({ type: 'SET_PROGRAMS', programs: merged })
+        },
+        undefined
+      )
     },
-    [state.programs]
+    [state.programs, withOfflineFallback]
   )
 
   const contextValue: DataContextValue = {

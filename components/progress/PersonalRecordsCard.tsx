@@ -2,9 +2,7 @@
  * PersonalRecordsCard - Display recent PRs
  */
 
-import { ErrorScreen } from '@/components/common/ErrorScreen'
 import { Skeleton } from '@/components/common/Skeleton'
-import { useDataContext } from '@/context/DataContext'
 import { isPRRecent, useExerciseNames, useExercises, usePRs } from '@/hooks/data'
 import { isLoadFailure } from '@/lib/api'
 import { theme } from '@/theme/theme'
@@ -13,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useEffect, useMemo, useRef } from 'react'
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native'
 import PRItem from './PRItem'
+import ProgressCardError from './ProgressCardError'
 import ProgressEmptyState from './ProgressEmptyState'
 
 type Props = {
@@ -22,7 +21,6 @@ type Props = {
 
 export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
   const { data: prsData, loading, error } = usePRs(limit)
-  const { actions } = useDataContext()
   const { data: exercises } = useExercises()
   const prIds = useMemo(
     () => (prsData?.latestPRs ?? []).map(pr => pr.exerciseId),
@@ -58,16 +56,7 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
   }
 
   if (isLoadFailure(error) && !prsData) {
-    return (
-      <View style={styles.card}>
-        <ErrorScreen
-          inline
-          title="Couldn't load records"
-          message="Check your connection and try again."
-          onRetry={actions.refreshProgress}
-        />
-      </View>
-    )
+    return <ProgressCardError title="Couldn't load records" />
   }
 
   const prs = prsData?.latestPRs ?? []

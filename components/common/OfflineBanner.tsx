@@ -8,7 +8,8 @@
 import { useSyncStatus } from '@/context/DataContext'
 import { theme } from '@/theme/theme'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text } from 'react-native'
+import { Dot } from './Dot'
 import Animated, {
   SlideInUp,
   SlideOutUp,
@@ -29,7 +30,7 @@ export function OfflineBanner() {
       exiting={reducedMotion ? undefined : SlideOutUp.duration(200)}
       style={[styles.banner, { paddingTop: insets.top + theme.spacing.xs }]}
     >
-      <View style={styles.dot} />
+      <Dot />
       <Ionicons
         name="cloud-offline-outline"
         size={14}
@@ -52,12 +53,6 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.offlineBorder,
     paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.sm
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.colors.warning
   },
   text: {
     ...theme.typography.caption,
