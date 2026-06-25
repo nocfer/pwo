@@ -321,8 +321,10 @@ export default function Index() {
                 icon="barbell-outline"
                 title="No programs yet"
                 description="Create your first program to get started"
-                actionLabel="Go to Library"
-                onAction={() => router.navigate('/(tabs)/library')}
+                actionLabel="Create a program"
+                onAction={() => router.navigate('/library/programs/new')}
+                secondaryActionLabel="Browse library"
+                onSecondaryAction={() => router.navigate('/(tabs)/library')}
               />
             </AnimatedCard>
           )}

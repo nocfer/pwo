@@ -9,6 +9,8 @@ type EmptyStateProps = {
   description?: string
   actionLabel?: string
   onAction?: () => void
+  secondaryActionLabel?: string
+  onSecondaryAction?: () => void
   variant?: 'default' | 'search' | 'progress' | 'history'
   style?: ViewStyle
   compact?: boolean
@@ -43,6 +45,8 @@ export function EmptyState({
   description,
   actionLabel,
   onAction,
+  secondaryActionLabel,
+  onSecondaryAction,
   variant = 'default',
   style,
   compact = false
@@ -101,6 +105,18 @@ export function EmptyState({
           onPress={onAction}
         >
           <Text style={styles.buttonText}>{actionLabel}</Text>
+        </Pressable>
+      )}
+
+      {secondaryActionLabel && onSecondaryAction && (
+        <Pressable
+          style={({ pressed }) => [
+            styles.secondaryButton,
+            pressed && styles.buttonPressed
+          ]}
+          onPress={onSecondaryAction}
+        >
+          <Text style={styles.secondaryButtonText}>{secondaryActionLabel}</Text>
         </Pressable>
       )}
     </View>
@@ -181,6 +197,17 @@ const styles = StyleSheet.create({
   buttonText: {
     ...theme.typography.bodyBold,
     color: theme.colors.primaryTextOn
+  },
+  secondaryButton: {
+    marginTop: theme.spacing.sm,
+    backgroundColor: theme.colors.primaryLight,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: theme.radius.md
+  },
+  secondaryButtonText: {
+    ...theme.typography.bodyBold,
+    color: theme.colors.primary
   },
   compactContainer: {
     flexDirection: 'row',

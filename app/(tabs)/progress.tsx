@@ -18,6 +18,7 @@ import {
 import { haptics } from '@/lib/haptics'
 import { theme } from '@/theme/theme'
 import { Ionicons } from '@expo/vector-icons'
+import { router } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Animated,
@@ -146,7 +147,12 @@ export default function StatisticsScreen() {
 
         {/* Weekly Summary */}
         <Animated.View style={[styles.section, animatedStyles[0]]}>
-          <WeeklySummaryCard />
+          <WeeklySummaryCard
+            onStartWorkout={() => {
+              haptics.buttonTap()
+              router.navigate('/(tabs)/library')
+            }}
+          />
         </Animated.View>
 
         {/* Overall Stats */}

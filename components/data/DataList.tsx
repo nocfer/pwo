@@ -40,6 +40,11 @@ type Props = {
   showInlineActions?: boolean
   isLoading?: boolean
   error?: string
+  /** Contextual action shown on the "no data yet" empty (hidden for search-empty) */
+  emptyActionLabel?: string
+  onEmptyAction?: () => void
+  emptySecondaryActionLabel?: string
+  onEmptySecondaryAction?: () => void
   onEndReached?: () => void
   hasMore?: boolean
   loadingMore?: boolean
@@ -59,6 +64,10 @@ export function DataList({
   showInlineActions = false,
   isLoading = false,
   error,
+  emptyActionLabel,
+  onEmptyAction,
+  emptySecondaryActionLabel,
+  onEmptySecondaryAction,
   onEndReached,
   hasMore = false,
   loadingMore = false,
@@ -222,6 +231,10 @@ export function DataList({
     ? 'Try adjusting your search or filters'
     : `Create your first ${dataType.slice(0, -1)}`
 
+  // Contextual actions only belong on the genuine "no data yet" empty —
+  // a search that returns nothing should not invite creating an item.
+  const showEmptyActions = !searchState.query
+
   // For programs with inline actions, use a different rendering approach
   if (
     showInlineActions &&
@@ -245,6 +258,14 @@ export function DataList({
         error={undefined} // Error is handled above
         emptyTitle={emptyTitle}
         emptySubtitle={emptySubtitle}
+        emptyActionLabel={showEmptyActions ? emptyActionLabel : undefined}
+        onEmptyAction={showEmptyActions ? onEmptyAction : undefined}
+        emptySecondaryActionLabel={
+          showEmptyActions ? emptySecondaryActionLabel : undefined
+        }
+        onEmptySecondaryAction={
+          showEmptyActions ? onEmptySecondaryAction : undefined
+        }
         style={style}
       />
     )
@@ -266,6 +287,14 @@ export function DataList({
       error={undefined} // Error is handled above
       emptyTitle={emptyTitle}
       emptySubtitle={emptySubtitle}
+      emptyActionLabel={showEmptyActions ? emptyActionLabel : undefined}
+      onEmptyAction={showEmptyActions ? onEmptyAction : undefined}
+      emptySecondaryActionLabel={
+        showEmptyActions ? emptySecondaryActionLabel : undefined
+      }
+      onEmptySecondaryAction={
+        showEmptyActions ? onEmptySecondaryAction : undefined
+      }
       onEndReached={onEndReached}
       hasMore={hasMore}
       loadingMore={loadingMore}

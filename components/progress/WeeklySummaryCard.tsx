@@ -85,7 +85,7 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
         <ProgressEmptyState
           type="no-workouts"
           onAction={onStartWorkout}
-          actionLabel="Start Workout"
+          actionLabel="Start your first workout"
         />
       </View>
     )

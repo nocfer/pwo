@@ -184,6 +184,21 @@ export function UnifiedDataManager({
     }
   }
 
+  // Contextual empty-state actions (mirror the Library header buttons).
+  const handleCreateNew = useCallback(() => {
+    haptics.buttonTap()
+    router.navigate(
+      activeTab === 'exercises'
+        ? '/library/exercises/new'
+        : '/library/programs/new'
+    )
+  }, [activeTab])
+
+  const handleScanQR = useCallback(() => {
+    haptics.buttonTap()
+    router.navigate('/library/scan')
+  }, [])
+
   const handleDeletePress = useCallback(
     async (item: Exercise | Program) => {
       // Check if built-in
@@ -420,6 +435,16 @@ export function UnifiedDataManager({
         onItemDelete={handleDeletePress}
         showInlineActions={activeTab === 'programs'}
         isLoading={isLoading}
+        emptyActionLabel={
+          activeTab === 'exercises' ? 'Create an exercise' : 'Create a program'
+        }
+        onEmptyAction={handleCreateNew}
+        emptySecondaryActionLabel={
+          activeTab === 'programs' ? 'Scan a QR code' : undefined
+        }
+        onEmptySecondaryAction={
+          activeTab === 'programs' ? handleScanQR : undefined
+        }
         onEndReached={
           activeTab === 'exercises' ? actions.loadMoreExercises : undefined
         }

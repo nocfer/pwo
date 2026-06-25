@@ -59,6 +59,10 @@ type Props = {
   error?: string
   emptyTitle?: string
   emptySubtitle?: string
+  emptyActionLabel?: string
+  onEmptyAction?: () => void
+  emptySecondaryActionLabel?: string
+  onEmptySecondaryAction?: () => void
   onEndReached?: () => void
   hasMore?: boolean
   loadingMore?: boolean
@@ -82,6 +86,10 @@ export function SearchableList({
   error,
   emptyTitle,
   emptySubtitle,
+  emptyActionLabel,
+  onEmptyAction,
+  emptySecondaryActionLabel,
+  onEmptySecondaryAction,
   onEndReached,
   hasMore = false,
   loadingMore = false,
@@ -302,6 +310,12 @@ export function SearchableList({
               : `Create your first ${dataType.slice(0, -1)}`)
           }
           icon={searchQuery ? 'search-outline' : 'add-circle-outline'}
+          actionLabel={searchQuery ? undefined : emptyActionLabel}
+          onAction={searchQuery ? undefined : onEmptyAction}
+          secondaryActionLabel={
+            searchQuery ? undefined : emptySecondaryActionLabel
+          }
+          onSecondaryAction={searchQuery ? undefined : onEmptySecondaryAction}
           style={styles.emptyState}
         />
       ) : (
