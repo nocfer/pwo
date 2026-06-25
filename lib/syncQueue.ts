@@ -25,7 +25,8 @@ export function loadQueue(): PendingMutation[] {
   }
 }
 
-function saveQueue(queue: PendingMutation[]): void {
+/** Overwrite the persisted queue with the given array. */
+export function saveQueue(queue: PendingMutation[]): void {
   storage.set(KEY, JSON.stringify(queue))
 }
 
@@ -45,38 +46,8 @@ export function enqueue(
   return next
 }
 
-/** Remove an entry by its queue id and return the updated queue. */
-export function dequeue(id: string): PendingMutation[] {
-  const next = loadQueue().filter(e => e.id !== id)
-  saveQueue(next)
-  return next
-}
-
-/** Merge a patch into an entry (e.g. bump retryCount) and return the queue. */
-export function updateEntry(
-  id: string,
-  patch: Partial<PendingMutation>
-): PendingMutation[] {
-  const next = loadQueue().map(e => (e.id === id ? { ...e, ...patch } : e))
-  saveQueue(next)
-  return next
-}
-
 export function clearQueue(): void {
   storage.remove(KEY)
-}
-
-/**
- * Rewrite every queued entry that targets `from` to target `to`. Used after an
- * offline-created entity is created on the server so later queued update/delete
- * writes hit the real id instead of the temp id.
- */
-export function remapEntityId(from: string, to: string): PendingMutation[] {
-  const next = loadQueue().map(e =>
-    e.entityId === from ? { ...e, entityId: to } : e
-  )
-  saveQueue(next)
-  return next
 }
 
 /** Set of entity ids that currently have a queued write (for pending dots). */

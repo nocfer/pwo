@@ -24,12 +24,10 @@ import { auth } from '@/lib/firebase'
 import { programToWorkoutInput, workoutToProgram } from '@/lib/mappers/workout'
 import {
   clearQueue,
-  dequeue,
   enqueue,
   loadQueue,
   pendingEntityIds,
-  remapEntityId,
-  updateEntry
+  saveQueue
 } from '@/lib/syncQueue'
 import { buildWorkoutLog } from '@/lib/utils/sessionBuilder'
 import {
@@ -153,6 +151,8 @@ type DataContextValue = {
       }
     ) => Promise<Exercise>
     deleteExercise: (id: string) => Promise<void>
+    // Bulk delete (single reconcile) — used by the undo-toast commit path
+    deleteExercises: (ids: string[]) => Promise<void>
 
     // Programs CRUD
     upsertProgram: (
@@ -169,6 +169,7 @@ type DataContextValue = {
       }
     ) => Promise<Program>
     deleteProgram: (id: string) => Promise<void>
+    deletePrograms: (ids: string[]) => Promise<void>
   } & EnhancedDataActions
 }
 
@@ -345,6 +346,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // the latest catalog/cache, and dedupe in-flight/attempted id fetches.
   const exercisesRef = useRef<Exercise[]>(state.exercises)
   exercisesRef.current = state.exercises
+  const programsRef = useRef<Program[]>(state.programs)
+  programsRef.current = state.programs
   const nameCacheRef = useRef<Record<string, string>>(state.exerciseNameCache)
   nameCacheRef.current = state.exerciseNameCache
   const attemptedNameIdsRef = useRef<Set<string>>(new Set())
@@ -518,6 +521,33 @@ export function DataProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'INCREMENT_PROGRESS_VERSION' })
   }, [])
 
+  // Re-fetch a collection from the API and replace local state. Shared by the
+  // CRUD mutations so a write reconciles to the server in one place.
+  const reconcileExercises = useCallback(async () => {
+    const response = await fetchExercises(1)
+    dispatch({ type: 'RESET_EXERCISES' })
+    dispatch({
+      type: 'APPEND_EXERCISES',
+      exercises: response.data,
+      pagination: response.pagination
+    })
+  }, [])
+
+  const reconcilePrograms = useCallback(async () => {
+    let apiPrograms: Program[] = []
+    try {
+      const workouts = await fetchWorkouts()
+      apiPrograms = workouts.map(workoutToProgram)
+    } catch (error) {
+      console.warn('Failed to fetch programs from API:', error)
+    }
+    const merged = [
+      ...programsRef.current.filter(p => p.source === 'builtin'),
+      ...apiPrograms
+    ].sort((a, b) => a.name.localeCompare(b.name))
+    dispatch({ type: 'SET_PROGRAMS', programs: merged })
+  }, [])
+
   // refreshHistory and refreshCompleted consolidated into refreshProgress
 
   // ==========================================================================
@@ -602,55 +632,56 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // (still offline) and drops poison entries after a retry cap.
   const flushQueue = useCallback(async () => {
     if (flushingRef.current || !isOnlineRef.current || !auth.currentUser) return
-    const queue = loadQueue()
-    if (!queue.length) return
+    const snapshot = loadQueue()
+    if (!snapshot.length) return
 
     flushingRef.current = true
     dispatch({ type: 'SET_SYNC_STATE', syncState: 'syncing' })
-    // Temp id → server id, so an offline create's later update/delete writes
-    // hit the real id rather than the (now non-existent) temp id.
+    // Work on an in-memory copy and persist once per step (single stringify,
+    // no per-entry re-parse). Temp id → server id so an offline create's later
+    // update/delete writes hit the real id, not the (now non-existent) temp id.
+    let working = [...snapshot]
+    const persist = () => {
+      saveQueue(working)
+      dispatch({ type: 'SET_PENDING_MUTATIONS', pending: working })
+    }
     const idMap = new Map<string, string>()
     try {
-      for (const entry of queue) {
+      for (const entry of snapshot) {
         const entityId = idMap.get(entry.entityId) ?? entry.entityId
         try {
           const serverId = await replayEntry(entry, entityId)
+          working = working.filter(e => e.id !== entry.id)
           if (entry.op === 'create' && serverId && serverId !== entry.entityId) {
             idMap.set(entry.entityId, serverId)
-            // Persist the remap so followers survive a mid-flush interruption.
-            remapEntityId(entry.entityId, serverId)
+            working = working.map(e =>
+              e.entityId === entry.entityId ? { ...e, entityId: serverId } : e
+            )
           }
-          dispatch({
-            type: 'SET_PENDING_MUTATIONS',
-            pending: dequeue(entry.id)
-          })
+          persist()
         } catch (e) {
           if (isNetworkError(e)) break // still offline — retry on next reconnect
           // Permanent failure: bump retry, drop after the cap so it can't wedge.
-          const bumped = updateEntry(entry.id, {
-            retryCount: entry.retryCount + 1
-          })
-          const current = bumped.find(x => x.id === entry.id)
-          dispatch({
-            type: 'SET_PENDING_MUTATIONS',
-            pending:
-              !current || current.retryCount >= 5 ? dequeue(entry.id) : bumped
-          })
+          const retryCount = entry.retryCount + 1
+          working =
+            retryCount >= 5
+              ? working.filter(e => e.id !== entry.id)
+              : working.map(e => (e.id === entry.id ? { ...e, retryCount } : e))
+          persist()
         }
       }
     } finally {
       flushingRef.current = false
     }
 
-    const remaining = loadQueue()
-    if (remaining.length) {
+    if (working.length) {
       dispatch({ type: 'SET_SYNC_STATE', syncState: 'error' })
     } else {
       dispatch({ type: 'SET_SYNC_STATE', syncState: 'idle' })
       dispatch({ type: 'SET_LAST_SYNC_AT', at: Date.now() })
     }
     // Reconcile optimistic local state (e.g. temp ids → server ids) if anything synced.
-    if (remaining.length !== queue.length) {
+    if (working.length !== snapshot.length) {
       refreshAll()
     }
   }, [replayEntry, refreshAll])
@@ -854,21 +885,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
             })
           }
 
-          // Fetch page 1 first, then replace atomically to avoid flash of empty state
-          const exerciseResponse = await fetchExercises(1)
-          dispatch({ type: 'RESET_EXERCISES' })
-          dispatch({
-            type: 'APPEND_EXERCISES',
-            exercises: exerciseResponse.data,
-            pagination: exerciseResponse.pagination
-          })
+          // Reconcile to the server (replaces the optimistic copy / temp id)
+          await reconcileExercises()
 
           return saved
         },
         optimistic
       )
     },
-    [state.exercises, withOfflineFallback]
+    [state.exercises, withOfflineFallback, reconcileExercises]
   )
 
   const deleteExercise = useCallback(
@@ -919,20 +944,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         async () => {
           // Call API delete — errors propagate directly to the caller
           await apiDeleteExercise(id)
-
-          // Fetch page 1 first, then replace atomically to avoid flash of empty state
-          const exerciseResponse = await fetchExercises(1)
-          dispatch({ type: 'RESET_EXERCISES' })
-          dispatch({
-            type: 'APPEND_EXERCISES',
-            exercises: exerciseResponse.data,
-            pagination: exerciseResponse.pagination
-          })
+          await reconcileExercises()
         },
         undefined
       )
     },
-    [state.exercises, state.programs, withOfflineFallback]
+    [state.exercises, state.programs, withOfflineFallback, reconcileExercises]
   )
 
   const upsertProgram = useCallback(
@@ -1020,26 +1037,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
           }
 
           // Re-fetch all programs from API to ensure consistency
-          let apiPrograms: Program[] = []
-          try {
-            const workouts = await fetchWorkouts()
-            apiPrograms = workouts.map(workoutToProgram)
-          } catch (error) {
-            console.warn('Failed to fetch programs from API:', error)
-          }
-
-          const merged = [
-            ...state.programs.filter((p: Program) => p.source === 'builtin'),
-            ...apiPrograms
-          ].sort((a, b) => a.name.localeCompare(b.name))
-          dispatch({ type: 'SET_PROGRAMS', programs: merged })
+          await reconcilePrograms()
 
           return saved
         },
         optimistic
       )
     },
-    [state.programs, withOfflineFallback]
+    [state.programs, withOfflineFallback, reconcilePrograms]
   )
 
   const deleteProgram = useCallback(
@@ -1075,26 +1080,112 @@ export function DataProvider({ children }: { children: ReactNode }) {
         async () => {
           // Delete via API — errors propagate to the caller
           await apiDeleteWorkout(id)
-
           // Re-fetch all programs from API to ensure consistency
-          let apiPrograms: Program[] = []
-          try {
-            const workouts = await fetchWorkouts()
-            apiPrograms = workouts.map(workoutToProgram)
-          } catch (error) {
-            console.warn('Failed to fetch programs from API:', error)
-          }
-
-          const merged = [
-            ...state.programs.filter(p => p.source === 'builtin'),
-            ...apiPrograms
-          ].sort((a, b) => a.name.localeCompare(b.name))
-          dispatch({ type: 'SET_PROGRAMS', programs: merged })
+          await reconcilePrograms()
         },
         undefined
       )
     },
-    [state.programs, withOfflineFallback]
+    [state.programs, withOfflineFallback, reconcilePrograms]
+  )
+
+  // Bulk delete — one reconcile for the whole set instead of one per item
+  // (the per-item delete actions each refetch the full list). Items deleted
+  // online are reconciled from the server; items that go offline are removed
+  // optimistically and queued, then re-hidden after the reconcile refetch.
+  const deleteMany = useCallback(
+    async (type: 'exercises' | 'programs', ids: string[]) => {
+      if (!ids.length) return
+      if (!auth.currentUser || (type === 'programs' && !isAPIAvailable())) {
+        throw new Error(
+          'Cannot delete: user is not authenticated or API is unavailable.'
+        )
+      }
+
+      const removeLocal = (id: string) =>
+        dispatch(
+          type === 'exercises'
+            ? { type: 'REMOVE_EXERCISE_LOCAL', id }
+            : { type: 'REMOVE_PROGRAM_LOCAL', id }
+        )
+
+      const queuedIds: string[] = []
+      let deletedOnline = false
+
+      for (const id of ids) {
+        // Validate per item (mirrors the single-delete guards).
+        if (type === 'exercises') {
+          const existing = state.exercises.find(e => e.id === id)
+          if (!existing) continue
+          const perm = validateModificationPermissions(
+            existing.source as 'builtin' | 'user' | 'pt',
+            'delete'
+          )
+          if (!perm.isValid) throw new Error(perm.errors[0].message)
+          const dep = canSafelyDelete(
+            'exercises',
+            id,
+            state.exercises,
+            state.programs
+          )
+          if (!dep.canDelete) {
+            throw new Error(`Cannot delete exercise: ${dep.warnings.join('; ')}`)
+          }
+        } else {
+          const existing = state.programs.find(p => p.id === id)
+          if (!existing) continue
+          if (existing.source === 'builtin') {
+            throw new Error('Built-in programs cannot be deleted.')
+          }
+        }
+
+        const queueOffline = () => {
+          removeLocal(id)
+          dispatch({
+            type: 'SET_PENDING_MUTATIONS',
+            pending: enqueue({
+              entity: type === 'exercises' ? 'exercise' : 'program',
+              op: 'delete',
+              entityId: id
+            })
+          })
+          queuedIds.push(id)
+        }
+
+        if (!isOnlineRef.current) {
+          queueOffline()
+          continue
+        }
+        try {
+          await (type === 'exercises'
+            ? apiDeleteExercise(id)
+            : apiDeleteWorkout(id))
+          deletedOnline = true
+        } catch (e) {
+          if (isNetworkError(e)) queueOffline()
+          else throw e
+        }
+      }
+
+      // A single reconcile for the whole batch; re-hide anything still queued
+      // (the reconcile refetch would otherwise resurface it).
+      if (deletedOnline) {
+        await (type === 'exercises'
+          ? reconcileExercises()
+          : reconcilePrograms())
+        queuedIds.forEach(removeLocal)
+      }
+    },
+    [state.exercises, state.programs, reconcileExercises, reconcilePrograms]
+  )
+
+  const deleteExercises = useCallback(
+    (ids: string[]) => deleteMany('exercises', ids),
+    [deleteMany]
+  )
+  const deletePrograms = useCallback(
+    (ids: string[]) => deleteMany('programs', ids),
+    [deleteMany]
   )
 
   const contextValue: DataContextValue = {
@@ -1107,8 +1198,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ensureExerciseNames,
       upsertExercise,
       deleteExercise,
+      deleteExercises,
       upsertProgram,
       deleteProgram,
+      deletePrograms,
       retrySync
     }
   }

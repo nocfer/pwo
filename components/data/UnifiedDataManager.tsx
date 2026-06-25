@@ -98,23 +98,25 @@ export function UnifiedDataManager({
     return currentData.filter(item => !hidden.has(item.id))
   }, [currentData, pendingDelete, activeTab])
 
-  // Send the actual delete(s). Errors surface a toast; the optimistic hide is
-  // reconciled by the delete actions (re-fetch / offline queue).
+  // Send the actual delete(s) via the bulk action (one reconcile for the whole
+  // set). Commits are chained so back-to-back deletes can't interleave their
+  // reconcile refetches. Errors surface a toast.
+  const commitChainRef = useRef<Promise<void>>(Promise.resolve())
   const commitDelete = useCallback(
-    async (pd: PendingDelete) => {
-      try {
-        await Promise.all(
-          pd.ids.map(id =>
-            pd.type === 'exercises'
-              ? actions.deleteExercise(id)
-              : actions.deleteProgram(id)
-          )
-        )
-        await haptics.deleteItem()
-      } catch (error: any) {
-        await haptics.formValidationError()
-        showError('Failed to delete', error.message)
+    (pd: PendingDelete): Promise<void> => {
+      const run = async () => {
+        try {
+          await (pd.type === 'exercises'
+            ? actions.deleteExercises(pd.ids)
+            : actions.deletePrograms(pd.ids))
+          await haptics.deleteItem()
+        } catch (error: any) {
+          await haptics.formValidationError()
+          showError('Failed to delete', error.message)
+        }
       }
+      commitChainRef.current = commitChainRef.current.then(run)
+      return commitChainRef.current
     },
     [actions]
   )
