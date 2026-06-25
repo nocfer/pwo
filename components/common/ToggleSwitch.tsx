@@ -1,14 +1,11 @@
 /**
- * ToggleSwitch - themed wrapper around RN Switch.
- *
- * ON  = lime track + dark knob; OFF = hairline track + muted knob.
- * (Approximates the design spec's 46×28 / lime / dark-knob switch using the
- * platform Switch, so there's no new dependency.)
+ * ToggleSwitch — thin adapter over the kit's Toggle (components/ui/Toggle).
+ * Preserves the `onValueChange` API existing callers use; new code should use
+ * the kit's Toggle (`onChange`) directly.
+ * @deprecated import { Toggle } from '@/components/ui' instead.
  */
 
-import { haptics } from '@/lib/haptics'
-import { theme } from '@/theme/theme'
-import { Switch } from 'react-native'
+import Toggle from '@/components/ui/Toggle'
 
 type Props = {
   value: boolean
@@ -20,24 +17,15 @@ type Props = {
 export default function ToggleSwitch({
   value,
   onValueChange,
-  disabled = false,
+  disabled,
   accessibilityLabel
 }: Props) {
   return (
-    <Switch
+    <Toggle
       value={value}
-      onValueChange={next => {
-        haptics.buttonTap()
-        onValueChange(next)
-      }}
+      onChange={onValueChange}
       disabled={disabled}
       accessibilityLabel={accessibilityLabel}
-      trackColor={{
-        false: theme.colors.borderLight,
-        true: theme.colors.primary
-      }}
-      thumbColor={value ? theme.colors.primaryTextOn : theme.colors.subtext}
-      ios_backgroundColor={theme.colors.borderLight}
     />
   )
 }

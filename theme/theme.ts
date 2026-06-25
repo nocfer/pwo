@@ -75,6 +75,12 @@ const colors = {
   skeleton: '#1C1D24',
   skeletonHighlight: '#2A2B36',
 
+  // Elevated overlay surface — sheets, toasts, elevated cards (spec "elevated").
+  // Distinct from surfaceElevated (#1C1D24); matches session.elevated.
+  surfaceOverlay: '#1A1D24',
+  // Disabled fill for buttons / chips (spec #1c1e25). Dark, recessed, inert.
+  disabledBg: '#1C1E25',
+
   // Workout Session ("Flow") redesign palette — scoped to the session screen.
   // Centralized here so session components stay free of literal hex.
   session: {
@@ -158,9 +164,12 @@ const spacing = {
 const radius = {
   xs: 4,
   sm: 8,
-  md: 12,
+  chip: 10, // chips / small pills (spec control/chip 10–14)
+  md: 12, // controls — inputs, stepper, segmented
   lg: 16,
+  card: 18, // cards / list rows (spec card 16–18)
   xl: 20,
+  sheet: 26, // bottom-sheet top corners
   full: 9999
 } as const
 
@@ -172,7 +181,22 @@ const shadows = {
   sm: {
     elevation: 1,
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+  },
+  // Sheets / modals — deep ambient lift (spec 0 28px 60px rgba(0,0,0,.6)).
+  lg: {
+    elevation: 16,
+    boxShadow: '0 28px 60px rgba(0, 0, 0, 0.6)'
   }
+} as const
+
+// Motion tokens — durations (ms) and the canonical press scale. Components must
+// gate animations behind useReducedMotion(); these are the values to use when
+// motion is allowed.
+const motion = {
+  pressScale: 0.98, // pressed-state shrink for buttons / rows / chips
+  durationSheet: 350, // bottom-sheet slide-up / backdrop fade
+  durationToast: 260, // toast slide-in
+  durationBanner: 280 // banner slide-down
 } as const
 
 const typography = {
@@ -181,6 +205,35 @@ const typography = {
     fontFamily: fonts.display,
     lineHeight: 38,
     letterSpacing: -0.8
+  },
+  // Big tabular numeral — StatTile values, headline metrics (Space Grotesk 700).
+  numeral: {
+    fontSize: 40,
+    fontFamily: fonts.display,
+    lineHeight: 44,
+    letterSpacing: -1
+  },
+  // Compact numeral — inline stepper / number-field values (Space Grotesk).
+  metric: {
+    fontSize: 18,
+    fontFamily: fonts.display,
+    lineHeight: 22,
+    letterSpacing: -0.3
+  },
+  // Section / sheet heading (Space Grotesk 700 · 22) — spec "headings 22/700".
+  heading: {
+    fontSize: 22,
+    fontFamily: fonts.display,
+    lineHeight: 28,
+    letterSpacing: -0.4
+  },
+  // Tracked uppercase label above groups (spec section label 10/600/1.4).
+  // Apply textTransform: 'uppercase' at the component.
+  sectionLabel: {
+    fontSize: 10,
+    fontFamily: fonts.semiBold,
+    lineHeight: 14,
+    letterSpacing: 1.4
   },
   h1: {
     fontSize: 24,
@@ -436,6 +489,7 @@ export const theme = {
   spacing,
   radius,
   shadows,
+  motion,
   typography,
   cards,
   presets

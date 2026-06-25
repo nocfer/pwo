@@ -1,4 +1,4 @@
-import { Button, SegmentedControl, ToggleSwitch } from '@/components/common'
+import { Button, Segmented, Toggle } from '@/components/ui'
 import { useAuth } from '@/context/AuthContext'
 import { usePrograms } from '@/hooks/data'
 import { getInitials } from '@/lib/utils/format'
@@ -200,7 +200,7 @@ export default function ProfileScreen() {
             iconBg={theme.colors.primaryLight}
             label="Units"
             right={
-              <SegmentedControl
+              <Segmented
                 options={[
                   { value: 'lb', label: 'lb' },
                   { value: 'kg', label: 'kg' }
@@ -241,9 +241,9 @@ export default function ProfileScreen() {
             label="Workout reminders"
             sub="Weekdays · 6:00 PM"
             right={
-              <ToggleSwitch
+              <Toggle
                 value={workoutReminders}
-                onValueChange={setWorkoutReminders}
+                onChange={setWorkoutReminders}
                 accessibilityLabel="Workout reminders"
               />
             }
@@ -254,9 +254,9 @@ export default function ProfileScreen() {
             iconBg={theme.colors.infoLight}
             label="Auto-start rest timer"
             right={
-              <ToggleSwitch
+              <Toggle
                 value={autoStartRest}
-                onValueChange={setAutoStartRest}
+                onChange={setAutoStartRest}
                 accessibilityLabel="Auto-start rest timer"
               />
             }
@@ -271,9 +271,9 @@ export default function ProfileScreen() {
             iconBg={theme.colors.accentLight}
             label="Sound effects"
             right={
-              <ToggleSwitch
+              <Toggle
                 value={soundEffects}
-                onValueChange={setSoundEffects}
+                onChange={setSoundEffects}
                 accessibilityLabel="Sound effects"
               />
             }
@@ -284,9 +284,9 @@ export default function ProfileScreen() {
             iconBg={theme.colors.successLight}
             label="Haptic feedback"
             right={
-              <ToggleSwitch
+              <Toggle
                 value={hapticFeedback}
-                onValueChange={setHapticFeedback}
+                onChange={setHapticFeedback}
                 accessibilityLabel="Haptic feedback"
               />
             }
