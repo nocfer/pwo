@@ -40,7 +40,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      tabBar={TabBarWithActiveWorkout}
+      tabBar={props => <TabBarWithActiveWorkout {...props} />}
       screenOptions={{
         headerShown: false,
         animation: 'none',

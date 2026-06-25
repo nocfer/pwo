@@ -1,0 +1,2463 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+          href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+        <style>
+          @property --ang {
+            syntax: '<angle>';
+            inherits: false;
+            initial-value: 0deg;
+          }
+          * {
+            box-sizing: border-box;
+          }
+          html,
+          body {
+            margin: 0;
+          }
+          @keyframes glowPulse {
+            0%,
+            100% {
+              box-shadow:
+                0 0 0 0 rgba(198, 242, 78, 0),
+                0 6px 18px rgba(198, 242, 78, 0.18);
+            }
+            50% {
+              box-shadow:
+                0 0 0 5px rgba(198, 242, 78, 0.1),
+                0 6px 24px rgba(198, 242, 78, 0.34);
+            }
+          }
+          @keyframes ringGlow {
+            0%,
+            100% {
+              opacity: 0.3;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.6;
+              transform: scale(1.05);
+            }
+          }
+          @keyframes popIn {
+            0% {
+              transform: scale(0.6);
+              opacity: 0;
+            }
+            20% {
+              transform: scale(1.12);
+              opacity: 1;
+            }
+            36% {
+              transform: scale(1);
+            }
+            100% {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+          @keyframes confettiFall {
+            0% {
+              transform: translateY(-30px) rotate(0deg);
+              opacity: 0;
+            }
+            12% {
+              opacity: 1;
+            }
+            100% {
+              transform: translateY(760px) rotate(540deg);
+              opacity: 0;
+            }
+          }
+          @keyframes slideUp {
+            0% {
+              transform: translateY(16px);
+              opacity: 0;
+            }
+            100% {
+              transform: translateY(0);
+              opacity: 1;
+            }
+          }
+          @keyframes toastIn {
+            0% {
+              transform: translate(-50%, -14px);
+              opacity: 0;
+            }
+            14% {
+              transform: translate(-50%, 0);
+              opacity: 1;
+            }
+            86% {
+              opacity: 1;
+            }
+            100% {
+              opacity: 0;
+            }
+          }
+          .liveRing {
+            transition: --ang 1s linear;
+          }
+          .scrollArea::-webkit-scrollbar {
+            width: 0;
+          }
+        </style>
+      </helmet>
+
+      <div
+        style="
+          min-height: 100vh;
+          background: #060708;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 32px;
+          font-family: 'DM Sans', sans-serif;
+        "
+      >
+        <div
+          style="
+            width: 380px;
+            height: 812px;
+            background: #050506;
+            border-radius: 52px;
+            padding: 12px;
+            box-shadow:
+              0 40px 90px rgba(0, 0, 0, 0.6),
+              inset 0 0 0 1.5px #20222a;
+            position: relative;
+          "
+        >
+          <div
+            style="
+              position: absolute;
+              top: 22px;
+              left: 50%;
+              transform: translateX(-50%);
+              width: 104px;
+              height: 30px;
+              background: #000;
+              border-radius: 16px;
+              z-index: 40;
+            "
+          ></div>
+          <div
+            style="
+              position: relative;
+              width: 356px;
+              height: 788px;
+              background: #0a0b0e;
+              border-radius: 40px;
+              overflow: hidden;
+              display: flex;
+              flex-direction: column;
+              color: #f2f3f5;
+            "
+          >
+            <div
+              style="
+                height: 50px;
+                flex: 0 0 auto;
+                display: flex;
+                align-items: flex-end;
+                justify-content: space-between;
+                padding: 0 30px 8px;
+                font: 600 14px 'DM Sans';
+                z-index: 5;
+              "
+            >
+              <span>9:41</span>
+              <span style="display: flex; align-items: center; gap: 7px">
+                <span
+                  style="
+                    display: flex;
+                    align-items: flex-end;
+                    gap: 2px;
+                    height: 12px;
+                  "
+                  ><i
+                    style="
+                      display: block;
+                      width: 3px;
+                      height: 4px;
+                      background: #f2f3f5;
+                      border-radius: 1px;
+                    "
+                  ></i
+                  ><i
+                    style="
+                      display: block;
+                      width: 3px;
+                      height: 7px;
+                      background: #f2f3f5;
+                      border-radius: 1px;
+                    "
+                  ></i
+                  ><i
+                    style="
+                      display: block;
+                      width: 3px;
+                      height: 9px;
+                      background: #f2f3f5;
+                      border-radius: 1px;
+                    "
+                  ></i
+                  ><i
+                    style="
+                      display: block;
+                      width: 3px;
+                      height: 12px;
+                      background: #f2f3f5;
+                      border-radius: 1px;
+                    "
+                  ></i
+                ></span>
+                <span
+                  style="
+                    width: 20px;
+                    height: 12px;
+                    border: 1.5px solid #f2f3f5;
+                    border-radius: 3px;
+                    position: relative;
+                    display: inline-block;
+                  "
+                  ><span
+                    style="
+                      position: absolute;
+                      top: 1.5px;
+                      bottom: 1.5px;
+                      left: 1.5px;
+                      width: 11px;
+                      background: #f2f3f5;
+                      border-radius: 1px;
+                    "
+                  ></span
+                ></span>
+              </span>
+            </div>
+
+            <!-- ===================== SESSION VIEW ===================== -->
+            <sc-if value="{{ isSession }}" hint-placeholder-val="{{ true }}">
+              <div
+                style="
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+                  min-height: 0;
+                  position: relative;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    padding: 6px 22px 14px;
+                  "
+                >
+                  <div>
+                    <div
+                      style="
+                        font: 700 22px 'Space Grotesk';
+                        color: #f2f3f5;
+                        letter-spacing: -0.4px;
+                      "
+                    >
+                      {{ programName }}
+                    </div>
+                    <div
+                      style="
+                        font: 500 13px 'DM Sans';
+                        color: #6b6e7a;
+                        margin-top: 3px;
+                      "
+                    >
+                      {{ sessionLabel }}
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px">
+                    <span
+                      style="
+                        font: 600 13px 'DM Sans';
+                        color: #9a9dab;
+                        background: #15171d;
+                        padding: 9px 12px;
+                        border-radius: 12px;
+                        font-variant-numeric: tabular-nums;
+                      "
+                      >{{ elapStr }}</span
+                    >
+                    <span
+                      onClick="{{ onEnd }}"
+                      style="
+                        font: 600 13px 'DM Sans';
+                        color: #fb7185;
+                        background: #241317;
+                        padding: 9px 12px;
+                        border-radius: 12px;
+                        cursor: pointer;
+                      "
+                      >End</span
+                    >
+                  </div>
+                </div>
+
+                <div
+                  style="
+                    height: 4px;
+                    background: #16181e;
+                    margin: 0 22px 4px;
+                    border-radius: 2px;
+                    overflow: hidden;
+                  "
+                >
+                  <span
+                    style="display:block;height:100%;background:#C6F24E;border-radius:2px;transition:width 0.4s ease;width:{{ overallPct }};"
+                  ></span>
+                </div>
+
+                <div
+                  class="scrollArea"
+                  style="
+                    flex: 1;
+                    min-height: 0;
+                    overflow-y: auto;
+                    padding: 14px 16px 16px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                  "
+                >
+                  <sc-for
+                    list="{{ exercises }}"
+                    as="ex"
+                    hint-placeholder-count="3"
+                  >
+                    <!-- EXPANDED CARD -->
+                    <sc-if
+                      value="{{ ex.isExpanded }}"
+                      hint-placeholder-val="{{ true }}"
+                    >
+                      <div
+                        style="
+                          background: #14161b;
+                          border: 1.5px solid #2c3424;
+                          border-radius: 20px;
+                          padding: 16px 15px 13px;
+                        "
+                      >
+                        <div
+                          onClick="{{ ex.onToggle }}"
+                          style="
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            margin-bottom: 3px;
+                            cursor: pointer;
+                          "
+                        >
+                          <span style="font: 600 16px 'DM Sans'; color: #f2f3f5"
+                            >{{ ex.name }}</span
+                          >
+                          <sc-if
+                            value="{{ ex.isNow }}"
+                            hint-placeholder-val="{{ true }}"
+                            ><span
+                              style="
+                                font: 600 10px 'DM Sans';
+                                letter-spacing: 1px;
+                                color: #c6f24e;
+                                background: #1b1e14;
+                                padding: 4px 9px;
+                                border-radius: 8px;
+                              "
+                              >NOW</span
+                            ></sc-if
+                          >
+                          <sc-if
+                            value="{{ ex.isDoneBadge }}"
+                            hint-placeholder-val="{{ false }}"
+                            ><span
+                              style="
+                                font: 600 10px 'DM Sans';
+                                letter-spacing: 1px;
+                                color: #34d399;
+                                background: #0e1411;
+                                padding: 4px 9px;
+                                border-radius: 8px;
+                              "
+                              >DONE</span
+                            ></sc-if
+                          >
+                          <sc-if
+                            value="{{ ex.isNext }}"
+                            hint-placeholder-val="{{ false }}"
+                            ><span
+                              style="
+                                font: 600 10px 'DM Sans';
+                                letter-spacing: 1px;
+                                color: #9a9dab;
+                                background: #181a20;
+                                padding: 4px 9px;
+                                border-radius: 8px;
+                              "
+                              >UP NEXT</span
+                            ></sc-if
+                          >
+                        </div>
+                        <div
+                          style="
+                            font: 500 12px 'DM Sans';
+                            color: #6b6e7a;
+                            margin-bottom: 12px;
+                          "
+                        >
+                          {{ ex.last }}
+                        </div>
+                        <div
+                          style="
+                            display: grid;
+                            grid-template-columns: 26px 1fr 1fr 34px;
+                            gap: 6px;
+                            font: 600 9px 'DM Sans';
+                            letter-spacing: 0.8px;
+                            color: #5b5e6b;
+                            padding: 0 4px 4px;
+                          "
+                        >
+                          <span>#</span
+                          ><span style="text-align: center">WEIGHT</span
+                          ><span style="text-align: center">REPS</span
+                          ><span></span>
+                        </div>
+
+                        <sc-for
+                          list="{{ ex.sets }}"
+                          as="set"
+                          hint-placeholder-count="3"
+                        >
+                          <sc-if
+                            value="{{ set.isDone }}"
+                            hint-placeholder-val="{{ false }}"
+                          >
+                            <div
+                              style="
+                                display: grid;
+                                grid-template-columns: 26px 1fr 1fr 34px;
+                                gap: 6px;
+                                align-items: center;
+                                padding: 8px 4px;
+                              "
+                            >
+                              <span
+                                style="
+                                  font: 600 14px 'Space Grotesk';
+                                  color: #6b6e7a;
+                                "
+                                >{{ set.num }}</span
+                              >
+                              <span
+                                onClick="{{ set.onWeight }}"
+                                style="
+                                  text-align: center;
+                                  font: 500 15px 'DM Sans';
+                                  color: #7c8a82;
+                                  cursor: pointer;
+                                "
+                                >{{ set.w }}</span
+                              >
+                              <span
+                                onClick="{{ set.onReps }}"
+                                style="
+                                  text-align: center;
+                                  font: 500 15px 'DM Sans';
+                                  color: #7c8a82;
+                                  cursor: pointer;
+                                "
+                                >{{ set.r }}</span
+                              >
+                              <span
+                                style="display: flex; justify-content: flex-end"
+                                ><span
+                                  style="
+                                    width: 24px;
+                                    height: 24px;
+                                    border-radius: 8px;
+                                    background: #1c2a22;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                  "
+                                  ><span
+                                    style="
+                                      display: inline-block;
+                                      width: 5px;
+                                      height: 10px;
+                                      border: solid #34d399;
+                                      border-width: 0 2.5px 2.5px 0;
+                                      transform: rotate(45deg);
+                                      margin-top: -2px;
+                                    "
+                                  ></span></span
+                              ></span>
+                            </div>
+                          </sc-if>
+                          <sc-if
+                            value="{{ set.isSkipped }}"
+                            hint-placeholder-val="{{ false }}"
+                          >
+                            <div
+                              style="
+                                display: grid;
+                                grid-template-columns: 26px 1fr 1fr 34px;
+                                gap: 6px;
+                                align-items: center;
+                                padding: 8px 4px;
+                                opacity: 0.7;
+                              "
+                            >
+                              <span
+                                style="
+                                  font: 600 14px 'Space Grotesk';
+                                  color: #4d505c;
+                                "
+                                >{{ set.num }}</span
+                              >
+                              <span
+                                onClick="{{ set.onWeight }}"
+                                style="
+                                  text-align: center;
+                                  font: 500 15px 'DM Sans';
+                                  color: #5b5e6b;
+                                  text-decoration: line-through;
+                                  cursor: pointer;
+                                "
+                                >{{ set.w }}</span
+                              >
+                              <span
+                                onClick="{{ set.onReps }}"
+                                style="
+                                  text-align: center;
+                                  font: 500 15px 'DM Sans';
+                                  color: #5b5e6b;
+                                  text-decoration: line-through;
+                                  cursor: pointer;
+                                "
+                                >{{ set.r }}</span
+                              >
+                              <span
+                                style="display: flex; justify-content: flex-end"
+                                ><span
+                                  style="
+                                    width: 24px;
+                                    height: 24px;
+                                    border-radius: 8px;
+                                    background: #16181e;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                  "
+                                  ><span
+                                    style="
+                                      width: 10px;
+                                      height: 2px;
+                                      background: #4d505c;
+                                      border-radius: 1px;
+                                    "
+                                  ></span></span
+                              ></span>
+                            </div>
+                          </sc-if>
+                          <sc-if
+                            value="{{ set.isActive }}"
+                            hint-placeholder-val="{{ true }}"
+                          >
+                            <div
+                              style="
+                                display: grid;
+                                grid-template-columns: 26px 1fr 1fr 34px;
+                                gap: 6px;
+                                align-items: center;
+                                padding: 10px 8px;
+                                margin: 3px -4px;
+                                background: #1b1e14;
+                                border-radius: 13px;
+                              "
+                            >
+                              <span
+                                style="
+                                  font: 700 14px 'Space Grotesk';
+                                  color: #c6f24e;
+                                "
+                                >{{ set.num }}</span
+                              >
+                              <span
+                                onClick="{{ set.onWeight }}"
+                                style="
+                                  text-align: center;
+                                  font: 600 20px 'Space Grotesk';
+                                  color: #f2f3f5;
+                                  font-variant-numeric: tabular-nums;
+                                  cursor: pointer;
+                                "
+                                >{{ set.w }}</span
+                              >
+                              <span
+                                onClick="{{ set.onReps }}"
+                                style="
+                                  text-align: center;
+                                  font: 600 20px 'Space Grotesk';
+                                  color: #f2f3f5;
+                                  font-variant-numeric: tabular-nums;
+                                  cursor: pointer;
+                                "
+                                >{{ set.r }}</span
+                              >
+                              <span
+                                style="display: flex; justify-content: flex-end"
+                                ><span
+                                  onClick="{{ set.onCheck }}"
+                                  style="
+                                    width: 28px;
+                                    height: 28px;
+                                    border-radius: 9px;
+                                    background: #c6f24e;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    cursor: pointer;
+                                    animation: glowPulse 2.6s ease-in-out
+                                      infinite;
+                                  "
+                                  ><span
+                                    style="
+                                      display: inline-block;
+                                      width: 6px;
+                                      height: 12px;
+                                      border: solid #0a0b0e;
+                                      border-width: 0 2.5px 2.5px 0;
+                                      transform: rotate(45deg);
+                                      margin-top: -2px;
+                                    "
+                                  ></span></span
+                              ></span>
+                            </div>
+                          </sc-if>
+                          <sc-if
+                            value="{{ set.isPending }}"
+                            hint-placeholder-val="{{ false }}"
+                          >
+                            <div
+                              style="
+                                display: grid;
+                                grid-template-columns: 26px 1fr 1fr 34px;
+                                gap: 6px;
+                                align-items: center;
+                                padding: 8px 4px;
+                              "
+                            >
+                              <span
+                                style="
+                                  font: 600 14px 'Space Grotesk';
+                                  color: #6b6e7a;
+                                "
+                                >{{ set.num }}</span
+                              >
+                              <span
+                                onClick="{{ set.onWeight }}"
+                                style="
+                                  text-align: center;
+                                  font: 500 15px 'DM Sans';
+                                  color: #9a9dab;
+                                  cursor: pointer;
+                                "
+                                >{{ set.w }}</span
+                              >
+                              <span
+                                onClick="{{ set.onReps }}"
+                                style="
+                                  text-align: center;
+                                  font: 500 15px 'DM Sans';
+                                  color: #9a9dab;
+                                  cursor: pointer;
+                                "
+                                >{{ set.r }}</span
+                              >
+                              <span
+                                style="display: flex; justify-content: flex-end"
+                                ><span
+                                  style="
+                                    width: 24px;
+                                    height: 24px;
+                                    border-radius: 8px;
+                                    border: 1.5px solid #2a2d36;
+                                  "
+                                ></span
+                              ></span>
+                            </div>
+                          </sc-if>
+                        </sc-for>
+
+                        <sc-if
+                          value="{{ ex.canAdd }}"
+                          hint-placeholder-val="{{ true }}"
+                        >
+                          <div
+                            onClick="{{ ex.onAddSet }}"
+                            style="
+                              margin-top: 8px;
+                              height: 38px;
+                              border: 1.5px dashed #2f3a26;
+                              border-radius: 12px;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              gap: 7px;
+                              cursor: pointer;
+                            "
+                          >
+                            <span
+                              style="
+                                position: relative;
+                                width: 12px;
+                                height: 12px;
+                                display: inline-block;
+                              "
+                              ><span
+                                style="
+                                  position: absolute;
+                                  top: 5px;
+                                  left: 0;
+                                  width: 12px;
+                                  height: 2px;
+                                  background: #9aa86a;
+                                  border-radius: 1px;
+                                "
+                              ></span
+                              ><span
+                                style="
+                                  position: absolute;
+                                  left: 5px;
+                                  top: 0;
+                                  width: 2px;
+                                  height: 12px;
+                                  background: #9aa86a;
+                                  border-radius: 1px;
+                                "
+                              ></span
+                            ></span>
+                            <span
+                              style="font: 600 13px 'DM Sans'; color: #9aa86a"
+                              >Add set</span
+                            >
+                          </div>
+                        </sc-if>
+                        <div
+                          style="
+                            height: 3px;
+                            background: #16181e;
+                            border-radius: 2px;
+                            margin-top: 12px;
+                            overflow: hidden;
+                          "
+                        >
+                          <span
+                            style="display:block;height:100%;background:#34D399;border-radius:2px;width:{{ ex.progress }};transition:width 0.3s ease;"
+                          ></span>
+                        </div>
+                      </div>
+                    </sc-if>
+
+                    <!-- COLLAPSED: DONE -->
+                    <sc-if
+                      value="{{ ex.isDoneCol }}"
+                      hint-placeholder-val="{{ false }}"
+                    >
+                      <div
+                        onClick="{{ ex.onToggle }}"
+                        style="
+                          background: #0e1411;
+                          border: 1px solid #18241d;
+                          border-radius: 16px;
+                          padding: 14px 16px;
+                          display: flex;
+                          align-items: center;
+                          justify-content: space-between;
+                          cursor: pointer;
+                        "
+                      >
+                        <div
+                          style="display: flex; align-items: center; gap: 12px"
+                        >
+                          <span
+                            style="
+                              width: 26px;
+                              height: 26px;
+                              border-radius: 50%;
+                              background: #34d399;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                            "
+                            ><span
+                              style="
+                                display: inline-block;
+                                width: 6px;
+                                height: 12px;
+                                border: solid #06241a;
+                                border-width: 0 2.5px 2.5px 0;
+                                transform: rotate(45deg);
+                                margin-top: -2px;
+                              "
+                            ></span
+                          ></span>
+                          <span style="font: 600 15px 'DM Sans'; color: #7c8a82"
+                            >{{ ex.name }}</span
+                          >
+                        </div>
+                        <span style="font: 500 13px 'DM Sans'; color: #5b6660"
+                          >{{ ex.summary }}</span
+                        >
+                      </div>
+                    </sc-if>
+
+                    <!-- COLLAPSED: CURRENT (active exercise, another is expanded) -->
+                    <sc-if
+                      value="{{ ex.isCurrentCol }}"
+                      hint-placeholder-val="{{ false }}"
+                    >
+                      <div
+                        onClick="{{ ex.onToggle }}"
+                        style="
+                          background: #14161b;
+                          border: 1.5px solid #2c3424;
+                          border-radius: 16px;
+                          padding: 14px 16px;
+                          display: flex;
+                          align-items: center;
+                          justify-content: space-between;
+                          cursor: pointer;
+                        "
+                      >
+                        <div
+                          style="display: flex; align-items: center; gap: 11px"
+                        >
+                          <span
+                            style="
+                              width: 9px;
+                              height: 9px;
+                              border-radius: 50%;
+                              background: #c6f24e;
+                            "
+                          ></span>
+                          <span style="font: 600 15px 'DM Sans'; color: #f2f3f5"
+                            >{{ ex.name }}</span
+                          >
+                        </div>
+                        <span style="font: 600 12px 'DM Sans'; color: #c6f24e"
+                          >{{ ex.summary }}</span
+                        >
+                      </div>
+                    </sc-if>
+
+                    <!-- COLLAPSED: PENDING (reorderable) -->
+                    <sc-if
+                      value="{{ ex.isPendingCol }}"
+                      hint-placeholder-val="{{ false }}"
+                    >
+                      <div
+                        style="
+                          background: #101116;
+                          border: 1px solid #1c1e25;
+                          border-radius: 16px;
+                          padding: 11px 12px 11px 16px;
+                          display: flex;
+                          align-items: center;
+                          justify-content: space-between;
+                        "
+                      >
+                        <div
+                          onClick="{{ ex.onToggle }}"
+                          style="
+                            flex: 1;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            padding-right: 10px;
+                          "
+                        >
+                          <span style="font: 600 15px 'DM Sans'; color: #9a9dab"
+                            >{{ ex.name }}</span
+                          >
+                          <span style="font: 500 13px 'DM Sans'; color: #5b5e6b"
+                            >{{ ex.summary }}</span
+                          >
+                        </div>
+                        <div style="display: flex; gap: 5px">
+                          <span
+                            onClick="{{ ex.onUp }}"
+                            style="
+                              width: 30px;
+                              height: 30px;
+                              border-radius: 9px;
+                              background: #181a20;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              cursor: pointer;
+                            "
+                            ><span
+                              style="
+                                display: inline-block;
+                                width: 7px;
+                                height: 7px;
+                                border: solid #8a8d99;
+                                border-width: 2px 2px 0 0;
+                                transform: rotate(-45deg);
+                                margin-top: 2px;
+                              "
+                            ></span
+                          ></span>
+                          <span
+                            onClick="{{ ex.onDown }}"
+                            style="
+                              width: 30px;
+                              height: 30px;
+                              border-radius: 9px;
+                              background: #181a20;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              cursor: pointer;
+                            "
+                            ><span
+                              style="
+                                display: inline-block;
+                                width: 7px;
+                                height: 7px;
+                                border: solid #8a8d99;
+                                border-width: 0 2px 2px 0;
+                                transform: rotate(45deg);
+                                margin-bottom: 2px;
+                              "
+                            ></span
+                          ></span>
+                        </div>
+                      </div>
+                    </sc-if>
+                  </sc-for>
+                </div>
+
+                <!-- footer: action bar OR rest sheet -->
+                <sc-if
+                  value="{{ rest.idle }}"
+                  hint-placeholder-val="{{ true }}"
+                >
+                  <div
+                    style="
+                      padding: 12px 16px 16px;
+                      background: linear-gradient(
+                        0deg,
+                        #0a0b0e 72%,
+                        transparent
+                      );
+                    "
+                  >
+                    <div
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 11px;
+                        background: #14161b;
+                        border: 1px solid #23262f;
+                        border-radius: 20px;
+                        padding: 10px 10px 10px 17px;
+                      "
+                    >
+                      <div style="flex: 1">
+                        <div
+                          style="
+                            font: 600 9px 'DM Sans';
+                            letter-spacing: 1px;
+                            color: #5b5e6b;
+                            text-transform: uppercase;
+                          "
+                        >
+                          {{ footer.label }}
+                        </div>
+                        <div
+                          style="
+                            font: 600 16px 'Space Grotesk';
+                            color: #f2f3f5;
+                            margin-top: 2px;
+                          "
+                        >
+                          {{ footer.target }}
+                        </div>
+                      </div>
+                      <div
+                        onClick="{{ footer.onLog }}"
+                        style="
+                          height: 50px;
+                          padding: 0 28px;
+                          border-radius: 15px;
+                          background: #c6f24e;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          font: 700 16px 'DM Sans';
+                          color: #0a0b0e;
+                          cursor: pointer;
+                        "
+                      >
+                        Log
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+                <sc-if
+                  value="{{ rest.active }}"
+                  hint-placeholder-val="{{ false }}"
+                >
+                  <div
+                    style="
+                      background: #0c1416;
+                      border-top: 1.5px solid #163038;
+                      border-radius: 26px 26px 0 0;
+                      padding: 16px 20px 18px;
+                      box-shadow: 0 -16px 36px rgba(0, 0, 0, 0.5);
+                      animation: slideUp 0.35s ease-out;
+                    "
+                  >
+                    <div style="display: flex; align-items: center; gap: 16px">
+                      <div
+                        style="
+                          position: relative;
+                          width: 72px;
+                          height: 72px;
+                          flex: 0 0 auto;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                        "
+                      >
+                        <div
+                          style="
+                            position: absolute;
+                            inset: 8px;
+                            border-radius: 50%;
+                            background: radial-gradient(
+                              circle,
+                              rgba(86, 224, 240, 0.22),
+                              transparent 70%
+                            );
+                            animation: ringGlow 3s ease-in-out infinite;
+                          "
+                        ></div>
+                        <div
+                          class="liveRing"
+                          style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -90deg, #56E0F0 var(--ang), #1A1E24 0);--ang:{{ rest.ang }};-webkit-mask:radial-gradient(closest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));mask:radial-gradient(closest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));"
+                        ></div>
+                        <span
+                          style="
+                            font: 600 18px 'Space Grotesk';
+                            color: #56e0f0;
+                            font-variant-numeric: tabular-nums;
+                          "
+                          >{{ rest.str }}</span
+                        >
+                      </div>
+                      <div style="flex: 1">
+                        <div
+                          style="
+                            font: 600 10px 'DM Sans';
+                            letter-spacing: 1.4px;
+                            color: #56e0f0;
+                          "
+                        >
+                          RESTING
+                        </div>
+                        <div
+                          style="
+                            font: 600 15px 'DM Sans';
+                            color: #f2f3f5;
+                            margin-top: 3px;
+                          "
+                        >
+                          {{ rest.nextLabel }} · {{ rest.nextName }}
+                        </div>
+                        <div
+                          style="
+                            font: 500 13px 'DM Sans';
+                            color: #9a9dab;
+                            margin-top: 1px;
+                          "
+                        >
+                          {{ rest.nextTarget }}
+                        </div>
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 14px">
+                      <div
+                        onClick="{{ rest.onAdd }}"
+                        style="
+                          flex: 1;
+                          height: 46px;
+                          border-radius: 14px;
+                          background: #11181c;
+                          border: 1px solid #1d2933;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          font: 600 14px 'DM Sans';
+                          color: #56e0f0;
+                          cursor: pointer;
+                        "
+                      >
+                        +15s
+                      </div>
+                      <div
+                        onClick="{{ rest.onSkip }}"
+                        style="
+                          flex: 1;
+                          height: 46px;
+                          border-radius: 14px;
+                          background: #11181c;
+                          border: 1px solid #1d2933;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          font: 600 14px 'DM Sans';
+                          color: #9a9dab;
+                          cursor: pointer;
+                        "
+                      >
+                        Skip rest
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- inline editor overlay -->
+                <sc-if
+                  value="{{ editor.open }}"
+                  hint-placeholder-val="{{ false }}"
+                >
+                  <div
+                    onClick="{{ editor.onClose }}"
+                    style="
+                      position: absolute;
+                      inset: 0;
+                      background: rgba(5, 6, 8, 0.62);
+                      z-index: 20;
+                    "
+                  ></div>
+                  <div
+                    style="
+                      position: absolute;
+                      left: 24px;
+                      right: 24px;
+                      bottom: 96px;
+                      background: #1a1d24;
+                      border: 1px solid #2c303b;
+                      border-radius: 24px;
+                      padding: 20px;
+                      box-shadow: 0 28px 60px rgba(0, 0, 0, 0.6);
+                      z-index: 21;
+                      animation: slideUp 0.32s ease-out;
+                    "
+                  >
+                    <div
+                      style="
+                        text-align: center;
+                        font: 600 10px 'DM Sans';
+                        letter-spacing: 1.4px;
+                        color: #5b5e6b;
+                        text-transform: uppercase;
+                      "
+                    >
+                      {{ editor.label }}
+                    </div>
+                    <div
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 20px;
+                        margin-top: 14px;
+                      "
+                    >
+                      <span
+                        onClick="{{ editor.onMinus }}"
+                        style="
+                          width: 54px;
+                          height: 54px;
+                          border-radius: 17px;
+                          background: #23262f;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          cursor: pointer;
+                        "
+                        ><span
+                          style="
+                            width: 20px;
+                            height: 3px;
+                            background: #f2f3f5;
+                            border-radius: 2px;
+                          "
+                        ></span
+                      ></span>
+                      <div style="text-align: center; min-width: 92px">
+                        <span
+                          style="
+                            font: 600 52px 'Space Grotesk';
+                            color: #c6f24e;
+                            font-variant-numeric: tabular-nums;
+                          "
+                          >{{ editor.value }}</span
+                        >
+                        <div
+                          style="
+                            font: 500 11px 'DM Sans';
+                            color: #6b6e7a;
+                            margin-top: -4px;
+                          "
+                        >
+                          {{ editor.unit }}
+                        </div>
+                      </div>
+                      <span
+                        onClick="{{ editor.onPlus }}"
+                        style="
+                          width: 54px;
+                          height: 54px;
+                          border-radius: 17px;
+                          background: #c6f24e;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          cursor: pointer;
+                          position: relative;
+                        "
+                        ><span
+                          style="
+                            position: absolute;
+                            width: 20px;
+                            height: 3px;
+                            background: #0a0b0e;
+                            border-radius: 2px;
+                          "
+                        ></span
+                        ><span
+                          style="
+                            position: absolute;
+                            width: 3px;
+                            height: 20px;
+                            background: #0a0b0e;
+                            border-radius: 2px;
+                          "
+                        ></span
+                      ></span>
+                    </div>
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: center;
+                        gap: 8px;
+                        margin-top: 18px;
+                      "
+                    >
+                      <sc-for
+                        list="{{ editor.chips }}"
+                        as="chip"
+                        hint-placeholder-count="4"
+                      >
+                        <sc-if
+                          value="{{ chip.active }}"
+                          hint-placeholder-val="{{ false }}"
+                        >
+                          <span
+                            onClick="{{ chip.on }}"
+                            style="
+                              font: 700 14px 'DM Sans';
+                              color: #0a0b0e;
+                              background: #c6f24e;
+                              padding: 9px 16px;
+                              border-radius: 12px;
+                              cursor: pointer;
+                            "
+                            >{{ chip.label }}</span
+                          >
+                        </sc-if>
+                        <sc-if
+                          value="{{ chip.idle }}"
+                          hint-placeholder-val="{{ true }}"
+                        >
+                          <span
+                            onClick="{{ chip.on }}"
+                            style="
+                              font: 600 14px 'DM Sans';
+                              color: #9a9dab;
+                              background: #23262f;
+                              padding: 9px 16px;
+                              border-radius: 12px;
+                              cursor: pointer;
+                            "
+                            >{{ chip.label }}</span
+                          >
+                        </sc-if>
+                      </sc-for>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 18px">
+                      <div
+                        onClick="{{ editor.onSec }}"
+                        style="
+                          flex: 1;
+                          height: 50px;
+                          border-radius: 15px;
+                          background: #1f1417;
+                          border: 1px solid #3a2226;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          font: 600 14px 'DM Sans';
+                          color: #fb7185;
+                          cursor: pointer;
+                        "
+                      >
+                        {{ editor.secLabel }}
+                      </div>
+                      <div
+                        onClick="{{ editor.onClose }}"
+                        style="
+                          flex: 1.2;
+                          height: 50px;
+                          border-radius: 15px;
+                          background: #2a2e38;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          font: 700 15px 'DM Sans';
+                          color: #f2f3f5;
+                          cursor: pointer;
+                        "
+                      >
+                        Done
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- toast -->
+                <sc-if
+                  value="{{ toast.show }}"
+                  hint-placeholder-val="{{ false }}"
+                >
+                  <div
+                    style="
+                      position: absolute;
+                      top: 64px;
+                      left: 50%;
+                      background: #1b2114;
+                      border: 1px solid #39431f;
+                      border-radius: 14px;
+                      padding: 10px 18px;
+                      z-index: 30;
+                      animation: toastIn 1.5s ease-out forwards;
+                      display: flex;
+                      align-items: center;
+                      gap: 9px;
+                    "
+                  >
+                    <span
+                      style="
+                        width: 18px;
+                        height: 18px;
+                        border-radius: 50%;
+                        background: #c6f24e;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      "
+                      ><span
+                        style="
+                          display: inline-block;
+                          width: 4px;
+                          height: 8px;
+                          border: solid #0a0b0e;
+                          border-width: 0 2px 2px 0;
+                          transform: rotate(45deg);
+                          margin-top: -1px;
+                        "
+                      ></span
+                    ></span>
+                    <span
+                      style="
+                        font: 600 13px 'DM Sans';
+                        color: #c6f24e;
+                        white-space: nowrap;
+                      "
+                      >{{ toast.text }}</span
+                    >
+                  </div>
+                </sc-if>
+
+                <!-- end confirmation -->
+                <sc-if
+                  value="{{ confirm.open }}"
+                  hint-placeholder-val="{{ false }}"
+                >
+                  <div
+                    style="
+                      position: absolute;
+                      inset: 0;
+                      background: rgba(5, 6, 8, 0.72);
+                      z-index: 35;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      padding: 30px;
+                    "
+                  >
+                    <div
+                      style="
+                        width: 100%;
+                        background: #1a1d24;
+                        border: 1px solid #2c303b;
+                        border-radius: 24px;
+                        padding: 24px;
+                        box-shadow: 0 28px 60px rgba(0, 0, 0, 0.6);
+                      "
+                    >
+                      <div
+                        style="
+                          font: 700 19px 'Space Grotesk';
+                          color: #f2f3f5;
+                          text-align: center;
+                        "
+                      >
+                        End workout?
+                      </div>
+                      <div
+                        style="
+                          font: 400 14px/1.5 'DM Sans';
+                          color: #9a9dab;
+                          text-align: center;
+                          margin-top: 8px;
+                        "
+                      >
+                        {{ confirm.msg }}
+                      </div>
+                      <div style="display: flex; gap: 10px; margin-top: 22px">
+                        <div
+                          onClick="{{ confirm.onCancel }}"
+                          style="
+                            flex: 1;
+                            height: 50px;
+                            border-radius: 15px;
+                            background: #23262f;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font: 700 15px 'DM Sans';
+                            color: #f2f3f5;
+                            cursor: pointer;
+                          "
+                        >
+                          Keep going
+                        </div>
+                        <div
+                          onClick="{{ confirm.onConfirm }}"
+                          style="
+                            flex: 1;
+                            height: 50px;
+                            border-radius: 15px;
+                            background: #241317;
+                            border: 1px solid #3a2226;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font: 700 15px 'DM Sans';
+                            color: #fb7185;
+                            cursor: pointer;
+                          "
+                        >
+                          End workout
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <!-- ===================== COMPLETE VIEW ===================== -->
+            <sc-if value="{{ isComplete }}" hint-placeholder-val="{{ false }}">
+              <div
+                style="
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+                  min-height: 0;
+                  position: relative;
+                "
+              >
+                <div
+                  style="
+                    position: absolute;
+                    inset: 0;
+                    overflow: hidden;
+                    z-index: 3;
+                    pointer-events: none;
+                  "
+                >
+                  <span
+                    style="
+                      position: absolute;
+                      left: 14%;
+                      top: 0;
+                      width: 8px;
+                      height: 8px;
+                      background: #c6f24e;
+                      border-radius: 2px;
+                      animation: confettiFall 3.2s linear infinite;
+                      animation-delay: 0s;
+                    "
+                  ></span>
+                  <span
+                    style="
+                      position: absolute;
+                      left: 30%;
+                      top: 0;
+                      width: 7px;
+                      height: 11px;
+                      background: #56e0f0;
+                      border-radius: 2px;
+                      animation: confettiFall 3.6s linear infinite;
+                      animation-delay: 0.4s;
+                    "
+                  ></span>
+                  <span
+                    style="
+                      position: absolute;
+                      left: 46%;
+                      top: 0;
+                      width: 9px;
+                      height: 9px;
+                      background: #fbbf24;
+                      border-radius: 50%;
+                      animation: confettiFall 3s linear infinite;
+                      animation-delay: 0.8s;
+                    "
+                  ></span>
+                  <span
+                    style="
+                      position: absolute;
+                      left: 62%;
+                      top: 0;
+                      width: 8px;
+                      height: 8px;
+                      background: #c6f24e;
+                      border-radius: 2px;
+                      animation: confettiFall 3.8s linear infinite;
+                      animation-delay: 0.2s;
+                    "
+                  ></span>
+                  <span
+                    style="
+                      position: absolute;
+                      left: 78%;
+                      top: 0;
+                      width: 7px;
+                      height: 11px;
+                      background: #34d399;
+                      border-radius: 2px;
+                      animation: confettiFall 3.3s linear infinite;
+                      animation-delay: 1s;
+                    "
+                  ></span>
+                  <span
+                    style="
+                      position: absolute;
+                      left: 88%;
+                      top: 0;
+                      width: 9px;
+                      height: 9px;
+                      background: #56e0f0;
+                      border-radius: 50%;
+                      animation: confettiFall 3.5s linear infinite;
+                      animation-delay: 0.6s;
+                    "
+                  ></span>
+                  <span
+                    style="
+                      position: absolute;
+                      left: 22%;
+                      top: 0;
+                      width: 7px;
+                      height: 7px;
+                      background: #fbbf24;
+                      border-radius: 2px;
+                      animation: confettiFall 4s linear infinite;
+                      animation-delay: 1.4s;
+                    "
+                  ></span>
+                  <span
+                    style="
+                      position: absolute;
+                      left: 54%;
+                      top: 0;
+                      width: 8px;
+                      height: 8px;
+                      background: #c6f24e;
+                      border-radius: 50%;
+                      animation: confettiFall 3.1s linear infinite;
+                      animation-delay: 1.8s;
+                    "
+                  ></span>
+                </div>
+                <div style="padding: 22px 24px 0; z-index: 4">
+                  <div
+                    style="
+                      font: 600 11px 'DM Sans';
+                      letter-spacing: 2px;
+                      color: #56e0f0;
+                    "
+                  >
+                    SESSION COMPLETE
+                  </div>
+                  <div
+                    style="
+                      font: 700 26px 'Space Grotesk';
+                      color: #f2f3f5;
+                      margin-top: 6px;
+                      letter-spacing: -0.4px;
+                    "
+                  >
+                    {{ programName }} · recap
+                  </div>
+                  <div style="display: flex; gap: 22px; margin-top: 18px">
+                    <div>
+                      <div
+                        style="
+                          font: 600 24px 'Space Grotesk';
+                          color: #f2f3f5;
+                          font-variant-numeric: tabular-nums;
+                        "
+                      >
+                        {{ done.timeStr }}
+                      </div>
+                      <div
+                        style="
+                          font: 500 11px 'DM Sans';
+                          color: #6b6e7a;
+                          margin-top: 2px;
+                        "
+                      >
+                        time
+                      </div>
+                    </div>
+                    <div>
+                      <div
+                        style="
+                          font: 600 24px 'Space Grotesk';
+                          color: #f2f3f5;
+                          font-variant-numeric: tabular-nums;
+                        "
+                      >
+                        {{ done.sets }}
+                      </div>
+                      <div
+                        style="
+                          font: 500 11px 'DM Sans';
+                          color: #6b6e7a;
+                          margin-top: 2px;
+                        "
+                      >
+                        sets
+                      </div>
+                    </div>
+                    <div>
+                      <div
+                        style="
+                          font: 600 24px 'Space Grotesk';
+                          color: #c6f24e;
+                          font-variant-numeric: tabular-nums;
+                        "
+                      >
+                        {{ done.volume }}
+                      </div>
+                      <div
+                        style="
+                          font: 500 11px 'DM Sans';
+                          color: #6b6e7a;
+                          margin-top: 2px;
+                        "
+                      >
+                        lb volume
+                      </div>
+                    </div>
+                  </div>
+                  <sc-if
+                    value="{{ done.hasSkipped }}"
+                    hint-placeholder-val="{{ false }}"
+                  >
+                    <div
+                      style="
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        margin-top: 16px;
+                        background: #16181e;
+                        border: 1px solid #23262f;
+                        border-radius: 11px;
+                        padding: 8px 13px;
+                      "
+                    >
+                      <span
+                        style="
+                          width: 16px;
+                          height: 16px;
+                          border-radius: 5px;
+                          background: #23262f;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                        "
+                        ><span
+                          style="
+                            width: 8px;
+                            height: 2px;
+                            background: #8a8d99;
+                            border-radius: 1px;
+                          "
+                        ></span
+                      ></span>
+                      <span style="font: 600 12px 'DM Sans'; color: #9a9dab"
+                        >{{ done.skippedLabel }}</span
+                      >
+                    </div>
+                  </sc-if>
+                </div>
+                <div
+                  class="scrollArea"
+                  style="
+                    flex: 1;
+                    min-height: 0;
+                    overflow-y: auto;
+                    padding: 20px 16px 0;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    z-index: 4;
+                  "
+                >
+                  <sc-for
+                    list="{{ done.recap }}"
+                    as="r"
+                    hint-placeholder-count="3"
+                  >
+                    <div
+                      style="
+                        background: #14161b;
+                        border: 1px solid #23262f;
+                        border-radius: 16px;
+                        padding: 14px 16px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                      "
+                    >
+                      <div>
+                        <div style="font: 600 15px 'DM Sans'; color: #f2f3f5">
+                          {{ r.name }}
+                        </div>
+                        <div
+                          style="
+                            font: 500 12px 'DM Sans';
+                            color: #6b6e7a;
+                            margin-top: 2px;
+                          "
+                        >
+                          {{ r.detail }}
+                        </div>
+                      </div>
+                      <sc-if
+                        value="{{ r.isPR }}"
+                        hint-placeholder-val="{{ false }}"
+                      >
+                        <span
+                          style="
+                            font: 700 9px 'DM Sans';
+                            letter-spacing: 0.6px;
+                            color: #0a0b0e;
+                            background: #c6f24e;
+                            padding: 5px 9px;
+                            border-radius: 8px;
+                          "
+                          >PR</span
+                        >
+                      </sc-if>
+                      <sc-if
+                        value="{{ r.noPR }}"
+                        hint-placeholder-val="{{ true }}"
+                      >
+                        <span style="font: 500 13px 'DM Sans'; color: #5b6660"
+                          >—</span
+                        >
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+                <div
+                  style="display: flex; gap: 10px; padding: 16px; z-index: 4"
+                >
+                  <div
+                    style="
+                      flex: 1;
+                      height: 56px;
+                      border-radius: 16px;
+                      background: #15171d;
+                      border: 1px solid #23262f;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font: 600 15px 'DM Sans';
+                      color: #9a9dab;
+                    "
+                  >
+                    Share
+                  </div>
+                  <div
+                    onClick="{{ onReset }}"
+                    style="
+                      flex: 1.5;
+                      height: 56px;
+                      border-radius: 16px;
+                      background: #c6f24e;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font: 700 17px 'DM Sans';
+                      color: #0a0b0e;
+                      cursor: pointer;
+                    "
+                  >
+                    Done
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <div
+              style="
+                position: absolute;
+                bottom: 9px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 128px;
+                height: 5px;
+                border-radius: 3px;
+                background: #2a2d36;
+                z-index: 50;
+              "
+            ></div>
+          </div>
+        </div>
+      </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{"$preview": {"width": 444, "height": 876}}'
+    >
+      /*
+       * WIRED TO THE REAL APP ARCHITECTURE
+       * ----------------------------------
+       * Data shape  : types/workout.ts  -> WorkoutState / ExerciseState / ExerciseSetState / SetStatus
+       * Init        : lib/buildInitialState.ts (Program.blocks + PrefillMap -> WorkoutState)
+       * State engine: context/workoutReducer.ts + context/reducerHelpers.ts (copied verbatim)
+       *
+       * Real reducer actions used 1:1:
+       *   EXPAND_EXERCISE · LOG_SET · CONFIRM_SET · SKIP_SET · EDIT_SET
+       *   START_REST_TIMER · DISMISS_REST_TIMER · COMPLETE_WORKOUT
+       *
+       * Prototype-only EXTENSION actions (NOT in the shipped reducer — these are the
+       * new affordances this redesign proposes; each would need a reducer case added):
+       *   ADD_SET · MOVE_EXERCISE · EXTEND_REST · UNLOG_SET · RESTORE_SET
+       *
+       * UI-only state (kept outside WorkoutState, like the real screen does with hooks):
+       *   now (clock for elapsed + rest countdown) · editor (keypad/stepper) · confirmEnd · toast
+       *   PR detection + "Last ·" prefill display come from the progress/prefill APIs in the real app.
+       */
+      class Component extends DCLogic {
+        constructor(props) {
+          super(props)
+          this.meta = this.buildMeta()
+          const now = Date.now()
+          this.state = {
+            ws: this.buildInitialState(this.meta.program, 3, this.meta.nameById, this.meta.prefillMap),
+            now,
+            editor: { open: false, exerciseIndex: 0, setIndex: 0, field: 'weight' },
+            confirmEnd: false,
+            toast: null
+          }
+          this.onEnd = this.onEnd.bind(this)
+          this.onReset = this.onReset.bind(this)
+          this.log = this.log.bind(this)
+        }
+
+        // ---- Sample program + prefill (stands in for usePrograms / usePrefill / progress API) ----
+        buildMeta() {
+          const now = new Date().toISOString()
+          const program = {
+            id: 'push-a',
+            name: 'Push Day A',
+            source: 'user',
+            createdAt: now,
+            updatedAt: now,
+            defaultRestBetweenExercises: 90,
+            blocks: [
+              { type: 'exercise', exerciseId: 'ex_bench', sets: 3, targetReps: 10, restBetweenSets: 90 },
+              { type: 'exercise', exerciseId: 'ex_incline', sets: 3, targetReps: 10, restBetweenSets: 90 },
+              { type: 'exercise', exerciseId: 'ex_cable', sets: 3, targetReps: 12, restBetweenSets: 75 }
+            ]
+          }
+          const nameById = new Map([
+            ['ex_bench', 'Bench Press'],
+            ['ex_incline', 'Incline DB Press'],
+            ['ex_cable', 'Cable Fly']
+          ])
+          const prefillMap = new Map([
+            ['ex_bench', { reps: 10, weight: 135 }],
+            ['ex_incline', { reps: 10, weight: 60 }],
+            ['ex_cable', { reps: 12, weight: 25 }]
+          ])
+          const bestById = new Map([
+            ['ex_bench', 130],
+            ['ex_incline', 65],
+            ['ex_cable', 25]
+          ])
+          return { program, nameById, prefillMap, bestById }
+        }
+
+        // ---- lib/buildInitialState.ts (faithful port) ----
+        resolveSetValues(block, setIndex, prefillMap) {
+          const prefill = block.type === 'exercise' ? prefillMap && prefillMap.get(block.exerciseId) : undefined
+          if (prefill) return { reps: prefill.reps, weight: prefill.weight }
+          if (block.type !== 'exercise') return { reps: 0, weight: 0 }
+          const targetReps = block.targetReps
+          let reps = 0
+          if (typeof targetReps === 'number') reps = targetReps
+          else if (Array.isArray(targetReps) && targetReps.length > 0) reps = targetReps[setIndex] != null ? targetReps[setIndex] : targetReps[targetReps.length - 1]
+          return { reps, weight: 0 }
+        }
+
+        buildInitialState(program, sessionIndex, nameById, prefillMap) {
+          const exercises = program.blocks
+            .filter(b => b.type === 'exercise')
+            .map(block => ({
+              exerciseId: block.exerciseId,
+              exerciseName: nameById.get(block.exerciseId) || block.exerciseId,
+              restDurationMs: (block.restBetweenSets != null ? block.restBetweenSets : 60) * 1000,
+              sets: Array.from({ length: block.sets != null ? block.sets : 1 }, (_, i) => ({
+                ...this.resolveSetValues(block, i, prefillMap),
+                status: 'pending'
+              }))
+            }))
+          if (exercises.length > 0 && exercises[0].sets.length > 0) exercises[0].sets[0].status = 'active'
+          return {
+            workoutId: program.id + '_' + sessionIndex + '_' + Date.now(),
+            programSlug: program.id,
+            sessionIndex,
+            sessionName: program.name,
+            exercises,
+            expandedExerciseIndex: 0,
+            activeSetIndex: 0,
+            restTimer: { isActive: false, startedAt: 0, durationMs: 0 },
+            startedAt: Date.now(),
+            completedAt: null,
+            isCompleted: false
+          }
+        }
+
+        // ---- context/reducerHelpers.ts (faithful port) ----
+        findNextPendingSet(exercises, ei, si) {
+          const total = exercises.length
+          if (total === 0) return null
+          const cur = exercises[ei].sets
+          for (let s = si + 1; s < cur.length; s++) if (cur[s].status === 'pending') return { exerciseIndex: ei, setIndex: s }
+          for (let off = 1; off < total; off++) {
+            const e = (ei + off) % total
+            const sets = exercises[e].sets
+            for (let s = 0; s < sets.length; s++) if (sets[s].status === 'pending') return { exerciseIndex: e, setIndex: s }
+          }
+          for (let s = 0; s <= si; s++) if (cur[s].status === 'pending') return { exerciseIndex: ei, setIndex: s }
+          return null
+        }
+
+        activateInExercise(ex, target) {
+          if (target !== undefined) {
+            const t = ex.sets[target]
+            if (!t || t.status !== 'pending') return ex
+            return { ...ex, sets: ex.sets.map((s, i) => (i === target ? { ...s, status: 'active' } : s)) }
+          }
+          let done = false
+          return {
+            ...ex,
+            sets: ex.sets.map(s => {
+              if (!done && s.status === 'pending') { done = true; return { ...s, status: 'active' } }
+              return s
+            })
+          }
+        }
+
+        revertEditingSets(exercises) {
+          return exercises.map(ex => {
+            if (!ex.sets.some(s => s.status === 'editing')) return ex
+            return {
+              ...ex,
+              sets: ex.sets.map(s =>
+                s.status === 'editing'
+                  ? { ...s, status: 'completed', reps: s.confirmedReps != null ? s.confirmedReps : s.reps, weight: s.confirmedWeight != null ? s.confirmedWeight : s.weight }
+                  : s
+              )
+            }
+          })
+        }
+
+        // ---- context/workoutReducer.ts (faithful port) + prototype extensions ----
+        reducer(state, action) {
+          switch (action.type) {
+            case 'EXPAND_EXERCISE': {
+              const same = action.exerciseIndex === state.expandedExerciseIndex
+              if (same && action.setIndex === undefined) return state
+              const target = action.setIndex
+              const reverted = this.revertEditingSets(state.exercises)
+              let exercises = reverted.map((ex, eIdx) => {
+                if (eIdx === state.expandedExerciseIndex) {
+                  return { ...ex, sets: ex.sets.map(s => (s.status === 'active' ? { ...s, status: 'pending' } : s)) }
+                }
+                if (!same && eIdx === action.exerciseIndex) return this.activateInExercise(ex, target)
+                return ex
+              })
+              if (same) exercises[action.exerciseIndex] = this.activateInExercise(exercises[action.exerciseIndex], target)
+              const resolvedIdx = target !== undefined ? target : exercises[action.exerciseIndex].sets.findIndex(s => s.status === 'active')
+              return { ...state, exercises, expandedExerciseIndex: action.exerciseIndex, activeSetIndex: resolvedIdx === -1 ? 0 : resolvedIdx }
+            }
+            case 'LOG_SET': {
+              const exercises = state.exercises.map((ex, eIdx) =>
+                eIdx === action.exerciseIndex
+                  ? { ...ex, sets: ex.sets.map((s, sIdx) => (sIdx === action.setIndex ? { ...s, reps: action.reps, weight: action.weight } : s)) }
+                  : ex
+              )
+              return { ...state, exercises }
+            }
+            case 'CONFIRM_SET': {
+              let exercises = state.exercises.map((ex, eIdx) =>
+                eIdx === action.exerciseIndex
+                  ? { ...ex, sets: ex.sets.map((s, sIdx) => (sIdx === action.setIndex ? { ...s, status: 'completed', confirmedReps: s.reps, confirmedWeight: s.weight } : s)) }
+                  : ex
+              )
+              const next = this.findNextPendingSet(exercises, action.exerciseIndex, action.setIndex)
+              if (next) {
+                exercises = exercises.map((ex, eIdx) =>
+                  eIdx === next.exerciseIndex
+                    ? { ...ex, sets: ex.sets.map((s, sIdx) => (sIdx === next.setIndex ? { ...s, status: 'active' } : s)) }
+                    : ex
+                )
+                return { ...state, exercises, expandedExerciseIndex: next.exerciseIndex, activeSetIndex: next.setIndex }
+              }
+              return { ...state, exercises }
+            }
+            case 'SKIP_SET': {
+              let exercises = state.exercises.map((ex, eIdx) =>
+                eIdx === action.exerciseIndex
+                  ? { ...ex, sets: ex.sets.map((s, sIdx) => (sIdx === action.setIndex ? { ...s, status: 'skipped' } : s)) }
+                  : ex
+              )
+              const next = this.findNextPendingSet(exercises, action.exerciseIndex, action.setIndex)
+              if (next) {
+                exercises = exercises.map((ex, eIdx) =>
+                  eIdx === next.exerciseIndex
+                    ? { ...ex, sets: ex.sets.map((s, sIdx) => (sIdx === next.setIndex ? { ...s, status: 'active' } : s)) }
+                    : ex
+                )
+                return { ...state, exercises, expandedExerciseIndex: next.exerciseIndex, activeSetIndex: next.setIndex }
+              }
+              return { ...state, exercises }
+            }
+            case 'EDIT_SET': {
+              const target = state.exercises[action.exerciseIndex] && state.exercises[action.exerciseIndex].sets[action.setIndex]
+              if (!target || target.status !== 'completed') return state
+              const reverted = this.revertEditingSets(state.exercises)
+              const exercises = reverted.map((ex, eIdx) => {
+                const isTarget = eIdx === action.exerciseIndex
+                const hasActive = ex.sets.some(s => s.status === 'active')
+                if (!isTarget && !hasActive) return ex
+                return {
+                  ...ex,
+                  sets: ex.sets.map((s, sIdx) => {
+                    if (isTarget && sIdx === action.setIndex) return { ...s, status: 'editing' }
+                    if (s.status === 'active') return { ...s, status: 'pending' }
+                    return s
+                  })
+                }
+              })
+              return { ...state, exercises, expandedExerciseIndex: action.exerciseIndex, activeSetIndex: action.setIndex }
+            }
+            case 'START_REST_TIMER':
+              return { ...state, restTimer: { isActive: true, startedAt: action.startedAt, durationMs: action.durationMs } }
+            case 'DISMISS_REST_TIMER':
+              return { ...state, restTimer: { ...state.restTimer, isActive: false } }
+            case 'COMPLETE_WORKOUT': {
+              const reverted = this.revertEditingSets(state.exercises)
+              const exercises = reverted.map(ex => ({
+                ...ex,
+                sets: ex.sets.map(s => (s.status === 'pending' || s.status === 'active' ? { ...s, status: 'skipped' } : s))
+              }))
+              return { ...state, exercises, isCompleted: true, completedAt: action.completedAt, restTimer: { isActive: false, startedAt: 0, durationMs: 0 } }
+            }
+
+            // -------- prototype extensions --------
+            case 'ADD_SET': {
+              const exercises = state.exercises.map((ex, eIdx) => {
+                if (eIdx !== action.exerciseIndex) return ex
+                const last = ex.sets[ex.sets.length - 1]
+                return { ...ex, sets: [...ex.sets, { reps: last ? last.reps : 0, weight: last ? last.weight : 0, status: 'pending' }] }
+              })
+              return { ...state, exercises }
+            }
+            case 'MOVE_EXERCISE': {
+              const { from, to } = action
+              const n = state.exercises.length
+              if (to < 0 || to >= n) return state
+              const allPending = ex => ex.sets.every(s => s.status === 'pending')
+              if (from === state.expandedExerciseIndex || to === state.expandedExerciseIndex) return state
+              if (!allPending(state.exercises[from]) || !allPending(state.exercises[to])) return state
+              const exercises = state.exercises.slice()
+              const tmp = exercises[from]; exercises[from] = exercises[to]; exercises[to] = tmp
+              return { ...state, exercises }
+            }
+            case 'EXTEND_REST':
+              if (!state.restTimer.isActive) return state
+              return { ...state, restTimer: { ...state.restTimer, startedAt: state.restTimer.startedAt + 15000 } }
+            case 'UNLOG_SET':
+            case 'RESTORE_SET': {
+              let exercises = state.exercises.map((ex, eIdx) =>
+                eIdx === action.exerciseIndex
+                  ? { ...ex, sets: ex.sets.map((s, sIdx) => (sIdx === action.setIndex ? { ...s, status: 'pending' } : s)) }
+                  : ex
+              )
+              const hasActive = exercises.some(ex => ex.sets.some(s => s.status === 'active'))
+              let expanded = state.expandedExerciseIndex
+              let activeIdx = state.activeSetIndex
+              if (!hasActive) {
+                exercises = exercises.map((ex, eIdx) => (eIdx === action.exerciseIndex ? this.activateInExercise(ex, action.setIndex) : ex))
+                expanded = action.exerciseIndex
+                activeIdx = action.setIndex
+              }
+              return { ...state, exercises, expandedExerciseIndex: expanded, activeSetIndex: activeIdx, restTimer: { ...state.restTimer, isActive: false } }
+            }
+            default:
+              return state
+          }
+        }
+
+        // ---- dispatch helpers ----
+        dispatch(...actions) {
+          this.setState(s => {
+            let ws = s.ws
+            for (const a of actions) ws = this.reducer(ws, a)
+            return { ws }
+          })
+        }
+
+        findActive(ws) {
+          for (let i = 0; i < ws.exercises.length; i++) {
+            const j = ws.exercises[i].sets.findIndex(s => s.status === 'active')
+            if (j !== -1) return { exerciseIndex: i, setIndex: j }
+          }
+          return null
+        }
+
+        componentDidMount() {
+          this._t = setInterval(() => {
+            this.setState(s => {
+              if (s.ws.isCompleted) return null
+              const now = Date.now()
+              if (s.ws.restTimer.isActive) {
+                const remMs = s.ws.restTimer.durationMs - (now - s.ws.restTimer.startedAt)
+                if (remMs <= 0) return { now, ws: this.reducer(s.ws, { type: 'DISMISS_REST_TIMER' }) }
+              }
+              return { now }
+            })
+          }, 500)
+        }
+        componentWillUnmount() {
+          if (this._t) clearInterval(this._t)
+          if (this._toast) clearTimeout(this._toast)
+        }
+
+        fmt(t) {
+          const m = Math.floor(t / 60)
+          const s = t % 60
+          return m + ':' + String(s).padStart(2, '0')
+        }
+
+        // ---- interaction handlers (dispatch real reducer actions) ----
+        log() {
+          this.setState(s => {
+            const active = this.findActive(s.ws)
+            if (!active) return null
+            const { exerciseIndex: i, setIndex: j } = active
+            const set = s.ws.exercises[i].sets[j]
+            let ws = this.reducer(s.ws, { type: 'LOG_SET', exerciseIndex: i, setIndex: j, weight: set.weight, reps: set.reps })
+            const vol = set.weight * set.reps
+            ws = this.reducer(ws, { type: 'CONFIRM_SET', exerciseIndex: i, setIndex: j })
+            const allDone = ws.exercises.every(ex => ex.sets.every(st => st.status === 'completed' || st.status === 'skipped'))
+            if (allDone) {
+              ws = this.reducer(ws, { type: 'COMPLETE_WORKOUT', completedAt: Date.now() })
+              return { ws, toast: null }
+            }
+            const restMs = ws.exercises[i].restDurationMs || 0
+            if (restMs > 0) ws = this.reducer(ws, { type: 'START_REST_TIMER', durationMs: restMs, startedAt: Date.now() })
+            if (this._toast) clearTimeout(this._toast)
+            this._toast = setTimeout(() => this.setState({ toast: null }), 1500)
+            return { ws, toast: 'Set logged · +' + vol.toLocaleString('en-US') + ' lb' }
+          })
+        }
+
+        tapHeader(i) { this.dispatch({ type: 'EXPAND_EXERCISE', exerciseIndex: i }) }
+        addSet(i) { this.dispatch({ type: 'ADD_SET', exerciseIndex: i }) }
+        moveExercise(from, dir) { this.dispatch({ type: 'MOVE_EXERCISE', from, to: from + dir }) }
+        restAdd() { this.dispatch({ type: 'EXTEND_REST' }) }
+        restSkip() { this.dispatch({ type: 'DISMISS_REST_TIMER' }) }
+
+        openEditor(i, j, field) {
+          this.setState(s => {
+            const set = s.ws.exercises[i].sets[j]
+            let ws = s.ws
+            if (set.status === 'completed') ws = this.reducer(ws, { type: 'EDIT_SET', exerciseIndex: i, setIndex: j })
+            else if (set.status === 'pending') ws = this.reducer(ws, { type: 'EXPAND_EXERCISE', exerciseIndex: i, setIndex: j })
+            return { ws, editor: { open: true, exerciseIndex: i, setIndex: j, field } }
+          })
+        }
+        closeEditor() {
+          this.setState(s => {
+            const ed = s.editor
+            const set = s.ws.exercises[ed.exerciseIndex] && s.ws.exercises[ed.exerciseIndex].sets[ed.setIndex]
+            let ws = s.ws
+            if (set && set.status === 'editing') ws = this.reducer(ws, { type: 'CONFIRM_SET', exerciseIndex: ed.exerciseIndex, setIndex: ed.setIndex })
+            return { ws, editor: { ...ed, open: false } }
+          })
+        }
+        editAdjust(delta) {
+          this.setState(s => {
+            const ed = s.editor
+            const set = s.ws.exercises[ed.exerciseIndex].sets[ed.setIndex]
+            const weight = ed.field === 'weight' ? Math.max(0, set.weight + delta) : set.weight
+            const reps = ed.field === 'reps' ? Math.max(0, set.reps + delta) : set.reps
+            return { ws: this.reducer(s.ws, { type: 'LOG_SET', exerciseIndex: ed.exerciseIndex, setIndex: ed.setIndex, weight, reps }) }
+          })
+        }
+        editSetVal(v) {
+          this.setState(s => {
+            const ed = s.editor
+            const set = s.ws.exercises[ed.exerciseIndex].sets[ed.setIndex]
+            const weight = ed.field === 'weight' ? Math.max(0, v) : set.weight
+            const reps = ed.field === 'reps' ? Math.max(0, v) : set.reps
+            return { ws: this.reducer(s.ws, { type: 'LOG_SET', exerciseIndex: ed.exerciseIndex, setIndex: ed.setIndex, weight, reps }) }
+          })
+        }
+        editSecondary() {
+          this.setState(s => {
+            const ed = s.editor
+            const set = s.ws.exercises[ed.exerciseIndex].sets[ed.setIndex]
+            let action
+            if (set.status === 'editing') action = { type: 'UNLOG_SET', exerciseIndex: ed.exerciseIndex, setIndex: ed.setIndex }
+            else if (set.status === 'skipped') action = { type: 'RESTORE_SET', exerciseIndex: ed.exerciseIndex, setIndex: ed.setIndex }
+            else action = { type: 'SKIP_SET', exerciseIndex: ed.exerciseIndex, setIndex: ed.setIndex }
+            return { ws: this.reducer(s.ws, action), editor: { ...ed, open: false } }
+          })
+        }
+
+        onEnd() { this.setState({ confirmEnd: true }) }
+        cancelEnd() { this.setState({ confirmEnd: false }) }
+        confirmEndWorkout() {
+          this.setState(s => ({ ws: this.reducer(s.ws, { type: 'COMPLETE_WORKOUT', completedAt: Date.now() }), confirmEnd: false, editor: { ...s.editor, open: false } }))
+        }
+        onReset() {
+          const now = Date.now()
+          this.setState({
+            ws: this.buildInitialState(this.meta.program, 3, this.meta.nameById, this.meta.prefillMap),
+            now,
+            editor: { open: false, exerciseIndex: 0, setIndex: 0, field: 'weight' },
+            confirmEnd: false,
+            toast: null
+          })
+        }
+
+        renderVals() {
+          const st = this.state
+          const ws = st.ws
+          const meta = this.meta
+          const noop = () => {}
+          const exs = ws.exercises
+          const totalSets = exs.reduce((a, e) => a + e.sets.length, 0)
+          const doneSets = exs.reduce((a, e) => a + e.sets.filter(s => s.status === 'completed').length, 0)
+          const elapsedSec = Math.max(0, Math.floor((st.now - ws.startedAt) / 1000))
+          const pf = id => meta.prefillMap.get(id) || { reps: 0, weight: 0 }
+
+          const exercises = exs.map((ex, i) => {
+            const total = ex.sets.length
+            const resolved = ex.sets.every(s => s.status === 'completed' || s.status === 'skipped')
+            const completed = ex.sets.filter(s => s.status === 'completed')
+            const skipped = ex.sets.filter(s => s.status === 'skipped').length
+            const topW = completed.length ? Math.max(...completed.map(s => s.weight)) : 0
+            const hasActive = ex.sets.some(s => s.status === 'active' || s.status === 'editing')
+            const isExpanded = i === ws.expandedExerciseIndex
+            const onToggle = () => this.tapHeader(i)
+            const p = pf(ex.exerciseId)
+
+            if (isExpanded) {
+              const sets = ex.sets.map((s, j) => {
+                let kind
+                if (s.status === 'completed') kind = 'done'
+                else if (s.status === 'skipped') kind = 'skipped'
+                else if (s.status === 'active' || s.status === 'editing') kind = 'active'
+                else kind = 'pending'
+                return {
+                  key: 'e' + i + 's' + j,
+                  num: String(j + 1),
+                  w: String(s.weight),
+                  r: String(s.reps),
+                  isDone: kind === 'done',
+                  isSkipped: kind === 'skipped',
+                  isActive: kind === 'active',
+                  isPending: kind === 'pending',
+                  onWeight: () => this.openEditor(i, j, 'weight'),
+                  onReps: () => this.openEditor(i, j, 'reps'),
+                  onCheck: s.status === 'active' ? this.log : noop
+                }
+              })
+              return {
+                key: 'e' + i, name: ex.exerciseName, isExpanded: true,
+                isDoneCol: false, isCurrentCol: false, isPendingCol: false,
+                isNow: hasActive, isDoneBadge: !hasActive && resolved, isNext: !hasActive && !resolved,
+                last: 'Last · ' + p.weight + ' × ' + p.reps,
+                sets, canAdd: hasActive, onAddSet: () => this.addSet(i), onToggle,
+                progress: Math.round(((completed.length + skipped) / total) * 100) + '%'
+              }
+            }
+
+            const base = { key: 'e' + i, name: ex.exerciseName, isExpanded: false, isDoneCol: false, isCurrentCol: false, isPendingCol: false, onToggle }
+            if (resolved) {
+              base.isDoneCol = true
+              base.summary = completed.length + '/' + total + ' · top ' + topW + ' lb'
+            } else if (hasActive) {
+              const k = ex.sets.findIndex(s => s.status === 'active' || s.status === 'editing')
+              base.isCurrentCol = true
+              base.summary = 'Set ' + (k + 1) + ' of ' + total
+            } else {
+              base.isPendingCol = true
+              base.summary = '0/' + total + ' · ' + p.weight + ' lb'
+              base.onUp = () => this.moveExercise(i, -1)
+              base.onDown = () => this.moveExercise(i, 1)
+            }
+            return base
+          })
+
+          const active = this.findActive(ws)
+          const aEx = active ? exs[active.exerciseIndex] : null
+          const aSet = active ? aEx.sets[active.setIndex] : null
+          const footer = aSet
+            ? { label: 'Set ' + (active.setIndex + 1) + ' · ' + aEx.exerciseName, target: aSet.weight + ' lb × ' + aSet.reps, onLog: this.log }
+            : { label: 'No active set', target: 'Tap a set to start', onLog: noop }
+
+          const rt = ws.restTimer
+          const remSec = rt.isActive ? Math.max(0, Math.ceil((rt.durationMs - (st.now - rt.startedAt)) / 1000)) : 0
+          const totalSec = Math.max(1, Math.round(rt.durationMs / 1000))
+          const restActive = rt.isActive && remSec > 0
+          const rest = {
+            active: restActive, idle: !restActive,
+            str: this.fmt(remSec),
+            ang: ((remSec / totalSec) * 360).toFixed(1) + 'deg',
+            nextLabel: active ? 'Next · Set ' + (active.setIndex + 1) : 'Next',
+            nextName: aEx ? aEx.exerciseName : '',
+            nextTarget: aSet ? aSet.weight + ' lb × ' + aSet.reps : '',
+            onAdd: () => this.restAdd(), onSkip: () => this.restSkip()
+          }
+
+          let editor = { open: false, label: '', value: '', unit: '', chips: [], onMinus: noop, onPlus: noop, onClose: () => this.closeEditor(), secLabel: '', onSec: noop }
+          const ed = st.editor
+          if (ed.open && exs[ed.exerciseIndex] && exs[ed.exerciseIndex].sets[ed.setIndex]) {
+            const tEx = exs[ed.exerciseIndex]
+            const tSet = tEx.sets[ed.setIndex]
+            const isW = ed.field === 'weight'
+            const val = isW ? tSet.weight : tSet.reps
+            const p = pf(tEx.exerciseId)
+            const baseN = isW ? p.weight : p.reps
+            const step = isW ? 5 : 1
+            const opts = isW ? [baseN - 5, baseN, baseN + 5, baseN + 10] : [baseN - 1, baseN, baseN + 1, baseN + 2]
+            const chips = opts.filter(v => v >= 0).map(v => ({ key: 'c' + v, label: String(v), active: v === val, idle: v !== val, on: () => this.editSetVal(v) }))
+            let secLabel
+            if (tSet.status === 'editing') secLabel = 'Unlog set'
+            else if (tSet.status === 'skipped') secLabel = 'Restore set'
+            else secLabel = 'Skip set'
+            editor = {
+              open: true,
+              label: 'Set ' + (ed.setIndex + 1) + ' · ' + (isW ? 'Weight' : 'Reps'),
+              value: String(val), unit: isW ? 'lb' : 'reps', chips,
+              onMinus: () => this.editAdjust(-step), onPlus: () => this.editAdjust(step),
+              onClose: () => this.closeEditor(), secLabel, onSec: () => this.editSecondary()
+            }
+          }
+
+          const volume = exs.reduce((a, e) => a + e.sets.filter(s => s.status === 'completed').reduce((b, s) => b + s.weight * s.reps, 0), 0)
+          const recap = exs.map((e, i) => {
+            const completed = e.sets.filter(s => s.status === 'completed')
+            const skipped = e.sets.filter(s => s.status === 'skipped').length
+            const topW = completed.length ? Math.max(...completed.map(s => s.weight)) : 0
+            const best = meta.bestById.get(e.exerciseId) != null ? meta.bestById.get(e.exerciseId) : Infinity
+            const pr = topW > best
+            let detail
+            if (completed.length === 0) detail = skipped + (skipped === 1 ? ' set skipped' : ' sets skipped')
+            else detail = completed.length + ' sets · top ' + topW + ' lb' + (skipped ? ' · ' + skipped + ' skipped' : '')
+            return { key: 'r' + i, name: e.exerciseName, detail, isPR: pr, noPR: !pr }
+          })
+          const totalSkipped = exs.reduce((a, e) => a + e.sets.filter(s => s.status === 'skipped').length, 0)
+          const pendingCount = exs.reduce((a, e) => a + e.sets.filter(s => s.status === 'pending' || s.status === 'active').length, 0)
+          const confirm = { open: st.confirmEnd, msg: pendingCount + (pendingCount === 1 ? ' set' : ' sets') + ' remaining will be marked as skipped.', onCancel: () => this.cancelEnd(), onConfirm: () => this.confirmEndWorkout() }
+
+          return {
+            isSession: !ws.isCompleted,
+            isComplete: ws.isCompleted,
+            programName: ws.sessionName,
+            sessionLabel: 'Session ' + ws.sessionIndex + ' · Exercise ' + (ws.expandedExerciseIndex + 1) + ' of ' + exs.length,
+            elapStr: this.fmt(elapsedSec),
+            overallPct: Math.round((doneSets / totalSets) * 100) + '%',
+            exercises, footer, rest, editor, confirm,
+            toast: { show: !!st.toast, text: st.toast || '' },
+            done: { timeStr: this.fmt(elapsedSec), sets: doneSets, volume: volume.toLocaleString('en-US'), recap, hasSkipped: totalSkipped > 0, skippedLabel: totalSkipped + (totalSkipped === 1 ? ' set skipped' : ' sets skipped') },
+            onEnd: this.onEnd, onReset: this.onReset
+          }
+        }
+      }
+    </script>
+  </body>
+</html>

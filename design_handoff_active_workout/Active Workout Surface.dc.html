@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+  * { box-sizing: border-box; }
+  .liveRing { transition: --ang 1s linear; }
+  @keyframes ringGlow { 0%,100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+  @keyframes barUp { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+</style>
+</helmet>
+
+<!-- intro -->
+<div style="position:absolute; left:40px; top:36px; width:1300px;">
+  <div data-drags-parent="1" style="font:600 12px 'DM Sans'; letter-spacing:0.4px; color:#6b6e7a; margin-bottom:10px; text-transform:uppercase;">Global UX #1</div>
+  <div style="background:#fff; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:24px 30px;">
+    <div style="font:700 23px 'Space Grotesk'; color:#14161B; letter-spacing:-0.4px;">The workout follows you everywhere</div>
+    <div style="font:400 15px/1.5 'DM Sans'; color:#54576a; margin-top:8px; max-width:880px;">Today a workout only exists on the session screen — leave it and you lose your place. This adds a persistent <b style="color:#14161B;">active-workout surface</b>: a mini-bar docked above the tab bar on every screen, an <b style="color:#14161B;">iOS Live Activity</b> on the lock screen, and a <b style="color:#14161B;">Dynamic Island</b> live countdown. Rest, glance, switch apps — the timer keeps going and you're one tap from back in.</div>
+  </div>
+</div>
+
+<!-- A: RESTING mini-bar over Library -->
+<div style="position:absolute; left:40px; top:188px; width:380px;">
+  <div data-drags-parent="1" style="display:flex;align-items:baseline;gap:12px;"><span style="font:700 20px 'Space Grotesk';color:#14161B;">Mini-bar · resting</span><span style="font:400 13px 'DM Sans';color:#6b6e7a;">docked on any screen</span></div>
+</div>
+<div style="position:absolute; left:40px; top:236px; width:380px;">
+  <div style="width:380px;height:812px;background:#050506;border-radius:52px;padding:12px;box-shadow:0 40px 90px rgba(0,0,0,.55), inset 0 0 0 1.5px #20222a;position:relative;">
+    <div style="position:absolute;top:22px;left:50%;transform:translateX(-50%);width:104px;height:30px;background:#000;border-radius:16px;z-index:40;"></div>
+    <div style="position:relative;width:356px;height:788px;background:#0A0B0E;border-radius:40px;overflow:hidden;display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;color:#F2F3F5;">
+      <div style="height:50px;flex:0 0 auto;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 8px;font:600 14px 'DM Sans';"><span>9:41</span><span style="display:flex;align-items:center;gap:7px;"><span style="display:flex;align-items:flex-end;gap:2px;height:12px;"><i style="display:block;width:3px;height:4px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:7px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:9px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:12px;background:#F2F3F5;border-radius:1px;"></i></span><span style="width:20px;height:12px;border:1.5px solid #F2F3F5;border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;top:1.5px;bottom:1.5px;left:1.5px;width:11px;background:#F2F3F5;border-radius:1px;"></span></span></span></div>
+      <!-- condensed library bg -->
+      <div style="flex:1;overflow:hidden;padding:6px 20px 0;">
+        <div style="font:700 26px 'Space Grotesk';color:#F2F3F5;letter-spacing:-0.5px;margin-bottom:14px;">Library</div>
+        <div style="display:flex;background:#0E0F13;border:1px solid #23262F;border-radius:13px;padding:4px;gap:4px;margin-bottom:16px;"><div style="flex:1;text-align:center;padding:9px 0;border-radius:9px;background:#C6F24E;font:700 14px 'DM Sans';color:#0A0B0E;">Programs</div><div style="flex:1;text-align:center;padding:9px 0;border-radius:9px;font:600 14px 'DM Sans';color:#9A9DAB;">Exercises</div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;opacity:0.6;">
+          <div style="background:#14161B;border:1px solid #23262F;border-radius:16px;padding:16px;height:64px;"></div>
+          <div style="background:#14161B;border:1px solid #23262F;border-radius:16px;padding:16px;height:64px;"></div>
+          <div style="background:#14161B;border:1px solid #23262F;border-radius:16px;padding:16px;height:64px;"></div>
+        </div>
+      </div>
+      <!-- RESTING mini-bar -->
+      <div style="margin:0 12px;background:#0C1416;border:1.5px solid #163038;border-radius:20px;padding:12px 14px;box-shadow:0 12px 30px rgba(0,0,0,0.5);animation:barUp 0.4s ease-out;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="position:relative;width:46px;height:46px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;">
+            <div style="position:absolute;inset:4px;border-radius:50%;background:radial-gradient(circle,rgba(86,224,240,0.25),transparent 70%);animation:ringGlow 3s ease-in-out infinite;"></div>
+            <div class="liveRing" style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -90deg,#56E0F0 var(--ang),#1A1E24 0);--ang:{{ restAng }};-webkit-mask:radial-gradient(closest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));mask:radial-gradient(closest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));"></div>
+            <span style="font:600 13px 'Space Grotesk';color:#56E0F0;font-variant-numeric:tabular-nums;">{{ restStr }}</span>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font:600 9px 'DM Sans';letter-spacing:1.2px;color:#56E0F0;">RESTING</div>
+            <div style="font:600 14px 'DM Sans';color:#F2F3F5;margin-top:2px;">Next · Set 3 · Incline DB Press</div>
+          </div>
+          <span style="display:inline-block;width:9px;height:9px;border:solid #56E0F0;border-width:2px 2px 0 0;transform:rotate(-45deg);margin-right:4px;"></span>
+        </div>
+        <div style="display:flex;gap:9px;margin-top:11px;">
+          <div style="flex:1;height:40px;border-radius:12px;background:#11181C;border:1px solid #1d2933;display:flex;align-items:center;justify-content:center;font:600 13px 'DM Sans';color:#56E0F0;">+15s</div>
+          <div style="flex:1;height:40px;border-radius:12px;background:#11181C;border:1px solid #1d2933;display:flex;align-items:center;justify-content:center;font:600 13px 'DM Sans';color:#9A9DAB;">Skip</div>
+        </div>
+      </div>
+      <!-- tab bar -->
+      <div style="height:78px;flex:0 0 auto;background:#101216;border-top:1px solid #1c1e25;display:flex;align-items:flex-start;justify-content:space-around;padding:10px 18px 0;margin-top:10px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="width:18px;height:18px;border-radius:5px;border:2px solid #5B5E6B;"></span><span style="font:600 10px 'DM Sans';color:#5B5E6B;">Home</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="display:flex;flex-direction:column;gap:3px;width:18px;"><i style="height:4px;background:#C6F24E;border-radius:1px;"></i><i style="height:4px;background:#C6F24E;border-radius:1px;"></i></span><span style="font:600 10px 'DM Sans';color:#C6F24E;">Library</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="display:flex;align-items:flex-end;gap:2px;height:18px;"><i style="display:block;width:4px;height:8px;background:#5B5E6B;border-radius:1px;"></i><i style="display:block;width:4px;height:13px;background:#5B5E6B;border-radius:1px;"></i><i style="display:block;width:4px;height:18px;background:#5B5E6B;border-radius:1px;"></i></span><span style="font:600 10px 'DM Sans';color:#5B5E6B;">Stats</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="width:16px;height:16px;border-radius:50%;border:2px solid #5B5E6B;"></span><span style="font:600 10px 'DM Sans';color:#5B5E6B;">Profile</span></div>
+      </div>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:128px;height:5px;border-radius:3px;background:#2a2d36;z-index:5;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- B: ACTIVE (in progress) mini-bar over Home -->
+<div style="position:absolute; left:470px; top:188px; width:380px;">
+  <div data-drags-parent="1" style="display:flex;align-items:baseline;gap:12px;"><span style="font:700 20px 'Space Grotesk';color:#14161B;">Mini-bar · in progress</span><span style="font:400 13px 'DM Sans';color:#6b6e7a;">between sets / paused</span></div>
+</div>
+<div style="position:absolute; left:470px; top:236px; width:380px;">
+  <div style="width:380px;height:812px;background:#050506;border-radius:52px;padding:12px;box-shadow:0 40px 90px rgba(0,0,0,.55), inset 0 0 0 1.5px #20222a;position:relative;">
+    <div style="position:absolute;top:22px;left:50%;transform:translateX(-50%);width:104px;height:30px;background:#000;border-radius:16px;z-index:40;"></div>
+    <div style="position:relative;width:356px;height:788px;background:#0A0B0E;border-radius:40px;overflow:hidden;display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;color:#F2F3F5;">
+      <div style="height:50px;flex:0 0 auto;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 8px;font:600 14px 'DM Sans';"><span>9:41</span><span style="display:flex;align-items:center;gap:7px;"><span style="display:flex;align-items:flex-end;gap:2px;height:12px;"><i style="display:block;width:3px;height:4px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:7px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:9px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:12px;background:#F2F3F5;border-radius:1px;"></i></span><span style="width:20px;height:12px;border:1.5px solid #F2F3F5;border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;top:1.5px;bottom:1.5px;left:1.5px;width:11px;background:#F2F3F5;border-radius:1px;"></span></span></span></div>
+      <!-- condensed home bg -->
+      <div style="flex:1;overflow:hidden;padding:6px 20px 0;">
+        <div style="font:600 10px 'DM Sans';letter-spacing:1.6px;color:#9aa86a;">TUE · JUN 24</div>
+        <div style="font:700 25px 'Space Grotesk';color:#F2F3F5;letter-spacing:-0.5px;margin-top:3px;margin-bottom:16px;">Evening, Alex</div>
+        <div style="display:flex;gap:10px;opacity:0.6;">
+          <div style="flex:1;background:#14161B;border:1px solid #23262F;border-radius:18px;height:96px;"></div>
+          <div style="flex:1;background:#14161B;border:1px solid #23262F;border-radius:18px;height:96px;"></div>
+          <div style="flex:1;background:#14161B;border:1px solid #23262F;border-radius:18px;height:96px;"></div>
+        </div>
+        <div style="background:#14161B;border:1px solid #23262F;border-radius:20px;height:140px;margin-top:14px;opacity:0.6;"></div>
+      </div>
+      <!-- ACTIVE mini-bar -->
+      <div style="margin:0 12px;background:#14161B;border:1.5px solid #2C3424;border-radius:20px;padding:12px 12px 12px 14px;box-shadow:0 12px 30px rgba(0,0,0,0.5);display:flex;align-items:center;gap:12px;">
+        <span style="width:42px;height:42px;border-radius:13px;background:rgba(198,242,78,0.14);display:flex;align-items:center;justify-content:center;flex:0 0 auto;"><span style="display:inline-block;width:0;height:0;border-left:12px solid #C6F24E;border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:3px;"></span></span>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:7px;"><span style="width:6px;height:6px;border-radius:50%;background:#C6F24E;"></span><span style="font:600 9px 'DM Sans';letter-spacing:1.2px;color:#9aa86a;">IN PROGRESS · 14:32</span></div>
+          <div style="font:600 14px 'DM Sans';color:#F2F3F5;margin-top:3px;">Push Day A · Set 3 of 12</div>
+          <div style="height:4px;background:#0E0F13;border-radius:2px;margin-top:7px;overflow:hidden;"><span style="display:block;height:100%;width:25%;background:#C6F24E;border-radius:2px;"></span></div>
+        </div>
+        <div style="height:38px;padding:0 16px;border-radius:12px;background:#C6F24E;display:flex;align-items:center;justify-content:center;font:700 13px 'DM Sans';color:#0A0B0E;flex:0 0 auto;">Resume</div>
+      </div>
+      <!-- tab bar -->
+      <div style="height:78px;flex:0 0 auto;background:#101216;border-top:1px solid #1c1e25;display:flex;align-items:flex-start;justify-content:space-around;padding:10px 18px 0;margin-top:10px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="width:18px;height:18px;border-radius:5px;background:#C6F24E;"></span><span style="font:600 10px 'DM Sans';color:#C6F24E;">Home</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="display:flex;flex-direction:column;gap:3px;width:18px;"><i style="height:4px;background:#5B5E6B;border-radius:1px;"></i><i style="height:4px;background:#5B5E6B;border-radius:1px;"></i></span><span style="font:600 10px 'DM Sans';color:#5B5E6B;">Library</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="display:flex;align-items:flex-end;gap:2px;height:18px;"><i style="display:block;width:4px;height:8px;background:#5B5E6B;border-radius:1px;"></i><i style="display:block;width:4px;height:13px;background:#5B5E6B;border-radius:1px;"></i><i style="display:block;width:4px;height:18px;background:#5B5E6B;border-radius:1px;"></i></span><span style="font:600 10px 'DM Sans';color:#5B5E6B;">Stats</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="width:16px;height:16px;border-radius:50%;border:2px solid #5B5E6B;"></span><span style="font:600 10px 'DM Sans';color:#5B5E6B;">Profile</span></div>
+      </div>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:128px;height:5px;border-radius:3px;background:#2a2d36;z-index:5;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- C: Lock screen Live Activity -->
+<div style="position:absolute; left:900px; top:188px; width:380px;">
+  <div data-drags-parent="1" style="display:flex;align-items:baseline;gap:12px;"><span style="font:700 20px 'Space Grotesk';color:#14161B;">iOS Live Activity</span><span style="font:400 13px 'DM Sans';color:#6b6e7a;">lock screen rest timer</span></div>
+</div>
+<div style="position:absolute; left:900px; top:236px; width:380px;">
+  <div style="width:380px;height:812px;background:#050506;border-radius:52px;padding:12px;box-shadow:0 40px 90px rgba(0,0,0,.55), inset 0 0 0 1.5px #20222a;position:relative;">
+    <div style="position:absolute;top:22px;left:50%;transform:translateX(-50%);width:104px;height:30px;background:#000;border-radius:16px;z-index:40;"></div>
+    <div style="position:relative;width:356px;height:788px;border-radius:40px;overflow:hidden;display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;color:#F2F3F5;background:linear-gradient(165deg,#10161a,#070808 55%,#0c0f0a);">
+      <div style="height:50px;flex:0 0 auto;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 8px;font:600 14px 'DM Sans';z-index:2;"><span>9:41</span><span style="display:flex;align-items:center;gap:7px;"><span style="display:flex;align-items:flex-end;gap:2px;height:12px;"><i style="display:block;width:3px;height:4px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:7px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:9px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:12px;background:#F2F3F5;border-radius:1px;"></i></span><span style="width:20px;height:12px;border:1.5px solid #F2F3F5;border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;top:1.5px;bottom:1.5px;left:1.5px;width:11px;background:#F2F3F5;border-radius:1px;"></span></span></span></div>
+      <!-- lock clock -->
+      <div style="text-align:center;padding-top:14px;">
+        <div style="font:500 14px 'DM Sans';color:#C9CCD6;">Tuesday, June 24</div>
+        <div style="font:600 76px 'Space Grotesk';color:#F2F3F5;line-height:1;letter-spacing:-1px;margin-top:2px;">9:41</div>
+      </div>
+      <div style="flex:1;"></div>
+      <!-- Live Activity card -->
+      <div style="margin:0 14px 18px;background:rgba(12,18,20,0.82);border:1px solid #1d2a30;border-radius:24px;padding:16px 16px 15px;backdrop-filter:blur(8px);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:13px;">
+          <span style="width:22px;height:22px;border-radius:6px;background:#C6F24E;display:flex;align-items:center;justify-content:center;"><span style="display:flex;align-items:center;"><span style="width:2.5px;height:8px;background:#0A0B0E;border-radius:1px;"></span><span style="width:7px;height:2px;background:#0A0B0E;"></span><span style="width:2.5px;height:8px;background:#0A0B0E;border-radius:1px;"></span></span></span>
+          <span style="font:600 12px 'DM Sans';color:#9A9DAB;">PWO · Push Day A</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="position:relative;width:64px;height:64px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;">
+            <div class="liveRing" style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -90deg,#56E0F0 var(--ang),#1A1E24 0);--ang:{{ restAng }};-webkit-mask:radial-gradient(closest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));mask:radial-gradient(closest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));"></div>
+            <span style="font:600 18px 'Space Grotesk';color:#56E0F0;font-variant-numeric:tabular-nums;">{{ restStr }}</span>
+          </div>
+          <div style="flex:1;">
+            <div style="font:600 10px 'DM Sans';letter-spacing:1.4px;color:#56E0F0;">RESTING</div>
+            <div style="font:600 16px 'DM Sans';color:#F2F3F5;margin-top:3px;">Next · Set 3</div>
+            <div style="font:500 13px 'DM Sans';color:#9A9DAB;margin-top:1px;">Incline DB Press · 60 lb × 10</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:9px;margin-top:14px;">
+          <div style="flex:1;height:42px;border-radius:13px;background:rgba(86,224,240,0.12);display:flex;align-items:center;justify-content:center;font:600 14px 'DM Sans';color:#56E0F0;">+15s</div>
+          <div style="flex:1;height:42px;border-radius:13px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font:600 14px 'DM Sans';color:#F2F3F5;">Skip</div>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:128px;height:5px;border-radius:3px;background:rgba(255,255,255,0.5);z-index:5;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- D: Dynamic Island -->
+<div style="position:absolute; left:1330px; top:188px; width:380px;">
+  <div data-drags-parent="1" style="display:flex;align-items:baseline;gap:12px;"><span style="font:700 20px 'Space Grotesk';color:#14161B;">Dynamic Island</span><span style="font:400 13px 'DM Sans';color:#6b6e7a;">compact + expanded</span></div>
+</div>
+<div style="position:absolute; left:1330px; top:236px; width:380px;">
+  <div style="width:380px;height:812px;background:#050506;border-radius:52px;padding:12px;box-shadow:0 40px 90px rgba(0,0,0,.55), inset 0 0 0 1.5px #20222a;position:relative;">
+    <div style="position:relative;width:356px;height:788px;border-radius:40px;overflow:hidden;display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;color:#F2F3F5;background:radial-gradient(circle at 30% 20%,#1a1d26,#0A0B0E 60%);">
+      <!-- expanded island near top -->
+      <div style="padding:14px 14px 0;z-index:3;">
+        <div style="background:#000;border-radius:30px;padding:14px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 24px rgba(0,0,0,0.6);">
+          <div style="position:relative;width:48px;height:48px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;">
+            <div class="liveRing" style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -90deg,#56E0F0 var(--ang),#1A1E24 0);--ang:{{ restAng }};-webkit-mask:radial-gradient(closest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));mask:radial-gradient(closest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));"></div>
+            <span style="font:600 14px 'Space Grotesk';color:#56E0F0;font-variant-numeric:tabular-nums;">{{ restStr }}</span>
+          </div>
+          <div style="flex:1;">
+            <div style="font:600 9px 'DM Sans';letter-spacing:1.2px;color:#56E0F0;">RESTING</div>
+            <div style="font:600 14px 'DM Sans';color:#F2F3F5;margin-top:2px;">Set 3 · Incline DB Press</div>
+          </div>
+          <div style="width:38px;height:38px;border-radius:50%;background:rgba(86,224,240,0.14);display:flex;align-items:center;justify-content:center;font:600 11px 'DM Sans';color:#56E0F0;">+15</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:26px;z-index:2;">
+        <span style="font:600 10px 'DM Sans';letter-spacing:1.4px;color:#5B5E6B;">COMPACT (TAP TO EXPAND)</span>
+      </div>
+      <!-- compact island -->
+      <div style="display:flex;justify-content:center;margin-top:14px;z-index:2;">
+        <div style="background:#000;border-radius:20px;height:37px;display:flex;align-items:center;gap:10px;padding:0 14px;box-shadow:0 6px 18px rgba(0,0,0,0.5);">
+          <div style="position:relative;width:22px;height:22px;display:flex;align-items:center;justify-content:center;">
+            <div class="liveRing" style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -90deg,#56E0F0 var(--ang),#1A1E24 0);--ang:{{ restAng }};-webkit-mask:radial-gradient(closest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));mask:radial-gradient(closest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));"></div>
+          </div>
+          <span style="font:600 14px 'Space Grotesk';color:#56E0F0;font-variant-numeric:tabular-nums;">{{ restStr }}</span>
+        </div>
+      </div>
+
+      <div style="flex:1;"></div>
+      <div style="text-align:center;padding:0 30px 40px;z-index:2;">
+        <div style="font:500 12px 'DM Sans';color:#6b6e7a;line-height:1.6;">The rest countdown lives in the island while you're in other apps. Tap to expand for the next set + quick actions; long-press skips.</div>
+      </div>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:128px;height:5px;border-radius:3px;background:#2a2d36;z-index:5;"></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { rest: 72 }
+  componentDidMount() {
+    this._t = setInterval(() => {
+      this.setState(s => ({ rest: s.rest - 1 < 0 ? 90 : s.rest - 1 }))
+    }, 1000)
+  }
+  componentWillUnmount() { if (this._t) clearInterval(this._t) }
+  renderVals() {
+    const r = this.state.rest
+    const m = Math.floor(r / 60)
+    const s = r % 60
+    return {
+      restStr: m + ':' + String(s).padStart(2, '0'),
+      restAng: ((r / 90) * 360).toFixed(1) + 'deg'
+    }
+  }
+}
+</script>
+</body>
+</html>

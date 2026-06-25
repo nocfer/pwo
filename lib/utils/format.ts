@@ -87,6 +87,22 @@ export function formatClock(ms: number): string {
 }
 
 /**
+ * Format milliseconds as a screen-reader-friendly duration, e.g.
+ * "2 minutes 5 seconds" or "45 seconds". Shared by the rest-timer surfaces
+ * (RestSheet, ActiveWorkoutBar) for accessibility labels.
+ */
+export function spokenDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  const parts: string[] = []
+  if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`)
+  if (seconds > 0 || minutes === 0)
+    parts.push(`${seconds} second${seconds !== 1 ? 's' : ''}`)
+  return parts.join(' ')
+}
+
+/**
  * Format seconds into human-readable duration.
  *
  * @param seconds - Total seconds

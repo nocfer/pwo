@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+  * { box-sizing: border-box; }
+  @keyframes glowPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(198,242,78,0.0), 0 8px 24px rgba(198,242,78,0.22); }
+    50% { box-shadow: 0 0 0 6px rgba(198,242,78,0.10), 0 8px 30px rgba(198,242,78,0.40); }
+  }
+  @keyframes breathe { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @keyframes ringGlow { 0%,100% { opacity: 0.35; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.04); } }
+  @keyframes popIn { 0% { transform: scale(0.6); opacity: 0; } 18% { transform: scale(1.12); opacity: 1; } 32% { transform: scale(1); } 82% { transform: scale(1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes rays { 0% { transform: scale(0.7); opacity: 0; } 25% { opacity: 0.9; } 70% { transform: scale(1.5); opacity: 0; } 100% { opacity: 0; } }
+  @keyframes confettiFall { 0% { transform: translateY(-30px) rotate(0deg); opacity: 0; } 12% { opacity: 1; } 100% { transform: translateY(680px) rotate(540deg); opacity: 0; } }
+  @keyframes slideUp { 0% { transform: translateY(14px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+  @keyframes barFill { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+  .liveRing { transition: --ang 1s linear; }
+</style>
+</helmet>
+
+<div style="position:absolute; left:40px; top:40px; width:980px;">
+  <div data-drags-parent="1" style="font:600 12px 'DM Sans'; letter-spacing:0.4px; color:#6b6e7a; margin-bottom:10px; text-transform:uppercase;">Overview</div>
+  <div style="background:#fff; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:30px 34px;">
+    <div style="font:700 27px 'Space Grotesk'; color:#14161B; letter-spacing:-0.5px;">Workout Session — reinvented</div>
+    <div style="font:400 15px/1.5 'DM Sans'; color:#54576a; margin-top:10px; max-width:720px;">A fresh visual language and two ways to track sets with far fewer taps. The old flow needed expand → tap field → type on a keypad → switch field → type → confirm. Both directions below pre-fill every set from last time, so the common case is <b style="color:#14161B;">one tap to log</b>. Live rest timers get the spotlight they deserve.</div>
+    <div style="display:flex; gap:26px; margin-top:22px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:9px;"><span style="width:15px;height:15px;border-radius:4px;background:#C6F24E;"></span><span style="font:500 13px 'DM Sans'; color:#54576a;">Lime — active / log action</span></div>
+      <div style="display:flex; align-items:center; gap:9px;"><span style="width:15px;height:15px;border-radius:4px;background:#56E0F0;"></span><span style="font:500 13px 'DM Sans'; color:#54576a;">Cyan — rest timer</span></div>
+      <div style="display:flex; align-items:center; gap:9px;"><span style="width:15px;height:15px;border-radius:4px;background:#0A0B0E; border:1px solid #ddd;"></span><span style="font:500 13px 'DM Sans'; color:#54576a;">Near-black surfaces</span></div>
+      <div style="display:flex; align-items:center; gap:9px;"><span style="font:600 13px 'Space Grotesk'; color:#14161B;">Aa</span><span style="font:500 13px 'DM Sans'; color:#54576a;">Space Grotesk + DM Sans</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DIRECTION A HEADING ============ -->
+<div style="position:absolute; left:40px; top:268px; width:1610px;">
+  <div data-drags-parent="1" style="display:flex; align-items:baseline; gap:14px;">
+    <span style="font:700 21px 'Space Grotesk'; color:#1d1f27; background:#C6F24E; padding:5px 12px; border-radius:6px;">Direction A</span>
+    <span style="font:700 20px 'Space Grotesk'; color:#14161B;">Focus mode — one set at a time</span>
+    <span style="font:400 14px 'DM Sans'; color:#6b6e7a;">Immersive. Shows only the set you're on, prefilled. Tap once to log; rest takes the full screen.</span>
+  </div>
+</div>
+
+<!-- A1 ACTIVE SET -->
+<div style="position:absolute; left:40px; top:330px; width:320px;">
+  <div data-drags-parent="1" style="font:600 12px 'DM Sans'; color:#6b6e7a; margin-bottom:9px;">A1 · Active set</div>
+  <div style="width:320px;height:692px;background:#050506;border-radius:46px;padding:11px;box-shadow:0 30px 70px rgba(0,0,0,.55), inset 0 0 0 1.5px #202028;position:relative;">
+    <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:90px;height:26px;background:#000;border-radius:14px;z-index:30;"></div>
+    <div style="position:relative;width:298px;height:670px;background:#0A0B0E;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;color:#F2F3F5;">
+      <div style="height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 7px;font:600 13px 'DM Sans';">
+        <span>9:41</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span style="display:flex;align-items:flex-end;gap:2px;height:11px;"><i style="display:block;width:3px;height:4px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:6px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:8px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:11px;background:#F2F3F5;border-radius:1px;"></i></span>
+          <span style="width:18px;height:11px;border:1.4px solid #F2F3F5;border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;top:1.5px;bottom:1.5px;left:1.5px;width:9px;background:#F2F3F5;border-radius:1px;"></span></span>
+        </span>
+      </div>
+      <!-- header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 18px 0;">
+        <div style="width:38px;height:38px;border-radius:12px;background:#15171D;display:flex;align-items:center;justify-content:center;"><span style="display:inline-block;width:8px;height:8px;border:solid #9A9DAB;border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-3px;"></span></div>
+        <div style="text-align:center;">
+          <div style="font:600 9px 'DM Sans';letter-spacing:1.4px;color:#5B5E6B;">EXERCISE 2 OF 5</div>
+          <div style="font:600 15px 'DM Sans';color:#F2F3F5;margin-top:2px;">Bench Press</div>
+        </div>
+        <div style="font:600 11px 'DM Sans';color:#9A9DAB;background:#15171D;padding:8px 11px;border-radius:11px;font-variant-numeric:tabular-nums;">{{ elapStr }}</div>
+      </div>
+      <!-- overall progress -->
+      <div style="display:flex;gap:5px;padding:16px 22px 0;">
+        <span style="flex:1;height:4px;border-radius:2px;background:#C6F24E;"></span>
+        <span style="flex:1;height:4px;border-radius:2px;background:#C6F24E;"></span>
+        <span style="flex:1;height:4px;border-radius:2px;background:#24262F;"></span>
+        <span style="flex:1;height:4px;border-radius:2px;background:#24262F;"></span>
+        <span style="flex:1;height:4px;border-radius:2px;background:#24262F;"></span>
+      </div>
+      <!-- focus card -->
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 22px;">
+        <div style="text-align:center;font:600 11px 'DM Sans';letter-spacing:1.6px;color:#C6F24E;">SET 2 OF 4</div>
+        <div style="display:flex;gap:12px;margin-top:18px;">
+          <div style="flex:1;background:#14161B;border:1px solid #23262F;border-radius:20px;padding:18px 10px 14px;text-align:center;">
+            <div style="font:600 10px 'DM Sans';letter-spacing:1px;color:#5B5E6B;">WEIGHT · LB</div>
+            <div style="font:600 46px 'Space Grotesk';color:#F2F3F5;line-height:1.05;margin-top:4px;font-variant-numeric:tabular-nums;">135</div>
+            <div style="display:flex;justify-content:center;gap:8px;margin-top:10px;">
+              <span style="width:34px;height:34px;border-radius:11px;background:#1C1F27;display:flex;align-items:center;justify-content:center;"><span style="width:13px;height:2px;background:#C6F24E;border-radius:1px;"></span></span>
+              <span style="width:34px;height:34px;border-radius:11px;background:#1C1F27;display:flex;align-items:center;justify-content:center;position:relative;"><span style="position:absolute;width:13px;height:2px;background:#C6F24E;border-radius:1px;"></span><span style="position:absolute;width:2px;height:13px;background:#C6F24E;border-radius:1px;"></span></span>
+            </div>
+          </div>
+          <div style="flex:1;background:#14161B;border:1px solid #23262F;border-radius:20px;padding:18px 10px 14px;text-align:center;">
+            <div style="font:600 10px 'DM Sans';letter-spacing:1px;color:#5B5E6B;">REPS</div>
+            <div style="font:600 46px 'Space Grotesk';color:#F2F3F5;line-height:1.05;margin-top:4px;font-variant-numeric:tabular-nums;">10</div>
+            <div style="display:flex;justify-content:center;gap:8px;margin-top:10px;">
+              <span style="width:34px;height:34px;border-radius:11px;background:#1C1F27;display:flex;align-items:center;justify-content:center;"><span style="width:13px;height:2px;background:#C6F24E;border-radius:1px;"></span></span>
+              <span style="width:34px;height:34px;border-radius:11px;background:#1C1F27;display:flex;align-items:center;justify-content:center;position:relative;"><span style="position:absolute;width:13px;height:2px;background:#C6F24E;border-radius:1px;"></span><span style="position:absolute;width:2px;height:13px;background:#C6F24E;border-radius:1px;"></span></span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:16px;font:500 12px 'DM Sans';color:#6b6e7a;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#3a3d48;"></span>Last time · 135 lb × 10
+        </div>
+        <div style="display:flex;justify-content:center;gap:8px;margin-top:18px;">
+          <span style="width:9px;height:9px;border-radius:50%;background:#34D399;"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:#C6F24E;animation:blink 1.4s ease-in-out infinite;"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:#24262F;"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:#24262F;"></span>
+        </div>
+      </div>
+      <!-- footer action -->
+      <div style="padding:0 22px 14px;">
+        <div style="height:60px;border-radius:18px;background:#C6F24E;display:flex;align-items:center;justify-content:center;gap:10px;animation:glowPulse 2.6s ease-in-out infinite;">
+          <span style="display:inline-block;width:9px;height:16px;border:solid #0A0B0E;border-width:0 3px 3px 0;transform:rotate(45deg);margin-top:-4px;"></span>
+          <span style="font:700 18px 'DM Sans';color:#0A0B0E;letter-spacing:0.2px;">Log Set</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:0 4px;">
+          <span style="font:500 12px 'DM Sans';color:#6b6e7a;">Up next · Incline DB Press</span>
+          <span style="display:inline-block;width:7px;height:7px;border:solid #6b6e7a;border-width:0 2px 2px 0;transform:rotate(-45deg);"></span>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#2a2d36;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- A2 REST TIMER -->
+<div style="position:absolute; left:470px; top:330px; width:320px;">
+  <div data-drags-parent="1" style="font:600 12px 'DM Sans'; color:#6b6e7a; margin-bottom:9px;">A2 · Rest timer (live)</div>
+  <div style="width:320px;height:692px;background:#050506;border-radius:46px;padding:11px;box-shadow:0 30px 70px rgba(0,0,0,.55), inset 0 0 0 1.5px #202028;position:relative;">
+    <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:90px;height:26px;background:#000;border-radius:14px;z-index:30;"></div>
+    <div style="position:relative;width:298px;height:670px;background:#080C0D;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;color:#F2F3F5;">
+      <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 40%, rgba(86,224,240,0.12), transparent 60%);"></div>
+      <div style="height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 7px;font:600 13px 'DM Sans';z-index:2;">
+        <span>9:41</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span style="display:flex;align-items:flex-end;gap:2px;height:11px;"><i style="display:block;width:3px;height:4px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:6px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:8px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:11px;background:#F2F3F5;border-radius:1px;"></i></span>
+          <span style="width:18px;height:11px;border:1.4px solid #F2F3F5;border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;top:1.5px;bottom:1.5px;left:1.5px;width:9px;background:#F2F3F5;border-radius:1px;"></span></span>
+        </span>
+      </div>
+      <div style="text-align:center;padding-top:18px;z-index:2;">
+        <div style="font:600 11px 'DM Sans';letter-spacing:2px;color:#56E0F0;">RESTING</div>
+      </div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;z-index:2;">
+        <div style="position:relative;width:222px;height:222px;display:flex;align-items:center;justify-content:center;">
+          <div style="position:absolute;inset:14px;border-radius:50%;background:radial-gradient(circle, rgba(86,224,240,0.25), transparent 70%);animation:ringGlow 3s ease-in-out infinite;"></div>
+          <div class="liveRing" style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -90deg, #56E0F0 var(--ang), #1A1E24 0);--ang:{{ restAng }};-webkit-mask:radial-gradient(closest-side, transparent calc(100% - 15px), #000 calc(100% - 14px));mask:radial-gradient(closest-side, transparent calc(100% - 15px), #000 calc(100% - 14px));"></div>
+          <div style="text-align:center;">
+            <div style="font:600 64px 'Space Grotesk';color:#F2F3F5;line-height:1;font-variant-numeric:tabular-nums;">{{ restStr }}</div>
+            <div style="font:500 12px 'DM Sans';color:#6b6e7a;margin-top:6px;">until next set</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;padding:0 26px;z-index:2;">
+        <div style="flex:1;height:48px;border-radius:15px;background:#12161A;border:1px solid #1d2933;display:flex;align-items:center;justify-content:center;font:600 14px 'DM Sans';color:#56E0F0;">+15s</div>
+        <div style="flex:1;height:48px;border-radius:15px;background:#12161A;border:1px solid #1d2933;display:flex;align-items:center;justify-content:center;font:600 14px 'DM Sans';color:#9A9DAB;">Skip rest</div>
+      </div>
+      <div style="margin:18px 22px 0;background:#101317;border:1px solid #1d2128;border-radius:18px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;z-index:2;">
+        <div>
+          <div style="font:600 9px 'DM Sans';letter-spacing:1.2px;color:#5B5E6B;">NEXT · SET 3</div>
+          <div style="font:600 15px 'DM Sans';color:#F2F3F5;margin-top:3px;">Bench Press</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font:600 20px 'Space Grotesk';color:#C6F24E;font-variant-numeric:tabular-nums;">135<span style="font-size:12px;color:#6b6e7a;"> lb</span></div>
+          <div style="font:500 12px 'DM Sans';color:#9A9DAB;">× 10 reps</div>
+        </div>
+      </div>
+      <div style="height:22px;"></div>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#243038;z-index:2;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- A3 LOG FEEDBACK -->
+<div style="position:absolute; left:900px; top:330px; width:320px;">
+  <div data-drags-parent="1" style="font:600 12px 'DM Sans'; color:#6b6e7a; margin-bottom:9px;">A3 · Set logged feedback</div>
+  <div style="width:320px;height:692px;background:#050506;border-radius:46px;padding:11px;box-shadow:0 30px 70px rgba(0,0,0,.55), inset 0 0 0 1.5px #202028;position:relative;">
+    <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:90px;height:26px;background:#000;border-radius:14px;z-index:30;"></div>
+    <div style="position:relative;width:298px;height:670px;background:#0A0B0E;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;color:#F2F3F5;">
+      <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 38%, rgba(52,211,153,0.14), transparent 58%);"></div>
+      <div style="height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 7px;font:600 13px 'DM Sans';z-index:2;">
+        <span>9:41</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span style="display:flex;align-items:flex-end;gap:2px;height:11px;"><i style="display:block;width:3px;height:4px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:6px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:8px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:11px;background:#F2F3F5;border-radius:1px;"></i></span>
+          <span style="width:18px;height:11px;border:1.4px solid #F2F3F5;border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;top:1.5px;bottom:1.5px;left:1.5px;width:9px;background:#F2F3F5;border-radius:1px;"></span></span>
+        </span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;">
+        <div style="position:relative;width:140px;height:140px;display:flex;align-items:center;justify-content:center;">
+          <div style="position:absolute;inset:0;border-radius:50%;border:2px solid #34D399;animation:rays 1.8s ease-out infinite;"></div>
+          <div style="width:104px;height:104px;border-radius:50%;background:#34D399;display:flex;align-items:center;justify-content:center;animation:popIn 1.8s ease-in-out infinite;">
+            <span style="display:inline-block;width:24px;height:44px;border:solid #06241A;border-width:0 7px 7px 0;transform:rotate(45deg);margin-top:-8px;"></span>
+          </div>
+        </div>
+        <div style="font:700 24px 'Space Grotesk';color:#F2F3F5;margin-top:28px;">Set 2 logged</div>
+        <div style="font:500 14px 'DM Sans';color:#9A9DAB;margin-top:8px;">135 lb × 10 reps</div>
+        <div style="display:flex;gap:9px;margin-top:22px;">
+          <span style="background:#13211B;border:1px solid #1f3a2e;color:#34D399;font:600 12px 'DM Sans';padding:7px 13px;border-radius:11px;">+1,350 lb volume</span>
+          <span style="background:#1B1E14;border:1px solid #353a22;color:#C6F24E;font:600 12px 'DM Sans';padding:7px 13px;border-radius:11px;">2 sets to go</span>
+        </div>
+      </div>
+      <div style="padding:0 22px 22px;z-index:2;">
+        <div style="background:#101317;border:1px solid #1d2128;border-radius:18px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;animation:slideUp 0.6s ease-out;">
+          <div style="display:flex;align-items:center;gap:11px;">
+            <span style="width:34px;height:34px;border-radius:50%;background:#0E1A1C;border:1px solid #1d2933;display:flex;align-items:center;justify-content:center;font:600 12px 'Space Grotesk';color:#56E0F0;">90</span>
+            <div>
+              <div style="font:600 9px 'DM Sans';letter-spacing:1.2px;color:#5B5E6B;">STARTING REST</div>
+              <div style="font:600 14px 'DM Sans';color:#F2F3F5;margin-top:2px;">Set 3 prefilled · 135 × 10</div>
+            </div>
+          </div>
+          <span style="display:inline-block;width:7px;height:7px;border:solid #6b6e7a;border-width:0 2px 2px 0;transform:rotate(-45deg);"></span>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#2a2d36;z-index:2;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- A4 COMPLETE -->
+<div style="position:absolute; left:1330px; top:330px; width:320px;">
+  <div data-drags-parent="1" style="font:600 12px 'DM Sans'; color:#6b6e7a; margin-bottom:9px;">A4 · Workout complete</div>
+  <div style="width:320px;height:692px;background:#050506;border-radius:46px;padding:11px;box-shadow:0 30px 70px rgba(0,0,0,.55), inset 0 0 0 1.5px #202028;position:relative;">
+    <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:90px;height:26px;background:#000;border-radius:14px;z-index:30;"></div>
+    <div style="position:relative;width:298px;height:670px;background:#0A0B0E;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;color:#F2F3F5;">
+      <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 25%, rgba(198,242,78,0.13), transparent 55%);"></div>
+      <!-- confetti -->
+      <div style="position:absolute;inset:0;overflow:hidden;z-index:3;pointer-events:none;">
+        <span style="position:absolute;left:12%;top:0;width:8px;height:8px;background:#C6F24E;border-radius:2px;animation:confettiFall 3.2s linear infinite;animation-delay:0s;"></span>
+        <span style="position:absolute;left:26%;top:0;width:7px;height:10px;background:#56E0F0;border-radius:2px;animation:confettiFall 3.6s linear infinite;animation-delay:0.4s;"></span>
+        <span style="position:absolute;left:40%;top:0;width:9px;height:9px;background:#FBBF24;border-radius:50%;animation:confettiFall 3.0s linear infinite;animation-delay:0.8s;"></span>
+        <span style="position:absolute;left:54%;top:0;width:8px;height:8px;background:#C6F24E;border-radius:2px;animation:confettiFall 3.8s linear infinite;animation-delay:0.2s;"></span>
+        <span style="position:absolute;left:68%;top:0;width:7px;height:11px;background:#34D399;border-radius:2px;animation:confettiFall 3.3s linear infinite;animation-delay:1s;"></span>
+        <span style="position:absolute;left:82%;top:0;width:9px;height:9px;background:#56E0F0;border-radius:50%;animation:confettiFall 3.5s linear infinite;animation-delay:0.6s;"></span>
+        <span style="position:absolute;left:33%;top:0;width:7px;height:7px;background:#FBBF24;border-radius:2px;animation:confettiFall 4.0s linear infinite;animation-delay:1.4s;"></span>
+        <span style="position:absolute;left:60%;top:0;width:8px;height:8px;background:#C6F24E;border-radius:50%;animation:confettiFall 3.1s linear infinite;animation-delay:1.8s;"></span>
+        <span style="position:absolute;left:18%;top:0;width:8px;height:11px;background:#56E0F0;border-radius:2px;animation:confettiFall 3.7s linear infinite;animation-delay:1.2s;"></span>
+        <span style="position:absolute;left:75%;top:0;width:7px;height:7px;background:#C6F24E;border-radius:2px;animation:confettiFall 3.4s linear infinite;animation-delay:2.1s;"></span>
+      </div>
+      <div style="height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 7px;font:600 13px 'DM Sans';z-index:4;">
+        <span>9:41</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span style="display:flex;align-items:flex-end;gap:2px;height:11px;"><i style="display:block;width:3px;height:4px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:6px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:8px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:11px;background:#F2F3F5;border-radius:1px;"></i></span>
+          <span style="width:18px;height:11px;border:1.4px solid #F2F3F5;border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;top:1.5px;bottom:1.5px;left:1.5px;width:9px;background:#F2F3F5;border-radius:1px;"></span></span>
+        </span>
+      </div>
+      <div style="text-align:center;padding:24px 22px 0;z-index:4;">
+        <div style="width:78px;height:78px;border-radius:24px;background:#C6F24E;margin:0 auto;display:flex;align-items:center;justify-content:center;animation:popIn 2.6s ease-in-out infinite;">
+          <span style="display:inline-block;width:18px;height:34px;border:solid #0A0B0E;border-width:0 6px 6px 0;transform:rotate(45deg);margin-top:-6px;"></span>
+        </div>
+        <div style="font:600 11px 'DM Sans';letter-spacing:2px;color:#C6F24E;margin-top:20px;">PUSH DAY A · COMPLETE</div>
+        <div style="font:700 26px 'Space Grotesk';color:#F2F3F5;margin-top:6px;letter-spacing:-0.4px;">Strong session 💪</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:24px 22px 0;z-index:4;">
+        <div style="background:#14161B;border:1px solid #23262F;border-radius:16px;padding:15px;">
+          <div style="font:600 26px 'Space Grotesk';color:#F2F3F5;font-variant-numeric:tabular-nums;">38:14</div>
+          <div style="font:500 12px 'DM Sans';color:#6b6e7a;margin-top:3px;">Duration</div>
+        </div>
+        <div style="background:#14161B;border:1px solid #23262F;border-radius:16px;padding:15px;">
+          <div style="font:600 26px 'Space Grotesk';color:#F2F3F5;font-variant-numeric:tabular-nums;">18</div>
+          <div style="font:500 12px 'DM Sans';color:#6b6e7a;margin-top:3px;">Sets done</div>
+        </div>
+        <div style="background:#14161B;border:1px solid #23262F;border-radius:16px;padding:15px;">
+          <div style="font:600 26px 'Space Grotesk';color:#F2F3F5;font-variant-numeric:tabular-nums;">12,480</div>
+          <div style="font:500 12px 'DM Sans';color:#6b6e7a;margin-top:3px;">Volume · lb</div>
+        </div>
+        <div style="background:#1B1E14;border:1px solid #353a22;border-radius:16px;padding:15px;">
+          <div style="font:600 26px 'Space Grotesk';color:#C6F24E;font-variant-numeric:tabular-nums;">2</div>
+          <div style="font:500 12px 'DM Sans';color:#a6b06a;margin-top:3px;">New PRs 🎉</div>
+        </div>
+      </div>
+      <div style="flex:1;"></div>
+      <div style="padding:0 22px 22px;z-index:4;">
+        <div style="height:58px;border-radius:18px;background:#C6F24E;display:flex;align-items:center;justify-content:center;font:700 17px 'DM Sans';color:#0A0B0E;">Done</div>
+      </div>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#2a2d36;z-index:5;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DIRECTION B HEADING ============ -->
+<div style="position:absolute; left:40px; top:1110px; width:1610px;">
+  <div data-drags-parent="1" style="display:flex; align-items:baseline; gap:14px;">
+    <span style="font:700 21px 'Space Grotesk'; color:#1d1f27; background:#56E0F0; padding:5px 12px; border-radius:6px;">Direction B</span>
+    <span style="font:700 20px 'Space Grotesk'; color:#14161B;">Flow mode — glanceable smart list</span>
+    <span style="font:400 14px 'DM Sans'; color:#6b6e7a;">Everything stays visible. Tap a row's check to log instantly; nudge a number inline — no full-screen keypad.</span>
+  </div>
+</div>
+
+<!-- B1 ACTIVE LIST -->
+<div style="position:absolute; left:40px; top:1172px; width:320px;">
+  <div data-drags-parent="1" style="font:600 12px 'DM Sans'; color:#6b6e7a; margin-bottom:9px;">B1 · Active session</div>
+  <div style="width:320px;height:692px;background:#050506;border-radius:46px;padding:11px;box-shadow:0 30px 70px rgba(0,0,0,.55), inset 0 0 0 1.5px #202028;position:relative;">
+    <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:90px;height:26px;background:#000;border-radius:14px;z-index:30;"></div>
+    <div style="position:relative;width:298px;height:670px;background:#0A0B0E;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;color:#F2F3F5;">
+      <div style="height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 7px;font:600 13px 'DM Sans';">
+        <span>9:41</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span style="display:flex;align-items:flex-end;gap:2px;height:11px;"><i style="display:block;width:3px;height:4px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:6px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:8px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:11px;background:#F2F3F5;border-radius:1px;"></i></span>
+          <span style="width:18px;height:11px;border:1.4px solid #F2F3F5;border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;top:1.5px;bottom:1.5px;left:1.5px;width:9px;background:#F2F3F5;border-radius:1px;"></span></span>
+        </span>
+      </div>
+      <!-- header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 20px 14px;">
+        <div>
+          <div style="font:700 19px 'Space Grotesk';color:#F2F3F5;letter-spacing:-0.3px;">Push Day A</div>
+          <div style="font:500 12px 'DM Sans';color:#6b6e7a;margin-top:2px;">Session 3 · 3 of 5 exercises</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font:600 12px 'DM Sans';color:#9A9DAB;background:#15171D;padding:8px 11px;border-radius:11px;font-variant-numeric:tabular-nums;">{{ elapStr }}</span>
+          <span style="font:600 12px 'DM Sans';color:#FB7185;background:#241317;padding:8px 11px;border-radius:11px;">End</span>
+        </div>
+      </div>
+      <div style="height:3px;background:#16181E;margin:0 20px;border-radius:2px;overflow:hidden;"><span style="display:block;height:100%;width:48%;background:#C6F24E;border-radius:2px;transform-origin:left;animation:barFill 1s ease-out;"></span></div>
+      <div style="flex:1;overflow:hidden;padding:14px 16px 0;display:flex;flex-direction:column;gap:9px;">
+        <!-- completed collapsed -->
+        <div style="background:#0E1411;border:1px solid #18241d;border-radius:15px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:11px;">
+            <span style="width:24px;height:24px;border-radius:50%;background:#34D399;display:flex;align-items:center;justify-content:center;"><span style="display:inline-block;width:6px;height:11px;border:solid #06241A;border-width:0 2.5px 2.5px 0;transform:rotate(45deg);margin-top:-2px;"></span></span>
+            <span style="font:600 14px 'DM Sans';color:#7c8a82;">Bench Press</span>
+          </div>
+          <span style="font:500 12px 'DM Sans';color:#5b6660;">4/4 · 135 lb</span>
+        </div>
+        <!-- ACTIVE expanded -->
+        <div style="background:#14161B;border:1.5px solid #2c3424;border-radius:18px;padding:14px 14px 12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;">
+            <span style="font:600 15px 'DM Sans';color:#F2F3F5;">Incline DB Press</span>
+            <span style="font:600 10px 'DM Sans';letter-spacing:1px;color:#C6F24E;background:#1B1E14;padding:4px 9px;border-radius:8px;">NOW</span>
+          </div>
+          <div style="display:grid;grid-template-columns:22px 1fr 1fr 30px;gap:6px;font:600 9px 'DM Sans';letter-spacing:0.8px;color:#5B5E6B;padding:0 2px 6px;">
+            <span>#</span><span style="text-align:center;">WEIGHT</span><span style="text-align:center;">REPS</span><span></span>
+          </div>
+          <!-- done row -->
+          <div style="display:grid;grid-template-columns:22px 1fr 1fr 30px;gap:6px;align-items:center;padding:7px 2px;">
+            <span style="font:600 13px 'Space Grotesk';color:#6b6e7a;">1</span>
+            <span style="text-align:center;font:500 14px 'DM Sans';color:#7c8a82;">60</span>
+            <span style="text-align:center;font:500 14px 'DM Sans';color:#7c8a82;">12</span>
+            <span style="display:flex;justify-content:flex-end;"><span style="width:22px;height:22px;border-radius:7px;background:#1c2a22;display:flex;align-items:center;justify-content:center;"><span style="display:inline-block;width:5px;height:9px;border:solid #34D399;border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-2px;"></span></span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:22px 1fr 1fr 30px;gap:6px;align-items:center;padding:7px 2px;">
+            <span style="font:600 13px 'Space Grotesk';color:#6b6e7a;">2</span>
+            <span style="text-align:center;font:500 14px 'DM Sans';color:#7c8a82;">60</span>
+            <span style="text-align:center;font:500 14px 'DM Sans';color:#7c8a82;">10</span>
+            <span style="display:flex;justify-content:flex-end;"><span style="width:22px;height:22px;border-radius:7px;background:#1c2a22;display:flex;align-items:center;justify-content:center;"><span style="display:inline-block;width:5px;height:9px;border:solid #34D399;border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-2px;"></span></span></span>
+          </div>
+          <!-- active row -->
+          <div style="display:grid;grid-template-columns:22px 1fr 1fr 30px;gap:6px;align-items:center;padding:9px 6px;margin:3px -4px;background:#1B1E14;border-radius:12px;">
+            <span style="font:700 13px 'Space Grotesk';color:#C6F24E;">3</span>
+            <span style="text-align:center;font:600 18px 'Space Grotesk';color:#F2F3F5;font-variant-numeric:tabular-nums;">60</span>
+            <span style="text-align:center;font:600 18px 'Space Grotesk';color:#F2F3F5;font-variant-numeric:tabular-nums;">10</span>
+            <span style="display:flex;justify-content:flex-end;"><span style="width:26px;height:26px;border-radius:8px;background:#C6F24E;display:flex;align-items:center;justify-content:center;animation:glowPulse 2.6s ease-in-out infinite;"><span style="display:inline-block;width:6px;height:11px;border:solid #0A0B0E;border-width:0 2.5px 2.5px 0;transform:rotate(45deg);margin-top:-2px;"></span></span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:22px 1fr 1fr 30px;gap:6px;align-items:center;padding:7px 2px;">
+            <span style="font:600 13px 'Space Grotesk';color:#6b6e7a;">4</span>
+            <span style="text-align:center;font:500 14px 'DM Sans';color:#9A9DAB;">60</span>
+            <span style="text-align:center;font:500 14px 'DM Sans';color:#9A9DAB;">10</span>
+            <span style="display:flex;justify-content:flex-end;"><span style="width:22px;height:22px;border-radius:7px;border:1.5px solid #2a2d36;"></span></span>
+          </div>
+        </div>
+        <!-- pending collapsed -->
+        <div style="background:#101116;border:1px solid #1c1e25;border-radius:15px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font:600 14px 'DM Sans';color:#9A9DAB;">Cable Fly</span>
+          <span style="font:500 12px 'DM Sans';color:#5B5E6B;">0/3 · 25 lb</span>
+        </div>
+      </div>
+      <!-- bottom action bar -->
+      <div style="padding:12px 16px 14px;background:linear-gradient(0deg,#0A0B0E 70%,transparent);">
+        <div style="display:flex;align-items:center;gap:11px;background:#14161B;border:1px solid #23262F;border-radius:18px;padding:9px 10px 9px 16px;">
+          <div style="flex:1;">
+            <div style="font:600 9px 'DM Sans';letter-spacing:1px;color:#5B5E6B;">SET 3 · INCLINE DB PRESS</div>
+            <div style="font:600 15px 'Space Grotesk';color:#F2F3F5;margin-top:2px;">60 lb × 10</div>
+          </div>
+          <div style="height:46px;padding:0 24px;border-radius:14px;background:#C6F24E;display:flex;align-items:center;justify-content:center;font:700 15px 'DM Sans';color:#0A0B0E;">Log</div>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#2a2d36;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- B2 REST SHEET -->
+<div style="position:absolute; left:470px; top:1172px; width:320px;">
+  <div data-drags-parent="1" style="font:600 12px 'DM Sans'; color:#6b6e7a; margin-bottom:9px;">B2 · Rest sheet (live)</div>
+  <div style="width:320px;height:692px;background:#050506;border-radius:46px;padding:11px;box-shadow:0 30px 70px rgba(0,0,0,.55), inset 0 0 0 1.5px #202028;position:relative;">
+    <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:90px;height:26px;background:#000;border-radius:14px;z-index:30;"></div>
+    <div style="position:relative;width:298px;height:670px;background:#0A0B0E;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;color:#F2F3F5;">
+      <div style="height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 7px;font:600 13px 'DM Sans';">
+        <span>9:41</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span style="display:flex;align-items:flex-end;gap:2px;height:11px;"><i style="display:block;width:3px;height:4px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:6px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:8px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:11px;background:#F2F3F5;border-radius:1px;"></i></span>
+          <span style="width:18px;height:11px;border:1.4px solid #F2F3F5;border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;top:1.5px;bottom:1.5px;left:1.5px;width:9px;background:#F2F3F5;border-radius:1px;"></span></span>
+        </span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 20px 14px;opacity:0.5;">
+        <div>
+          <div style="font:700 19px 'Space Grotesk';color:#F2F3F5;letter-spacing:-0.3px;">Push Day A</div>
+          <div style="font:500 12px 'DM Sans';color:#6b6e7a;margin-top:2px;">Session 3 · 3 of 5 exercises</div>
+        </div>
+        <span style="font:600 12px 'DM Sans';color:#9A9DAB;background:#15171D;padding:8px 11px;border-radius:11px;font-variant-numeric:tabular-nums;">{{ elapStr }}</span>
+      </div>
+      <div style="flex:1;padding:0 16px;display:flex;flex-direction:column;gap:9px;opacity:0.5;">
+        <div style="background:#14161B;border:1px solid #23262F;border-radius:15px;padding:13px 15px;display:flex;justify-content:space-between;align-items:center;"><span style="font:600 14px 'DM Sans';color:#F2F3F5;">Incline DB Press</span><span style="font:500 12px 'DM Sans';color:#6b6e7a;">3/4 · 60 lb</span></div>
+        <div style="background:#101116;border:1px solid #1c1e25;border-radius:15px;padding:13px 15px;display:flex;justify-content:space-between;align-items:center;"><span style="font:600 14px 'DM Sans';color:#9A9DAB;">Cable Fly</span><span style="font:500 12px 'DM Sans';color:#5B5E6B;">0/3 · 25 lb</span></div>
+      </div>
+      <!-- rest bottom sheet -->
+      <div style="background:#0C1416;border-top:1.5px solid #163038;border-radius:26px 26px 0 0;padding:18px 20px 20px;box-shadow:0 -20px 40px rgba(0,0,0,0.5);">
+        <div style="width:38px;height:4px;border-radius:2px;background:#1f3038;margin:0 auto 16px;"></div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="position:relative;width:74px;height:74px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;">
+            <div class="liveRing" style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -90deg, #56E0F0 var(--ang), #1A1E24 0);--ang:{{ restAng }};-webkit-mask:radial-gradient(closest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));mask:radial-gradient(closest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));"></div>
+            <span style="font:600 19px 'Space Grotesk';color:#56E0F0;font-variant-numeric:tabular-nums;">{{ restStr }}</span>
+          </div>
+          <div style="flex:1;">
+            <div style="font:600 10px 'DM Sans';letter-spacing:1.4px;color:#56E0F0;">RESTING</div>
+            <div style="font:600 15px 'DM Sans';color:#F2F3F5;margin-top:3px;">Next · Set 4</div>
+            <div style="font:500 13px 'DM Sans';color:#9A9DAB;margin-top:1px;">60 lb × 10 reps</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <div style="flex:1;height:46px;border-radius:14px;background:#11181C;border:1px solid #1d2933;display:flex;align-items:center;justify-content:center;font:600 14px 'DM Sans';color:#56E0F0;">+15s</div>
+          <div style="flex:1;height:46px;border-radius:14px;background:#11181C;border:1px solid #1d2933;display:flex;align-items:center;justify-content:center;font:600 14px 'DM Sans';color:#9A9DAB;">Skip</div>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#243038;z-index:5;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- B3 INLINE EDIT -->
+<div style="position:absolute; left:900px; top:1172px; width:320px;">
+  <div data-drags-parent="1" style="font:600 12px 'DM Sans'; color:#6b6e7a; margin-bottom:9px;">B3 · Inline adjust — no keypad</div>
+  <div style="width:320px;height:692px;background:#050506;border-radius:46px;padding:11px;box-shadow:0 30px 70px rgba(0,0,0,.55), inset 0 0 0 1.5px #202028;position:relative;">
+    <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:90px;height:26px;background:#000;border-radius:14px;z-index:30;"></div>
+    <div style="position:relative;width:298px;height:670px;background:#0A0B0E;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;color:#F2F3F5;">
+      <div style="height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 7px;font:600 13px 'DM Sans';">
+        <span>9:41</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span style="display:flex;align-items:flex-end;gap:2px;height:11px;"><i style="display:block;width:3px;height:4px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:6px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:8px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:11px;background:#F2F3F5;border-radius:1px;"></i></span>
+          <span style="width:18px;height:11px;border:1.4px solid #F2F3F5;border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;top:1.5px;bottom:1.5px;left:1.5px;width:9px;background:#F2F3F5;border-radius:1px;"></span></span>
+        </span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 20px 14px;">
+        <div>
+          <div style="font:700 19px 'Space Grotesk';color:#F2F3F5;letter-spacing:-0.3px;">Push Day A</div>
+          <div style="font:500 12px 'DM Sans';color:#6b6e7a;margin-top:2px;">Session 3 · 3 of 5 exercises</div>
+        </div>
+        <span style="font:600 12px 'DM Sans';color:#9A9DAB;background:#15171D;padding:8px 11px;border-radius:11px;font-variant-numeric:tabular-nums;">{{ elapStr }}</span>
+      </div>
+      <div style="flex:1;padding:0 16px;position:relative;">
+        <div style="background:#14161B;border:1.5px solid #2c3424;border-radius:18px;padding:14px;opacity:0.45;">
+          <div style="font:600 15px 'DM Sans';color:#F2F3F5;margin-bottom:11px;">Incline DB Press</div>
+          <div style="display:grid;grid-template-columns:22px 1fr 1fr 30px;gap:6px;align-items:center;padding:7px 2px;">
+            <span style="font:600 13px 'Space Grotesk';color:#6b6e7a;">3</span>
+            <span style="text-align:center;font:600 16px 'Space Grotesk';color:#F2F3F5;">60</span>
+            <span style="text-align:center;font:600 16px 'Space Grotesk';color:#F2F3F5;">10</span>
+            <span></span>
+          </div>
+        </div>
+        <!-- scrim -->
+        <div style="position:absolute;inset:0;background:rgba(5,6,8,0.55);"></div>
+        <!-- stepper popover -->
+        <div style="position:absolute;left:24px;right:24px;top:64px;background:#1A1D24;border:1px solid #2c303b;border-radius:22px;padding:18px;box-shadow:0 24px 50px rgba(0,0,0,0.6);animation:slideUp 0.4s ease-out;">
+          <div style="text-align:center;font:600 10px 'DM Sans';letter-spacing:1.4px;color:#5B5E6B;">SET 3 · WEIGHT</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:18px;margin-top:14px;">
+            <span style="width:50px;height:50px;border-radius:16px;background:#23262F;display:flex;align-items:center;justify-content:center;"><span style="width:18px;height:3px;background:#F2F3F5;border-radius:2px;"></span></span>
+            <div style="text-align:center;min-width:84px;">
+              <span style="font:600 48px 'Space Grotesk';color:#C6F24E;font-variant-numeric:tabular-nums;">65</span>
+              <div style="font:500 11px 'DM Sans';color:#6b6e7a;margin-top:-2px;">lb</div>
+            </div>
+            <span style="width:50px;height:50px;border-radius:16px;background:#C6F24E;display:flex;align-items:center;justify-content:center;position:relative;"><span style="position:absolute;width:18px;height:3px;background:#0A0B0E;border-radius:2px;"></span><span style="position:absolute;width:3px;height:18px;background:#0A0B0E;border-radius:2px;"></span></span>
+          </div>
+          <div style="display:flex;justify-content:center;gap:8px;margin-top:18px;">
+            <span style="font:600 13px 'DM Sans';color:#9A9DAB;background:#23262F;padding:8px 15px;border-radius:11px;">55</span>
+            <span style="font:600 13px 'DM Sans';color:#9A9DAB;background:#23262F;padding:8px 15px;border-radius:11px;">60</span>
+            <span style="font:700 13px 'DM Sans';color:#0A0B0E;background:#C6F24E;padding:8px 15px;border-radius:11px;">65</span>
+            <span style="font:600 13px 'DM Sans';color:#9A9DAB;background:#23262F;padding:8px 15px;border-radius:11px;">70</span>
+          </div>
+          <div style="height:48px;border-radius:15px;background:#23262F;display:flex;align-items:center;justify-content:center;font:700 15px 'DM Sans';color:#F2F3F5;margin-top:16px;">Done</div>
+        </div>
+      </div>
+      <div style="padding:12px 16px 14px;">
+        <div style="font:500 12px 'DM Sans';color:#5B5E6B;text-align:center;">Tap any number to nudge it — steppers + quick chips, no full keypad</div>
+      </div>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#2a2d36;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- B4 COMPLETE RECAP -->
+<div style="position:absolute; left:1330px; top:1172px; width:320px;">
+  <div data-drags-parent="1" style="font:600 12px 'DM Sans'; color:#6b6e7a; margin-bottom:9px;">B4 · Workout recap</div>
+  <div style="width:320px;height:692px;background:#050506;border-radius:46px;padding:11px;box-shadow:0 30px 70px rgba(0,0,0,.55), inset 0 0 0 1.5px #202028;position:relative;">
+    <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:90px;height:26px;background:#000;border-radius:14px;z-index:30;"></div>
+    <div style="position:relative;width:298px;height:670px;background:#0A0B0E;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;color:#F2F3F5;">
+      <div style="position:absolute;inset:0;overflow:hidden;z-index:3;pointer-events:none;">
+        <span style="position:absolute;left:20%;top:0;width:7px;height:9px;background:#C6F24E;border-radius:2px;animation:confettiFall 3.4s linear infinite;animation-delay:0.2s;"></span>
+        <span style="position:absolute;left:46%;top:0;width:8px;height:8px;background:#56E0F0;border-radius:50%;animation:confettiFall 3.0s linear infinite;animation-delay:0.7s;"></span>
+        <span style="position:absolute;left:72%;top:0;width:7px;height:10px;background:#FBBF24;border-radius:2px;animation:confettiFall 3.7s linear infinite;animation-delay:0.4s;"></span>
+        <span style="position:absolute;left:60%;top:0;width:8px;height:8px;background:#34D399;border-radius:2px;animation:confettiFall 3.3s linear infinite;animation-delay:1.1s;"></span>
+      </div>
+      <div style="height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 7px;font:600 13px 'DM Sans';z-index:4;">
+        <span>9:41</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span style="display:flex;align-items:flex-end;gap:2px;height:11px;"><i style="display:block;width:3px;height:4px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:6px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:8px;background:#F2F3F5;border-radius:1px;"></i><i style="display:block;width:3px;height:11px;background:#F2F3F5;border-radius:1px;"></i></span>
+          <span style="width:18px;height:11px;border:1.4px solid #F2F3F5;border-radius:3px;position:relative;display:inline-block;"><span style="position:absolute;top:1.5px;bottom:1.5px;left:1.5px;width:9px;background:#F2F3F5;border-radius:1px;"></span></span>
+        </span>
+      </div>
+      <div style="padding:16px 22px 0;z-index:4;">
+        <div style="font:600 11px 'DM Sans';letter-spacing:2px;color:#56E0F0;">SESSION COMPLETE</div>
+        <div style="font:700 24px 'Space Grotesk';color:#F2F3F5;margin-top:5px;letter-spacing:-0.4px;">Push Day A · recap</div>
+        <div style="display:flex;gap:18px;margin-top:14px;">
+          <div><span style="font:600 22px 'Space Grotesk';color:#F2F3F5;">38:14</span><div style="font:500 11px 'DM Sans';color:#6b6e7a;">time</div></div>
+          <div><span style="font:600 22px 'Space Grotesk';color:#F2F3F5;">18</span><div style="font:500 11px 'DM Sans';color:#6b6e7a;">sets</div></div>
+          <div><span style="font:600 22px 'Space Grotesk';color:#C6F24E;">12,480</span><div style="font:500 11px 'DM Sans';color:#6b6e7a;">lb volume</div></div>
+        </div>
+      </div>
+      <div style="flex:1;padding:18px 16px 0;display:flex;flex-direction:column;gap:9px;z-index:4;">
+        <div style="background:#14161B;border:1px solid #23262F;border-radius:15px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;">
+          <div><div style="font:600 14px 'DM Sans';color:#F2F3F5;">Bench Press</div><div style="font:500 12px 'DM Sans';color:#6b6e7a;margin-top:2px;">4 sets · top 135 lb</div></div>
+          <span style="font:700 9px 'DM Sans';letter-spacing:0.6px;color:#0A0B0E;background:#C6F24E;padding:4px 8px;border-radius:7px;">PR</span>
+        </div>
+        <div style="background:#14161B;border:1px solid #23262F;border-radius:15px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;">
+          <div><div style="font:600 14px 'DM Sans';color:#F2F3F5;">Incline DB Press</div><div style="font:500 12px 'DM Sans';color:#6b6e7a;margin-top:2px;">4 sets · top 65 lb</div></div>
+          <span style="font:700 9px 'DM Sans';letter-spacing:0.6px;color:#0A0B0E;background:#C6F24E;padding:4px 8px;border-radius:7px;">PR</span>
+        </div>
+        <div style="background:#14161B;border:1px solid #23262F;border-radius:15px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;">
+          <div><div style="font:600 14px 'DM Sans';color:#F2F3F5;">Cable Fly</div><div style="font:500 12px 'DM Sans';color:#6b6e7a;margin-top:2px;">3 sets · top 25 lb</div></div>
+          <span style="font:500 12px 'DM Sans';color:#5b6660;">—</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;padding:14px 16px 16px;z-index:4;">
+        <div style="flex:1;height:54px;border-radius:16px;background:#15171D;border:1px solid #23262F;display:flex;align-items:center;justify-content:center;font:600 14px 'DM Sans';color:#9A9DAB;">Share</div>
+        <div style="flex:1.4;height:54px;border-radius:16px;background:#C6F24E;display:flex;align-items:center;justify-content:center;font:700 16px 'DM Sans';color:#0A0B0E;">Done</div>
+      </div>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#2a2d36;z-index:5;"></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { rest: 88, elapsed: 872 }
+
+  componentDidMount() {
+    this._t = setInterval(() => {
+      this.setState(s => {
+        let rest = s.rest - 1
+        if (rest < 0) rest = 90
+        return { rest, elapsed: s.elapsed + 1 }
+      })
+    }, 1000)
+  }
+
+  componentWillUnmount() {
+    if (this._t) clearInterval(this._t)
+  }
+
+  fmt(t) {
+    const m = Math.floor(t / 60)
+    const s = t % 60
+    return m + ':' + String(s).padStart(2, '0')
+  }
+
+  renderVals() {
+    const { rest, elapsed } = this.state
+    const ang = (rest / 90) * 360
+    return {
+      restStr: this.fmt(rest),
+      elapStr: this.fmt(elapsed),
+      restAng: ang.toFixed(1) + 'deg'
+    }
+  }
+}
+</script>
+</body>
+</html>

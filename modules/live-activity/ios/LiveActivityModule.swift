@@ -23,13 +23,6 @@ public class LiveActivityModule: Module {
   public func definition() -> ModuleDefinition {
     Name("LiveActivityModule")
 
-    Function("isSupported") { () -> Bool in
-      if #available(iOS 16.2, *) {
-        return ActivityAuthorizationInfo().areActivitiesEnabled
-      }
-      return false
-    }
-
     Function("startActivity") { (content: LiveActivityContentRecord) -> String? in
       guard #available(iOS 16.2, *) else { return nil }
       guard ActivityAuthorizationInfo().areActivitiesEnabled else { return nil }

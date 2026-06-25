@@ -26,10 +26,6 @@ class LiveActivityModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("LiveActivityModule")
 
-    Function("isSupported") {
-      Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-    }
-
     Function("startActivity") { content: LiveActivityContentRecord ->
       startOrUpdate(content)
       null as String?

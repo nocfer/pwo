@@ -1,43 +1,42 @@
 /**
  * useLiveActivitySync — bridges the live WorkoutState to the iOS Live Activity
- * / Dynamic Island. Mount once inside the session route (within the provider).
+ * / Dynamic Island / Android notification. Mount once inside the session route
+ * (within the provider).
  *
  * Lifecycle (per the handoff spec): start on workout start, update on rest
- * start / +15s and set advancement, end on workout complete / unmount. The
- * native countdown ticks itself from `restEndsAtMs`, so we only push on actual
- * state transitions — not every second.
+ * start / +15s and set advancement, end on workout complete. The native
+ * countdown ticks itself from `restEndsAtMs`, so we only push on actual state
+ * transitions — not every second.
+ *
+ * We deliberately do NOT end the activity when this hook unmounts: leaving the
+ * session screen for a tab is exactly when the cross-app surface matters most,
+ * so it must survive navigation and only end when the workout completes.
  */
 
+import { selectActiveWorkout } from '@/lib/activeWorkout'
 import {
   endLiveActivity,
   startLiveActivity,
   updateLiveActivity,
   type LiveActivityContent
 } from '@/modules/live-activity'
+import type { WorkoutState } from '@/types/workout'
 import { useEffect, useRef } from 'react'
 import { useWorkoutExecution } from './useWorkoutExecution'
 
-function buildContent(
-  state: ReturnType<typeof useWorkoutExecution>['state']
-): LiveActivityContent | null {
-  const exercise = state.exercises[state.expandedExerciseIndex]
-  if (!exercise) return null
-  const set = exercise.sets[state.activeSetIndex]
-
-  const { restTimer } = state
-  const restEndsAtMs = restTimer.isActive
-    ? restTimer.startedAt + restTimer.durationMs
-    : 0
+function buildContent(state: WorkoutState): LiveActivityContent | null {
+  const active = selectActiveWorkout(state, Date.now())
+  if (!active) return null
 
   return {
     programName: state.sessionName,
-    isResting: restTimer.isActive && restEndsAtMs > Date.now(),
-    restEndsAtMs,
+    isResting: active.isResting,
+    restEndsAtMs: active.restEndsAtMs,
     startedAtMs: state.startedAt,
-    setNumber: state.activeSetIndex + 1,
-    exerciseName: exercise.exerciseName,
-    weight: set?.weight ?? 0,
-    reps: set?.reps ?? 0
+    setNumber: active.setNumber,
+    exerciseName: active.exercise.exerciseName,
+    weight: active.set?.weight ?? 0,
+    reps: active.set?.reps ?? 0
   }
 }
 
@@ -65,15 +64,4 @@ export function useLiveActivitySync(): void {
     // buildContent reads many fields; re-run on any reducer change (cheap, and
     // never misses a rest-start / +15s / set-advance transition).
   }, [state])
-
-  // End the activity if the session route unmounts mid-workout (e.g. the user
-  // ends the workout via a path that just navigates away).
-  useEffect(() => {
-    return () => {
-      if (startedRef.current) {
-        endLiveActivity()
-        startedRef.current = false
-      }
-    }
-  }, [])
 }

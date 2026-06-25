@@ -73,7 +73,24 @@ struct LockScreenLiveActivityView: View {
   let context: ActivityViewContext<WorkoutActivityAttributes>
 
   var body: some View {
-    let state = context.state
+    Group {
+      if context.state.isResting {
+        restingBody(context.state)
+      } else {
+        inProgressBody(context.state)
+      }
+    }
+    .padding(16)
+    .activityBackgroundTint(Color.pwoPanel.opacity(0.82))
+    .activitySystemActionForegroundColor(
+      context.state.isResting ? Color.pwoCyan : Color.pwoLime
+    )
+  }
+
+  @ViewBuilder
+  private func restingBody(
+    _ state: WorkoutActivityAttributes.ContentState
+  ) -> some View {
     HStack(spacing: 16) {
       ZStack {
         RestRing(state: state, size: 64)
@@ -116,9 +133,33 @@ struct LockScreenLiveActivityView: View {
         .buttonStyle(.bordered)
       }
     }
-    .padding(16)
-    .activityBackgroundTint(Color.pwoPanel.opacity(0.82))
-    .activitySystemActionForegroundColor(Color.pwoCyan)
+  }
+
+  @ViewBuilder
+  private func inProgressBody(
+    _ state: WorkoutActivityAttributes.ContentState
+  ) -> some View {
+    HStack(spacing: 16) {
+      Image(systemName: "figure.strengthtraining.traditional")
+        .font(.system(size: 26))
+        .foregroundStyle(Color.pwoLime)
+
+      VStack(alignment: .leading, spacing: 3) {
+        Text("PWO · \(context.attributes.programName)")
+          .font(.system(size: 11, weight: .semibold))
+          .foregroundStyle(Color.pwoSubtext)
+        Text("IN PROGRESS")
+          .font(.system(size: 10, weight: .bold))
+          .tracking(1.4)
+          .foregroundStyle(Color.pwoLime)
+        Text("Set \(state.setNumber) · \(state.exerciseName)")
+          .font(.system(size: 15, weight: .semibold))
+          .foregroundStyle(Color.pwoText)
+          .lineLimit(1)
+      }
+
+      Spacer(minLength: 0)
+    }
   }
 }
 
@@ -131,12 +172,19 @@ struct WorkoutLiveActivityWidget: Widget {
       LockScreenLiveActivityView(context: context)
     } dynamicIsland: { context in
       let state = context.state
+      let resting = state.isResting
       return DynamicIsland {
         DynamicIslandExpandedRegion(.leading) {
-          RestRing(state: state, size: 48)
+          if resting {
+            RestRing(state: state, size: 48)
+          } else {
+            Image(systemName: "figure.strengthtraining.traditional")
+              .font(.system(size: 22))
+              .foregroundStyle(Color.pwoLime)
+          }
         }
         DynamicIslandExpandedRegion(.trailing) {
-          if #available(iOS 17.0, *) {
+          if resting, #available(iOS 17.0, *) {
             Button(intent: ExtendRestIntent()) {
               Image(systemName: "goforward.15")
             }
@@ -146,14 +194,21 @@ struct WorkoutLiveActivityWidget: Widget {
         }
         DynamicIslandExpandedRegion(.center) {
           VStack(spacing: 2) {
-            CountdownText(
-              state: state,
-              font: .system(size: 22, weight: .semibold, design: .rounded)
-            )
-            Text("RESTING")
-              .font(.system(size: 9, weight: .bold))
-              .tracking(1.2)
-              .foregroundStyle(Color.pwoCyan)
+            if resting {
+              CountdownText(
+                state: state,
+                font: .system(size: 22, weight: .semibold, design: .rounded)
+              )
+              Text("RESTING")
+                .font(.system(size: 9, weight: .bold))
+                .tracking(1.2)
+                .foregroundStyle(Color.pwoCyan)
+            } else {
+              Text("IN PROGRESS")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.2)
+                .foregroundStyle(Color.pwoLime)
+            }
           }
         }
         DynamicIslandExpandedRegion(.bottom) {
@@ -163,20 +218,21 @@ struct WorkoutLiveActivityWidget: Widget {
             .lineLimit(1)
         }
       } compactLeading: {
-        Image(systemName: "timer").foregroundStyle(Color.pwoCyan)
+        Image(systemName: resting ? "timer" : "figure.strengthtraining.traditional")
+          .foregroundStyle(resting ? Color.pwoCyan : Color.pwoLime)
       } compactTrailing: {
-        CountdownText(
-          state: state,
-          font: .system(size: 13, weight: .semibold, design: .rounded)
-        )
-        .frame(maxWidth: 44)
+        if resting {
+          CountdownText(
+            state: state,
+            font: .system(size: 13, weight: .semibold, design: .rounded)
+          )
+          .frame(maxWidth: 44)
+        }
       } minimal: {
-        CountdownText(
-          state: state,
-          font: .system(size: 12, weight: .semibold, design: .rounded)
-        )
+        Image(systemName: resting ? "timer" : "figure.strengthtraining.traditional")
+          .foregroundStyle(resting ? Color.pwoCyan : Color.pwoLime)
       }
-      .keylineTint(Color.pwoCyan)
+      .keylineTint(resting ? Color.pwoCyan : Color.pwoLime)
     }
   }
 }

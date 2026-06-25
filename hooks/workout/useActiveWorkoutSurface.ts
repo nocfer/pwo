@@ -10,10 +10,11 @@
  * new reducer cases, no dependency on the provider being mounted.
  */
 
-import { workoutReducer } from '@/context/workoutReducer'
+import { selectActiveWorkout, workoutProgress } from '@/lib/activeWorkout'
 import { storage } from '@/lib/mmkv'
 import { STORAGE_KEYS } from '@/lib/storage-keys'
 import { readPersistedWorkout } from '@/lib/workout-persistence'
+import { workoutReducer } from '@/context/workoutReducer'
 import { consumePendingRestAction } from '@/modules/live-activity'
 import type { WorkoutAction, WorkoutState } from '@/types/workout'
 import { useFocusEffect, useRouter } from 'expo-router'
@@ -47,50 +48,24 @@ export type UseActiveWorkoutSurfaceReturn = {
   openSession: () => void
 }
 
-function deriveCounts(state: WorkoutState): {
-  completed: number
-  total: number
-} {
-  let completed = 0
-  let total = 0
-  for (const ex of state.exercises) {
-    for (const set of ex.sets) {
-      total += 1
-      if (set.status === 'completed' || set.status === 'skipped') completed += 1
-    }
-  }
-  return { completed, total }
-}
-
 function buildSurface(
   state: WorkoutState,
   now: number
 ): ActiveWorkoutSurface | null {
-  const exercise = state.exercises[state.expandedExerciseIndex]
-  if (!exercise) return null
-
-  const { restTimer } = state
-  const remainingMs = restTimer.isActive
-    ? Math.max(0, restTimer.startedAt + restTimer.durationMs - now)
-    : 0
-  // A rest timer can naturally run out while we're off the session screen (the
-  // session's countdown loop that dismisses it isn't mounted). Treat remaining
-  // <= 0 as "no longer resting" so the bar falls back to the in-progress face.
-  const isResting = restTimer.isActive && remainingMs > 0
-
-  const { completed, total } = deriveCounts(state)
+  const active = selectActiveWorkout(state, now)
+  if (!active) return null
 
   return {
-    variant: isResting ? 'resting' : 'inProgress',
+    variant: active.isResting ? 'resting' : 'inProgress',
     programSlug: state.programSlug,
     sessionIndex: state.sessionIndex,
     sessionName: state.sessionName,
-    exerciseName: exercise.exerciseName,
-    setNumber: state.activeSetIndex + 1,
-    setCount: exercise.sets.length,
-    progress: total > 0 ? completed / total : 0,
-    remainingMs,
-    durationMs: restTimer.durationMs,
+    exerciseName: active.exercise.exerciseName,
+    setNumber: active.setNumber,
+    setCount: active.setCount,
+    progress: workoutProgress(state),
+    remainingMs: active.isResting ? Math.max(0, active.restEndsAtMs - now) : 0,
+    durationMs: state.restTimer.durationMs,
     elapsedMs: Math.max(0, now - state.startedAt)
   }
 }

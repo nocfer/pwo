@@ -12,7 +12,6 @@ import { requireOptionalNativeModule } from 'expo-modules-core'
 import { Platform } from 'react-native'
 
 type NativeLiveActivityModule = {
-  isSupported(): boolean
   startActivity(content: LiveActivityContent): string | null
   updateActivity(content: LiveActivityContent): void
   endActivity(): void
@@ -46,15 +45,6 @@ export type LiveActivityContent = {
   exerciseName: string
   weight: number
   reps: number
-}
-
-/** True only on a dev client whose OS supports Live Activities (iOS 16.2+). */
-export function isLiveActivitySupported(): boolean {
-  try {
-    return native?.isSupported() ?? false
-  } catch {
-    return false
-  }
 }
 
 /** Start the activity (no-op if one is already running or unsupported). */

@@ -1,9 +1,9 @@
-import { formatClock } from '@/lib/utils/format'
+import { formatClock, spokenDuration } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import Animated, { SlideInDown } from 'react-native-reanimated'
-import Svg, { Circle } from 'react-native-svg'
+import { CountdownRing } from './CountdownRing'
 
 export type RestSheetProps = {
   remainingMs: number
@@ -14,22 +14,6 @@ export type RestSheetProps = {
   nextReps: number
   onExtend: () => void
   onSkip: () => void
-}
-
-const RING_SIZE = 72
-const RING_STROKE = 7
-const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
-
-function accessibilityTime(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  const parts: string[] = []
-  if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`)
-  if (seconds > 0 || minutes === 0)
-    parts.push(`${seconds} second${seconds !== 1 ? 's' : ''}`)
-  return parts.join(' ')
 }
 
 export function RestSheet({
@@ -44,40 +28,18 @@ export function RestSheet({
 }: RestSheetProps) {
   const progress =
     durationMs > 0 ? Math.min(1, Math.max(0, remainingMs / durationMs)) : 0
-  const dashOffset = RING_CIRCUMFERENCE * (1 - progress)
 
   return (
     <Animated.View style={styles.sheet} entering={SlideInDown.duration(350)}>
       <View style={styles.topRow}>
         <View
-          style={styles.ring}
           accessibilityRole="timer"
           accessibilityLiveRegion="polite"
-          accessibilityLabel={`Resting, ${accessibilityTime(remainingMs)} remaining`}
+          accessibilityLabel={`Resting, ${spokenDuration(remainingMs)} remaining`}
         >
-          <Svg width={RING_SIZE} height={RING_SIZE}>
-            <Circle
-              cx={RING_SIZE / 2}
-              cy={RING_SIZE / 2}
-              r={RING_RADIUS}
-              stroke={theme.colors.session.ringTrack}
-              strokeWidth={RING_STROKE}
-              fill="none"
-            />
-            <Circle
-              cx={RING_SIZE / 2}
-              cy={RING_SIZE / 2}
-              r={RING_RADIUS}
-              stroke={theme.colors.session.cyan}
-              strokeWidth={RING_STROKE}
-              fill="none"
-              strokeLinecap="round"
-              strokeDasharray={RING_CIRCUMFERENCE}
-              strokeDashoffset={dashOffset}
-              transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
-            />
-          </Svg>
-          <Text style={styles.ringLabel}>{formatClock(remainingMs)}</Text>
+          <CountdownRing progress={progress} size={72} stroke={7}>
+            <Text style={styles.ringLabel}>{formatClock(remainingMs)}</Text>
+          </CountdownRing>
         </View>
 
         <View style={styles.info}>
@@ -133,12 +95,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.lg
-  },
-  ring: {
-    width: RING_SIZE,
-    height: RING_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center'
   },
   ringLabel: {
     position: 'absolute',

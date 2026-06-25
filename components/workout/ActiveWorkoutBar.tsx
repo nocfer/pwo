@@ -9,7 +9,7 @@
 
 import { useActiveWorkoutSurface } from '@/hooks/workout'
 import { haptics } from '@/lib/haptics'
-import { formatClock } from '@/lib/utils/format'
+import { formatClock, spokenDuration } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import { Ionicons } from '@expo/vector-icons'
 import React, { useCallback } from 'react'
@@ -19,23 +19,7 @@ import Animated, {
   SlideOutDown,
   useReducedMotion
 } from 'react-native-reanimated'
-import Svg, { Circle } from 'react-native-svg'
-
-const RING_SIZE = 46
-const RING_STROKE = 4
-const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
-
-function accessibilityTime(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  const parts: string[] = []
-  if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`)
-  if (seconds > 0 || minutes === 0)
-    parts.push(`${seconds} second${seconds !== 1 ? 's' : ''}`)
-  return parts.join(' ')
-}
+import { CountdownRing } from './CountdownRing'
 
 export function ActiveWorkoutBar() {
   const { surface, extendRest, skipRest, openSession } =
@@ -67,7 +51,6 @@ export function ActiveWorkoutBar() {
       surface.durationMs > 0
         ? Math.min(1, Math.max(0, surface.remainingMs / surface.durationMs))
         : 0
-    const dashOffset = RING_CIRCUMFERENCE * (1 - progress)
 
     return (
       <Animated.View
@@ -81,35 +64,13 @@ export function ActiveWorkoutBar() {
             style={styles.body}
             onPress={handleOpen}
             accessibilityRole="button"
-            accessibilityLabel={`Resting, ${accessibilityTime(surface.remainingMs)} remaining. Tap to return to workout.`}
+            accessibilityLabel={`Resting, ${spokenDuration(surface.remainingMs)} remaining. Tap to return to workout.`}
           >
-            <View style={styles.ring}>
-              <Svg width={RING_SIZE} height={RING_SIZE}>
-                <Circle
-                  cx={RING_SIZE / 2}
-                  cy={RING_SIZE / 2}
-                  r={RING_RADIUS}
-                  stroke={theme.colors.session.ringTrack}
-                  strokeWidth={RING_STROKE}
-                  fill="none"
-                />
-                <Circle
-                  cx={RING_SIZE / 2}
-                  cy={RING_SIZE / 2}
-                  r={RING_RADIUS}
-                  stroke={theme.colors.session.cyan}
-                  strokeWidth={RING_STROKE}
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={RING_CIRCUMFERENCE}
-                  strokeDashoffset={dashOffset}
-                  transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
-                />
-              </Svg>
+            <CountdownRing progress={progress} size={46} stroke={4}>
               <Text style={styles.ringLabel}>
                 {formatClock(surface.remainingMs)}
               </Text>
-            </View>
+            </CountdownRing>
 
             <View style={styles.info}>
               <Text style={styles.restingLabel}>RESTING</Text>
@@ -164,10 +125,10 @@ export function ActiveWorkoutBar() {
       pointerEvents="box-none"
     >
       <Pressable
-        style={[styles.bar, styles.barInProgress, styles.bodyRow]}
+        style={[styles.bar, styles.barInProgress, styles.body]}
         onPress={handleOpen}
         accessibilityRole="button"
-        accessibilityLabel={`Workout in progress, ${accessibilityTime(surface.elapsedMs)} elapsed. Tap to resume.`}
+        accessibilityLabel={`Workout in progress, ${spokenDuration(surface.elapsedMs)} elapsed. Tap to resume.`}
       >
         <View style={styles.playTile}>
           <Ionicons
@@ -230,17 +191,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12
-  },
-  bodyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12
-  },
-  ring: {
-    width: RING_SIZE,
-    height: RING_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center'
   },
   ringLabel: {
     position: 'absolute',

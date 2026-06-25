@@ -48,6 +48,17 @@ Same `live-activity` module, Android side:
   `FOREGROUND_SERVICE_SPECIAL_USE` (runtime POST_NOTIFICATIONS is already
   requested via the existing `requestNotificationPermission()`).
 
+## Known limitation — lock-screen actions vs. the live session
+
+The session's `WorkoutExecutionProvider` reads MMKV once at mount and holds its
+state in memory. When a lock-screen / notification **+15s / Skip** is drained by
+`useActiveWorkoutSurface` (tab layer) and written back to MMKV while the session
+screen is still mounted underneath, the provider's next dispatch can overwrite
+that change (lost update). On iOS this is moot under free signing (the App Group
+is off, so the App Intents no-op); on Android it is a real edge case. Fix during
+native bring-up by having the session reconcile from MMKV on foreground
+(`RESTORE_STATE`) or by routing the drained action through the live reducer.
+
 ## Build
 
 ```bash
