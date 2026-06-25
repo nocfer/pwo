@@ -2,11 +2,14 @@ import { theme } from '@/theme/theme'
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useEffect, useRef } from 'react'
 import { Animated, StyleSheet, View, ViewStyle } from 'react-native'
+import { useReducedMotion } from 'react-native-reanimated'
 
 type SkeletonProps = {
   width?: number
   height?: number
   borderRadius?: number
+  /** Stagger the shimmer start (ms) so rows ripple instead of pulsing in unison */
+  delay?: number
   style?: ViewStyle
 }
 
@@ -14,11 +17,16 @@ export function Skeleton({
   width,
   height = 20,
   borderRadius = theme.radius.sm,
+  delay = 0,
   style
 }: SkeletonProps) {
   const shimmerAnim = useRef(new Animated.Value(0)).current
+  const reducedMotion = useReducedMotion()
 
   useEffect(() => {
+    // Respect reduced-motion: show a static block, no sweeping shimmer.
+    if (reducedMotion) return
+
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(shimmerAnim, {
@@ -33,9 +41,12 @@ export function Skeleton({
         })
       ])
     )
-    animation.start()
-    return () => animation.stop()
-  }, [shimmerAnim])
+    const timer = setTimeout(() => animation.start(), delay)
+    return () => {
+      clearTimeout(timer)
+      animation.stop()
+    }
+  }, [shimmerAnim, reducedMotion, delay])
 
   const translateX = shimmerAnim.interpolate({
     inputRange: [0, 1],
@@ -54,21 +65,23 @@ export function Skeleton({
         style
       ]}
     >
-      <Animated.View
-        style={[
-          styles.shimmer,
-          {
-            transform: [{ translateX }]
-          }
-        ]}
-      >
-        <LinearGradient
-          colors={['transparent', 'rgba(255,255,255,0.4)', 'transparent']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.gradient}
-        />
-      </Animated.View>
+      {!reducedMotion && (
+        <Animated.View
+          style={[
+            styles.shimmer,
+            {
+              transform: [{ translateX }]
+            }
+          ]}
+        >
+          <LinearGradient
+            colors={['transparent', 'rgba(255,255,255,0.4)', 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.gradient}
+          />
+        </Animated.View>
+      )}
     </View>
   )
 }

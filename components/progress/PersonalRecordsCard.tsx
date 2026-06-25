@@ -2,6 +2,7 @@
  * PersonalRecordsCard - Display recent PRs
  */
 
+import { Skeleton } from '@/components/common/Skeleton'
 import { isPRRecent, useExerciseNames, useExercises, usePRs } from '@/hooks/data'
 import { theme } from '@/theme/theme'
 import { Exercise } from '@/types'
@@ -47,7 +48,7 @@ export default function PersonalRecordsCard({ limit = 3, onViewAll }: Props) {
   if (loading) {
     return (
       <View style={styles.card}>
-        <View style={styles.skeleton} />
+        <Skeleton height={180} borderRadius={theme.radius.sm} />
       </View>
     )
   }
@@ -183,10 +184,5 @@ const styles = StyleSheet.create({
   },
   prList: {
     gap: theme.spacing.sm
-  },
-  skeleton: {
-    height: 180,
-    backgroundColor: theme.colors.skeleton,
-    borderRadius: theme.radius.sm
   }
 })

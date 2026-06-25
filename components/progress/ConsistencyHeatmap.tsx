@@ -2,6 +2,7 @@
  * ConsistencyHeatmap - GitHub-style activity heatmap
  */
 
+import { Skeleton } from '@/components/common/Skeleton'
 import {
   getDayLabels,
   useConsistencyData,
@@ -46,7 +47,7 @@ export default function ConsistencyHeatmap({ weeks = 8 }: Props) {
   if (loading) {
     return (
       <View style={styles.card}>
-        <View style={styles.skeleton} />
+        <Skeleton height={200} borderRadius={theme.radius.sm} />
       </View>
     )
   }
@@ -206,10 +207,5 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 3
-  },
-  skeleton: {
-    height: 200,
-    backgroundColor: theme.colors.skeleton,
-    borderRadius: theme.radius.sm
   }
 })

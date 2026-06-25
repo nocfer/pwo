@@ -15,6 +15,9 @@ type Props = {
   style?: ViewStyle
 }
 
+// Per-row shimmer offset (ms) for the staggered ripple down the list.
+const ROW_STAGGER = 120
+
 export function LoadingStateList({
   itemCount = 5,
   showSearch = true,
@@ -35,60 +38,75 @@ export function LoadingStateList({
 
       {/* List items skeleton */}
       <View style={styles.listContainer}>
-        {Array.from({ length: itemCount }, (_, index) => (
-          <View key={index} style={styles.itemContainer}>
-            {/* Icon skeleton */}
-            <Skeleton
-              width={40}
-              height={40}
-              borderRadius={theme.radius.md}
-              style={styles.itemIcon}
-            />
+        {Array.from({ length: itemCount }, (_, index) => {
+          // Ripple the shimmer down the list instead of pulsing in unison.
+          const delay = index * ROW_STAGGER
+          return (
+            <View key={index} style={styles.itemContainer}>
+              {/* Icon skeleton */}
+              <Skeleton
+                width={40}
+                height={40}
+                borderRadius={theme.radius.md}
+                delay={delay}
+                style={styles.itemIcon}
+              />
 
-            {/* Content skeleton */}
-            <View style={styles.itemContent}>
-              {/* Title and badge */}
-              <View style={styles.itemHeader}>
-                <Skeleton
-                  height={18}
-                  borderRadius={theme.radius.sm}
-                  style={{ width: '60%' }}
-                />
-                <Skeleton
-                  width={60}
-                  height={16}
-                  borderRadius={theme.radius.sm}
-                />
+              {/* Content skeleton */}
+              <View style={styles.itemContent}>
+                {/* Title and badge */}
+                <View style={styles.itemHeader}>
+                  <Skeleton
+                    height={18}
+                    borderRadius={theme.radius.sm}
+                    delay={delay}
+                    style={{ width: '60%' }}
+                  />
+                  <Skeleton
+                    width={60}
+                    height={16}
+                    borderRadius={theme.radius.sm}
+                    delay={delay}
+                  />
+                </View>
+
+                {/* Description */}
+                <View style={{ width: '80%' }}>
+                  <Skeleton
+                    height={14}
+                    borderRadius={theme.radius.sm}
+                    delay={delay}
+                    style={styles.descriptionSkeleton}
+                  />
+                </View>
+
+                {/* Metadata */}
+                <View style={styles.metadata}>
+                  <Skeleton
+                    width={80}
+                    height={12}
+                    borderRadius={theme.radius.sm}
+                    delay={delay}
+                  />
+                  <Skeleton
+                    width={60}
+                    height={12}
+                    borderRadius={theme.radius.sm}
+                    delay={delay}
+                  />
+                </View>
               </View>
 
-              {/* Description */}
-              <View style={{ width: '80%' }}>
-                <Skeleton
-                  height={14}
-                  borderRadius={theme.radius.sm}
-                  style={styles.descriptionSkeleton}
-                />
-              </View>
-
-              {/* Metadata */}
-              <View style={styles.metadata}>
-                <Skeleton
-                  width={80}
-                  height={12}
-                  borderRadius={theme.radius.sm}
-                />
-                <Skeleton
-                  width={60}
-                  height={12}
-                  borderRadius={theme.radius.sm}
-                />
-              </View>
+              {/* Chevron skeleton */}
+              <Skeleton
+                width={20}
+                height={20}
+                borderRadius={theme.radius.sm}
+                delay={delay}
+              />
             </View>
-
-            {/* Chevron skeleton */}
-            <Skeleton width={20} height={20} borderRadius={theme.radius.sm} />
-          </View>
-        ))}
+          )
+        })}
       </View>
     </View>
   )

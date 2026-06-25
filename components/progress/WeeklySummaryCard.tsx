@@ -2,6 +2,7 @@
  * WeeklySummaryCard - Hero card showing this week's progress
  */
 
+import { Skeleton } from '@/components/common/Skeleton'
 import { useConsistencyData, useWeeklyStats } from '@/hooks/data'
 import { theme } from '@/theme/theme'
 import { Ionicons } from '@expo/vector-icons'
@@ -47,7 +48,7 @@ export default function WeeklySummaryCard({ onStartWorkout }: Props) {
   if (loading) {
     return (
       <View style={styles.card}>
-        <View style={styles.skeleton} />
+        <Skeleton height={120} borderRadius={theme.radius.sm} />
       </View>
     )
   }
@@ -249,10 +250,5 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: theme.radius.xs,
     minHeight: 4
-  },
-  skeleton: {
-    height: 120,
-    backgroundColor: theme.colors.skeleton,
-    borderRadius: theme.radius.sm
   }
 })

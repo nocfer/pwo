@@ -13,6 +13,7 @@ import {
   useExercisePRs,
   useExercisesWithProgression
 } from '@/hooks/data'
+import { Skeleton } from '@/components/common/Skeleton'
 import { useExercises } from '@/hooks/data/useExercises'
 import { haptics } from '@/lib/haptics'
 import { theme } from '@/theme/theme'
@@ -202,7 +203,7 @@ export function EnhancedExerciseProgressionChart({
   if (loadingExerciseIds) {
     return (
       <View style={styles.card}>
-        <View style={styles.skeleton} />
+        <Skeleton height={280} borderRadius={theme.radius.sm} />
       </View>
     )
   }
@@ -366,7 +367,11 @@ export function EnhancedExerciseProgressionChart({
         />
       ) : loading ? (
         <View style={styles.chartLoadingArea}>
-          <View style={styles.chartLoadingSkeleton} />
+          <Skeleton
+            height={CHART_HEIGHT}
+            borderRadius={theme.radius.sm}
+            style={styles.chartLoadingSkeleton}
+          />
         </View>
       ) : !chartData ? (
         <CompactEmptyState
@@ -586,21 +591,13 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.subtext
   },
-  skeleton: {
-    height: 280,
-    backgroundColor: theme.colors.skeleton,
-    borderRadius: theme.radius.sm
-  },
   chartLoadingArea: {
     height: CHART_HEIGHT + 48,
     justifyContent: 'center',
     alignItems: 'center'
   },
   chartLoadingSkeleton: {
-    width: '100%',
-    height: CHART_HEIGHT,
-    backgroundColor: theme.colors.skeleton,
-    borderRadius: theme.radius.sm
+    width: '100%'
   },
   modalContainer: {
     flex: 1,
