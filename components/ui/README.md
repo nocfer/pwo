@@ -77,6 +77,7 @@ Themed input. Focus = lime border + lime caret.
 | `keyboardType` | `KeyboardTypeOptions` | per-variant | overrides the variant default |
 | `editable` | `boolean` | `true` | |
 | `maxLength` | `number` | — | |
+| `secureTextEntry` / `autoCapitalize` / `autoComplete` / `autoCorrect` / `textContentType` / `returnKeyType` / `onSubmitEditing` | — | — | passed through to the underlying `TextInput` (forms / auth) |
 
 ### Stepper
 `−` / value / `+`. A11y `adjustable` with increment/decrement actions.

@@ -12,6 +12,7 @@ import {
   KeyboardTypeOptions,
   StyleSheet,
   TextInput,
+  TextInputProps,
   TextStyle,
   View,
   ViewStyle
@@ -28,6 +29,15 @@ type Props = {
   editable?: boolean
   autoFocus?: boolean
   maxLength?: number
+  // Standard secure-entry / autofill / submission props passed straight through
+  // to the underlying TextInput so the field is usable in real forms.
+  secureTextEntry?: boolean
+  autoCapitalize?: TextInputProps['autoCapitalize']
+  autoComplete?: TextInputProps['autoComplete']
+  autoCorrect?: boolean
+  textContentType?: TextInputProps['textContentType']
+  returnKeyType?: TextInputProps['returnKeyType']
+  onSubmitEditing?: TextInputProps['onSubmitEditing']
   onFocus?: () => void
   onBlur?: () => void
   accessibilityLabel?: string
@@ -43,6 +53,13 @@ export default function TextField({
   editable = true,
   autoFocus = false,
   maxLength,
+  secureTextEntry,
+  autoCapitalize,
+  autoComplete,
+  autoCorrect,
+  textContentType,
+  returnKeyType,
+  onSubmitEditing,
   onFocus,
   onBlur,
   accessibilityLabel,
@@ -79,6 +96,13 @@ export default function TextField({
         editable={editable}
         autoFocus={autoFocus}
         maxLength={maxLength}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize={autoCapitalize}
+        autoComplete={autoComplete}
+        autoCorrect={autoCorrect}
+        textContentType={textContentType}
+        returnKeyType={returnKeyType}
+        onSubmitEditing={onSubmitEditing}
         // Lime caret on both platforms.
         selectionColor={theme.colors.primary}
         cursorColor={theme.colors.primary}

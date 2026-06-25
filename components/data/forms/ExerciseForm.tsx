@@ -13,6 +13,7 @@ import {
 import { theme } from '@/theme/theme'
 import type { ExerciseCategory } from '@/types'
 import Ionicons from '@expo/vector-icons/Ionicons'
+import { TextField } from '@/components/ui'
 import { useCallback, useState } from 'react'
 import {
   Alert,
@@ -23,7 +24,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View
 } from 'react-native'
 
@@ -55,7 +55,6 @@ export function ExerciseForm({
   })
 
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
-  const [nameFocused, setNameFocused] = useState(false)
 
   const updateField = useCallback(
     <K extends keyof ExerciseFormData>(
@@ -157,17 +156,12 @@ export function ExerciseForm({
         {/* Name Field */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Name</Text>
-          <TextInput
+          <TextField
             value={formData.name}
             onChangeText={value => updateField('name', value)}
             placeholder="e.g. Bench Press"
-            placeholderTextColor={theme.colors.muted}
-            style={[styles.textInput, nameFocused && styles.textInputFocused]}
-            selectionColor={theme.colors.primary}
-            cursorColor={theme.colors.primary}
-            onFocus={() => setNameFocused(true)}
-            onBlur={() => setNameFocused(false)}
             autoFocus={mode === 'create'}
+            accessibilityLabel="Exercise name"
           />
         </View>
 
@@ -354,19 +348,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginLeft: theme.spacing.xs
-  },
-  textInput: {
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.lg,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.lg,
-    color: theme.colors.text,
-    ...theme.typography.body
-  },
-  textInputFocused: {
-    borderColor: theme.colors.primary
   },
   categoryGrid: {
     flexDirection: 'row',
