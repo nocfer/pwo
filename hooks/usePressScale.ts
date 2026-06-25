@@ -2,9 +2,10 @@
  * usePressScale — the kit's shared press feedback.
  *
  * Returns an animated style (scale + opacity dip) plus onPressIn/onPressOut
- * handlers to spread onto an `Animated.createAnimatedComponent(Pressable)`.
- * Fires the light `haptics.buttonTap` on press-in so the touch is felt at the
- * same instant it's seen (the Press row of the motion↔haptic table).
+ * handlers to wire onto an `Animated.createAnimatedComponent(Pressable)`.
+ * Pass `haptic: true` to also fire the light `haptics.buttonTap` on press-in
+ * (the Press row of the motion↔haptic table); off by default to avoid stacking
+ * with a component's own onPress haptic.
  *
  * Reduce-motion: the scale transform is suppressed (no movement) and the press
  * is conveyed by a slightly deeper opacity dip instead — honoring the OS
@@ -13,7 +14,11 @@
  * Usage:
  *   const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
  *   const press = usePressScale({ enabled: !disabled })
- *   <AnimatedPressable {...press.handlers} style={[styles.base, press.animatedStyle]} />
+ *   <AnimatedPressable
+ *     onPressIn={press.onPressIn}
+ *     onPressOut={press.onPressOut}
+ *     style={[styles.base, press.animatedStyle]}
+ *   />
  */
 
 import { pressScaleTo, timing } from '@/lib/motion'
@@ -27,8 +32,9 @@ import {
 } from 'react-native-reanimated'
 
 type Options = {
-  /** Fire the light tap on press-in. Default true; set false if the component
-   *  already fires its own semantic haptic on press. */
+  /** Fire the light tap on press-in. Default false — opt in only where the
+   *  press itself is the event; otherwise the component's own onPress haptic
+   *  (or none) stays the single source, avoiding double-fire. */
   haptic?: boolean
   /** Whether press feedback is active. Pass false for disabled/loading. */
   enabled?: boolean
@@ -37,7 +43,7 @@ type Options = {
 }
 
 export function usePressScale({
-  haptic = true,
+  haptic = false,
   enabled = true,
   pressedOpacity = 0.92
 }: Options = {}) {
@@ -68,7 +74,7 @@ export function usePressScale({
     opacity.value = withTiming(1, reduced ? timing.instant : timing.fast)
   }, [enabled, reduced, scale, opacity])
 
-  return { animatedStyle, onPressIn, onPressOut, handlers: { onPressIn, onPressOut } }
+  return { animatedStyle, onPressIn, onPressOut }
 }
 
 export default usePressScale

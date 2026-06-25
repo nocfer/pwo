@@ -6,9 +6,9 @@
  * import these presets instead of hand-writing durations/curves, so every
  * transition shares one timing language.
  *
- * Reduce-motion: every preset takes a `reduced` flag (pass `useReducedMotion()`
- * from the component). When reduced, transforms collapse to quick fades and
- * loops are dropped — honoring the OS accessibility setting.
+ * Reduce-motion: the helpers that move things (layoutShift, popScale,
+ * pressScaleTo) take a `reduced` flag (pass `useReducedMotion()`); when reduced,
+ * transforms collapse to instant/fades — honoring the OS accessibility setting.
  *
  * Pairing: motion marks a state change; fire the matching `haptics.*` at the
  * same instant as the visual (see lib/haptics.ts) — never decorate.
@@ -17,10 +17,6 @@
 import { theme } from '@/theme/theme'
 import {
   Easing,
-  FadeIn,
-  FadeInDown,
-  FadeOut,
-  FadeOutDown,
   LinearTransition,
   withSequence,
   withSpring,
@@ -30,7 +26,7 @@ import {
 const { duration, easing, spring } = theme.motion
 
 /** Easing functions built once from the theme's bezier control points. */
-export const easings = {
+const easings = {
   standard: Easing.bezier(...easing.standard),
   decelerate: Easing.bezier(...easing.decelerate)
 }
@@ -45,45 +41,12 @@ export const timing = {
   enter: { duration: duration.base, easing: easings.decelerate }
 } as const
 
-/** Spring config for pops / success overshoot (withSpring). */
-export const springConfig = spring
-
-// ── Entering / exiting layout-animation builders ───────────────────────────
-// Pass directly to <Animated.View entering={...} exiting={...} layout={...}>.
-
 /**
- * Sheet / bar / banner / toast enter: rise 18px + fade, ease-out.
- * Reduced → a plain quick fade (no translate).
- */
-export const enterUp = (reduced: boolean) =>
-  reduced
-    ? FadeIn.duration(duration.fast)
-    : FadeInDown.duration(duration.base).easing(easings.decelerate)
-
-/** Matching exit for {@link enterUp}. Reduced → plain quick fade. */
-export const exitDown = (reduced: boolean) =>
-  reduced
-    ? FadeOut.duration(duration.fast)
-    : FadeOutDown.duration(duration.fast).easing(easings.standard)
-
-/** List item add — fade in (base; quick when reduced). */
-export const listAdd = (reduced: boolean) =>
-  FadeIn.duration(reduced ? duration.fast : duration.base)
-
-/** List item remove (e.g. delete before undo) — fade out. */
-export const listRemove = (reduced: boolean) =>
-  FadeOut.duration(reduced ? duration.fast : duration.base)
-
-/**
- * Layout shift for surviving siblings when an item is added/removed.
+ * Layout shift for surviving siblings when a list item is added/removed/undone.
  * Reduced → `undefined` (snap into place, no animated reflow).
  */
 export const layoutShift = (reduced: boolean) =>
   reduced ? undefined : LinearTransition.duration(duration.base).easing(easings.standard)
-
-/** Tab / segment crossfade — quick fade of the entering content. */
-export const crossfade = (reduced: boolean) =>
-  FadeIn.duration(reduced ? duration.instant : duration.fast)
 
 // ── Shared-value worklet helpers ───────────────────────────────────────────
 // Assign the return value to a scale shared value, e.g.

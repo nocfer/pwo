@@ -78,7 +78,7 @@ export function InlineSetEditor({
         <Animated.View
           style={styles.cardWrap}
           entering={
-            reduced ? undefined : SlideInDown.duration(theme.motion.durationSheet)
+            reduced ? undefined : SlideInDown.duration(theme.motion.duration.slow)
           }
         >
           <Pressable style={styles.card} onPress={() => {}}>

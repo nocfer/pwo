@@ -8,9 +8,15 @@ import { storage } from './mmkv'
 
 const HAPTICS_ENABLED_KEY = 'settings.hapticsEnabled'
 
-/** Whether the user has haptics turned on (default true). */
+/** Whether the user has haptics turned on (default true). A storage read
+ *  failure must not turn a fire-and-forget haptic into a rejected promise, so
+ *  it falls back to enabled. */
 export function getHapticsEnabled(): boolean {
-  return storage.getBoolean(HAPTICS_ENABLED_KEY) ?? true
+  try {
+    return storage.getBoolean(HAPTICS_ENABLED_KEY) ?? true
+  } catch {
+    return true
+  }
 }
 
 /** Persist the user's haptics preference. */

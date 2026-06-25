@@ -50,7 +50,7 @@ export default function Toast({
   return (
     <Animated.View
       entering={
-        reducedMotion ? undefined : SlideInDown.duration(theme.motion.durationToast)
+        reducedMotion ? undefined : SlideInDown.duration(theme.motion.duration.base)
       }
       exiting={
         reducedMotion ? undefined : SlideOutDown.duration(theme.motion.duration.fast)

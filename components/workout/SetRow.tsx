@@ -1,4 +1,3 @@
-import { haptics } from '@/lib/haptics'
 import { popScale } from '@/lib/motion'
 import { ActiveGlow } from '@/components/workout/ActiveGlow'
 import { theme } from '@/theme/theme'
@@ -59,7 +58,8 @@ export function SetRow({
   const isSkipped = status === 'skipped'
 
   // Log pop: pressing the active check logs the set — the check pops (overshoot
-  // → settle) and the success haptic fires at the same instant as the tap.
+  // → settle) in step with the tap. The confirm haptic is owned by the session's
+  // log handler (onConfirm → handleLogSet), so it isn't duplicated here.
   const reduced = useReducedMotion()
   const checkScale = useSharedValue(1)
   const checkAnimStyle = useAnimatedStyle(() => ({
@@ -68,7 +68,6 @@ export function SetRow({
   const onCheckPress = () => {
     if (isActive) {
       checkScale.value = popScale(reduced)
-      haptics.setComplete()
       onConfirm()
     } else {
       onPress()

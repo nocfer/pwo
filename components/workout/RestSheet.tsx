@@ -34,7 +34,7 @@ export function RestSheet({
     <Animated.View
       style={styles.sheet}
       entering={
-        reduced ? undefined : SlideInDown.duration(theme.motion.durationSheet)
+        reduced ? undefined : SlideInDown.duration(theme.motion.duration.slow)
       }
     >
       <View style={styles.topRow}>

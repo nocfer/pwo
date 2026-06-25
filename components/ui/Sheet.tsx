@@ -40,7 +40,9 @@ export default function Sheet({ visible, onClose, title, children }: Props) {
       >
         <Animated.View
           entering={
-            reducedMotion ? undefined : SlideInDown.duration(theme.motion.durationSheet)
+            reducedMotion
+              ? undefined
+              : SlideInDown.duration(theme.motion.duration.slow)
           }
           exiting={
             reducedMotion ? undefined : SlideOutDown.duration(theme.motion.duration.base)

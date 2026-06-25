@@ -213,11 +213,7 @@ const motion = {
   },
   // Spring for pops / success (Reanimated withSpring).
   spring: { damping: 14, stiffness: 180 },
-  pressScale: 0.94, // pressed-state shrink for buttons / rows / chips
-  // Semantic aliases onto the scale — existing call sites keep their names.
-  durationSheet: 350, // → slow: bottom-sheet slide-up / backdrop fade
-  durationToast: 240, // → base: toast slide-in
-  durationBanner: 240 // → base: banner slide-down
+  pressScale: 0.94 // pressed-state shrink for buttons / rows / chips
 } as const
 
 const typography = {
