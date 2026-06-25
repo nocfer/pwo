@@ -2,7 +2,7 @@
  * UnifiedDataManager - Central component for managing exercises and programs
  */
 
-import { useDataContext } from '@/context/DataContext'
+import { useDataContext, usePendingIds } from '@/context/DataContext'
 import { canSafelyDelete } from '@/lib/dependencyChecker'
 import { haptics } from '@/lib/haptics'
 import { showError, showSuccess } from '@/lib/toast'
@@ -41,6 +41,7 @@ export function UnifiedDataManager({
   onActiveTabChange
 }: Props) {
   const { state, actions } = useDataContext()
+  const pendingIds = usePendingIds()
   const [activeTab, setActiveTab] = useState<DataType>(initialTab)
   const [searchState, setSearchState] = useState<SearchState>({
     query: searchQuery,
@@ -445,6 +446,7 @@ export function UnifiedDataManager({
         onEmptySecondaryAction={
           activeTab === 'programs' ? handleScanQR : undefined
         }
+        pendingIds={pendingIds}
         onEndReached={
           activeTab === 'exercises' ? actions.loadMoreExercises : undefined
         }

@@ -21,6 +21,8 @@ export interface ProgramListItemProps {
   selected?: boolean
   onSelectionChange?: (selected: boolean) => void
   showMetadata?: boolean
+  /** Has an unsynced offline write — shows an amber pending dot */
+  pending?: boolean
   style?: ViewStyle
 }
 
@@ -38,6 +40,7 @@ export function ProgramListItem({
   selected = false,
   onSelectionChange,
   showMetadata = true,
+  pending = false,
   style
 }: ProgramListItemProps) {
   const [menuVisible, setMenuVisible] = useState(false)
@@ -87,6 +90,7 @@ export function ProgramListItem({
 
       <View style={styles.content}>
         <View style={styles.header}>
+          {pending && <View style={styles.pendingDot} />}
           <Text style={styles.name} numberOfLines={1}>
             {program.name}
           </Text>
@@ -217,6 +221,12 @@ const styles = StyleSheet.create({
     ...theme.typography.bodyBold,
     color: theme.colors.text,
     flexShrink: 1
+  },
+  pendingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.warning
   },
   badge: {
     flexDirection: 'row',

@@ -63,6 +63,8 @@ type Props = {
   onEmptyAction?: () => void
   emptySecondaryActionLabel?: string
   onEmptySecondaryAction?: () => void
+  /** Entity ids with an unsynced offline write — render a pending dot */
+  pendingIds?: Set<string>
   onEndReached?: () => void
   hasMore?: boolean
   loadingMore?: boolean
@@ -90,6 +92,7 @@ export function SearchableList({
   onEmptyAction,
   emptySecondaryActionLabel,
   onEmptySecondaryAction,
+  pendingIds,
   onEndReached,
   hasMore = false,
   loadingMore = false,
@@ -140,6 +143,7 @@ export function SearchableList({
   const renderItem = ({ item }: { item: ListItem }) => {
     const isSelected = selectedItems.includes(item.id)
     const canDelete = item.source === 'user' && onItemDelete && !selectionMode
+    const isPending = pendingIds?.has(item.id) ?? false
 
     // Use ProgramListItem for programs when inline actions are enabled
     if (
@@ -163,6 +167,7 @@ export function SearchableList({
           onStart={() => onItemPress?.(item)}
           onEdit={() => onItemEdit?.(item)}
           onDelete={canDelete ? () => onItemDelete?.(item) : undefined}
+          pending={isPending}
           selected={isSelected}
           onSelectionChange={
             selectionMode
@@ -215,9 +220,12 @@ export function SearchableList({
         </View>
 
         <View style={styles.itemContent}>
-          <Text style={styles.itemName} numberOfLines={1}>
-            {item.name}
-          </Text>
+          <View style={styles.itemNameRow}>
+            {isPending && <View style={styles.pendingDot} />}
+            <Text style={styles.itemName} numberOfLines={1}>
+              {item.name}
+            </Text>
+          </View>
 
           {showMetadata && (
             <View style={styles.chipsRow}>
@@ -386,9 +394,21 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 4
   },
+  itemNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm
+  },
+  pendingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.warning
+  },
   itemName: {
     ...theme.typography.bodyBold,
-    color: theme.colors.text
+    color: theme.colors.text,
+    flexShrink: 1
   },
   chipsRow: {
     flexDirection: 'row',

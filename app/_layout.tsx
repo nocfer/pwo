@@ -1,4 +1,5 @@
 import { LoadingScreen } from '@/components/common/LoadingScreen'
+import { OfflineBanner } from '@/components/common/OfflineBanner'
 import { AuthProvider } from '@/context/AuthContext'
 import { DataProvider } from '@/context/DataContext'
 import { theme } from '@/theme/theme'
@@ -77,6 +78,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <AuthProvider>
         <DataProvider>
+          <OfflineBanner />
           <RootLayoutNav />
           <StatusBar style="light" />
           <Toast />

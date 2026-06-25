@@ -9,7 +9,7 @@ import {
   PersonalRecordsCard,
   WeeklySummaryCard
 } from '@/components'
-import { Button } from '@/components/common'
+import { Button, SyncChip } from '@/components/common'
 import { type AggregatedProgress, useAllProgress } from '@/hooks/data'
 import {
   AnimatedIcon,
@@ -141,7 +141,10 @@ export default function StatisticsScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Statistics</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>Statistics</Text>
+            <SyncChip />
+          </View>
           <Text style={styles.subtitle}>Your fitness insights</Text>
         </View>
 
@@ -289,6 +292,12 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: theme.spacing.lg,
     paddingBottom: theme.spacing.md
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing.sm
   },
   title: {
     ...theme.typography.h1,

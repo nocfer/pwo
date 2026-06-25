@@ -6,6 +6,7 @@
  */
 
 import {
+  APIError,
   createExercise as apiCreateExercise,
   createWorkout as apiCreateWorkout,
   deleteExercise as apiDeleteExercise,
@@ -21,6 +22,13 @@ import {
 import { canSafelyDelete } from '@/lib/dependencyChecker'
 import { auth } from '@/lib/firebase'
 import { programToWorkoutInput, workoutToProgram } from '@/lib/mappers/workout'
+import {
+  dequeue,
+  enqueue,
+  loadQueue,
+  pendingEntityIds,
+  updateEntry
+} from '@/lib/syncQueue'
 import { buildWorkoutLog } from '@/lib/utils/sessionBuilder'
 import {
   validateExercise,
@@ -31,9 +39,12 @@ import type {
   EnhancedDataActions,
   EnhancedDataState,
   Exercise,
+  PendingMutation,
   PersonalRecord,
-  Program
+  Program,
+  SyncState
 } from '@/types'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import type { AccumulatedSet } from '@/types/session'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import React, {
@@ -98,6 +109,16 @@ type DataAction =
   | { type: 'INCREMENT_HISTORY_VERSION' }
   | { type: 'INCREMENT_COMPLETED_VERSION' }
   | { type: 'REFRESH_ALL' }
+  // Offline / sync
+  | { type: 'SET_ONLINE'; isOnline: boolean }
+  | { type: 'SET_SYNC_STATE'; syncState: SyncState }
+  | { type: 'SET_LAST_SYNC_AT'; at: number | null }
+  | { type: 'SET_PENDING_MUTATIONS'; pending: PendingMutation[] }
+  // Optimistic local list edits (offline writes)
+  | { type: 'UPSERT_EXERCISE_LOCAL'; exercise: Exercise }
+  | { type: 'REMOVE_EXERCISE_LOCAL'; id: string }
+  | { type: 'UPSERT_PROGRAM_LOCAL'; program: Program }
+  | { type: 'REMOVE_PROGRAM_LOCAL'; id: string }
 
 type DataContextValue = {
   state: DataState & EnhancedDataState
@@ -149,6 +170,18 @@ type DataContextValue = {
   } & EnhancedDataActions
 }
 
+/** Build a temporary id for an entity created while offline. */
+function tempId(prefix: string): string {
+  return `pending_${prefix}_${Date.now()}_${Math.floor(Math.random() * 1e6)}`
+}
+
+function isNetworkError(error: unknown): boolean {
+  return (
+    error instanceof APIError &&
+    (error.code === 'NETWORK_ERROR' || error.code === 'TIMEOUT')
+  )
+}
+
 // ============================================================================
 // Initial State & Reducer
 // ============================================================================
@@ -170,7 +203,12 @@ export const initialState: DataState & EnhancedDataState = {
   lastNewPRs: [],
   progressVersion: 0,
   historyVersion: 0,
-  completedVersion: 0
+  completedVersion: 0,
+  // Offline / sync
+  isOnline: true,
+  syncState: 'idle',
+  lastSyncAt: null,
+  pendingMutations: []
 }
 
 export function dataReducer(
@@ -242,6 +280,46 @@ export function dataReducer(
         progressVersion: state.progressVersion + 1,
         historyVersion: state.historyVersion + 1,
         completedVersion: state.completedVersion + 1
+      }
+    case 'SET_ONLINE':
+      return { ...state, isOnline: action.isOnline }
+    case 'SET_SYNC_STATE':
+      return { ...state, syncState: action.syncState }
+    case 'SET_LAST_SYNC_AT':
+      return { ...state, lastSyncAt: action.at }
+    case 'SET_PENDING_MUTATIONS':
+      return { ...state, pendingMutations: action.pending }
+    case 'UPSERT_EXERCISE_LOCAL': {
+      const exists = state.exercises.some(e => e.id === action.exercise.id)
+      const exercises = (
+        exists
+          ? state.exercises.map(e =>
+              e.id === action.exercise.id ? action.exercise : e
+            )
+          : [...state.exercises, action.exercise]
+      ).sort((a, b) => a.name.localeCompare(b.name))
+      return { ...state, exercises }
+    }
+    case 'REMOVE_EXERCISE_LOCAL':
+      return {
+        ...state,
+        exercises: state.exercises.filter(e => e.id !== action.id)
+      }
+    case 'UPSERT_PROGRAM_LOCAL': {
+      const exists = state.programs.some(p => p.id === action.program.id)
+      const programs = (
+        exists
+          ? state.programs.map(p =>
+              p.id === action.program.id ? action.program : p
+            )
+          : [...state.programs, action.program]
+      ).sort((a, b) => a.name.localeCompare(b.name))
+      return { ...state, programs }
+    }
+    case 'REMOVE_PROGRAM_LOCAL':
+      return {
+        ...state,
+        programs: state.programs.filter(p => p.id !== action.id)
       }
     default:
       return state
@@ -435,6 +513,140 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // refreshHistory and refreshCompleted consolidated into refreshProgress
 
+  // ==========================================================================
+  // Offline / sync
+  // ==========================================================================
+
+  const { isOnline } = useNetworkStatus()
+  const isOnlineRef = useRef(isOnline)
+  const flushingRef = useRef(false)
+
+  // Replay a single queued write against the API.
+  const replayEntry = useCallback(async (entry: PendingMutation) => {
+    if (entry.entity === 'exercise') {
+      if (entry.op === 'delete') {
+        await apiDeleteExercise(entry.entityId)
+        return
+      }
+      const input = entry.payload as Pick<
+        Exercise,
+        'name' | 'category' | 'icon'
+      >
+      if (entry.op === 'create') {
+        await apiCreateExercise({
+          name: input.name,
+          category: input.category,
+          icon: input.icon,
+          source: 'user'
+        })
+      } else {
+        await apiUpdateExercise(entry.entityId, {
+          name: input.name,
+          category: input.category,
+          icon: input.icon
+        })
+      }
+      return
+    }
+
+    // program
+    if (entry.op === 'delete') {
+      await apiDeleteWorkout(entry.entityId)
+      return
+    }
+    const input = entry.payload as Pick<
+      Program,
+      | 'name'
+      | 'description'
+      | 'blocks'
+      | 'initialWarmup'
+      | 'defaultRestBetweenExercises'
+    >
+    const now = new Date().toISOString()
+    const programForMapper: Program = {
+      id: entry.op === 'update' ? entry.entityId : '',
+      name: input.name,
+      description: input.description,
+      blocks: input.blocks,
+      initialWarmup: input.initialWarmup,
+      defaultRestBetweenExercises: input.defaultRestBetweenExercises,
+      source: 'user',
+      createdAt: now,
+      updatedAt: now
+    }
+    const workoutInput = programToWorkoutInput(programForMapper)
+    if (entry.op === 'create') {
+      await apiCreateWorkout(workoutInput)
+    } else {
+      await apiUpdateWorkout(entry.entityId, workoutInput)
+    }
+  }, [])
+
+  // Flush the pending-write queue in FIFO order. Stops on a network error
+  // (still offline) and drops poison entries after a retry cap.
+  const flushQueue = useCallback(async () => {
+    if (flushingRef.current || !isOnlineRef.current || !auth.currentUser) return
+    const queue = loadQueue()
+    if (!queue.length) return
+
+    flushingRef.current = true
+    dispatch({ type: 'SET_SYNC_STATE', syncState: 'syncing' })
+    try {
+      for (const entry of queue) {
+        try {
+          await replayEntry(entry)
+          dispatch({
+            type: 'SET_PENDING_MUTATIONS',
+            pending: dequeue(entry.id)
+          })
+        } catch (e) {
+          if (isNetworkError(e)) break // still offline — retry on next reconnect
+          // Permanent failure: bump retry, drop after the cap so it can't wedge.
+          const bumped = updateEntry(entry.id, {
+            retryCount: entry.retryCount + 1
+          })
+          const current = bumped.find(x => x.id === entry.id)
+          dispatch({
+            type: 'SET_PENDING_MUTATIONS',
+            pending:
+              !current || current.retryCount >= 5 ? dequeue(entry.id) : bumped
+          })
+        }
+      }
+    } finally {
+      flushingRef.current = false
+    }
+
+    const remaining = loadQueue()
+    if (remaining.length) {
+      dispatch({ type: 'SET_SYNC_STATE', syncState: 'error' })
+    } else {
+      dispatch({ type: 'SET_SYNC_STATE', syncState: 'idle' })
+      dispatch({ type: 'SET_LAST_SYNC_AT', at: Date.now() })
+    }
+    // Reconcile optimistic local state (e.g. temp ids → server ids) if anything synced.
+    if (remaining.length !== queue.length) {
+      refreshAll()
+    }
+  }, [replayEntry, refreshAll])
+
+  const retrySync = useCallback(() => {
+    flushQueue()
+  }, [flushQueue])
+
+  // Hydrate the queue once on mount.
+  useEffect(() => {
+    const q = loadQueue()
+    if (q.length) dispatch({ type: 'SET_PENDING_MUTATIONS', pending: q })
+  }, [])
+
+  // Track connectivity; flush whatever is queued when we come back online.
+  useEffect(() => {
+    isOnlineRef.current = isOnline
+    dispatch({ type: 'SET_ONLINE', isOnline })
+    if (isOnline) flushQueue()
+  }, [isOnline, flushQueue])
+
   const loadMoreExercises = useCallback(async () => {
     if (
       state.exercisesLoadingMore ||
@@ -539,33 +751,79 @@ export function DataProvider({ children }: { children: ReactNode }) {
         throw new Error(nameValidation.errors[0].message)
       }
 
-      // Call API create or update — errors propagate directly to the caller
-      let saved: Exercise
-      if (id) {
-        saved = await apiUpdateExercise(id, {
-          name: input.name,
-          category: input.category,
-          icon: input.icon
-        })
-      } else {
-        saved = await apiCreateExercise({
-          name: input.name,
-          category: input.category,
-          icon: input.icon,
-          source: 'user'
+      // Optimistic copy used for offline writes (and as the offline return value).
+      const existing = id ? state.exercises.find(e => e.id === id) : undefined
+      const effectiveId = id ?? tempId('ex')
+      const optimistic = {
+        ...existing,
+        id: effectiveId,
+        name: input.name,
+        category: input.category,
+        icon: input.icon,
+        source: 'user',
+        createdAt: existing?.createdAt ?? new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      } as Exercise
+
+      const queueOffline = () => {
+        dispatch({ type: 'UPSERT_EXERCISE_LOCAL', exercise: optimistic })
+        dispatch({
+          type: 'SET_PENDING_MUTATIONS',
+          pending: enqueue({
+            entity: 'exercise',
+            op: id ? 'update' : 'create',
+            entityId: effectiveId,
+            payload: {
+              name: input.name,
+              category: input.category,
+              icon: input.icon
+            }
+          })
         })
       }
 
-      // Fetch page 1 first, then replace atomically to avoid flash of empty state
-      const exerciseResponse = await fetchExercises(1)
-      dispatch({ type: 'RESET_EXERCISES' })
-      dispatch({
-        type: 'APPEND_EXERCISES',
-        exercises: exerciseResponse.data,
-        pagination: exerciseResponse.pagination
-      })
+      // Known offline → apply optimistically and queue immediately.
+      if (!isOnlineRef.current) {
+        queueOffline()
+        return optimistic
+      }
 
-      return saved
+      try {
+        // Call API create or update — errors propagate directly to the caller
+        let saved: Exercise
+        if (id) {
+          saved = await apiUpdateExercise(id, {
+            name: input.name,
+            category: input.category,
+            icon: input.icon
+          })
+        } else {
+          saved = await apiCreateExercise({
+            name: input.name,
+            category: input.category,
+            icon: input.icon,
+            source: 'user'
+          })
+        }
+
+        // Fetch page 1 first, then replace atomically to avoid flash of empty state
+        const exerciseResponse = await fetchExercises(1)
+        dispatch({ type: 'RESET_EXERCISES' })
+        dispatch({
+          type: 'APPEND_EXERCISES',
+          exercises: exerciseResponse.data,
+          pagination: exerciseResponse.pagination
+        })
+
+        return saved
+      } catch (e) {
+        // Lost connectivity mid-write → fall back to the offline queue.
+        if (isNetworkError(e)) {
+          queueOffline()
+          return optimistic
+        }
+        throw e
+      }
     },
     [state.exercises]
   )
@@ -601,17 +859,42 @@ export function DataProvider({ children }: { children: ReactNode }) {
         throw new Error('Cannot delete exercise: user is not authenticated.')
       }
 
-      // Call API delete — errors propagate directly to the caller
-      await apiDeleteExercise(id)
+      const queueOffline = () => {
+        dispatch({ type: 'REMOVE_EXERCISE_LOCAL', id })
+        dispatch({
+          type: 'SET_PENDING_MUTATIONS',
+          pending: enqueue({
+            entity: 'exercise',
+            op: 'delete',
+            entityId: id
+          })
+        })
+      }
 
-      // Fetch page 1 first, then replace atomically to avoid flash of empty state
-      const exerciseResponse = await fetchExercises(1)
-      dispatch({ type: 'RESET_EXERCISES' })
-      dispatch({
-        type: 'APPEND_EXERCISES',
-        exercises: exerciseResponse.data,
-        pagination: exerciseResponse.pagination
-      })
+      if (!isOnlineRef.current) {
+        queueOffline()
+        return
+      }
+
+      try {
+        // Call API delete — errors propagate directly to the caller
+        await apiDeleteExercise(id)
+
+        // Fetch page 1 first, then replace atomically to avoid flash of empty state
+        const exerciseResponse = await fetchExercises(1)
+        dispatch({ type: 'RESET_EXERCISES' })
+        dispatch({
+          type: 'APPEND_EXERCISES',
+          exercises: exerciseResponse.data,
+          pagination: exerciseResponse.pagination
+        })
+      } catch (e) {
+        if (isNetworkError(e)) {
+          queueOffline()
+          return
+        }
+        throw e
+      }
     },
     [state.exercises, state.programs]
   )
@@ -638,24 +921,61 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      let saved: Program
-
       const currentUser = auth.currentUser
-      if (currentUser && isAPIAvailable()) {
-        // Build a temporary Program object for the mapper
+      if (!currentUser || !isAPIAvailable()) {
+        // No local storage fallback — API is the sole source of truth for user programs
+        throw new Error(
+          'Cannot save program: user is not authenticated or API is unavailable.'
+        )
+      }
+
+      // Optimistic copy used for offline writes (and as the offline return value).
+      const existing = id ? state.programs.find(p => p.id === id) : undefined
+      const effectiveId = id ?? tempId('prog')
+      const optimistic: Program = {
+        id: effectiveId,
+        name: input.name,
+        description: input.description,
+        blocks: input.blocks,
+        initialWarmup: input.initialWarmup,
+        defaultRestBetweenExercises: input.defaultRestBetweenExercises,
+        source: 'user',
+        createdAt: existing?.createdAt ?? new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      const queueOffline = () => {
+        dispatch({ type: 'UPSERT_PROGRAM_LOCAL', program: optimistic })
+        dispatch({
+          type: 'SET_PENDING_MUTATIONS',
+          pending: enqueue({
+            entity: 'program',
+            op: id ? 'update' : 'create',
+            entityId: effectiveId,
+            payload: {
+              name: input.name,
+              description: input.description,
+              blocks: input.blocks,
+              initialWarmup: input.initialWarmup,
+              defaultRestBetweenExercises: input.defaultRestBetweenExercises
+            }
+          })
+        })
+      }
+
+      if (!isOnlineRef.current) {
+        queueOffline()
+        return optimistic
+      }
+
+      try {
         const programForMapper: Program = {
-          id: id ?? '',
-          name: input.name,
-          description: input.description,
-          blocks: input.blocks,
-          initialWarmup: input.initialWarmup,
-          defaultRestBetweenExercises: input.defaultRestBetweenExercises,
-          source: 'user',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          ...optimistic,
+          id: id ?? ''
         }
         const workoutInput = programToWorkoutInput(programForMapper)
 
+        let saved: Program
         if (id) {
           const apiWorkout = await apiUpdateWorkout(id, workoutInput)
           saved = workoutToProgram(apiWorkout)
@@ -680,14 +1000,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
           ...apiPrograms
         ].sort((a, b) => a.name.localeCompare(b.name))
         dispatch({ type: 'SET_PROGRAMS', programs: merged })
-      } else {
-        // No local storage fallback — API is the sole source of truth for user programs
-        throw new Error(
-          'Cannot save program: user is not authenticated or API is unavailable.'
-        )
-      }
 
-      return saved
+        return saved
+      } catch (e) {
+        if (isNetworkError(e)) {
+          queueOffline()
+          return optimistic
+        }
+        throw e
+      }
     },
     [state.programs]
   )
@@ -701,7 +1022,31 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
 
       const currentUser = auth.currentUser
-      if (currentUser && isAPIAvailable()) {
+      if (!currentUser || !isAPIAvailable()) {
+        // No local storage fallback — API is the sole source of truth for user programs
+        throw new Error(
+          'Cannot delete program: user is not authenticated or API is unavailable.'
+        )
+      }
+
+      const queueOffline = () => {
+        dispatch({ type: 'REMOVE_PROGRAM_LOCAL', id })
+        dispatch({
+          type: 'SET_PENDING_MUTATIONS',
+          pending: enqueue({
+            entity: 'program',
+            op: 'delete',
+            entityId: id
+          })
+        })
+      }
+
+      if (!isOnlineRef.current) {
+        queueOffline()
+        return
+      }
+
+      try {
         // Delete via API — errors propagate to the caller
         await apiDeleteWorkout(id)
 
@@ -719,11 +1064,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
           ...apiPrograms
         ].sort((a, b) => a.name.localeCompare(b.name))
         dispatch({ type: 'SET_PROGRAMS', programs: merged })
-      } else {
-        // No local storage fallback — API is the sole source of truth for user programs
-        throw new Error(
-          'Cannot delete program: user is not authenticated or API is unavailable.'
-        )
+      } catch (e) {
+        if (isNetworkError(e)) {
+          queueOffline()
+          return
+        }
+        throw e
       }
     },
     [state.programs]
@@ -740,7 +1086,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       upsertExercise,
       deleteExercise,
       upsertProgram,
-      deleteProgram
+      deleteProgram,
+      retrySync
     }
   }
 
@@ -801,6 +1148,31 @@ export function useRefreshVersions() {
     historyVersion: state.historyVersion,
     completedVersion: state.completedVersion
   }
+}
+
+/**
+ * Offline / sync status for indicators (offline banner, sync chip).
+ */
+export function useSyncStatus() {
+  const { state, actions } = useDataContext()
+  return {
+    isOnline: state.isOnline,
+    syncState: state.syncState,
+    lastSyncAt: state.lastSyncAt,
+    pendingCount: state.pendingMutations.length,
+    retrySync: actions.retrySync
+  }
+}
+
+/**
+ * Set of entity ids with a queued offline write, for per-item "pending" dots.
+ */
+export function usePendingIds(): Set<string> {
+  const { state } = useDataContext()
+  return useMemo(
+    () => pendingEntityIds(state.pendingMutations),
+    [state.pendingMutations]
+  )
 }
 
 export default DataContext

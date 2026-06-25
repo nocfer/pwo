@@ -39,6 +39,9 @@ const colors = {
   dangerBorder: '#3A2226',
   warning: '#FBBF24',
   warningLight: 'rgba(251, 191, 36, 0.12)',
+  // Offline banner surface (amber on near-black)
+  offlineBg: '#1E1A10',
+  offlineBorder: '#3A3322',
 
   // Exercise category accents — icon tiles + category chips
   category: {

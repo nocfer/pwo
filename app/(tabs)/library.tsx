@@ -1,3 +1,4 @@
+import { SyncChip } from '@/components/common'
 import { UnifiedDataManager } from '@/components/data'
 import {
   AnimatedIcon,
@@ -40,7 +41,10 @@ export default function LibraryScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
       <View style={styles.header}>
-        <Text style={styles.title}>Library</Text>
+        <View style={styles.headerTitleGroup}>
+          <Text style={styles.title}>Library</Text>
+          <SyncChip />
+        </View>
         <View style={styles.headerActions}>
           <Pressable
             style={({ pressed }) => [
@@ -107,6 +111,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.lg,
     paddingBottom: theme.spacing.md
+  },
+  headerTitleGroup: {
+    gap: theme.spacing.xs,
+    alignItems: 'flex-start'
   },
   title: {
     ...theme.typography.h1,

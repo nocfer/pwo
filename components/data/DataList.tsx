@@ -45,6 +45,8 @@ type Props = {
   onEmptyAction?: () => void
   emptySecondaryActionLabel?: string
   onEmptySecondaryAction?: () => void
+  /** Entity ids with an unsynced offline write — render a pending dot */
+  pendingIds?: Set<string>
   onEndReached?: () => void
   hasMore?: boolean
   loadingMore?: boolean
@@ -68,6 +70,7 @@ export function DataList({
   onEmptyAction,
   emptySecondaryActionLabel,
   onEmptySecondaryAction,
+  pendingIds,
   onEndReached,
   hasMore = false,
   loadingMore = false,
@@ -266,6 +269,7 @@ export function DataList({
         onEmptySecondaryAction={
           showEmptyActions ? onEmptySecondaryAction : undefined
         }
+        pendingIds={pendingIds}
         style={style}
       />
     )
@@ -295,6 +299,7 @@ export function DataList({
       onEmptySecondaryAction={
         showEmptyActions ? onEmptySecondaryAction : undefined
       }
+      pendingIds={pendingIds}
       onEndReached={onEndReached}
       hasMore={hasMore}
       loadingMore={loadingMore}

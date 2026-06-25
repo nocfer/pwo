@@ -197,9 +197,44 @@ export type ConflictResolution = {
 }
 
 // ============================================================================
+// Offline / Sync Types
+// ============================================================================
+
+export type SyncState = 'idle' | 'syncing' | 'error'
+
+/**
+ * A write the user made while offline (or that failed with a network error),
+ * persisted so it can be replayed against the API on reconnect.
+ */
+export type PendingMutation = {
+  /** Unique id for this queue entry */
+  id: string
+  entity: 'exercise' | 'program'
+  op: 'create' | 'update' | 'delete'
+  /** The affected entity id (a temp id for offline creates) */
+  entityId: string
+  /** The original action input, used to replay create/update */
+  payload?: unknown
+  createdAt: number
+  retryCount: number
+}
+
+// ============================================================================
 // Enhanced Data Context Types
 // ============================================================================
 
-export type EnhancedDataActions = {}
+export type EnhancedDataActions = {
+  /** Manually re-attempt flushing the pending-write queue */
+  retrySync: () => void
+}
 
-export type EnhancedDataState = {}
+export type EnhancedDataState = {
+  /** Whether the device currently has a usable network connection */
+  isOnline: boolean
+  /** Whether the pending-write queue is currently being flushed */
+  syncState: SyncState
+  /** Epoch ms of the last successful sync, or null if never */
+  lastSyncAt: number | null
+  /** Writes awaiting replay against the API */
+  pendingMutations: PendingMutation[]
+}
