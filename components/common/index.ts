@@ -37,6 +37,7 @@ export {
   SkeletonStreakDots
 } from './Skeleton'
 export { SwipeableListItem } from './SwipeableListItem'
+export { UndoToast } from './UndoToast'
 export {
   ANIMATION_PARAMS,
   TAB_CONFIG,

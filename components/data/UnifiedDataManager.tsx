@@ -5,12 +5,12 @@
 import { useDataContext, usePendingIds } from '@/context/DataContext'
 import { canSafelyDelete } from '@/lib/dependencyChecker'
 import { haptics } from '@/lib/haptics'
-import { showError, showSuccess } from '@/lib/toast'
+import { showError } from '@/lib/toast'
 import { theme } from '@/theme/theme'
 import type { DataType, Exercise, Program, SearchState } from '@/types'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { router } from 'expo-router'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Modal,
   Pressable,
@@ -21,9 +21,9 @@ import {
   View,
   ViewStyle
 } from 'react-native'
-import { ConfirmationModal } from '../common/ConfirmationModal'
 import { DependencyErrorModal } from '../common/DependencyErrorModal'
 import { SearchInput } from '../common/SearchInput'
+import { UndoToast } from '../common/UndoToast'
 import { DataList } from './DataList'
 import { FilterControls } from './FilterControls'
 
@@ -52,8 +52,7 @@ export function UnifiedDataManager({
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
 
-  // Delete state
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  // Dependency-block state — blocked deletes still use a modal (not undoable)
   const [dependencyErrorVisible, setDependencyErrorVisible] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<{
     id: string
@@ -61,16 +60,25 @@ export function UnifiedDataManager({
     type: DataType
   } | null>(null)
   const [dependentPrograms, setDependentPrograms] = useState<Program[]>([])
-  const [deleting, setDeleting] = useState(false)
 
-  // Bulk delete state
-  const [bulkDeleteModalVisible, setBulkDeleteModalVisible] = useState(false)
   const [bulkDependencyErrorVisible, setBulkDependencyErrorVisible] =
     useState(false)
   const [blockedItems, setBlockedItems] = useState<
     { id: string; name: string; programs: Program[] }[]
   >([])
-  const [bulkDeleting, setBulkDeleting] = useState(false)
+
+  // Undo-toast delete state — the reversible path. The item(s) are hidden
+  // optimistically and committed when the toast's countdown completes; Undo
+  // simply clears this (the delete was never sent).
+  type PendingDelete = {
+    ids: string[]
+    type: DataType
+    label: string
+    subLabel?: string
+  }
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
+  const pendingDeleteRef = useRef<PendingDelete | null>(null)
+  pendingDeleteRef.current = pendingDelete
 
   const currentData = useMemo(() => {
     switch (activeTab) {
@@ -82,6 +90,66 @@ export function UnifiedDataManager({
         return []
     }
   }, [activeTab, state.exercises, state.programs])
+
+  // Hide items with a pending undoable delete from the visible list.
+  const visibleData = useMemo(() => {
+    if (!pendingDelete || pendingDelete.type !== activeTab) return currentData
+    const hidden = new Set(pendingDelete.ids)
+    return currentData.filter(item => !hidden.has(item.id))
+  }, [currentData, pendingDelete, activeTab])
+
+  // Send the actual delete(s). Errors surface a toast; the optimistic hide is
+  // reconciled by the delete actions (re-fetch / offline queue).
+  const commitDelete = useCallback(
+    async (pd: PendingDelete) => {
+      try {
+        await Promise.all(
+          pd.ids.map(id =>
+            pd.type === 'exercises'
+              ? actions.deleteExercise(id)
+              : actions.deleteProgram(id)
+          )
+        )
+        await haptics.deleteItem()
+      } catch (error: any) {
+        await haptics.formValidationError()
+        showError('Failed to delete', error.message)
+      }
+    },
+    [actions]
+  )
+  const commitDeleteRef = useRef(commitDelete)
+  commitDeleteRef.current = commitDelete
+
+  // Start an undoable delete. One toast at a time — commit any in-flight one.
+  const beginUndoableDelete = useCallback(
+    async (pd: PendingDelete) => {
+      if (pendingDeleteRef.current) commitDelete(pendingDeleteRef.current)
+      setPendingDelete(pd)
+      await haptics.skipAction()
+    },
+    [commitDelete]
+  )
+
+  const handleToastComplete = useCallback(() => {
+    const pd = pendingDeleteRef.current
+    if (pd) commitDelete(pd)
+    setPendingDelete(null)
+  }, [commitDelete])
+
+  const handleToastUndo = useCallback(() => {
+    haptics.buttonTap()
+    setPendingDelete(null)
+  }, [])
+
+  // Commit any pending delete when navigating away (component unmount).
+  useEffect(
+    () => () => {
+      if (pendingDeleteRef.current)
+        commitDeleteRef.current(pendingDeleteRef.current)
+    },
+    []
+  )
 
   const handleTabChange = useCallback(
     (tab: DataType) => {
@@ -218,46 +286,23 @@ export function UnifiedDataManager({
       )
 
       if (!check.canDelete) {
+        // Blocked by dependencies — not reversible, keep the explanatory modal.
         setItemToDelete({ id: item.id, name: item.name, type: activeTab })
         setDependentPrograms(check.dependencies.programs || [])
         setDependencyErrorVisible(true)
         await haptics.formValidationError()
       } else {
-        setItemToDelete({ id: item.id, name: item.name, type: activeTab })
-        setDeleteModalVisible(true)
-        await haptics.skipAction()
+        // Safely deletable — optimistic remove + undo toast.
+        beginUndoableDelete({
+          ids: [item.id],
+          type: activeTab,
+          label: `Deleted "${item.name}"`,
+          subLabel: 'Tap undo to restore'
+        })
       }
     },
-    [activeTab, state.exercises, state.programs]
+    [activeTab, state.exercises, state.programs, beginUndoableDelete]
   )
-
-  const handleConfirmDelete = useCallback(async () => {
-    if (!itemToDelete) return
-
-    setDeleting(true)
-    try {
-      if (itemToDelete.type === 'exercises') {
-        await actions.deleteExercise(itemToDelete.id)
-      } else {
-        await actions.deleteProgram(itemToDelete.id)
-      }
-
-      await haptics.deleteItem()
-      showSuccess(`${itemToDelete.name} deleted`)
-      setDeleteModalVisible(false)
-      setItemToDelete(null)
-    } catch (error: any) {
-      await haptics.formValidationError()
-      showError('Failed to delete item', error.message)
-    } finally {
-      setDeleting(false)
-    }
-  }, [itemToDelete, actions])
-
-  const handleCancelDelete = useCallback(() => {
-    setDeleteModalVisible(false)
-    setItemToDelete(null)
-  }, [])
 
   const handleDismissDependencyError = useCallback(() => {
     setDependencyErrorVisible(false)
@@ -300,41 +345,17 @@ export function UnifiedDataManager({
       }
     }
 
-    // Show confirmation for items that can be deleted
-    setBulkDeleteModalVisible(true)
-    await haptics.skipAction()
-  }, [selectedItems, activeTab, state.exercises, state.programs])
-
-  const handleConfirmBulkDelete = useCallback(async () => {
-    if (selectedItems.length === 0) return
-
-    setBulkDeleting(true)
-    try {
-      const deletePromises = selectedItems.map(itemId => {
-        if (activeTab === 'exercises') {
-          return actions.deleteExercise(itemId)
-        } else {
-          return actions.deleteProgram(itemId)
-        }
-      })
-
-      await Promise.all(deletePromises)
-
-      await haptics.bulkDelete()
-      showSuccess(`${selectedItems.length} items deleted`)
-      setBulkDeleteModalVisible(false)
-      setSelectedItems([])
-    } catch (error: any) {
-      await haptics.formValidationError()
-      showError('Failed to delete items', error.message)
-    } finally {
-      setBulkDeleting(false)
-    }
-  }, [selectedItems, activeTab, actions])
-
-  const handleCancelBulkDelete = useCallback(() => {
-    setBulkDeleteModalVisible(false)
-  }, [])
+    // Safely deletable — optimistic remove + undo toast for the whole set.
+    const count = selectedItems.length
+    const noun = count === 1 ? activeTab.slice(0, -1) : activeTab
+    beginUndoableDelete({
+      ids: [...selectedItems],
+      type: activeTab,
+      label: `Deleted ${count} ${noun}`,
+      subLabel: 'Tap undo to restore'
+    })
+    setSelectedItems([])
+  }, [selectedItems, activeTab, state.exercises, state.programs, beginUndoableDelete])
 
   const handleDismissBulkDependencyError = useCallback(() => {
     setBulkDependencyErrorVisible(false)
@@ -427,7 +448,7 @@ export function UnifiedDataManager({
       {/* Data List */}
       <DataList
         dataType={activeTab}
-        data={currentData}
+        data={visibleData}
         searchState={searchState}
         selectedItems={selectedItems}
         onSelectionChange={handleSelectionChange}
@@ -482,18 +503,6 @@ export function UnifiedDataManager({
         </View>
       )}
 
-      {/* Confirmation Modal */}
-      <ConfirmationModal
-        visible={deleteModalVisible}
-        title="Delete Item?"
-        message="This action cannot be undone."
-        itemName={itemToDelete?.name}
-        itemType={itemToDelete?.type === 'exercises' ? 'exercise' : 'program'}
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-        loading={deleting}
-      />
-
       {/* Dependency Error Modal */}
       <DependencyErrorModal
         visible={dependencyErrorVisible}
@@ -501,17 +510,6 @@ export function UnifiedDataManager({
         itemType={itemToDelete?.type === 'exercises' ? 'exercise' : 'program'}
         dependentPrograms={dependentPrograms}
         onDismiss={handleDismissDependencyError}
-      />
-
-      {/* Bulk Delete Confirmation Modal */}
-      <ConfirmationModal
-        visible={bulkDeleteModalVisible}
-        title="Delete Multiple Items?"
-        message={`Are you sure you want to delete ${selectedItems.length} ${activeTab}? This action cannot be undone.`}
-        confirmLabel="Delete All"
-        onConfirm={handleConfirmBulkDelete}
-        onCancel={handleCancelBulkDelete}
-        loading={bulkDeleting}
       />
 
       {/* Bulk Dependency Error Modal */}
@@ -572,6 +570,15 @@ export function UnifiedDataManager({
           </View>
         </Modal>
       )}
+
+      {/* Undo toast — reversible delete (single + bulk) */}
+      <UndoToast
+        visible={pendingDelete !== null}
+        message={pendingDelete?.label ?? ''}
+        subMessage={pendingDelete?.subLabel}
+        onUndo={handleToastUndo}
+        onComplete={handleToastComplete}
+      />
     </View>
   )
 }
