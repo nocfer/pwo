@@ -1,6 +1,12 @@
-import { formatClock } from '@/lib/utils/format'
+import { formatClock, formatHold } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import type { ExerciseState } from '@/types/workout'
+import {
+  isTimedExercise,
+  timedTarget,
+  topCompletedHold,
+  topCompletedWeight
+} from '@/types/workout'
 import { Ionicons } from '@expo/vector-icons'
 import React, { useCallback } from 'react'
 import { LayoutAnimation, Pressable, StyleSheet, Text, View } from 'react-native'
@@ -66,33 +72,6 @@ function getStatus(exercise: ExerciseState): ExerciseStatus {
   if (hasActive(exercise)) return 'now'
   if (isComplete(exercise)) return 'done'
   return 'next'
-}
-
-function topWeight(exercise: ExerciseState): number {
-  return exercise.sets.reduce((max, s) => {
-    if (s.status !== 'completed') return max
-    const w = s.confirmedWeight ?? s.weight
-    return w > max ? w : max
-  }, 0)
-}
-
-/** A timed exercise: any set carries a hold duration. */
-function isTimedExercise(exercise: ExerciseState): boolean {
-  return exercise.sets.some(s => s.durationSeconds != null)
-}
-
-/** Representative target hold (seconds) — the first set's duration. */
-function timedTarget(exercise: ExerciseState): number {
-  return exercise.sets.find(s => s.durationSeconds != null)?.durationSeconds ?? 0
-}
-
-/** Longest completed hold (seconds) — the timed counterpart of topWeight. */
-function topHold(exercise: ExerciseState): number {
-  return exercise.sets.reduce((max, s) => {
-    if (s.status !== 'completed') return max
-    const d = s.confirmedDurationSeconds ?? s.durationSeconds ?? 0
-    return d > max ? d : max
-  }, 0)
 }
 
 function TimedBadge() {
@@ -291,7 +270,7 @@ export function ExerciseAccordionItem({
         </View>
 
         <Text style={styles.subLine}>
-          Target · {formatClock(timedTarget(exercise) * 1000)}
+          Target · {formatHold(timedTarget(exercise))}
         </Text>
 
         <View style={styles.columnHeader}>
@@ -307,7 +286,9 @@ export function ExerciseAccordionItem({
             reps={set.reps}
             weight={set.weight}
             status={set.status}
-            durationSeconds={set.durationSeconds ?? 0}
+            durationSeconds={
+              set.confirmedDurationSeconds ?? set.durationSeconds ?? 0
+            }
             onRepsPress={() => onSetRepsPress?.(sIdx)}
             onWeightPress={() => onSetWeightPress?.(sIdx)}
             onHoldPress={() => onSetRepsPress?.(sIdx)}
@@ -426,8 +407,8 @@ export function ExerciseAccordionItem({
         <Text style={styles.doneSummary} numberOfLines={1}>
           {completedCount(exercise)}/{total} ·{' '}
           {isTimedExercise(exercise)
-            ? `top ${formatClock(topHold(exercise) * 1000)}`
-            : `top ${topWeight(exercise)} lb`}
+            ? `top ${formatHold(topCompletedHold(exercise))}`
+            : `top ${topCompletedWeight(exercise)} lb`}
         </Text>
       </Pressable>
     )
@@ -478,7 +459,7 @@ export function ExerciseAccordionItem({
           </View>
           <Text style={styles.pendingSummary} numberOfLines={1}>
             {isTimedExercise(exercise)
-              ? `0/${total} · Hold ${formatClock(timedTarget(exercise) * 1000)}`
+              ? `0/${total} · Hold ${formatHold(timedTarget(exercise))}`
               : `0/${total} · ${pf.weight} lb`}
           </Text>
         </View>

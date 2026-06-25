@@ -87,6 +87,15 @@ export function formatClock(ms: number): string {
 }
 
 /**
+ * Format a hold/target duration given in *seconds* as a clock string. Thin
+ * adapter over {@link formatClock} (which takes ms) for the timed-set surfaces,
+ * so call sites don't repeat the `* 1000` conversion.
+ */
+export function formatHold(seconds: number): string {
+  return formatClock(seconds * 1000)
+}
+
+/**
  * Format milliseconds as a screen-reader-friendly duration, e.g.
  * "2 minutes 5 seconds" or "45 seconds". Shared by the rest-timer surfaces
  * (RestSheet, ActiveWorkoutBar) for accessibility labels.

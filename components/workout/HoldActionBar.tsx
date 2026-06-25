@@ -9,7 +9,7 @@
  * ready→holding); this bar only carries the lifecycle buttons.
  */
 
-import { formatClock } from '@/lib/utils/format'
+import { formatHold } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import { Ionicons } from '@expo/vector-icons'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
@@ -46,7 +46,7 @@ export function HoldActionBar({
               SET {setNumber} · {exerciseName.toUpperCase()}
             </Text>
             <Text style={styles.target}>
-              Hold {formatClock(targetSeconds * 1000)}
+              Hold {formatHold(targetSeconds)}
             </Text>
           </View>
           <Pressable
@@ -56,7 +56,7 @@ export function HoldActionBar({
             ]}
             onPress={onStart}
             accessibilityRole="button"
-            accessibilityLabel={`Start hold for set ${setNumber}, target ${formatClock(targetSeconds * 1000)}`}
+            accessibilityLabel={`Start hold for set ${setNumber}, target ${formatHold(targetSeconds)}`}
           >
             <Ionicons name="play" size={16} color={theme.colors.session.onLime} />
             <Text style={styles.startText}>Start</Text>

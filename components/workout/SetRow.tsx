@@ -1,6 +1,6 @@
 import { popScale } from '@/lib/motion'
 import { ActiveGlow } from '@/components/workout/ActiveGlow'
-import { formatClock } from '@/lib/utils/format'
+import { formatHold } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import type { SetStatus } from '@/types/workout'
 import { Ionicons } from '@expo/vector-icons'
@@ -67,6 +67,7 @@ export function SetRow({
   const isCompleted = status === 'completed'
   const isSkipped = status === 'skipped'
   const isTimed = durationSeconds != null
+  const holdLabel = formatHold(durationSeconds ?? 0)
 
   // Log pop: pressing the active check logs the set — the check pops (overshoot
   // → settle) in step with the tap. The confirm haptic is owned by the session's
@@ -101,7 +102,7 @@ export function SetRow({
   ]
 
   const valueDesc = isTimed
-    ? `hold ${formatClock((durationSeconds ?? 0) * 1000)}`
+    ? `hold ${holdLabel}`
     : `${weight} pounds for ${reps} reps`
   const a11yLabel = isCompleted
     ? `Set ${setNumber}, completed, ${valueDesc}`
@@ -120,11 +121,9 @@ export function SetRow({
           onPress={onHoldPress}
           style={[styles.valueCell, styles.holdCell]}
           accessibilityRole="button"
-          accessibilityLabel={`Hold ${formatClock((durationSeconds ?? 0) * 1000)}`}
+          accessibilityLabel={`Hold ${holdLabel}`}
         >
-          <Text style={valueStyle}>
-            {formatClock((durationSeconds ?? 0) * 1000)}
-          </Text>
+          <Text style={valueStyle}>{holdLabel}</Text>
         </Pressable>
       ) : (
         <>

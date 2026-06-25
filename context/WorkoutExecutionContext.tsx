@@ -37,7 +37,11 @@ export type WorkoutExecutionContextValue = {
     setIndex: number,
     durationSeconds: number
   ) => void
-  confirmSet: (exerciseIndex: number, setIndex: number) => void
+  confirmSet: (
+    exerciseIndex: number,
+    setIndex: number,
+    durationSeconds?: number
+  ) => void
   skipSet: (exerciseIndex: number, setIndex: number) => void
   startRestTimer: (durationMs: number) => void
   dismissRestTimer: () => void
@@ -97,8 +101,8 @@ export function WorkoutExecutionProvider({
   )
 
   const confirmSet = useCallback(
-    (exerciseIndex: number, setIndex: number) =>
-      dispatch({ type: 'CONFIRM_SET', exerciseIndex, setIndex }),
+    (exerciseIndex: number, setIndex: number, durationSeconds?: number) =>
+      dispatch({ type: 'CONFIRM_SET', exerciseIndex, setIndex, durationSeconds }),
     []
   )
 

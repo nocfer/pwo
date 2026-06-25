@@ -1,4 +1,4 @@
-import { formatClock } from '@/lib/utils/format'
+import { formatHold } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import type { SetStatus } from '@/types/workout'
 import { Ionicons } from '@expo/vector-icons'
@@ -20,7 +20,7 @@ const FIELD_CONFIG: Record<
     step: 5,
     floor: 5,
     unit: 'hold',
-    format: v => formatClock(v * 1000)
+    format: v => formatHold(v)
   }
 }
 

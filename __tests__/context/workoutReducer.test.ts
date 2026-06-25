@@ -1232,7 +1232,7 @@ describe('workoutReducer — LOG_DURATION', () => {
     })
   }
 
-  it('records the held seconds onto an active timed set', () => {
+  it('adjusts the target on an active timed set', () => {
     const next = workoutReducer(timedState(), {
       type: 'LOG_DURATION',
       exerciseIndex: 0,
@@ -1270,24 +1270,31 @@ describe('workoutReducer — LOG_DURATION', () => {
     expect(next).toBe(completed)
   })
 
-  it('CONFIRM_SET commits the held duration into confirmedDurationSeconds and advances', () => {
-    const logged = workoutReducer(timedState(), {
-      type: 'LOG_DURATION',
+  it('CONFIRM_SET commits the action held seconds and preserves the target', () => {
+    const confirmed = workoutReducer(timedState(), {
+      type: 'CONFIRM_SET',
       exerciseIndex: 0,
       setIndex: 0,
       durationSeconds: 38 // done early, below the 45s target
     })
-    const confirmed = workoutReducer(logged, {
+    const set0 = confirmed.exercises[0].sets[0]
+    expect(set0.status).toBe('completed')
+    expect(set0.confirmedDurationSeconds).toBe(38)
+    // The target is NOT overwritten with the held value — so an added set later
+    // inherits the program target, not the short hold.
+    expect(set0.durationSeconds).toBe(45)
+    // next timed set becomes active (prefilled as a hold)
+    expect(confirmed.exercises[0].sets[1].status).toBe('active')
+    expect(confirmed.activeSetIndex).toBe(1)
+  })
+
+  it('CONFIRM_SET falls back to the target when no held value is supplied', () => {
+    const confirmed = workoutReducer(timedState(), {
       type: 'CONFIRM_SET',
       exerciseIndex: 0,
       setIndex: 0
     })
-    const set0 = confirmed.exercises[0].sets[0]
-    expect(set0.status).toBe('completed')
-    expect(set0.confirmedDurationSeconds).toBe(38)
-    // next timed set becomes active (prefilled as a hold)
-    expect(confirmed.exercises[0].sets[1].status).toBe('active')
-    expect(confirmed.activeSetIndex).toBe(1)
+    expect(confirmed.exercises[0].sets[0].confirmedDurationSeconds).toBe(45)
   })
 
   it('does not set confirmedDurationSeconds for a reps set', () => {
@@ -1318,5 +1325,26 @@ describe('workoutReducer — ADD_SET inherits timed-ness', () => {
     expect(next.exercises[0].sets).toHaveLength(2)
     expect(next.exercises[0].sets[1].durationSeconds).toBe(45)
     expect(next.exercises[0].sets[1].status).toBe('pending')
+  })
+
+  it('inherits the target after a done-early hold, not the short held time', () => {
+    const state = createMockWorkoutState({
+      exercises: [
+        {
+          exerciseId: 'ex1',
+          exerciseName: 'Plank',
+          sets: [{ reps: 0, weight: 0, durationSeconds: 45, status: 'active' }]
+        }
+      ]
+    })
+    // Done early at 18s against a 45s target.
+    const confirmed = workoutReducer(state, {
+      type: 'CONFIRM_SET',
+      exerciseIndex: 0,
+      setIndex: 0,
+      durationSeconds: 18
+    })
+    const next = workoutReducer(confirmed, { type: 'ADD_SET', exerciseIndex: 0 })
+    expect(next.exercises[0].sets[1].durationSeconds).toBe(45)
   })
 })

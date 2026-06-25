@@ -36,7 +36,7 @@ import {
 import { haptics } from '@/lib/haptics'
 import { buildInitialState } from '@/lib/buildInitialState'
 import { buildWorkoutRecap } from '@/lib/workoutRecap'
-import { formatClock } from '@/lib/utils/format'
+import { formatHold } from '@/lib/utils/format'
 import { showToast } from '@/lib/toast'
 import { readPersistedWorkout } from '@/lib/workout-persistence'
 import { theme } from '@/theme/theme'
@@ -166,11 +166,34 @@ function WorkoutSessionContent() {
     [state.exercises, openEditor, expandExercise, scrollToExercise]
   )
 
+  // Shared tail for both log paths (reps and hold): start the right rest before
+  // the next pending set, or finish the workout when there is none.
+  const advanceAfterSet = useCallback(
+    (exerciseIndex: number, setIndex: number) => {
+      const exercise = state.exercises[exerciseIndex]
+      const next = findNextPendingSet(state.exercises, exerciseIndex, setIndex)
+      if (next) {
+        // Within the same exercise, honor the just-finished set's per-set rest;
+        // when wrapping to another exercise, fall back to that exercise's rest.
+        const durationMs =
+          next.exerciseIndex === exerciseIndex
+            ? (exercise?.sets[setIndex]?.restDurationMs ??
+              exercise?.restDurationMs ??
+              60000)
+            : (state.exercises[next.exerciseIndex].restDurationMs ?? 60000)
+        if (durationMs > 0) startRestTimer(durationMs)
+      } else {
+        haptics.workoutCompleted()
+        completeWorkout()
+      }
+    },
+    [state.exercises, startRestTimer, completeWorkout]
+  )
+
   // One-tap log: commit the set, advance, rest or complete.
   const handleLogSet = useCallback(
     (exerciseIndex: number, setIndex: number) => {
-      const exercise = state.exercises[exerciseIndex]
-      const set = exercise?.sets[setIndex]
+      const set = state.exercises[exerciseIndex]?.sets[setIndex]
       if (!set) return
       // Timed sets are logged via the hold timer (handleHoldComplete), never as
       // a reps×weight set — guard against a stray confirm corrupting stats.
@@ -188,23 +211,9 @@ function WorkoutSessionContent() {
         visibilityTime: 1500
       })
 
-      const next = findNextPendingSet(state.exercises, exerciseIndex, setIndex)
-      if (next) {
-        // Within the same exercise, honor the just-finished set's per-set rest;
-        // when wrapping to another exercise, fall back to that exercise's rest.
-        const durationMs =
-          next.exerciseIndex === exerciseIndex
-            ? (set.restDurationMs ??
-              exercise.restDurationMs ??
-              60000)
-            : (state.exercises[next.exerciseIndex].restDurationMs ?? 60000)
-        if (durationMs > 0) startRestTimer(durationMs)
-      } else {
-        haptics.workoutCompleted()
-        completeWorkout()
-      }
+      advanceAfterSet(exerciseIndex, setIndex)
     },
-    [state.exercises, logSet, confirmSet, startRestTimer, completeWorkout]
+    [state.exercises, logSet, confirmSet, advanceAfterSet]
   )
 
   const handleAddSet = useCallback(
@@ -320,12 +329,14 @@ function WorkoutSessionContent() {
     (heldSeconds: number, reason: 'target' | 'manual') => {
       if (!activeLoc) return
       const { exerciseIndex, setIndex } = activeLoc
-      const exercise = state.exercises[exerciseIndex]
-      const set = exercise?.sets[setIndex]
+      const set = state.exercises[exerciseIndex]?.sets[setIndex]
       if (!set) return
 
-      logDuration(exerciseIndex, setIndex, heldSeconds)
-      confirmSet(exerciseIndex, setIndex)
+      // Floor to 1s so a play→Done within the first second logs a real hold, not
+      // a completed 0:00 set. confirmSet commits this as confirmedDurationSeconds
+      // and leaves durationSeconds as the target (so Add-set inherits it).
+      const held = Math.max(1, heldSeconds)
+      confirmSet(exerciseIndex, setIndex, held)
       if (reason === 'target') {
         // Reached the target — celebrate (notifySuccess) + the timer-done cue.
         haptics.setComplete()
@@ -335,23 +346,13 @@ function WorkoutSessionContent() {
       }
       showToast({
         type: 'success',
-        text1: `Set ${setIndex + 1} held · ${formatClock(heldSeconds * 1000)}`,
+        text1: `Set ${setIndex + 1} held · ${formatHold(held)}`,
         visibilityTime: 1500
       })
 
-      const next = findNextPendingSet(state.exercises, exerciseIndex, setIndex)
-      if (next) {
-        const durationMs =
-          next.exerciseIndex === exerciseIndex
-            ? (set.restDurationMs ?? exercise.restDurationMs ?? 60000)
-            : (state.exercises[next.exerciseIndex].restDurationMs ?? 60000)
-        if (durationMs > 0) startRestTimer(durationMs)
-      } else {
-        haptics.workoutCompleted()
-        completeWorkout()
-      }
+      advanceAfterSet(exerciseIndex, setIndex)
     },
-    [activeLoc, state.exercises, logDuration, confirmSet, startRestTimer, completeWorkout]
+    [activeLoc, state.exercises, confirmSet, advanceAfterSet]
   )
 
   const holdTimer = useHoldTimer({
@@ -390,8 +391,10 @@ function WorkoutSessionContent() {
       }
       if (activeLoc) {
         if (activeIsTimed) {
-          // Timed set: Enter starts the hold, or finishes it (Done early).
+          // Timed set: Enter starts a ready hold, resumes a paused one, or
+          // finishes a running one (Done early) — never logs a paused hold.
           if (holdPhase === 'ready') handleStartHold()
+          else if (holdPhase === 'paused') handleResumeHold()
           else handleDoneEarly()
           return true
         }

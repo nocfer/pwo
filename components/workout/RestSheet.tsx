@@ -1,4 +1,4 @@
-import { formatClock, spokenDuration } from '@/lib/utils/format'
+import { formatClock, formatHold, spokenDuration } from '@/lib/utils/format'
 import { theme } from '@/theme/theme'
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
@@ -58,7 +58,7 @@ export function RestSheet({
           </Text>
           <Text style={styles.target} numberOfLines={1}>
             {nextDurationSeconds != null
-              ? `Hold ${formatClock(nextDurationSeconds * 1000)}`
+              ? `Hold ${formatHold(nextDurationSeconds)}`
               : `${nextWeight} lb × ${nextReps}`}
           </Text>
         </View>

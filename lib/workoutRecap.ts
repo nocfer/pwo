@@ -8,8 +8,12 @@
  */
 
 import type { ExerciseState } from '@/types/workout'
-import { isTimedSet } from '@/types/workout'
-import { formatClock, formatCount } from '@/lib/utils/format'
+import {
+  isTimedExercise,
+  topCompletedHold,
+  topCompletedWeight
+} from '@/types/workout'
+import { formatClock, formatCount, formatHold } from '@/lib/utils/format'
 
 export type RecapRow = {
   exerciseId: string
@@ -24,23 +28,6 @@ export type WorkoutRecap = {
   volume: number
   totalSkipped: number
   rows: RecapRow[]
-}
-
-function topCompletedWeight(exercise: ExerciseState): number {
-  return exercise.sets.reduce((max, s) => {
-    if (s.status !== 'completed') return max
-    const w = s.confirmedWeight ?? s.weight
-    return w > max ? w : max
-  }, 0)
-}
-
-/** Longest completed hold (seconds) for a timed exercise. */
-function topCompletedHold(exercise: ExerciseState): number {
-  return exercise.sets.reduce((max, s) => {
-    if (s.status !== 'completed') return max
-    const d = s.confirmedDurationSeconds ?? s.durationSeconds ?? 0
-    return d > max ? d : max
-  }, 0)
 }
 
 export function buildWorkoutRecap(
@@ -66,7 +53,7 @@ export function buildWorkoutRecap(
     totalSkipped += skipped
 
     // Timed exercises summarize and PR on the longest hold, not weight×reps.
-    const timed = ex.sets.some(isTimedSet)
+    const timed = isTimedExercise(ex)
 
     let detail: string
     let isPR: boolean
@@ -79,7 +66,7 @@ export function buildWorkoutRecap(
         detail = `${formatCount(skipped, 'set')} skipped`
       } else {
         detail =
-          `${formatCount(completed.length, 'set')} · top ${formatClock(topHold * 1000)}` +
+          `${formatCount(completed.length, 'set')} · top ${formatHold(topHold)}` +
           (skipped ? ` · ${skipped} skipped` : '')
       }
     } else {
