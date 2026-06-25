@@ -34,8 +34,10 @@ describe('fetchPrefillData', () => {
     const mockFetch = global.fetch as ReturnType<typeof vi.fn>
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () =>
-        Promise.resolve([{ exerciseId: 'ex-1', reps: 8, weight: 185 }])
+      text: () =>
+        Promise.resolve(
+          JSON.stringify([{ exerciseId: 'ex-1', reps: 8, weight: 185 }])
+        )
     })
 
     await fetchPrefillData(['ex-1', 'ex-2'])
@@ -59,7 +61,7 @@ describe('fetchPrefillData', () => {
     const mockFetch = global.fetch as ReturnType<typeof vi.fn>
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(response)
+      text: () => Promise.resolve(JSON.stringify(response))
     })
 
     const result = await fetchPrefillData(['ex-1', 'ex-2'])
@@ -90,7 +92,7 @@ describe('fetchPrefillData', () => {
     const mockFetch = global.fetch as ReturnType<typeof vi.fn>
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve([])
+      text: () => Promise.resolve(JSON.stringify([]))
     })
 
     await fetchPrefillData(['ex with spaces', 'ex&special'])

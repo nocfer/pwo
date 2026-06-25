@@ -99,11 +99,16 @@ async function request<T>(
     // Get auth token
     const token = await getAuthToken()
 
-    // Prepare headers
+    // Prepare headers. Only declare a JSON content-type when we actually send
+    // a body — a bodyless request (e.g. DELETE) with `Content-Type:
+    // application/json` is rejected by the server's body parser with
+    // "body cannot be empty when content-type is application/json".
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
       ...options.headers
+    }
+    if (options.body !== undefined) {
+      headers['Content-Type'] = 'application/json'
     }
 
     // Prepare request options with timeout via AbortController
@@ -139,9 +144,17 @@ async function request<T>(
       )
     }
 
-    // Parse and return response
-    const data = await response.json()
-    return data as T
+    // Parse and return response. DELETE and other endpoints may reply with
+    // 204 No Content (or an otherwise empty body); calling .json() on that
+    // throws a SyntaxError, so treat an empty body as undefined.
+    if (response.status === 204) {
+      return undefined as T
+    }
+    const text = await response.text()
+    if (text.length === 0) {
+      return undefined as T
+    }
+    return JSON.parse(text) as T
   } catch (error) {
     // Re-throw APIError as-is
     if (error instanceof APIError) {
